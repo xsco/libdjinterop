@@ -15,48 +15,27 @@
     along with libengineprime.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <engineprime/engineprime.hpp>
+#include <engineprime/database.hpp>
 
-#include <stdexcept>
 #include <string>
-#include "sqlite3.h"
+#include "sqlite3_db_raii.hpp"
 
-using namespace engineprime;
+namespace engineprime {
+
 using std::string;
-
-// RAII_friendly wrapper around opening/closing SQLite3 databases
-struct sqlite3_db_raii
-{
-    sqlite3_db_raii(const std::string &path)
-    {
-        if (sqlite3_open(path.c_str(), &db) != SQLITE_OK)
-        {
-            string err_msg_str{sqlite3_errmsg(db)};
-            sqlite3_close(db);
-            throw std::runtime_error{err_msg_str};
-        }
-    }
-    
-    ~sqlite3_db_raii()
-    {
-        sqlite3_close(db);
-    }
-    
-    sqlite3 *db;
-};
 
 struct database::impl
 {
     impl(const std::string &dir_path) :
         dir_path_{dir_path},
         db_m_path_{dir_path_ + "/m.db"},
-        db_p_path_{dir_path_ + "/p.db"},
-        db_m_{db_m_path_},
-        db_p_{db_p_path_}
+        db_p_path_{dir_path_ + "/p.db"}
     {
+        sqlite3_db_raii db_m{db_m_path_};
+        
         // Read from 'Information' table
         sqlite3_stmt *stmt;
-        if (sqlite3_prepare_v2(db_m_.db,
+        if (sqlite3_prepare_v2(db_m.db,
             "SELECT uuid, schemaVersionMajor, schemaVersionMinor, "
             "schemaVersionPatch "
             "FROM Information",
@@ -64,14 +43,14 @@ struct database::impl
             &stmt,
             0) != SQLITE_OK)
         {
-            string err_msg_str{sqlite3_errmsg(db_m_.db)};
+            std::string err_msg_str{sqlite3_errmsg(db_m.db)};
             throw std::runtime_error{err_msg_str};
         }
         
         // Expect only a single row in Information
         if (sqlite3_step(stmt) != SQLITE_ROW)
         {
-            string err_msg_str{sqlite3_errmsg(db_m_.db)};
+            std::string err_msg_str{sqlite3_errmsg(db_m.db)};
             throw std::runtime_error{err_msg_str};
         }
         
@@ -83,12 +62,10 @@ struct database::impl
         sqlite3_finalize(stmt);
     }
     
-    string dir_path_;
-    string db_m_path_;
-    string db_p_path_;
-    sqlite3_db_raii db_m_;
-    sqlite3_db_raii db_p_;
-    string uuid_;
+    std::string dir_path_;
+    std::string db_m_path_;
+    std::string db_p_path_;
+    std::string uuid_;
     int schema_version_major_;
     int schema_version_minor_;
     int schema_version_patch_;
@@ -130,3 +107,4 @@ int database::schema_version_patch() const
     return pimpl_->schema_version_patch_;
 }
 
+} // namespace engineprime
