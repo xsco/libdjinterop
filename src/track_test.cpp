@@ -50,3 +50,18 @@ BOOST_AUTO_TEST_CASE (all_track_ids__sample_db__expected_ids)
     BOOST_CHECK_EQUAL(results[6], 7);
 }
 
+BOOST_AUTO_TEST_CASE (ctor__track1__loads)
+{
+	// Arrange
+	ep::database db{sample_path};
+
+	// Act
+	ep::track t{db, 1};
+
+	// Assert
+	BOOST_CHECK_EQUAL(t.id(), 1);
+	BOOST_CHECK_EQUAL(t.path(), "../01-track-wav-format.wav");
+	BOOST_CHECK_EQUAL(t.filename(), "01-track-wav-format.wav");
+	BOOST_CHECK_EQUAL(t.file_extension(), "wav");
+}
+

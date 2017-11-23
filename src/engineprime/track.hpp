@@ -153,6 +153,9 @@ public:
     ~track();
     
     int id() const;
+	const std::string &path() const;
+	const std::string &filename() const;
+	const std::string &file_extension() const;
     
     // TODO - move to dedicated file
     /*

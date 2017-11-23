@@ -30,7 +30,31 @@ struct track::impl
     {
         id_ = id;
         
-        sqlite3_db_raii db_m{database.music_db_path()};
+        sqlite3_db_raii m{database.music_db_path()};
+
+		// Read from Track
+		sqlite3_stmt *stmt;
+		if (sqlite3_prepare_v2(m.db,
+			"SELECT id, playOrder, length, lengthCalculated, bpm, year, "
+			    "path, filename, bitrate, bpmAnalyzed, trackType, "
+				"isExternalTrack, uuidOfExternalDatabase, "
+				"idTrackInExternalDatabase, idAlbumArt "
+			"FROM Track WHERE id = :1",
+			-1, &stmt, 0) != SQLITE_OK)
+		{
+        	std::string err_msg_str{sqlite3_errmsg(m.db)};
+	        throw std::runtime_error{err_msg_str};
+		}
+		sqlite3_bind_int(stmt, 1, id);
+		if (sqlite3_step(stmt) != SQLITE_ROW)
+		{
+            std::string err_msg_str{sqlite3_errmsg(m.db)};
+	        throw std::runtime_error{err_msg_str};
+		}
+
+		// Set various fields
+		path_ = std::string{reinterpret_cast<const char *>(sqlite3_column_text(stmt, 6))};
+		filename_ = std::string{reinterpret_cast<const char *>(sqlite3_column_text(stmt, 7))};
         
         // TODO - read from Track
         // TODO - read from Metadata
@@ -66,6 +90,20 @@ int track::id() const
     return pimpl_->id_;
 }
 
+const std::string &track::path() const
+{
+	return pimpl_->path_;
+}
+
+const std::string &track::filename() const
+{
+	return pimpl_->filename_;
+}
+
+const std::string &track::file_extension() const
+{
+	return pimpl_->file_extension_;
+}
 
 std::vector<int> all_track_ids(const database &database)
 {
