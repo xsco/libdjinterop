@@ -90,25 +90,11 @@ struct standard_pad_colours
     const pad_colour pad_8{ 0x15, 0x8E, 0xE2, 0xFF };
 };
 
-// Track metadata (i.e. as stored in the file)
-struct track_metadata
-{
-    int track_number;
-    std::chrono::seconds duration;
-    int bpm;
-    int year;
-    std::string title;
-    std::string artist;
-    std::string album;
-    std::string genre;
-    std::string comment;
-    std::string publisher;
-    std::string composer;
-};
-
 struct track_beat_grid
 {
+	int first_beat_index;
     double first_beat_sample_offset;
+	int last_beat_index;
     double last_beat_sample_offset;
 };
 
@@ -135,7 +121,6 @@ struct track_analysis
     std::chrono::seconds duration;
     double sample_rate;
     int_least64_t total_samples;
-    /*TODO const*/ int bpm;
     musical_key key;
     double average_loudness;
     track_beat_grid default_beat_grid;
@@ -144,6 +129,15 @@ struct track_analysis
     double adjusted_main_cue_sample_offset;
     double default_main_cue_sample_offset;
     std::vector<track_loop> loops;
+
+	double bpm() const
+	{
+		return sample_rate * 60 *
+			(double)(adjusted_beat_grid.last_beat_index -
+			 adjusted_beat_grid.first_beat_index) /
+			(adjusted_beat_grid.last_beat_sample_offset -
+			 adjusted_beat_grid.first_beat_sample_offset);
+	}
 };
 
 class track
@@ -153,16 +147,33 @@ public:
     ~track();
     
     int id() const;
+	track_analysis analysis() const;
+    int track_number;
+    std::chrono::seconds duration() const;
+    int bpm() const;
+    int year() const;
+    const std::string title() const;
+    const std::string artist() const;
+    const std::string album() const;
+    const std::string genre() const;
+    const std::string comment() const;
+    const std::string publisher() const;
+    const std::string composer() const;
 	const std::string &path() const;
 	const std::string &filename() const;
 	const std::string &file_extension() const;
-    
-    // TODO - move to dedicated file
-    /*
-    std::shared_ptr<album_art> art() const;
-    bool has_art() const;
-    */
+    const std::chrono::system_clock::time_point last_modified_at() const;
+	int bitrate() const;
+	bool ever_played() const;
+	const std::chrono::system_clock::time_point last_played_at() const;
+	const std::chrono::system_clock::time_point last_loaded_at() const;
+	bool is_imported() const;
+	const std::string &external_database_id() const;
+	int track_id_in_external_database() const;
+	int album_art_id() const;
 
+	bool has_album_art() const { return album_art_id() != 1; }
+    
 private:
     class impl;
     std::unique_ptr<impl> pimpl_;

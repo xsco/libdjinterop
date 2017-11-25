@@ -26,3 +26,6 @@
 *.exe
 *.out
 *.app
+
+# Helper for bear (b-ear)
+compile_commands.json
