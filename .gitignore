@@ -29,3 +29,6 @@
 
 # Helper for bear (b-ear)
 compile_commands.json
+
+# Convenience autogens
+autogen-debug.sh

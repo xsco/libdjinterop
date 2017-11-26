@@ -147,18 +147,18 @@ public:
     ~track();
     
     int id() const;
-	track_analysis analysis() const;
-    int track_number;
+	track_analysis analysis() const; // Move to separate class or keep here?
+    int track_number() const;
     std::chrono::seconds duration() const;
     int bpm() const;
     int year() const;
-    const std::string title() const;
-    const std::string artist() const;
-    const std::string album() const;
-    const std::string genre() const;
-    const std::string comment() const;
-    const std::string publisher() const;
-    const std::string composer() const;
+    const std::string &title() const;
+    const std::string &artist() const;
+    const std::string &album() const;
+    const std::string &genre() const;
+    const std::string &comment() const;
+    const std::string &publisher() const;
+    const std::string &composer() const;
 	const std::string &path() const;
 	const std::string &filename() const;
 	const std::string &file_extension() const;

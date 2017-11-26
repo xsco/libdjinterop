@@ -19,6 +19,7 @@
 
 #include <chrono>
 #include <string>
+#include <vector>
 #include "sqlite3_db_raii.hpp"
 
 namespace engineprime {
@@ -41,11 +42,36 @@ struct track_row
 	int id_album_art;
 };
 
+struct metadata_types
+{
+	static const int title          = 1;
+	static const int artist         = 2;
+	static const int album          = 3;
+	static const int genre          = 4;
+	static const int comment        = 5;
+	static const int publisher      = 6;
+	static const int composer       = 7;
+	static const int duration_mm_ss = 10;
+	static const int ever_played    = 12;
+	static const int file_extension = 13;
+};
+
 struct metadata_row
 {
 	int id;
 	int type;
-	std::string value;
+	std::string text;
+};
+
+typedef std::vector<metadata_row> str_metadata_vec;
+
+struct metadata_integer_types
+{
+	static const int last_played_ts      = 1;
+	static const int last_modified_ts    = 2;
+	static const int last_played_date_ts = 3;
+	static const int musical_key         = 4;
+	static const int hash                = 10;
 };
 
 struct metadata_integer_row
@@ -54,6 +80,8 @@ struct metadata_integer_row
 	int type;
 	int value;
 };
+
+typedef std::vector<metadata_integer_row> int_metadata_vec;
 
 struct performance_data_row
 {
@@ -73,7 +101,7 @@ track_row select_track_row(const std::string &music_db_path, int id)
 {
     sqlite3_db_raii m{music_db_path};
 
-	// Read from Track
+	// Read from Track table
 	sqlite3_stmt *stmt;
 	if (sqlite3_prepare_v2(m.db,
 		"SELECT id, playOrder, length, lengthCalculated, bpm, year, "
@@ -114,11 +142,52 @@ track_row select_track_row(const std::string &music_db_path, int id)
 	return row;
 }
 
+str_metadata_vec select_metadata_rows(const std::string &music_db_path, int id)
+{
+	sqlite3_db_raii m{music_db_path};
+
+	// Read from Metadata table
+	sqlite3_stmt *stmt;
+	if (sqlite3_prepare_v2(m.db,
+		"SELECT id, type, text "
+		"FROM Metadata WHERE id = :1",
+		-1, &stmt, 0) != SQLITE_OK)
+	{
+       	std::string err_msg_str{sqlite3_errmsg(m.db)};
+	    throw std::runtime_error{err_msg_str};
+	}
+	sqlite3_bind_int(stmt, 1, id);
+
+	// Iterate through rows (we only know about types 1-16 so far though)
+	str_metadata_vec results{17};
+	for (auto rc = sqlite3_step(stmt); rc != SQLITE_DONE; rc = sqlite3_step(stmt))
+	{
+		if (rc != SQLITE_ROW)
+		{
+	        std::string err_msg_str{sqlite3_errmsg(m.db)};
+		    throw std::runtime_error{err_msg_str};
+		}
+
+		auto type = sqlite3_column_int(stmt, 1);
+		if (type > 16)
+			// Some new metadata that we don't know about yet!
+			continue;
+
+		results[type].id   = sqlite3_column_int(stmt, 0); // id
+		results[type].type = type;                        // type
+		results[type].text = sqlite3_column_str(stmt, 2); // text
+	}
+	
+	return results;
+}
+
 struct track::impl
 {
-    impl(const database &database, int id) :
+    impl(const database &db, int id) :
 		id_{id},
-		track_row_{select_track_row(database.music_db_path(), id)}
+		track_row_{select_track_row(db.music_db_path(), id)},
+		str_metadata_vec_{select_metadata_rows(db.music_db_path(), id)},
+		duration_{track_row_.length}
     {
         // TODO - read from Track
         // TODO - read from Metadata
@@ -128,7 +197,12 @@ struct track::impl
     
     int id_;
 	track_row track_row_;
+	str_metadata_vec str_metadata_vec_;
+	int_metadata_vec int_metadata_vec_;
+
     track_analysis analysis_;
+
+	std::chrono::seconds duration_;
     std::chrono::system_clock::time_point last_modified_at_;
     std::chrono::system_clock::time_point last_played_at_;
     std::chrono::system_clock::time_point last_loaded_at_;
@@ -141,8 +215,20 @@ track::track(const database &database, int id) : pimpl_{new impl{database, id}}
 track::~track() = default;
 
 int track::id() const { return pimpl_->id_; }
+int track::track_number() const { return pimpl_->track_row_.play_order; }
+std::chrono::seconds track::duration() const { return pimpl_->duration_; }
+int track::bpm() const { return pimpl_->track_row_.bpm; }
+int track::year() const { return pimpl_->track_row_.year; }
+const std::string &track::title() const { return pimpl_->str_metadata_vec_[metadata_types::title].text; }
+const std::string &track::artist() const { return pimpl_->str_metadata_vec_[metadata_types::artist].text; }
+const std::string &track::album() const { return pimpl_->str_metadata_vec_[metadata_types::album].text; }
+const std::string &track::genre() const { return pimpl_->str_metadata_vec_[metadata_types::genre].text; }
+const std::string &track::comment() const { return pimpl_->str_metadata_vec_[metadata_types::comment].text; }
+const std::string &track::publisher() const { return pimpl_->str_metadata_vec_[metadata_types::publisher].text; }
+const std::string &track::composer() const { return pimpl_->str_metadata_vec_[metadata_types::composer].text; }
 const std::string &track::path() const { return pimpl_->track_row_.path; }
 const std::string &track::filename() const { return pimpl_->track_row_.filename; }
+const std::string &track::file_extension() const { return pimpl_->str_metadata_vec_[metadata_types::file_extension].text; }
 
 std::vector<int> all_track_ids(const database &database)
 {

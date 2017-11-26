@@ -62,5 +62,7 @@ BOOST_AUTO_TEST_CASE (ctor__track1__correct_fields)
 	BOOST_CHECK_EQUAL(t.id(), 1);
 	BOOST_CHECK_EQUAL(t.path(), "../01-track-wav-format.wav");
 	BOOST_CHECK_EQUAL(t.filename(), "01-track-wav-format.wav");
+	// etc.
+	BOOST_CHECK_EQUAL(t.file_extension(), "wav");
 }
 
