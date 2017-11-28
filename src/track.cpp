@@ -181,26 +181,66 @@ str_metadata_vec select_metadata_rows(const std::string &music_db_path, int id)
 	return results;
 }
 
+int_metadata_vec select_int_metadata_rows(
+		const std::string &music_db_path, int id)
+{
+	sqlite3_db_raii m{music_db_path};
+
+	// Read from Metadata table
+	sqlite3_stmt *stmt;
+	if (sqlite3_prepare_v2(m.db,
+		"SELECT id, type, value "
+		"FROM MetadataInteger WHERE id = :1",
+		-1, &stmt, 0) != SQLITE_OK)
+	{
+       	std::string err_msg_str{sqlite3_errmsg(m.db)};
+	    throw std::runtime_error{err_msg_str};
+	}
+	sqlite3_bind_int(stmt, 1, id);
+
+	// Iterate through rows (we only know about types 1-11 so far though)
+	int_metadata_vec results{12};
+	for (auto rc = sqlite3_step(stmt); rc != SQLITE_DONE; rc = sqlite3_step(stmt))
+	{
+		if (rc != SQLITE_ROW)
+		{
+	        std::string err_msg_str{sqlite3_errmsg(m.db)};
+		    throw std::runtime_error{err_msg_str};
+		}
+
+		auto type = sqlite3_column_int(stmt, 1);
+		if (type > 11)
+			// Some new metadata that we don't know about yet!
+			continue;
+
+		results[type].id    = sqlite3_column_int(stmt, 0); // id
+		results[type].type  = type;                        // type
+		results[type].value = sqlite3_column_int(stmt, 2); // value
+	}
+	
+	return results;
+}
+
 struct track::impl
 {
     impl(const database &db, int id) :
 		id_{id},
 		track_row_{select_track_row(db.music_db_path(), id)},
 		str_metadata_vec_{select_metadata_rows(db.music_db_path(), id)},
-		duration_{track_row_.length}
-    {
-        // TODO - read from Track
-        // TODO - read from Metadata
-        // TODO - read from MetadataInteger
-        // TODO - read from PerformanceData
-    }
+		int_metadata_vec_{select_int_metadata_rows(db.music_db_path(), id)},
+		duration_{track_row_.length},
+		last_modified_at_{std::chrono::seconds{
+			int_metadata_vec_[metadata_integer_types::last_modified_ts].value}},
+		last_played_at_{std::chrono::seconds{
+			int_metadata_vec_[metadata_integer_types::last_played_ts].value}},
+		last_loaded_at_{std::chrono::seconds{
+			int_metadata_vec_[metadata_integer_types::last_played_date_ts].value}}
+    {}
     
     int id_;
 	track_row track_row_;
 	str_metadata_vec str_metadata_vec_;
 	int_metadata_vec int_metadata_vec_;
-
-    track_analysis analysis_;
 
 	std::chrono::seconds duration_;
     std::chrono::system_clock::time_point last_modified_at_;
@@ -229,6 +269,15 @@ const std::string &track::composer() const { return pimpl_->str_metadata_vec_[me
 const std::string &track::path() const { return pimpl_->track_row_.path; }
 const std::string &track::filename() const { return pimpl_->track_row_.filename; }
 const std::string &track::file_extension() const { return pimpl_->str_metadata_vec_[metadata_types::file_extension].text; }
+const std::chrono::system_clock::time_point track::last_modified_at() const { return pimpl_->last_modified_at_; }
+int track::bitrate() const { return pimpl_->track_row_.bitrate; }
+bool track::ever_played() const { return pimpl_->str_metadata_vec_[metadata_types::ever_played].text == "1"; }
+const std::chrono::system_clock::time_point track::last_played_at() const { return pimpl_->last_played_at_; }
+const std::chrono::system_clock::time_point track::last_loaded_at() const { return pimpl_->last_loaded_at_; }
+bool track::is_imported() const { return pimpl_->track_row_.is_external_track != 0; }
+const std::string &track::external_database_id() const { return pimpl_->track_row_.uuid_of_external_database; }
+int track::track_id_in_external_database() const { return pimpl_->track_row_.id_track_in_external_database; }
+int track::album_art_id() const { return pimpl_->track_row_.id_album_art; }
 
 std::vector<int> all_track_ids(const database &database)
 {

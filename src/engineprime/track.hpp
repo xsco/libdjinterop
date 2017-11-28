@@ -70,6 +70,7 @@ enum class musical_key
     c_major
 };
 
+// TODO - move all track analysis structs etc to dedicated file!
 struct pad_colour
 {
     uint_least8_t r;
@@ -147,7 +148,6 @@ public:
     ~track();
     
     int id() const;
-	track_analysis analysis() const; // Move to separate class or keep here?
     int track_number() const;
     std::chrono::seconds duration() const;
     int bpm() const;
