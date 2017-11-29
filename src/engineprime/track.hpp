@@ -25,6 +25,7 @@
 #include <chrono>
 #include <cstdint>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -42,6 +43,7 @@ struct album_art
     std::vector<image_data_type> image_data;
 };
 
+// TODO - Move to dedicated analysis file
 enum class musical_key
 {
     a_minor = 1,
@@ -139,6 +141,38 @@ struct track_analysis
 			(adjusted_beat_grid.last_beat_sample_offset -
 			 adjusted_beat_grid.first_beat_sample_offset);
 	}
+};
+
+
+class nonexistent_track : public std::invalid_argument
+{
+public:
+	explicit nonexistent_track(int id) noexcept :
+		invalid_argument{"Track does not exist in database"},
+		id_{id}
+	{}
+	virtual ~nonexistent_track() = default;
+	int id() const noexcept { return id_; }
+private:
+	int id_;
+};
+
+class track_database_inconsistency : public database_inconsistency
+{
+public:
+	explicit track_database_inconsistency(const std::string &what_arg)
+		noexcept :
+		database_inconsistency{what_arg}
+	{}
+	explicit track_database_inconsistency(const std::string &what_arg, int id)
+		noexcept :
+		database_inconsistency{what_arg},
+		id_{id}
+	{}
+	virtual ~track_database_inconsistency() = default;
+	int id() const noexcept { return id_; }
+private:
+	int id_;
 };
 
 class track

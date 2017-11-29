@@ -115,7 +115,12 @@ track_row select_track_row(const std::string &music_db_path, int id)
 	    throw std::runtime_error{err_msg_str};
 	}
 	sqlite3_bind_int(stmt, 1, id);
-	if (sqlite3_step(stmt) != SQLITE_ROW)
+	auto rc = sqlite3_step(stmt);
+	if (rc == SQLITE_DONE)
+	{
+		throw nonexistent_track(id);
+	}
+	else if (rc != SQLITE_ROW)
 	{
         std::string err_msg_str{sqlite3_errmsg(m.db)};
 	    throw std::runtime_error{err_msg_str};
@@ -158,9 +163,16 @@ str_metadata_vec select_metadata_rows(const std::string &music_db_path, int id)
 	}
 	sqlite3_bind_int(stmt, 1, id);
 
+	auto rc = sqlite3_step(stmt);
+	if (rc == SQLITE_DONE)
+	{
+		throw track_database_inconsistency{
+			"No entry in Metadata table for track", id};
+	}
+
 	// Iterate through rows (we only know about types 1-16 so far though)
 	str_metadata_vec results{17};
-	for (auto rc = sqlite3_step(stmt); rc != SQLITE_DONE; rc = sqlite3_step(stmt))
+	for (; rc != SQLITE_DONE; rc = sqlite3_step(stmt))
 	{
 		if (rc != SQLITE_ROW)
 		{
@@ -198,9 +210,16 @@ int_metadata_vec select_int_metadata_rows(
 	}
 	sqlite3_bind_int(stmt, 1, id);
 
+	auto rc = sqlite3_step(stmt);
+	if (rc == SQLITE_DONE)
+	{
+		throw track_database_inconsistency{
+			"No entry in MetadataInteger table for track", id};
+	}
+
 	// Iterate through rows (we only know about types 1-11 so far though)
 	int_metadata_vec results{12};
-	for (auto rc = sqlite3_step(stmt); rc != SQLITE_DONE; rc = sqlite3_step(stmt))
+	for (; rc != SQLITE_DONE; rc = sqlite3_step(stmt))
 	{
 		if (rc != SQLITE_ROW)
 		{
@@ -295,13 +314,9 @@ std::vector<int> all_track_ids(const database &database)
     }
     
     std::vector<int> results;
-    int rc;
-    while (true)
+	for (auto rc = sqlite3_step(stmt); rc != SQLITE_DONE;
+			rc = sqlite3_step(stmt))
     {
-        rc = sqlite3_step(stmt);
-        if (rc == SQLITE_DONE)
-            break;
-    
         if (rc != SQLITE_ROW)
         {
             std::string err_msg_str{sqlite3_errmsg(m.db)};

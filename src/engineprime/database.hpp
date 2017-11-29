@@ -23,9 +23,19 @@
 #define ENGINEPRIME_DATABASE_HPP
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 namespace engineprime {
+
+class database_inconsistency : public std::logic_error
+{
+public:
+	explicit database_inconsistency(const std::string &what_arg) noexcept :
+		logic_error{what_arg}
+	{}
+	virtual ~database_inconsistency() = default;
+};
 
 class database
 {
