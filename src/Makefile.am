@@ -10,6 +10,8 @@ nobase_include_HEADERS = \
 	engineprime/engineprime.hpp \
 	engineprime/database.hpp \
 	engineprime/track.hpp
+	engineprime/performance_data.hpp
+	engineprime/album_art.hpp
 
 # Unit test programs
 check_PROGRAMS = database_test track_test

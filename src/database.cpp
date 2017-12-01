@@ -18,11 +18,19 @@
 #include <engineprime/database.hpp>
 
 #include <string>
+#include <sys/stat.h>
 #include "sqlite3_db_raii.hpp"
 
 namespace engineprime {
 
-using std::string;
+// Utility method for getting std::string out of a stmt
+static std::string sqlite3_column_str(sqlite3_stmt *stmt, int index)
+{
+	auto uchar_ptr = sqlite3_column_text(stmt, index);
+	if (uchar_ptr == nullptr)
+		return "";
+	return reinterpret_cast<const char *>(uchar_ptr);
+}
 
 struct database::impl
 {
@@ -54,25 +62,32 @@ struct database::impl
             throw std::runtime_error{err_msg_str};
         }
         
-        uuid_ = string{reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0))};
-        schema_version_major_ = sqlite3_column_int(stmt, 1);
-        schema_version_minor_ = sqlite3_column_int(stmt, 2);
-        schema_version_patch_ = sqlite3_column_int(stmt, 3);
+        uuid_ = sqlite3_column_str(stmt, 0);
+        version_.maj = sqlite3_column_int(stmt, 1);
+        version_.min = sqlite3_column_int(stmt, 2);
+        version_.pat = sqlite3_column_int(stmt, 3);
         
         sqlite3_finalize(stmt);
     }
+
+	bool exists()
+	{
+		struct stat buffer;
+		auto m_exists = stat(db_m_path_.c_str(), &buffer) == 0;
+		auto p_exists = stat(db_p_path_.c_str(), &buffer) == 0;
+		return m_exists && p_exists;
+	}
     
     std::string dir_path_;
     std::string db_m_path_;
     std::string db_p_path_;
     std::string uuid_;
-    int schema_version_major_;
-    int schema_version_minor_;
-    int schema_version_patch_;
+	schema_version version_;
 };
 
 
-database::database(const std::string &dir_path) : pimpl_{new impl{dir_path}}
+database::database(const std::string &dir_path) :
+	pimpl_{new impl{dir_path}}
 {}
 
 database::~database() = default;
@@ -89,22 +104,30 @@ const std::string &database::performance_db_path() const
 {
     return pimpl_->db_p_path_;
 }
-
 const std::string &database::uuid() const
 {
     return pimpl_->uuid_;
 }
-int database::schema_version_major() const
+const schema_version &database::version() const
 {
-    return pimpl_->schema_version_major_;
+    return pimpl_->version_;
 }
-int database::schema_version_minor() const
+
+database create_database(const std::string &dir_path,
+		const schema_version &version)
 {
-    return pimpl_->schema_version_minor_;
-}
-int database::schema_version_patch() const
-{
-    return pimpl_->schema_version_patch_;
+	if (version != version_firmware_1_0_0 &&
+		version != version_firmware_1_0_3)
+	{
+		throw unsupported_database_version{
+			"Unsupported database version", version};
+	}
+
+	// TODO - create schema for m.db and p.db
+
+	database db{dir_path};
+	return db;
 }
 
 } // namespace engineprime
+

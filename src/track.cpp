@@ -83,12 +83,8 @@ struct metadata_integer_row
 
 typedef std::vector<metadata_integer_row> int_metadata_vec;
 
-struct performance_data_row
-{
-};
-
 // Utility method for getting std::string out of a stmt
-std::string sqlite3_column_str(sqlite3_stmt *stmt, int index)
+static std::string sqlite3_column_str(sqlite3_stmt *stmt, int index)
 {
 	auto uchar_ptr = sqlite3_column_text(stmt, index);
 	if (uchar_ptr == nullptr)

@@ -20,6 +20,7 @@
 #define BOOST_TEST_MODULE database_test
 
 #include <boost/test/unit_test.hpp>
+#include <ostream>
 #include <string>
 
 #define STRINGIFY(x) STRINGIFY_(x)
@@ -30,6 +31,25 @@ using namespace std;
 
 const std::string sample_path{STRINGIFY(TESTDATA_DIR) "/el1"};
 
+namespace boost {
+namespace test_tools {
+
+	// Why can't BOOST_CHECK_EQUAL find these operators in the global ns?
+	template<>
+	struct print_log_value<ep::schema_version>
+	{
+		void operator ()(std::ostream &os, const ep::schema_version &v)
+		{
+			::operator<<(os, v);
+		}
+	};
+
+	inline bool operator ==(const ep::schema_version &a, const ep::schema_version &b)
+	{
+		return ::operator==(a, b);
+	}
+} // test_tools
+} // boost
 
 BOOST_AUTO_TEST_CASE (ctor)
 {
@@ -46,9 +66,7 @@ BOOST_AUTO_TEST_CASE (information)
     BOOST_CHECK_EQUAL(db.music_db_path(), sample_path + "/m.db");
     BOOST_CHECK_EQUAL(db.performance_db_path(), sample_path + "/p.db");
     
-    BOOST_CHECK_EQUAL(db.uuid(), "e535b170-26ef-4f30-8cb2-5b9fa4c2a27f");
-    BOOST_CHECK_EQUAL(db.schema_version_major(), 1);
-    BOOST_CHECK_EQUAL(db.schema_version_minor(), 6);
-    BOOST_CHECK_EQUAL(db.schema_version_patch(), 0);
+	BOOST_CHECK_EQUAL(db.uuid(), "e535b170-26ef-4f30-8cb2-5b9fa4c2a27f");
+	BOOST_CHECK_EQUAL(db.version(), ep::version_firmware_1_0_0);
 }
 
