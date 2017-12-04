@@ -19,42 +19,29 @@
   #error This library needs at least a C++11 compliant compiler
 #endif
 
-#ifndef ENGINEPRIME_DATABASE_HPP
-#define ENGINEPRIME_DATABASE_HPP
+#ifndef ENGINEPRIME_SCHEMA_HPP
+#define ENGINEPRIME_SCHEMA_HPP
 
-#include <memory>
-#include <ostream>
 #include <stdexcept>
 #include <string>
+#include "sqlite_modern_cpp.h"
 
-#include "schema_version.hpp"
+#include "engineprime/schema_version.hpp"
 
 namespace engineprime {
 
-class database
-{
-public:
+bool is_supported(const schema_version &version);
 
-    explicit database(const std::string &dir_path);
-	database(database &&db) = default;
-    ~database();
+void verify_music_schema(sqlite::database &db);
 
-	bool exists() const;
+void verify_performance_schema(sqlite::database &db);
 
-    const std::string &directory_path() const;
-    const std::string &music_db_path() const;
-    const std::string &performance_db_path() const;
+void create_music_schema(
+        sqlite::database &db, const schema_version &version);
 
-    const std::string &uuid() const;
-	const schema_version &version() const;
-
-private:
-    class impl;
-    std::unique_ptr<impl> pimpl_;
-};
-
-database create_database(const std::string &dir_path, schema_version version);
+void create_performance_schema(
+        sqlite::database &db, const schema_version &version);
 
 } // engineprime
 
-#endif // ENGINEPRIME_DATABASE_HPP
+#endif // ENGINEPRIME_SCHEMA_HPP
