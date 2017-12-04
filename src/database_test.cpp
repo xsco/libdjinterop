@@ -44,7 +44,8 @@ namespace test_tools {
 		}
 	};
 
-	inline bool operator ==(const ep::schema_version &a, const ep::schema_version &b)
+	inline bool operator ==(
+			const ep::schema_version &a, const ep::schema_version &b)
 	{
 		return ::operator==(a, b);
 	}

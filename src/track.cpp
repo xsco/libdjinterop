@@ -20,7 +20,7 @@
 #include <chrono>
 #include <string>
 #include <vector>
-#include "sqlite3_db_raii.hpp"
+#include "sqlite_modern_cpp.h"
 
 namespace engineprime {
 
@@ -83,156 +83,80 @@ struct metadata_integer_row
 
 typedef std::vector<metadata_integer_row> int_metadata_vec;
 
-// Utility method for getting std::string out of a stmt
-static std::string sqlite3_column_str(sqlite3_stmt *stmt, int index)
-{
-	auto uchar_ptr = sqlite3_column_text(stmt, index);
-	if (uchar_ptr == nullptr)
-		return "";
-	return reinterpret_cast<const char *>(uchar_ptr);
-}
 
 // Select a row from the Track table
 track_row select_track_row(const std::string &music_db_path, int id)
 {
-    sqlite3_db_raii m{music_db_path};
+	sqlite::database m_db{music_db_path};
+	track_row row;
+	int rows_found = 0;
+	m_db
+		<< "SELECT id, playOrder, length, lengthCalculated, bpm, year, "
+		   "path, filename, bitrate, bpmAnalyzed, trackType, "
+		   "isExternalTrack, uuidOfExternalDatabase, "
+		   "idTrackInExternalDatabase, idAlbumArt "
+		   "FROM Track WHERE id = :1"
+		<< id
+		>> [&](int id, int play_order, int length, int length_calculated,
+			  int bpm, int year, std::string path, std::string filename,
+			  int bitrate, double bpm_analysed, int track_type,
+			  double is_external_track, std::string uuid_of_external_database,
+			  int id_track_in_external_database, int id_album_art)
+		{
+			row = track_row{
+				play_order, length, length_calculated, bpm, year, path,
+				filename, bitrate, bpm_analysed, track_type, is_external_track,
+				uuid_of_external_database, id_track_in_external_database,
+				id_album_art};
+			++rows_found;
+		};
 
-	// Read from Track table
-	sqlite3_stmt *stmt;
-	if (sqlite3_prepare_v2(m.db,
-		"SELECT id, playOrder, length, lengthCalculated, bpm, year, "
-		    "path, filename, bitrate, bpmAnalyzed, trackType, "
-			"isExternalTrack, uuidOfExternalDatabase, "
-			"idTrackInExternalDatabase, idAlbumArt "
-		"FROM Track WHERE id = :1",
-		-1, &stmt, 0) != SQLITE_OK)
-	{
-       	std::string err_msg_str{sqlite3_errmsg(m.db)};
-	    throw std::runtime_error{err_msg_str};
-	}
-	sqlite3_bind_int(stmt, 1, id);
-	auto rc = sqlite3_step(stmt);
-	if (rc == SQLITE_DONE)
-	{
-		throw nonexistent_track(id);
-	}
-	else if (rc != SQLITE_ROW)
-	{
-        std::string err_msg_str{sqlite3_errmsg(m.db)};
-	    throw std::runtime_error{err_msg_str};
-	}
+	if (rows_found == 0)
+		throw nonexistent_track{id};
 
-	// Set various fields
-	track_row row{
-		sqlite3_column_int(stmt, 1), // playOrder
-		sqlite3_column_int(stmt, 2), // length
-		sqlite3_column_int(stmt, 3), // lengthCalculated
-		sqlite3_column_int(stmt, 4), // bpm
-	    sqlite3_column_int(stmt, 5), // year
-		sqlite3_column_str(stmt, 6), // path
-		sqlite3_column_str(stmt, 7), // filename
-		sqlite3_column_int(stmt, 8), // bitrate
-		sqlite3_column_double(stmt, 9), // bpmAnalyzed
-		sqlite3_column_int(stmt, 10), // trackType
-		sqlite3_column_double(stmt, 11), // isExternalTrack
-		sqlite3_column_str(stmt, 12), // uuidOfExternalDatabase
-		sqlite3_column_int(stmt, 13), // idTrackInExternalDatabase
-		sqlite3_column_int(stmt, 14) // idAlbumArt
-	};
-	sqlite3_finalize(stmt);
 	return row;
 }
 
 str_metadata_vec select_metadata_rows(const std::string &music_db_path, int id)
 {
-	sqlite3_db_raii m{music_db_path};
-
-	// Read from Metadata table
-	sqlite3_stmt *stmt;
-	if (sqlite3_prepare_v2(m.db,
-		"SELECT id, type, text "
-		"FROM Metadata WHERE id = :1",
-		-1, &stmt, 0) != SQLITE_OK)
-	{
-       	std::string err_msg_str{sqlite3_errmsg(m.db)};
-	    throw std::runtime_error{err_msg_str};
-	}
-	sqlite3_bind_int(stmt, 1, id);
-
-	auto rc = sqlite3_step(stmt);
-	if (rc == SQLITE_DONE)
-	{
-		throw track_database_inconsistency{
-			"No entry in Metadata table for track", id};
-	}
-
-	// Iterate through rows (we only know about types 1-16 so far though)
+	sqlite::database m_db{music_db_path};
 	str_metadata_vec results{17};
-	for (; rc != SQLITE_DONE; rc = sqlite3_step(stmt))
-	{
-		if (rc != SQLITE_ROW)
+	m_db
+		<< "SELECT id, type, text FROM Metadata WHERE id = ?"
+		<< id
+		>> [&results](int id, int type, std::string text)
 		{
-	        std::string err_msg_str{sqlite3_errmsg(m.db)};
-		    throw std::runtime_error{err_msg_str};
-		}
+			if (type > 16)
+				// Some new metadata that we don't know about yet!
+				return;
 
-		auto type = sqlite3_column_int(stmt, 1);
-		if (type > 16)
-			// Some new metadata that we don't know about yet!
-			continue;
+			results[type].id = id;
+			results[type].type = type;
+			results[type].text = text;
+		};
 
-		results[type].id   = sqlite3_column_int(stmt, 0); // id
-		results[type].type = type;                        // type
-		results[type].text = sqlite3_column_str(stmt, 2); // text
-	}
-	
 	return results;
 }
 
 int_metadata_vec select_int_metadata_rows(
 		const std::string &music_db_path, int id)
 {
-	sqlite3_db_raii m{music_db_path};
-
-	// Read from Metadata table
-	sqlite3_stmt *stmt;
-	if (sqlite3_prepare_v2(m.db,
-		"SELECT id, type, value "
-		"FROM MetadataInteger WHERE id = :1",
-		-1, &stmt, 0) != SQLITE_OK)
-	{
-       	std::string err_msg_str{sqlite3_errmsg(m.db)};
-	    throw std::runtime_error{err_msg_str};
-	}
-	sqlite3_bind_int(stmt, 1, id);
-
-	auto rc = sqlite3_step(stmt);
-	if (rc == SQLITE_DONE)
-	{
-		throw track_database_inconsistency{
-			"No entry in MetadataInteger table for track", id};
-	}
-
-	// Iterate through rows (we only know about types 1-11 so far though)
+	sqlite::database m_db{music_db_path};
 	int_metadata_vec results{12};
-	for (; rc != SQLITE_DONE; rc = sqlite3_step(stmt))
-	{
-		if (rc != SQLITE_ROW)
+	m_db
+		<< "SELECT id, type, value FROM MetadataInteger WHERE id = ?"
+		<< id
+		>> [&results](int id, int type, int value)
 		{
-	        std::string err_msg_str{sqlite3_errmsg(m.db)};
-		    throw std::runtime_error{err_msg_str};
-		}
+			if (type > 11)
+				// Some new metadata that we don't know about yet!
+				return;
 
-		auto type = sqlite3_column_int(stmt, 1);
-		if (type > 11)
-			// Some new metadata that we don't know about yet!
-			continue;
+			results[type].id    = id;
+			results[type].type  = type;
+			results[type].value = value;
+		};
 
-		results[type].id    = sqlite3_column_int(stmt, 0); // id
-		results[type].type  = type;                        // type
-		results[type].value = sqlite3_column_int(stmt, 2); // value
-	}
-	
 	return results;
 }
 
@@ -296,35 +220,14 @@ int track::album_art_id() const { return pimpl_->track_row_.id_album_art; }
 
 std::vector<int> all_track_ids(const database &database)
 {
-    sqlite3_db_raii m{database.music_db_path()};
-    
-    sqlite3_stmt *stmt;
-    if (sqlite3_prepare_v2(m.db,
-        "SELECT id FROM Track ORDER BY id",
-        -1,
-        &stmt,
-        0) != SQLITE_OK)
-    {
-        std::string err_msg_str{sqlite3_errmsg(m.db)};
-        throw std::runtime_error{err_msg_str};
-    }
-    
-    std::vector<int> results;
-	for (auto rc = sqlite3_step(stmt); rc != SQLITE_DONE;
-			rc = sqlite3_step(stmt))
-    {
-        if (rc != SQLITE_ROW)
-        {
-            std::string err_msg_str{sqlite3_errmsg(m.db)};
-            throw std::runtime_error{err_msg_str};
-        }
-        
-        results.push_back(sqlite3_column_int(stmt, 0));
-    }
-    
-    sqlite3_finalize(stmt);
-    
-    return results;
+	sqlite::database m_db{database.music_db_path()};
+
+	std::vector<int> ids;
+	m_db
+		<< "SELECT id FROM Track ORDER BY id"
+		>> [&ids](int id) { ids.push_back(id); };
+
+	return ids;
 }
 
 } // namespace engineprime

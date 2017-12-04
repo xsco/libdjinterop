@@ -16,6 +16,12 @@ LT_INIT
 AX_CXX_COMPILE_STDCXX([11], [noext], [mandatory])
 
 # Check some mandatory dependencies.
+AC_CHECK_HEADERS([boost/uuid/uuid.hpp], [],
+    [AC_MSG_ERROR([couldn't find boost/uuid/uuid.hpp])])
+AC_CHECK_HEADERS([boost/uuid/uuid_generators.hpp], [],
+    [AC_MSG_ERROR([couldn't find boost/uuid/uuid_generators.hpp])])
+AC_CHECK_HEADERS([boost/uuid/uuid_io.hpp], [],
+    [AC_MSG_ERROR([couldn't find boost/uuid/uuid_io.hpp])])
 AC_CHECK_HEADERS([boost/test/unit_test.hpp], [],
     [AC_MSG_ERROR([couldn't find boost/test/unit_test.hpp])])
 

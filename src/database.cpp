@@ -17,9 +17,12 @@
 
 #include <engineprime/database.hpp>
 
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include <string>
 #include <sys/stat.h>
-#include "sqlite3_db_raii.hpp"
+#include "sqlite_modern_cpp.h"
 
 namespace engineprime {
 
@@ -39,35 +42,12 @@ struct database::impl
         db_m_path_{dir_path_ + "/m.db"},
         db_p_path_{dir_path_ + "/p.db"}
     {
-        sqlite3_db_raii db_m{db_m_path_};
-        
-        // Read from 'Information' table
-        sqlite3_stmt *stmt;
-        if (sqlite3_prepare_v2(db_m.db,
-            "SELECT uuid, schemaVersionMajor, schemaVersionMinor, "
-            "schemaVersionPatch "
-            "FROM Information",
-            -1,
-            &stmt,
-            0) != SQLITE_OK)
-        {
-            std::string err_msg_str{sqlite3_errmsg(db_m.db)};
-            throw std::runtime_error{err_msg_str};
-        }
-        
-        // Expect only a single row in Information
-        if (sqlite3_step(stmt) != SQLITE_ROW)
-        {
-            std::string err_msg_str{sqlite3_errmsg(db_m.db)};
-            throw std::runtime_error{err_msg_str};
-        }
-        
-        uuid_ = sqlite3_column_str(stmt, 0);
-        version_.maj = sqlite3_column_int(stmt, 1);
-        version_.min = sqlite3_column_int(stmt, 2);
-        version_.pat = sqlite3_column_int(stmt, 3);
-        
-        sqlite3_finalize(stmt);
+		sqlite::database m_db{db_m_path_};
+		m_db
+            << "SELECT uuid, schemaVersionMajor, schemaVersionMinor, "
+               "schemaVersionPatch "
+               "FROM Information"
+			>> tie(uuid_, version_.maj, version_.min, version_.pat);
     }
 
 	bool exists()
@@ -113,6 +93,19 @@ const schema_version &database::version() const
     return pimpl_->version_;
 }
 
+static void create_track(sqlite::database &db)
+{
+	// TODO - create schema for the Track table, if it doesn't exist
+}
+
+static void verify_track(sqlite::database &db)
+{
+	// TODO - verify schema for Track table
+	// Use PRAGMA TABLE_INFO('table_name')
+	// and PRAGMA INDEX_LIST('table_name')
+	// and PRAGMA INDEX_INFO('table_name')
+}
+
 database create_database(const std::string &dir_path,
 		const schema_version &version)
 {
@@ -123,7 +116,37 @@ database create_database(const std::string &dir_path,
 			"Unsupported database version", version};
 	}
 
-	// TODO - create schema for m.db and p.db
+	// Ensure the target directory exists
+	struct stat buf;
+	if (stat(dir_path.c_str(), &buf) != 0)
+	{
+		// Create the dir
+		if (mkdir(dir_path.c_str(), 0755) == 0 || errno == EEXIST)
+		{
+			throw std::runtime_error{
+				"Failed to create directory to hold new database"};
+		}
+	}
+
+	// TODO - create schema for m.db
+	{
+		auto m_db_path = dir_path + "/m.db";
+		sqlite::database m_db{m_db_path};
+	}
+
+	// TODO - create schema for p.db
+	{
+		auto p_db_path = dir_path + "/p.db";
+		sqlite::database p_db{p_db_path};
+	}
+
+	// Generate UUIDs for the Information tables
+    boost::uuids::uuid m_uuid{boost::uuids::random_generator()()};
+    boost::uuids::uuid p_uuid{boost::uuids::random_generator()()};
+    auto m_uuid_str = boost::uuids::to_string(m_uuid);
+    auto p_uuid_str = boost::uuids::to_string(m_uuid);
+
+	// Write to the Information table
 
 	database db{dir_path};
 	return db;

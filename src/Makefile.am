@@ -1,7 +1,12 @@
 lib_LTLIBRARIES = libengineprime.la
 
 libengineprime_la_SOURCES = \
-	sqlite3.c sqlite3.h sqlite3_db_raii.hpp \
+	sqlite3.c sqlite3.h \
+	sqlite_modern_cpp.h sqlite_modern_cpp/errors.h sqlite_modern_cpp/log.h \
+	sqlite_modern_cpp/sqlcipher.h sqlite_modern_cpp/lists/error_codes.h \
+	sqlite_modern_cpp/utility/function_traits.h \
+	sqlite_modern_cpp/utility/uncaught_exceptions.h \
+	sqlite_modern_cpp/utility/variant.h \
 	database.cpp \
 	track.cpp
 libengineprime_la_LDFLAGS = -version-info 1:0:0
