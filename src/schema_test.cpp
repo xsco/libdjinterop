@@ -42,3 +42,9 @@ BOOST_AUTO_TEST_CASE (verify_music_db)
     ep::verify_music_schema(db);
 }
 
+BOOST_AUTO_TEST_CASE (verify_performance_db)
+{
+    sqlite::database db{sample_path + "/p.db"};
+    ep::verify_performance_schema(db);
+}
+
