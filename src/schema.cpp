@@ -765,6 +765,37 @@ static void verify_track(sqlite::database &db)
     }
 }
 
+static void verify_performance_data(sqlite::database &db)
+{
+    {
+        table_info cols{db, "PerformanceData"};
+        auto iter = cols.begin(), end = cols.end();
+        validate(iter++, end, "beatData", "BLOB", 0, "", 0);
+        validate(iter++, end, "hasSeratoValues", "NUMERIC", 0, "", 0);
+        validate(iter++, end, "highResolutionWaveFormData", "BLOB", 0, "", 0);
+        validate(iter++, end, "id", "INTEGER", 0, "", 1);
+        validate(iter++, end, "isAnalyzed", "NUMERIC", 0, "", 0);
+        validate(iter++, end, "isRendered", "NUMERIC", 0, "", 0);
+        validate(iter++, end, "loops", "BLOB", 0, "", 0);
+        validate(iter++, end, "overviewWaveFormData", "BLOB", 0, "", 0);
+        validate(iter++, end, "quickCues", "BLOB", 0, "", 0);
+        validate(iter++, end, "trackData", "BLOB", 0, "", 0);
+        validate_no_more(iter, end, "table_info", "PerformanceData");
+    }
+    {
+        index_list indices{db, "PerformanceData"};
+        auto iter = indices.begin(), end = indices.end();
+        validate(iter++, end, "index_PerformanceData_id", 0, "c", 0);
+        validate_no_more(iter, end, "index_list", "PerformanceData");
+    }
+    {
+        index_info ii{db, "index_PerformanceData_id"};
+        auto iter = ii.begin(), end = ii.end();
+        validate(iter++, end, 0, "id");
+        validate_no_more(iter, end, "index_info", "index_PerformanceData_id");
+    }
+}
+
 bool is_supported(const schema_version &version)
 {
     return (
@@ -795,7 +826,7 @@ void verify_music_schema(sqlite::database &db)
 void verify_performance_schema(sqlite::database &db)
 {
     verify_information(db);
-    // TODO - other tables
+    verify_performance_data(db);
 }
 
 void create_music_schema(
