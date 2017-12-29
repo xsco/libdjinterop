@@ -19,6 +19,7 @@
 
 #include <string>
 #include <sys/stat.h>
+#include <tuple>
 #include "sqlite_modern_cpp.h"
 
 #include "schema.hpp"
@@ -37,7 +38,7 @@ struct database::impl
             << "SELECT uuid, schemaVersionMajor, schemaVersionMinor, "
                "schemaVersionPatch "
                "FROM Information"
-            >> tie(uuid_, version_.maj, version_.min, version_.pat);
+            >> std::tie(uuid_, version_.maj, version_.min, version_.pat);
     }
 
     bool exists()

@@ -19,6 +19,7 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE schema_test 
 
+#include <cstdio>
 #include <boost/test/unit_test.hpp>
 #include "engineprime/schema_version.hpp"
 #include "sqlite_modern_cpp.h"
@@ -53,6 +54,15 @@ namespace test_tools {
 } // test_tools
 } // boost
 
+static void temp_setup(const std::string &path)
+{
+    std::remove(path.c_str());
+}
+
+static void temp_teardown(const std::string &path)
+{
+    std::remove(path.c_str());
+}
 
 BOOST_AUTO_TEST_CASE (verify_music_db)
 {
@@ -70,8 +80,13 @@ BOOST_AUTO_TEST_CASE (verify_performance_db_1_0_0)
 
 BOOST_AUTO_TEST_CASE (create_performance_db_1_0_0)
 {
-    sqlite::database db{temp_dir + "/new_p.db"};
+    auto db_path = temp_dir + "/new_p.db";
+    temp_setup(db_path);
+
+    sqlite::database db{db_path};
     ep::create_performance_schema(db, ep::version_firmware_1_0_0);
-    //ep::verify_performance_schema(db);
+    ep::verify_performance_schema(db);
+
+    temp_teardown(db_path);
 }
 
