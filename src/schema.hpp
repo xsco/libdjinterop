@@ -32,9 +32,9 @@ namespace engineprime {
 
 bool is_supported(const schema_version &version);
 
-void verify_music_schema(sqlite::database &db);
+schema_version verify_music_schema(sqlite::database &db);
 
-void verify_performance_schema(sqlite::database &db);
+schema_version verify_performance_schema(sqlite::database &db);
 
 void create_music_schema(
         sqlite::database &db, const schema_version &version);

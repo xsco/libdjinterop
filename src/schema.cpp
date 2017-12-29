@@ -796,6 +796,16 @@ static void verify_performance_data(sqlite::database &db)
     }
 }
 
+static schema_version get_version(sqlite::database &db)
+{
+    schema_version version;
+    db
+        << "SELECT schemaVersionMajor, schemaVersionMinor, schemaVersionPatch "
+           "FROM Information"
+        >> std::tie(version.maj, version.min, version.pat);
+    return version;
+}
+
 bool is_supported(const schema_version &version)
 {
     return (
@@ -803,8 +813,11 @@ bool is_supported(const schema_version &version)
         version == version_firmware_1_0_3);
 }
 
-void verify_music_schema(sqlite::database &db)
+schema_version verify_music_schema(sqlite::database &db)
 {
+    verify_information(db);
+    auto version = get_version(db);
+
     verify_album_art(db);
     verify_copied_track(db);
     verify_crate(db);
@@ -813,7 +826,6 @@ void verify_music_schema(sqlite::database &db)
     verify_crate_track_list(db);
     verify_historylist(db);
     verify_historylist_track_list(db);
-    verify_information(db);
     verify_metadata(db);
     verify_metadata_integer(db);
     verify_playlist(db);
@@ -821,12 +833,17 @@ void verify_music_schema(sqlite::database &db)
     verify_preparelist(db);
     verify_preparelist_track_list(db);
     verify_track(db);
+
+    return version;
 }
 
-void verify_performance_schema(sqlite::database &db)
+schema_version verify_performance_schema(sqlite::database &db)
 {
     verify_information(db);
+    auto version = get_version(db);
+
     verify_performance_data(db);
+    return version;
 }
 
 void create_music_schema(
@@ -842,11 +859,32 @@ void create_music_schema(
 void create_performance_schema(
         sqlite::database &db, const schema_version &version)
 {
-    // TODO - generate schema
+    // Information
+    db << "CREATE TABLE Information ( "
+          "[id] INTEGER, [uuid] TEXT , [schemaVersionMajor] INTEGER , "
+          "[schemaVersionMinor] INTEGER , [schemaVersionPatch] INTEGER , "
+          "[currentPlayedIndiciator] INTEGER , PRIMARY KEY ( [id] ) )";
+    db << "CREATE INDEX index_Information_id ON Information ( id )";
+
+    // PerformanceData
+    db << "CREATE TABLE PerformanceData ( [id] INTEGER, [isAnalyzed] NUMERIC , "
+          "[isRendered] NUMERIC , [trackData] BLOB , "
+          "[highResolutionWaveFormData] BLOB , [overviewWaveFormData] BLOB , "
+          "[beatData] BLOB , [quickCues] BLOB , [loops] BLOB , "
+          "[hasSeratoValues] NUMERIC , PRIMARY KEY ( [id] ) )";
+    db << "CREATE INDEX index_PerformanceData_id ON PerformanceData ( id )";
 
     // Generate UUIDs for the Information table
     boost::uuids::uuid p_uuid{boost::uuids::random_generator()()};
     auto p_uuid_str = boost::uuids::to_string(p_uuid);
+
+    // Insert row into Information
+    /*
+    db << "INSERT INTO Information ([uuid], [schemaVersionMajor], "
+          "[schemaVersionMinor], [schemaVersionPatch], "
+          "[currentPlayedIndiciator]) VALUES (?, ?, ?, ?, ?)"
+       <<
+    */
 }
 
 } // engineprime
