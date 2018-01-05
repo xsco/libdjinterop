@@ -31,6 +31,15 @@
 
 namespace engineprime {
 
+class database_not_found : public std::runtime_error
+{
+public:
+    explicit database_not_found(const std::string &what_arg) noexcept :
+        runtime_error{what_arg}
+    {}
+    virtual ~database_not_found() = default;
+};
+
 class database
 {
 public:
@@ -40,6 +49,9 @@ public:
     ~database();
 
 	bool exists() const;
+    bool is_supported() const;
+
+    void verify() const;
 
     const std::string &directory_path() const;
     const std::string &music_db_path() const;

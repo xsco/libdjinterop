@@ -971,6 +971,8 @@ schema_version verify_music_schema(sqlite::database &db)
     verify_information(db);
     auto version = get_version(db);
 
+    // Note: the version can be used to verify schema differently, should it
+    // ever change in future.
     verify_album_art(db);
     verify_copied_track(db);
     verify_crate(db);
@@ -995,7 +997,10 @@ schema_version verify_performance_schema(sqlite::database &db)
     verify_information(db);
     auto version = get_version(db);
 
+    // Note: the version can be used to verify schema differently, should it
+    // ever change in future.
     verify_performance_data(db);
+
     return version;
 }
 
@@ -1010,7 +1015,137 @@ void create_music_schema(
           "[currentPlayedIndiciator] INTEGER , PRIMARY KEY ( [id] ) )";
     db << "CREATE INDEX index_Information_id ON Information ( id )";
 
-    // TODO - generate schema for other tables
+    // AlbumArt
+    db << "CREATE TABLE AlbumArt ( [id] INTEGER, [hash] TEXT , "
+          "[albumArt] BLOB , PRIMARY KEY ( [id] ) )";
+    db << "CREATE INDEX index_AlbumArt_id ON AlbumArt ( id )";
+    db << "CREATE INDEX index_AlbumArt_hash ON AlbumArt ( hash )";
+
+    // CopiedTrack
+    db << "CREATE TABLE CopiedTrack ( [trackId] INTEGER  "
+          "REFERENCES Track ( id )  ON DELETE CASCADE, "
+          "[uuidOfSourceDatabase] TEXT , [idOfTrackInSourceDatabase] INTEGER , "
+          "PRIMARY KEY ( [trackId] ) )";
+    db << "CREATE INDEX index_CopiedTrack_trackId ON CopiedTrack ( trackId )";
+
+    // Crate
+    db << "CREATE TABLE Crate ( [id] INTEGER, [title] TEXT , [path] TEXT , "
+          "PRIMARY KEY ( [id] ) )";
+    db << "CREATE INDEX index_Crate_id ON Crate ( id )";
+    db << "CREATE INDEX index_Crate_title ON Crate ( title )";
+    db << "CREATE INDEX index_Crate_path ON Crate ( path )";
+    
+    // CrateHierarchy
+    db << "CREATE TABLE CrateHierarchy ( [crateId] INTEGER  "
+          "REFERENCES Crate ( id )  ON DELETE CASCADE, [crateIdChild] INTEGER  "
+          "REFERENCES Crate ( id )  ON DELETE CASCADE)";
+    db << "CREATE INDEX index_CrateHierarchy_crateId ON "
+          "CrateHierarchy ( crateId )";
+    db << "CREATE INDEX index_CrateHierarchy_crateIdChild ON "
+          "CrateHierarchy ( crateIdChild )";
+
+    // CrateParentList
+    db << "CREATE TABLE CrateParentList ( [crateOriginId] INTEGER  "
+          "REFERENCES Crate ( id )  ON DELETE CASCADE, "
+          "[crateParentId] INTEGER  REFERENCES Crate ( id )  "
+          "ON DELETE CASCADE)";
+    db << "CREATE INDEX index_CrateParentList_crateOriginId ON "
+          "CrateParentList ( crateOriginId )";
+    db << "CREATE INDEX index_CrateParentList_crateParentId ON "
+          "CrateParentList ( crateParentId )";
+
+    // CrateTrackList
+    db << "CREATE TABLE CrateTrackList ( [crateId] INTEGER  "
+          "REFERENCES Crate ( id )  ON DELETE CASCADE, [trackId] INTEGER  "
+          "REFERENCES Track ( id )  ON DELETE CASCADE)";
+    db << "CREATE INDEX index_CrateTrackList_crateId ON "
+          "CrateTrackList ( crateId )";
+    db << "CREATE INDEX index_CrateTrackList_trackId ON "
+          "CrateTrackList ( trackId )";
+
+    // Historylist
+    db << "CREATE TABLE Historylist ( [id] INTEGER, [title] TEXT , "
+          "PRIMARY KEY ( [id] ) )";
+    db << "CREATE INDEX index_Historylist_id ON Historylist ( id )";
+
+    // HistorylistTrackList
+    db << "CREATE TABLE HistorylistTrackList ( [historylistId] INTEGER  "
+          "REFERENCES Historylist ( id )  ON DELETE CASCADE, "
+          "[trackId] INTEGER  REFERENCES Track ( id )  ON DELETE CASCADE, "
+          "[trackIdInOriginDatabase] INTEGER , [databaseUuid] TEXT , "
+          "[date] INTEGER )";
+    db << "CREATE INDEX index_HistorylistTrackList_historylistId ON "
+          "HistorylistTrackList ( historylistId )";
+    db << "CREATE INDEX index_HistorylistTrackList_trackId ON "
+          "HistorylistTrackList ( trackId )";
+    db << "CREATE INDEX index_HistorylistTrackList_date ON "
+          "HistorylistTrackList ( date )";
+
+    // Metadata
+    db << "CREATE TABLE MetaData ( [id] INTEGER  REFERENCES Track ( id )  "
+          "ON DELETE CASCADE, [type] INTEGER, [text] TEXT , "
+          "PRIMARY KEY ( [id], [type] ) )";
+    db << "CREATE INDEX index_MetaData_id ON MetaData ( id )";
+    db << "CREATE INDEX index_MetaData_type ON MetaData ( type )";
+    db << "CREATE INDEX index_MetaData_text ON MetaData ( text )";
+
+    // MetadataInteger
+    db << "CREATE TABLE MetaDataInteger ( [id] INTEGER  "
+          "REFERENCES Track ( id )  ON DELETE CASCADE, [type] INTEGER, "
+          "[value] INTEGER , PRIMARY KEY ( [id], [type] ) )";
+    db << "CREATE INDEX index_MetaDataInteger_id ON MetaDataInteger ( id )";
+    db << "CREATE INDEX index_MetaDataInteger_type ON MetaDataInteger ( type )";
+    db << "CREATE INDEX index_MetaDataInteger_value ON MetaDataInteger ( value )";
+
+    // Playlist
+    db << "CREATE TABLE Playlist ( [id] INTEGER, [title] TEXT , "
+          "PRIMARY KEY ( [id] ) )";
+    db << "CREATE INDEX index_Playlist_id ON Playlist ( id )";
+
+    // PlaylistTrackList
+    db << "CREATE TABLE PlaylistTrackList ( [playlistId] INTEGER  "
+          "REFERENCES Playlist ( id )  ON DELETE CASCADE, [trackId] INTEGER  "
+          "REFERENCES Track ( id )  ON DELETE CASCADE, "
+          "[trackIdInOriginDatabase] INTEGER , [databaseUuid] TEXT , "
+          "[trackNumber] INTEGER )";
+    db << "CREATE INDEX index_PlaylistTrackList_playlistId ON "
+          "PlaylistTrackList ( playlistId )";
+    db << "CREATE INDEX index_PlaylistTrackList_trackId ON "
+          "PlaylistTrackList ( trackId )";
+
+    // Preparelist
+    db << "CREATE TABLE Preparelist ( [id] INTEGER, [title] TEXT , "
+          "PRIMARY KEY ( [id] ) )";
+    db << "CREATE INDEX index_Preparelist_id ON Preparelist ( id )";
+
+    // PreparelistTrackList
+    db << "CREATE TABLE PreparelistTrackList ( [playlistId] INTEGER  "
+          "REFERENCES Preparelist ( id )  ON DELETE CASCADE, "
+          "[trackId] INTEGER  REFERENCES Track ( id )  ON DELETE CASCADE, "
+          "[trackIdInOriginDatabase] INTEGER , [databaseUuid] TEXT , "
+          "[trackNumber] INTEGER )";
+    db << "CREATE INDEX index_PreparelistTrackList_playlistId ON "
+          "PreparelistTrackList ( playlistId )";
+    db << "CREATE INDEX index_PreparelistTrackList_trackId ON "
+          "PreparelistTrackList ( trackId )";
+
+    // Track
+    db << "CREATE TABLE Track ( [id] INTEGER, [playOrder] INTEGER , "
+          "[length] INTEGER , [lengthCalculated] INTEGER , [bpm] INTEGER , "
+          "[year] INTEGER , [path] TEXT , [filename] TEXT , "
+          "[bitrate] INTEGER , [bpmAnalyzed] REAL , [trackType] INTEGER , "
+          "[isExternalTrack] NUMERIC , [uuidOfExternalDatabase] TEXT , "
+          "[idTrackInExternalDatabase] INTEGER , [idAlbumArt] INTEGER  "
+          "REFERENCES AlbumArt ( id )  ON DELETE RESTRICT, PRIMARY KEY ( [id] ) )";
+    db << "CREATE INDEX index_Track_id ON Track ( id )";
+    db << "CREATE INDEX index_Track_path ON Track ( path )";
+    db << "CREATE INDEX index_Track_filename ON Track ( filename )";
+    db << "CREATE INDEX index_Track_isExternalTrack ON Track ( isExternalTrack )";
+    db << "CREATE INDEX index_Track_uuidOfExternalDatabase ON "
+          "Track ( uuidOfExternalDatabase )";
+    db << "CREATE INDEX index_Track_idTrackInExternalDatabase ON "
+          "Track ( idTrackInExternalDatabase )";
+    db << "CREATE INDEX index_Track_idAlbumArt ON Track ( idAlbumArt )";
 
     // Generate UUIDs for the Information table
     boost::uuids::uuid uuid{boost::uuids::random_generator()()};

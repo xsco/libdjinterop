@@ -25,8 +25,13 @@ AC_CHECK_HEADERS([boost/uuid/uuid_io.hpp], [],
 AC_CHECK_HEADERS([boost/test/unit_test.hpp], [],
     [AC_MSG_ERROR([couldn't find boost/test/unit_test.hpp])])
 
+# Check optional dependencies.
+AC_CHECK_HEADERS([boost/filesystem.hpp], [],
+    [AC_MSG_WARN([couldn't find boost/filesystem.hpp, which is needed for unit testing])])
+
 # Library names.
 AC_SUBST([BOOST_SYSTEM_LDADD], [-lboost_system])
+AC_SUBST([BOOST_FILESYSTEM_LDADD], [-lboost_filesystem])
 AC_SUBST([BOOST_UTF_LDADD], [-lboost_unit_test_framework])
 
 # Makefiles

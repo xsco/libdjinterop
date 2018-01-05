@@ -30,6 +30,7 @@ namespace ep = engineprime;
 using namespace std;
 
 const std::string sample_path{STRINGIFY(TESTDATA_DIR) "/el1"};
+const std::string fake_path{STRINGIFY(TESTDATA_DIR) "/elfake"};
 
 namespace boost {
 namespace test_tools {
@@ -58,7 +59,34 @@ BOOST_AUTO_TEST_CASE (ctor)
     ep::database{sample_path};
 }
 
-BOOST_AUTO_TEST_CASE (information)
+BOOST_AUTO_TEST_CASE (exists__valid_db__true)
+{
+    // Check that a valid database is reported as existing
+    ep::database db{sample_path};
+    BOOST_CHECK_EQUAL(db.exists(), true);
+}
+
+BOOST_AUTO_TEST_CASE (exists__fake_db__false)
+{
+    // Check that a fake database is reported as not existing
+    ep::database db{fake_path};
+    BOOST_CHECK_EQUAL(db.exists(), false);
+}
+
+BOOST_AUTO_TEST_CASE(is_supported__valid_db__valid_version)
+{
+    ep::database db{sample_path};
+    auto supported = db.is_supported();
+    BOOST_CHECK_EQUAL(supported, true);
+}
+
+BOOST_AUTO_TEST_CASE(verify__valid_db__no_throw)
+{
+    ep::database db{sample_path};
+    db.verify();
+}
+
+BOOST_AUTO_TEST_CASE (information__valid_db__expected)
 {
     // Assess correctness of values sourced from the 'Information' table
     ep::database db{sample_path};

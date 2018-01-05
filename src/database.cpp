@@ -33,20 +33,53 @@ struct database::impl
         db_m_path_{dir_path_ + "/m.db"},
         db_p_path_{dir_path_ + "/p.db"}
     {
-        sqlite::database m_db{db_m_path_};
-        m_db
-            << "SELECT uuid, schemaVersionMajor, schemaVersionMinor, "
-               "schemaVersionPatch "
-               "FROM Information"
-            >> std::tie(uuid_, version_.maj, version_.min, version_.pat);
+        if (exists())
+        {
+            sqlite::database m_db{db_m_path_};
+            m_db
+                << "SELECT uuid, schemaVersionMajor, schemaVersionMinor, "
+                   "schemaVersionPatch "
+                   "FROM Information"
+                >> std::tie(uuid_, version_.maj, version_.min, version_.pat);
+        }
     }
 
-    bool exists()
+    bool exists() const
     {
         struct stat buffer;
         auto m_exists = stat(db_m_path_.c_str(), &buffer) == 0;
         auto p_exists = stat(db_p_path_.c_str(), &buffer) == 0;
         return m_exists && p_exists;
+    }
+
+    bool is_supported() const
+    {
+        return ::engineprime::is_supported(version_);
+    }
+
+    void verify()
+    {
+        // Check for existence of files on disk
+        struct stat buffer;
+        auto m_exists = stat(db_m_path_.c_str(), &buffer) == 0;
+        if (!m_exists)
+        {
+            throw database_not_found{db_m_path_};
+        }
+
+        auto p_exists = stat(db_p_path_.c_str(), &buffer) == 0;
+        if (!p_exists)
+        {
+            throw database_not_found{db_p_path_};
+        }
+
+        // Verify music schema
+        sqlite::database m_db{db_m_path_};
+        verify_music_schema(m_db);
+
+        // Verify performance schema
+        sqlite::database p_db{db_p_path_};
+        verify_performance_schema(p_db);
     }
     
     std::string dir_path_;
@@ -62,6 +95,20 @@ database::database(const std::string &dir_path) :
 {}
 
 database::~database() = default;
+
+bool database::exists() const
+{
+    return pimpl_->exists();
+}
+bool database::is_supported() const
+{
+    return pimpl_->is_supported();
+}
+
+void database::verify() const
+{
+    pimpl_->verify();
+}
 
 const std::string &database::directory_path() const
 {

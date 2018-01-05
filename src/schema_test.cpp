@@ -21,6 +21,7 @@
 
 #include <cstdio>
 #include <boost/test/unit_test.hpp>
+#include <boost/filesystem.hpp>
 #include "engineprime/schema_version.hpp"
 #include "sqlite_modern_cpp.h"
 
@@ -28,6 +29,7 @@
 #define STRINGIFY_(x) #x
 
 namespace ep = engineprime;
+namespace fs = boost::filesystem;
 using namespace std;
 
 const std::string sample_path{STRINGIFY(TESTDATA_DIR) "/el1"};
@@ -54,20 +56,23 @@ namespace test_tools {
 } // test_tools
 } // boost
 
-static void temp_setup(const std::string &path)
+static fs::path create_temp_dir()
 {
-    std::remove(path.c_str());
+    fs::path temp_dir{fs::temp_directory_path()};
+    temp_dir /= fs::unique_path();
+    if (!fs::create_directory(temp_dir))
+    {
+        throw std::runtime_error{"Failed to create tmp_dir"};
+    }
+    return temp_dir;
 }
 
-static void temp_teardown(const std::string &path)
-{
-    std::remove(path.c_str());
-}
-
-BOOST_AUTO_TEST_CASE (verify_music_db)
+BOOST_AUTO_TEST_CASE (verify_music_db_1_0_0)
 {
     sqlite::database db{sample_path + "/m.db"};
-    ep::verify_music_schema(db);
+    auto version = ep::verify_music_schema(db);
+
+	BOOST_CHECK_EQUAL(version, ep::version_firmware_1_0_0);
 }
 
 BOOST_AUTO_TEST_CASE (verify_performance_db_1_0_0)
@@ -78,15 +83,27 @@ BOOST_AUTO_TEST_CASE (verify_performance_db_1_0_0)
 	BOOST_CHECK_EQUAL(version, ep::version_firmware_1_0_0);
 }
 
+BOOST_AUTO_TEST_CASE (create_music_db_1_0_0)
+{
+    auto temp_dir = create_temp_dir();
+    auto db_path = temp_dir / "m.db";
+
+    sqlite::database db{db_path.string()};
+    ep::create_music_schema(db, ep::version_firmware_1_0_0);
+    ep::verify_music_schema(db);
+
+    fs::remove_all(temp_dir);
+}
+
 BOOST_AUTO_TEST_CASE (create_performance_db_1_0_0)
 {
-    auto db_path = temp_dir + "/new_p.db";
-    temp_setup(db_path);
+    auto temp_dir = create_temp_dir();
+    auto db_path = temp_dir / "p.db";
 
-    sqlite::database db{db_path};
+    sqlite::database db{db_path.string()};
     ep::create_performance_schema(db, ep::version_firmware_1_0_0);
     ep::verify_performance_schema(db);
 
-    temp_teardown(db_path);
+    fs::remove_all(temp_dir);
 }
 

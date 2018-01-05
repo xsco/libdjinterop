@@ -54,6 +54,8 @@ schema_test_SOURCES = \
 schema_test_CXXFLAGS = \
 	-DTESTDATA_DIR="../testdata"
 schema_test_LDADD = \
+	$(BOOST_SYSTEM_LDADD) \
+	$(BOOST_FILESYSTEM_LDADD) \
 	$(BOOST_UTF_LDADD) \
 	libengineprime.la \
 	-lpthread -ldl
