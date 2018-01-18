@@ -9,8 +9,11 @@ libengineprime_la_SOURCES = \
 	sqlite_modern_cpp/utility/variant.h \
 	schema.cpp schema.hpp \
 	database.cpp \
-	track.cpp
+	track.cpp \
+	performance_data.cpp
+libengineprime_la_CXXFLAGS = $(ZLIB_CFLAGS)
 libengineprime_la_LDFLAGS = -version-info 1:0:0
+libengineprime_la_LIBADD = $(ZLIB_LIBS) $(BOOST_IOSTREAMS_LIBS)
 
 nobase_include_HEADERS = \
 	engineprime/engineprime.hpp \
@@ -31,7 +34,7 @@ database_test_SOURCES = \
 database_test_CXXFLAGS = \
 	-DTESTDATA_DIR="../testdata"
 database_test_LDADD = \
-	$(BOOST_UTF_LDADD) \
+	$(BOOST_UTF_LIBS) \
 	libengineprime.la \
 	-lpthread -ldl
 
@@ -43,7 +46,7 @@ track_test_SOURCES = \
 track_test_CXXFLAGS = \
 	-DTESTDATA_DIR="../testdata"
 track_test_LDADD = \
-	$(BOOST_UTF_LDADD) \
+	$(BOOST_UTF_LIBS) \
 	libengineprime.la \
 	-lpthread -ldl
 
@@ -54,9 +57,9 @@ schema_test_SOURCES = \
 schema_test_CXXFLAGS = \
 	-DTESTDATA_DIR="../testdata"
 schema_test_LDADD = \
-	$(BOOST_SYSTEM_LDADD) \
-	$(BOOST_FILESYSTEM_LDADD) \
-	$(BOOST_UTF_LDADD) \
+	$(BOOST_SYSTEM_LIBS) \
+	$(BOOST_FILESYSTEM_LIBS) \
+	$(BOOST_UTF_LIBS) \
 	libengineprime.la \
 	-lpthread -ldl
 

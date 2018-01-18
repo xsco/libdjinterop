@@ -33,6 +33,19 @@
 
 namespace engineprime {
 
+class nonexistent_performance_data : public std::invalid_argument
+{
+public:
+	explicit nonexistent_performance_data(int track_id) noexcept :
+		invalid_argument{"PerformanceData does not exist in database"},
+		track_id_{track_id}
+	{}
+	virtual ~nonexistent_performance_data() = default;
+	int track_id() const noexcept { return track_id_; }
+private:
+	int track_id_;
+};
+
 enum class musical_key
 {
     a_minor = 1,
@@ -71,14 +84,14 @@ struct pad_colour
 
 struct standard_pad_colours
 {
-    static const pad_colour pad_1{ 0xEA, 0xC5, 0x32, 0xFF };
-    static const pad_colour pad_2{ 0xEA, 0x8F, 0x32, 0xFF };
-    static const pad_colour pad_3{ 0xB8, 0x55, 0xBF, 0xFF };
-    static const pad_colour pad_4{ 0xBA, 0x2A, 0x41, 0xFF };
-    static const pad_colour pad_5{ 0x86, 0xC6, 0x4B, 0xFF };
-    static const pad_colour pad_6{ 0x20, 0xC6, 0x7C, 0xFF };
-    static const pad_colour pad_7{ 0x00, 0xA8, 0xB1, 0xFF };
-    static const pad_colour pad_8{ 0x15, 0x8E, 0xE2, 0xFF };
+    static constexpr pad_colour pad_1{ 0xEA, 0xC5, 0x32, 0xFF };
+    static constexpr pad_colour pad_2{ 0xEA, 0x8F, 0x32, 0xFF };
+    static constexpr pad_colour pad_3{ 0xB8, 0x55, 0xBF, 0xFF };
+    static constexpr pad_colour pad_4{ 0xBA, 0x2A, 0x41, 0xFF };
+    static constexpr pad_colour pad_5{ 0x86, 0xC6, 0x4B, 0xFF };
+    static constexpr pad_colour pad_6{ 0x20, 0xC6, 0x7C, 0xFF };
+    static constexpr pad_colour pad_7{ 0x00, 0xA8, 0xB1, 0xFF };
+    static constexpr pad_colour pad_8{ 0x15, 0x8E, 0xE2, 0xFF };
 };
 
 struct track_beat_grid
@@ -110,10 +123,11 @@ struct track_loop
 class performance_data
 {
 public:
-	performance_data(const database &db, int id);
+	performance_data(const database &db, int track_id);
 	~performance_data();
 
-	int id() const;
+	int track_id() const;
+    /*
     std::chrono::seconds duration() const;
     double sample_rate() const;
     int_least64_t total_samples() const;
@@ -134,6 +148,7 @@ public:
 			(adjusted_beat_grid.last_beat_sample_offset -
 			 adjusted_beat_grid.first_beat_sample_offset);
 	}
+    */
 
 private:
 	class impl;
