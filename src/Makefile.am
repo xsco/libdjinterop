@@ -24,7 +24,7 @@ nobase_include_HEADERS = \
 	engineprime/album_art.hpp
 
 # Unit test programs
-check_PROGRAMS = database_test track_test schema_test
+check_PROGRAMS = database_test track_test schema_test performance_data_test
 TESTS = $(check_PROGRAMS)
 
 # Database test
@@ -59,6 +59,18 @@ schema_test_CXXFLAGS = \
 schema_test_LDADD = \
 	$(BOOST_SYSTEM_LIBS) \
 	$(BOOST_FILESYSTEM_LIBS) \
+	$(BOOST_UTF_LIBS) \
+	libengineprime.la \
+	-lpthread -ldl
+
+# Performance data test
+performance_data_test_SOURCES = \
+	performance_data_test.cpp \
+	performance_data.cpp 
+performance_data_test_CXXFLAGS = \
+	-DTESTDATA_DIR="../testdata"
+performance_data_test_LDADD = \
+	$(BOOST_SYSTEM_LIBS) \
 	$(BOOST_UTF_LIBS) \
 	libengineprime.la \
 	-lpthread -ldl

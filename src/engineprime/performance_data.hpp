@@ -46,6 +46,19 @@ private:
 	int track_id_;
 };
 
+class corrupt_performance_data : public std::invalid_argument
+{
+public:
+    explicit corrupt_performance_data(int track_id) noexcept :
+        invalid_argument{"PerformanceData is corrupted or of unknown format"},
+        track_id_{track_id}
+    {}
+	virtual ~corrupt_performance_data() = default;
+	int track_id() const noexcept { return track_id_; }
+private:
+	int track_id_;
+};
+
 enum class musical_key
 {
     a_minor = 1,
@@ -127,19 +140,19 @@ public:
 	~performance_data();
 
 	int track_id() const;
-    /*
-    std::chrono::seconds duration() const;
+    //std::chrono::seconds duration() const;
     double sample_rate() const;
     int_least64_t total_samples() const;
-    const musical_key &key() const;
+    //const musical_key &key() const;
     double average_loudness() const;
-    const track_beat_grid &default_beat_grid() const;
-    const track_beat_grid &adjusted_beat_grid() const;
-    const std::vector<track_hot_cue_point> &hot_cues() const;
-    double adjusted_main_cue_sample_offset() const;
-    double default_main_cue_sample_offset() const;
-    const std::vector<track_loop> &loops() const;
+    //const track_beat_grid &default_beat_grid() const;
+    //const track_beat_grid &adjusted_beat_grid() const;
+    //const std::vector<track_hot_cue_point> &hot_cues() const;
+    //double adjusted_main_cue_sample_offset() const;
+    //double default_main_cue_sample_offset() const;
+    //const std::vector<track_loop> &loops() const;
 
+    /*
 	double bpm() const
 	{
 		return sample_rate * 60 *
