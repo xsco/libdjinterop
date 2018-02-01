@@ -140,10 +140,9 @@ public:
 	~performance_data();
 
 	int track_id() const;
-    //std::chrono::seconds duration() const;
     double sample_rate() const;
     int_least64_t total_samples() const;
-    //const musical_key &key() const;
+    musical_key key() const;
     double average_loudness() const;
     //const track_beat_grid &default_beat_grid() const;
     //const track_beat_grid &adjusted_beat_grid() const;
@@ -151,6 +150,12 @@ public:
     //double adjusted_main_cue_sample_offset() const;
     //double default_main_cue_sample_offset() const;
     //const std::vector<track_loop> &loops() const;
+
+    std::chrono::milliseconds duration() const
+    {
+        auto ms = 1000 * total_samples() / (int_least64_t)sample_rate();
+        return std::chrono::milliseconds{ms};
+    }
 
     /*
 	double bpm() const
