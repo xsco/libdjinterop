@@ -22,42 +22,10 @@
 #include <string>
 #include <vector>
 #include <cstdint>
-#include <boost/iostreams/device/back_inserter.hpp>
-#include <boost/iostreams/filtering_stream.hpp>
-#include <boost/iostreams/filter/zlib.hpp>
 #include "sqlite_modern_cpp.h"
-
-namespace io = boost::iostreams;
+#include "performance_data_format.hpp"
 
 namespace engineprime {
-
-
-struct track_data_blob
-{
-    double sample_rate;
-    int64_t total_samples;
-    double average_loudness;
-    int32_t key;
-};
-
-struct beat_data_marker_blob
-{
-    double sample_offset;
-    int64_t beat_index;
-    int32_t beats_until_next_marker;
-    int32_t unknown_field_1;
-};
-
-struct beat_data_blob
-{
-    double sample_rate;
-    int64_t total_samples;
-    int8_t is_beat_data_set;
-    int64_t default_num_beatgrid_markers;
-    std::vector<beat_data_marker_blob> default_markers;
-    int64_t adjusted_num_beatgrid_markers;
-    std::vector<beat_data_marker_blob> adjusted_markers;
-};
 
 struct performance_data_row
 {
@@ -68,179 +36,10 @@ struct performance_data_row
     // TODO - high_resolution_wave_form_data
     // TODO - overview_wave_form_data
     beat_data_blob beat_data;
-    // TODO - quick_cues
-    // TODO - loops
+    quick_cues_blob quick_cues;
+    loops_blob loops;
     double has_serato_values;
 };
-
-// Uncompress a zlib'ed BLOB
-static void uncompress(
-        int track_id,
-        const std::vector<char> &compressed,
-        std::vector<char> &uncompressed)
-{
-    if (compressed.size() < 4)
-        throw corrupt_performance_data(track_id);
-
-    auto apparent_size = *reinterpret_cast<const uint32_t *>(compressed.data());
-    if (apparent_size == 0)
-        throw corrupt_performance_data(track_id);
-
-    uncompressed.clear();
-    uncompressed.reserve(apparent_size);
-
-    io::filtering_ostream out;
-    out.push(io::zlib_decompressor{});
-    out.push(io::back_inserter(uncompressed));
-    io::write(out, &compressed[4], compressed.size() - 4);
-}
-
-// Extract an int8_t from a raw value at ptr address
-static int32_t extract_int8(const char *ptr)
-{
-    return static_cast<const unsigned char>(*ptr);
-}
-
-// Extract an int32_t from a little-endian encoded raw value at ptr address
-static int32_t extract_int32_le(const char *ptr)
-{
-    int64_t val = 0;
-    for (int i = 0; i < 4; ++i)
-    {
-        val <<= 8;
-        val |= static_cast<const unsigned char>(*(ptr + 3 - i));
-    }
-    return val;
-}
-
-// Extract an int32_t from a big-endian encoded raw value at ptr address
-static int32_t extract_int32_be(const char *ptr)
-{
-    int64_t val = 0;
-    for (int i = 0; i < 4; ++i)
-    {
-        val <<= 8;
-        val |= static_cast<const unsigned char>(*ptr++);
-    }
-    return val;
-}
-
-// Extract an int64_t from a little-endian encoded raw value at ptr address
-static int64_t extract_int64_le(const char *ptr)
-{
-    int64_t val = 0;
-    for (int i = 0; i < 8; ++i)
-    {
-        val <<= 8;
-        val |= static_cast<const unsigned char>(*(ptr + 7 - i));
-    }
-    return val;
-}
-
-// Extract an int64_t from a big-endian encoded raw value at ptr address
-static int64_t extract_int64_be(const char *ptr)
-{
-    int64_t val = 0;
-    for (int i = 0; i < 8; ++i)
-    {
-        val <<= 8;
-        val |= static_cast<const unsigned char>(*ptr++);
-    }
-    return val;
-}
-
-// Extract a double from a little-endian encoded raw value at ptr address
-static double extract_double_le(const char *ptr)
-{
-    auto val = extract_int64_le(ptr);
-    return *reinterpret_cast<double *>(&val);
-}
-
-// Extract a double from a big-endian encoded raw value at ptr address
-static double extract_double_be(const char *ptr)
-{
-    auto val = extract_int64_be(ptr);
-    return *reinterpret_cast<double *>(&val);
-}
-
-// Extract track data from a blob
-static void extract_track_data(
-        int track_id,
-        const std::vector<char> &compressed_track_data,
-        track_data_blob &track_data)
-{
-    // Uncompress
-    std::vector<char> raw_data;
-    uncompress(track_id, compressed_track_data, raw_data);
-    auto ptr = raw_data.data();
-
-    // track_data should always be 28 bytes long
-    if (raw_data.size() != 28)
-        throw corrupt_performance_data{track_id};
-
-    // Extract values from raw data
-    track_data.sample_rate      = extract_double_be(ptr     );
-    track_data.total_samples    = extract_int64_be (ptr + 8 );
-    track_data.average_loudness = extract_double_be(ptr + 16);
-    track_data.key              = extract_int32_be (ptr + 24);
-}
-
-// Extract beat data from a blob
-static void extract_beat_data(
-        int track_id,
-        const std::vector<char> &compressed_beat_data,
-        beat_data_blob &beat_data)
-{
-    // Uncompress
-    std::vector<char> raw_data;
-    uncompress(track_id, compressed_beat_data, raw_data);
-    auto ptr = raw_data.data();
-
-    // Minimum length of 129 bytes
-    if (raw_data.size() < 129)
-        throw corrupt_performance_data{track_id};
-
-    // Extract fixed-location values from raw data
-    beat_data.sample_rate      = extract_double_be(ptr     );
-    beat_data.total_samples    = extract_int64_be (ptr + 8 );
-    beat_data.is_beat_data_set = extract_int8     (ptr + 16);
-
-    // Default beat grid
-    beat_data.default_num_beatgrid_markers = extract_int64_be(ptr + 17);
-    if (beat_data.default_num_beatgrid_markers < 2)
-        throw corrupt_performance_data{track_id};
-    beat_data.default_markers.reserve(beat_data.default_num_beatgrid_markers);
-    auto marker_ptr = ptr + 25;
-    for (int i = 0; i < beat_data.default_num_beatgrid_markers; ++i)
-    {
-        if (marker_ptr - ptr > raw_data.size())
-            throw corrupt_performance_data{track_id};
-        auto &marker = beat_data.default_markers[i];
-        marker.sample_offset           = extract_double_le(marker_ptr     );
-        marker.beat_index              = extract_int64_le (marker_ptr + 8 );
-        marker.beats_until_next_marker = extract_int32_le (marker_ptr + 16);
-        marker.unknown_field_1         = extract_int32_le (marker_ptr + 20);
-        marker_ptr += 24;
-    }
-
-    // Adjusted beat grid
-    marker_ptr = ptr + 25 + 8 + (beat_data.default_num_beatgrid_markers * 24);
-    beat_data.adjusted_num_beatgrid_markers = extract_int64_be(marker_ptr - 8);
-    if (beat_data.adjusted_num_beatgrid_markers < 2)
-        throw corrupt_performance_data{track_id};
-    beat_data.adjusted_markers.reserve(beat_data.adjusted_num_beatgrid_markers);
-    for (int i = 0; i < beat_data.adjusted_num_beatgrid_markers; ++i)
-    {
-        if (marker_ptr - ptr > raw_data.size())
-            throw corrupt_performance_data{track_id};
-        auto &marker = beat_data.adjusted_markers[i];
-        marker.sample_offset           = extract_double_le(marker_ptr     );
-        marker.beat_index              = extract_int64_le (marker_ptr + 8 );
-        marker.beats_until_next_marker = extract_int32_le (marker_ptr + 16);
-        marker.unknown_field_1         = extract_int32_le (marker_ptr + 20);
-        marker_ptr += 24;
-    }
-}
 
 // Select out a row from the PerformanceData table
 static performance_data_row extract_performance_data(
@@ -276,6 +75,8 @@ static performance_data_row extract_performance_data(
 
             extract_track_data(id, track_data, row.track_data);
             extract_beat_data(id, beat_data, row.beat_data);
+            extract_quick_cues(id, quick_cues, row.quick_cues);
+            extract_loops(id, loops, row.loops);
 
             row.has_serato_values = has_serato_values;
 			++rows_found;
@@ -330,10 +131,59 @@ performance_data::performance_data(
 
 performance_data::~performance_data() = default;
 
-int performance_data::track_id() const { return pimpl_->track_id_; }
-double performance_data::sample_rate() const { return pimpl_->pd_.track_data.sample_rate; }
-int_least64_t performance_data::total_samples() const { return pimpl_->pd_.track_data.total_samples; }
-musical_key performance_data::key() const { return static_cast<musical_key>(pimpl_->pd_.track_data.key); }
-double performance_data::average_loudness() const { return pimpl_->pd_.track_data.average_loudness; }
+int performance_data::track_id() const
+{
+    return pimpl_->track_id_;
+}
+
+double performance_data::sample_rate() const
+{
+    return pimpl_->pd_.track_data.sample_rate;
+}
+
+int_least64_t performance_data::total_samples() const
+{
+    return pimpl_->pd_.track_data.total_samples;
+}
+
+musical_key performance_data::key() const
+{
+    return static_cast<musical_key>(pimpl_->pd_.track_data.key);
+}
+
+double performance_data::average_loudness() const
+{
+    return pimpl_->pd_.track_data.average_loudness;
+}
+
+const track_beat_grid &performance_data::default_beat_grid() const
+{
+    return pimpl_->default_beat_grid_;
+}
+
+const track_beat_grid &performance_data::adjusted_beat_grid() const
+{
+    return pimpl_->adjusted_beat_grid_;
+}
+
+const std::vector<track_hot_cue_point> &performance_data::hot_cues() const
+{
+    return pimpl_->pd_.quick_cues.hot_cues;
+}
+
+double performance_data::adjusted_main_cue_sample_offset() const
+{
+    return pimpl_->pd_.quick_cues.adjusted_main_cue_sample_offset;
+}
+
+double performance_data::default_main_cue_sample_offset() const
+{
+    return pimpl_->pd_.quick_cues.default_main_cue_sample_offset;
+}
+
+const std::vector<track_loop> &performance_data::loops() const
+{
+    return pimpl_->pd_.loops.loops;
+}
 
 } // namespace engineprime

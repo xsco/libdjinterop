@@ -1,4 +1,4 @@
-AC_INIT([libengineprime], [1.0.0], [bugs@xsco.org], [libengineprime])
+AC_INIT([libengineprime], [0.5.0], [bugs@xsco.org], [libengineprime])
 #AM_SILENT_RULES([yes])
 AM_INIT_AUTOMAKE([-Wall -Werror])
 
@@ -12,10 +12,13 @@ AM_PROG_AR
 
 LT_INIT
 
+# Library interface version
+AC_SUBST([LIBENGINEPRIME_INTERFACE_VERSION], [0:0:0])
+
 # Require C++11
 AX_CXX_COMPILE_STDCXX([11], [noext], [mandatory])
 
-# Check some mandatory dependencies.
+# Check some mandatory dependencies
 PKG_CHECK_MODULES([ZLIB], [zlib])
 AC_CHECK_HEADERS([boost/uuid/uuid.hpp], [],
     [AC_MSG_ERROR([couldn't find boost/uuid/uuid.hpp])])
@@ -26,13 +29,13 @@ AC_CHECK_HEADERS([boost/uuid/uuid_io.hpp], [],
 AC_CHECK_HEADERS([boost/iostreams/filter/zlib.hpp], [],
     [AC_MSG_ERROR([couldn't find boost/iostreams/filter/zlib.hpp])])
 
-# Check optional dependencies.
+# Check optional dependencies
 AC_CHECK_HEADERS([boost/test/unit_test.hpp], [],
     [AC_MSG_WARN([couldn't find boost/test/unit_test.hpp, which is needed for unit testing])])
 AC_CHECK_HEADERS([boost/filesystem.hpp], [],
     [AC_MSG_WARN([couldn't find boost/filesystem.hpp, which is needed for unit testing])])
 
-# Library names.
+# Library names
 AC_SUBST([BOOST_SYSTEM_LIBS], [-lboost_system])
 AC_SUBST([BOOST_IOSTREAMS_LIBS], [-lboost_iostreams])
 AC_SUBST([BOOST_FILESYSTEM_LIBS], [-lboost_filesystem])

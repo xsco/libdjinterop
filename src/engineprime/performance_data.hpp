@@ -53,6 +53,10 @@ public:
         invalid_argument{"PerformanceData is corrupted or of unknown format"},
         track_id_{track_id}
     {}
+    explicit corrupt_performance_data(int track_id, const char *msg) noexcept :
+        invalid_argument{msg},
+        track_id_{track_id}
+    {}
 	virtual ~corrupt_performance_data() = default;
 	int track_id() const noexcept { return track_id_; }
 private:
@@ -95,17 +99,17 @@ struct pad_colour
     uint_least8_t a;
 };
 
-struct standard_pad_colours
+namespace standard_pad_colours
 {
-    static constexpr pad_colour pad_1{ 0xEA, 0xC5, 0x32, 0xFF };
-    static constexpr pad_colour pad_2{ 0xEA, 0x8F, 0x32, 0xFF };
-    static constexpr pad_colour pad_3{ 0xB8, 0x55, 0xBF, 0xFF };
-    static constexpr pad_colour pad_4{ 0xBA, 0x2A, 0x41, 0xFF };
-    static constexpr pad_colour pad_5{ 0x86, 0xC6, 0x4B, 0xFF };
-    static constexpr pad_colour pad_6{ 0x20, 0xC6, 0x7C, 0xFF };
-    static constexpr pad_colour pad_7{ 0x00, 0xA8, 0xB1, 0xFF };
-    static constexpr pad_colour pad_8{ 0x15, 0x8E, 0xE2, 0xFF };
-};
+    constexpr pad_colour pad_1{ 0xEA, 0xC5, 0x32, 0xFF };
+    constexpr pad_colour pad_2{ 0xEA, 0x8F, 0x32, 0xFF };
+    constexpr pad_colour pad_3{ 0xB8, 0x55, 0xBF, 0xFF };
+    constexpr pad_colour pad_4{ 0xBA, 0x2A, 0x41, 0xFF };
+    constexpr pad_colour pad_5{ 0x86, 0xC6, 0x4B, 0xFF };
+    constexpr pad_colour pad_6{ 0x20, 0xC6, 0x7C, 0xFF };
+    constexpr pad_colour pad_7{ 0x00, 0xA8, 0xB1, 0xFF };
+    constexpr pad_colour pad_8{ 0x15, 0x8E, 0xE2, 0xFF };
+}
 
 struct track_beat_grid
 {
@@ -125,11 +129,14 @@ struct track_hot_cue_point
 
 struct track_loop
 {
-    bool is_set;
+    bool is_start_set;
+    bool is_end_set;
     std::string label;
     double start_sample_offset;
     double end_sample_offset;
     pad_colour colour;
+
+    bool is_set() const { return is_start_set && is_end_set; }
 };
 
 // The results of track analysis
@@ -144,12 +151,12 @@ public:
     int_least64_t total_samples() const;
     musical_key key() const;
     double average_loudness() const;
-    //const track_beat_grid &default_beat_grid() const;
-    //const track_beat_grid &adjusted_beat_grid() const;
-    //const std::vector<track_hot_cue_point> &hot_cues() const;
-    //double adjusted_main_cue_sample_offset() const;
-    //double default_main_cue_sample_offset() const;
-    //const std::vector<track_loop> &loops() const;
+    const track_beat_grid &default_beat_grid() const;
+    const track_beat_grid &adjusted_beat_grid() const;
+    const std::vector<track_hot_cue_point> &hot_cues() const;
+    double adjusted_main_cue_sample_offset() const;
+    double default_main_cue_sample_offset() const;
+    const std::vector<track_loop> &loops() const;
 
     std::chrono::milliseconds duration() const
     {
@@ -157,21 +164,24 @@ public:
         return std::chrono::milliseconds{ms};
     }
 
-    /*
 	double bpm() const
 	{
-		return sample_rate * 60 *
-			(double)(adjusted_beat_grid.last_beat_index -
-			 adjusted_beat_grid.first_beat_index) /
-			(adjusted_beat_grid.last_beat_sample_offset -
-			 adjusted_beat_grid.first_beat_sample_offset);
+		return sample_rate() * 60 *
+			(double)(adjusted_beat_grid().last_beat_index -
+			 adjusted_beat_grid().first_beat_index) /
+			(adjusted_beat_grid().last_beat_sample_offset -
+			 adjusted_beat_grid().first_beat_sample_offset);
 	}
-    */
 
 private:
 	class impl;
 	std::unique_ptr<impl> pimpl_;
 };
+
+inline bool operator ==(const pad_colour &x, const pad_colour &y)
+{
+	return x.r == y.r && x.g == y.g && x.b == y.b && x.a == y.a;
+}
 
 } // engineprime
 
