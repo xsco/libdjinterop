@@ -139,7 +139,9 @@ struct track_loop
     bool is_set() const { return is_start_set && is_end_set; }
 };
 
-// The results of track analysis
+/**
+ * The results of track analysis
+ */
 class performance_data
 {
 public:

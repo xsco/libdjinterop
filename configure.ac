@@ -15,6 +15,16 @@ LT_INIT
 # Library interface version
 AC_SUBST([LIBENGINEPRIME_INTERFACE_VERSION], [0:0:0])
 
+# Documentation generation
+AC_CHECK_PROGS([DOXYGEN], [doxygen])
+if test -z "$DOXYGEN"; then
+    AC_MSG_WARN([Doxygen not found - continuing without Doxygen support])
+fi
+AM_CONDITIONAL(
+    [HAVE_DOXYGEN],
+    [test -n "$DOXYGEN"])AM_COND_IF(
+        [HAVE_DOXYGEN], [AC_CONFIG_FILES([Doxyfile])])
+
 # Require C++11
 AX_CXX_COMPILE_STDCXX([11], [noext], [mandatory])
 

@@ -1,7 +1,5 @@
 lib_LTLIBRARIES = libengineprime.la
 
-# TODO - add support for generation of documentation
-
 libengineprime_la_SOURCES = \
 	sqlite3.c sqlite3.h \
 	sqlite_modern_cpp.h sqlite_modern_cpp/errors.h sqlite_modern_cpp/log.h \
