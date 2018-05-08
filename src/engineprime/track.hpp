@@ -67,7 +67,21 @@ private:
 class track
 {
 public:
+    /**
+     * Construct a new track, not yet saved in any database
+     */
+    track();
+
+//    /**
+//     * Copy a track from another
+//     */
+//    track(const track &other);
+
+    /**
+     * Construct a track, loaded from a given database by its id
+     */
     track(const database &database, int id);
+
     ~track();
     
     int id() const;
@@ -96,7 +110,17 @@ public:
 	int album_art_id() const;
 
 	bool has_album_art() const { return album_art_id() != 1; }
-    
+
+    /**
+     * Save a track to a given database
+     *
+     * If the track came from the supplied database originally, it is updated
+     * in-place.  If the track does not already exist in the supplied database,
+     * then it will be saved as a new track there.  The `id()` method will
+     * return a new value after a new track is saved.
+     */
+    void save(const database &database);
+
 private:
     class impl;
     std::unique_ptr<impl> pimpl_;

@@ -94,6 +94,8 @@ database::database(const std::string &dir_path) :
     pimpl_{new impl{dir_path}}
 {}
 
+database::database(database &&db) = default;
+
 database::~database() = default;
 
 bool database::exists() const

@@ -45,7 +45,7 @@ class database
 public:
 
     explicit database(const std::string &dir_path);
-	database(database &&db) = default;
+	database(database &&db);
     ~database();
 
 	bool exists() const;
@@ -65,7 +65,8 @@ private:
     std::unique_ptr<impl> pimpl_;
 };
 
-database create_database(const std::string &dir_path, schema_version version);
+database create_database(
+        const std::string &dir_path, const schema_version &version);
 
 } // engineprime
 

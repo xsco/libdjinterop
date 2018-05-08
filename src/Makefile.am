@@ -31,10 +31,13 @@ TESTS = $(check_PROGRAMS)
 # Database test
 database_test_SOURCES = \
 	database_test.cpp \
-	database.cpp
+	database.cpp \
+	schema.cpp
 database_test_CXXFLAGS = \
 	-DTESTDATA_DIR="../testdata"
 database_test_LDADD = \
+	$(BOOST_SYSTEM_LIBS) \
+	$(BOOST_FILESYSTEM_LIBS) \
 	$(BOOST_UTF_LIBS) \
 	libengineprime.la \
 	-lpthread -ldl
@@ -47,6 +50,8 @@ track_test_SOURCES = \
 track_test_CXXFLAGS = \
 	-DTESTDATA_DIR="../testdata"
 track_test_LDADD = \
+	$(BOOST_SYSTEM_LIBS) \
+	$(BOOST_FILESYSTEM_LIBS) \
 	$(BOOST_UTF_LIBS) \
 	libengineprime.la \
 	-lpthread -ldl
