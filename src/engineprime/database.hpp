@@ -44,20 +44,63 @@ class database
 {
 public:
 
+    /**
+     * \brief Construct an Engine Prime database, specifying the path to the
+     *        Engine library directory
+     */
     explicit database(const std::string &dir_path);
+
+    /**
+     * \brief Move constructor
+     */
 	database(database &&db);
+
+    /**
+     * \brief Destructor
+     */
     ~database();
 
+    /**
+     * \brief Returns a `bool` indicating whether the database files exist on
+     *        disk or not
+     */
 	bool exists() const;
+
+    /**
+     * \brief Returns a `bool` indicating whether the database version is
+     *        supported by this version of libengineprime or not
+     */
     bool is_supported() const;
 
+    /**
+     * \brief Verify the schema of an Engine Prime database, throwing an
+     *        exception if there is any kind of inconsistency
+     */
     void verify() const;
 
+    /**
+     * \brief Get the directory path on which this database is based
+     */
     std::string directory_path() const;
+
+    /**
+     * \brief Get the path to the music database, i.e. m.db
+     */
     std::string music_db_path() const;
+
+    /**
+     * \brief Get the path to the performance data database, i.e. p.db
+     */
     std::string performance_db_path() const;
 
+    /**
+     * \brief Get the UUID of this database
+     */
     std::string uuid() const;
+
+    /**
+     * \brief Get the schema version of this database
+     */
 	schema_version version() const;
 
 private:
@@ -65,6 +108,10 @@ private:
     std::unique_ptr<impl> pimpl_;
 };
 
+/**
+ * \brief Create a new, empty database in a given directory and at a specified
+ *        schema version
+ */
 database create_database(
         const std::string &dir_path, const schema_version &version);
 

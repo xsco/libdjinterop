@@ -40,9 +40,9 @@ struct album_art
 
     std::string hash_hex_str;
     std::vector<image_data_type> image_data;
-};
 
-// TODO
+    // TODO - implement rest of album_art class
+};
 
 } // engineprime
 

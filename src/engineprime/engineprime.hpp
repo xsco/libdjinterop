@@ -24,5 +24,6 @@
 
 #include <engineprime/database.hpp>
 #include <engineprime/track.hpp>
+#include <engineprime/performance_data.hpp>
 
 #endif // ENGINEPRIME_ENGINEPRIME_HPP

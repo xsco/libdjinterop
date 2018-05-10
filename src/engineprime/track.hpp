@@ -34,35 +34,58 @@
 namespace engineprime {
 
 /**
- * The `nonexistent_track` exception is thrown when a request is made for a
- * track using an identifier that does not exist in a given database
+ * The `nonexistent_track` exception is thrown when a request is made for
+ * a track using an identifier that does not exist in a given database
  */
 class nonexistent_track : public std::invalid_argument
 {
 public:
+    /**
+     * \brief Construct the exception for a given track id
+     */
 	explicit nonexistent_track(int id) noexcept :
 		invalid_argument{"Track does not exist in database"},
 		id_{id}
 	{}
+
+    /**
+     * \brief Destructor
+     */
 	virtual ~nonexistent_track() = default;
+
+    /**
+     * \brief Get the track id that was deemed non-existent
+     */
 	int id() const noexcept { return id_; }
 private:
 	int id_;
 };
 
+/**
+ * The `track_database_inconsistency` exception is thrown when a track cannot
+ * be loaded from a database, due to an internal inconsistency in how the track
+ * data has been stored in the database
+ */
 class track_database_inconsistency : public database_inconsistency
 {
 public:
-	explicit track_database_inconsistency(const std::string &what_arg)
-		noexcept :
-		database_inconsistency{what_arg}
-	{}
+    /**
+     * \brief Construct the exception for a given track id
+     */
 	explicit track_database_inconsistency(const std::string &what_arg, int id)
 		noexcept :
 		database_inconsistency{what_arg},
 		id_{id}
 	{}
+
+    /**
+     * \brief Destructor
+     */
 	virtual ~track_database_inconsistency() = default;
+
+    /**
+     * \brief Get the track id that is the subject of this exception
+     */
 	int id() const noexcept { return id_; }
 private:
 	int id_;
@@ -92,6 +115,9 @@ public:
      */
     track(const database &database, int id);
 
+    /**
+     * \brief Destructor
+     */
     ~track();
 
     /**
@@ -236,8 +262,44 @@ public:
      */
 	int album_art_id() const;
 
-    // TODO - introduce "bool has_album() const" etc. methods for anything that comes from MetaData(Integer)
+    /**
+     * \brief Get a `bool` indicating if a title has been set for this track
+     */
+    bool has_title() const;
 
+    /**
+     * \brief Get a `bool` indicating if an artist has been set this track
+     */
+    bool has_artist() const;
+
+    /**
+     * \brief Get a `bool` indicating if an album has been set for this track
+     */
+    bool has_album() const;
+
+    /**
+     * \brief Get a `bool` indicating if a genre has been set for this track
+     */
+    bool has_genre() const;
+
+    /**
+     * \brief Get a `bool` indicating if a comment has been set for this track
+     */
+    bool has_comment() const;
+
+    /**
+     * \brief Get a `bool` indicating if a publisher has been set for this track
+     */
+    bool has_publisher() const;
+    
+    /**
+     * \brief Get a `bool` indicating if a composer has been set for this track
+     */
+    bool has_composer() const;
+
+    /**
+     * \brief Return a `bool` indicating whether this track has album art set
+     */
 	bool has_album_art() const { return album_art_id() != 1; }
 
     void set_track_number(int track_number);
@@ -276,11 +338,11 @@ public:
     void set_album_art_id(int album_art_id);
 
     /**
-     * Save a track to a given database
+     * \brief Save a track to a given database
      *
      * If the track came from the supplied database originally, it is updated
      * in-place.  If the track does not already exist in the supplied database,
-     * then it will be saved as a new track there.  The `id()` method will
+     * then it will be saved as a new track there, and the `id()` method will
      * return a new value after a new track is saved.
      */
     void save(const database &database);
@@ -290,6 +352,9 @@ private:
     std::unique_ptr<impl> pimpl_;
 };
 
+/**
+ * \brief Get a list of all track ids in a given database
+ */
 std::vector<int> all_track_ids(const database &database);
 
 } // engineprime

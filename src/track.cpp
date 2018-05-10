@@ -387,6 +387,41 @@ int track::album_art_id() const
     return pimpl_->track_row_.id_album_art;
 }
 
+bool track::has_title() const
+{
+    return (bool)pimpl_->str_metadata_vec_[metadata_types::title].text;
+}
+
+bool track::has_artist() const
+{
+    return (bool)pimpl_->str_metadata_vec_[metadata_types::artist].text;
+}
+
+bool track::has_album() const
+{
+    return (bool)pimpl_->str_metadata_vec_[metadata_types::album].text;
+}
+
+bool track::has_genre() const
+{
+    return (bool)pimpl_->str_metadata_vec_[metadata_types::genre].text;
+}
+
+bool track::has_comment() const
+{
+    return (bool)pimpl_->str_metadata_vec_[metadata_types::comment].text;
+}
+
+bool track::has_publisher() const
+{
+    return (bool)pimpl_->str_metadata_vec_[metadata_types::publisher].text;
+}
+
+bool track::has_composer() const
+{
+    return (bool)pimpl_->str_metadata_vec_[metadata_types::composer].text;
+}
+
 void track::set_track_number(int track_number)
 {
     pimpl_->track_row_.play_order = track_number;
@@ -411,37 +446,58 @@ void track::set_year(int year)
 
 void track::set_title(const std::string &title)
 {
-    pimpl_->str_metadata_vec_[metadata_types::title].text = title;
+    pimpl_->str_metadata_vec_[metadata_types::title].text =
+        title != ""
+        ? boost::optional<std::string>(title)
+        : boost::none;
 }
 
 void track::set_artist(const std::string &artist)
 {
-    pimpl_->str_metadata_vec_[metadata_types::artist].text = artist;
+    pimpl_->str_metadata_vec_[metadata_types::artist].text =
+        artist != ""
+        ? boost::optional<std::string>(artist)
+        : boost::none;
 }
 
 void track::set_album(const std::string &album)
 {
-    pimpl_->str_metadata_vec_[metadata_types::album].text = album;
+    pimpl_->str_metadata_vec_[metadata_types::album].text =
+        album != ""
+        ? boost::optional<std::string>(album)
+        : boost::none;
 }
 
 void track::set_genre(const std::string &genre)
 {
-    pimpl_->str_metadata_vec_[metadata_types::genre].text = genre;
+    pimpl_->str_metadata_vec_[metadata_types::genre].text =
+        genre != ""
+        ? boost::optional<std::string>(genre)
+        : boost::none;
 }
 
 void track::set_comment(const std::string &comment)
 {
-    pimpl_->str_metadata_vec_[metadata_types::comment].text = comment;
+    pimpl_->str_metadata_vec_[metadata_types::comment].text =
+        comment != ""
+        ? boost::optional<std::string>(comment)
+        : boost::none;
 }
 
 void track::set_publisher(const std::string &publisher)
 {
-    pimpl_->str_metadata_vec_[metadata_types::publisher].text = publisher;
+    pimpl_->str_metadata_vec_[metadata_types::publisher].text =
+        publisher != ""
+        ? boost::optional<std::string>(publisher)
+        : boost::none;
 }
 
 void track::set_composer(const std::string &composer)
 {
-    pimpl_->str_metadata_vec_[metadata_types::composer].text = composer;
+    pimpl_->str_metadata_vec_[metadata_types::composer].text =
+        composer != ""
+        ? boost::optional<std::string>(composer)
+        : boost::none;
 }
 
 void track::set_path(const std::string &path)

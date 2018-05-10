@@ -108,6 +108,13 @@ static void check_track_1(ep::track &t)
 	BOOST_CHECK_EQUAL(t.track_id_in_external_database(), 0);
 	BOOST_CHECK_EQUAL(t.album_art_id(), 2);
 	BOOST_CHECK_EQUAL(t.has_album_art(), true);
+    BOOST_CHECK(t.has_title());
+    BOOST_CHECK(t.has_artist());
+    BOOST_CHECK(t.has_album());
+    BOOST_CHECK(t.has_genre());
+    BOOST_CHECK(t.has_comment());
+    BOOST_CHECK(t.has_publisher());
+    BOOST_CHECK(!t.has_composer());
 }
 
 static void populate_example_track_2(ep::track &t)
@@ -167,6 +174,13 @@ static void check_track_2(ep::track &t)
 	BOOST_CHECK_EQUAL(t.track_id_in_external_database(), 123);
 	BOOST_CHECK_EQUAL(t.album_art_id(), 1);
 	BOOST_CHECK_EQUAL(t.has_album_art(), false);
+    BOOST_CHECK(t.has_title());
+    BOOST_CHECK(t.has_artist());
+    BOOST_CHECK(t.has_album());
+    BOOST_CHECK(t.has_genre());
+    BOOST_CHECK(t.has_comment());
+    BOOST_CHECK(t.has_publisher());
+    BOOST_CHECK(t.has_composer());
 }
 
 BOOST_AUTO_TEST_CASE (all_track_ids__sample_db__expected_ids)

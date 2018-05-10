@@ -94,7 +94,9 @@ database::database(const std::string &dir_path) :
     pimpl_{new impl{dir_path}}
 {}
 
-database::database(database &&db) = default;
+database::database(database &&db) :
+    pimpl_{std::move(db.pimpl_)}
+{}
 
 database::~database() = default;
 

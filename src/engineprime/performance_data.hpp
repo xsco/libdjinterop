@@ -33,6 +33,11 @@
 
 namespace engineprime {
 
+/**
+ * The `nonexistent_performance_data` exception is thrown when a request is
+ * made to look up performance data for a given track id in a given database,
+ * but there is no such performance data stored.
+ */
 class nonexistent_performance_data : public std::invalid_argument
 {
 public:
@@ -46,15 +51,19 @@ private:
 	int track_id_;
 };
 
-class corrupt_performance_data : public std::invalid_argument
+/**
+ * The `corrupt_performance_data` exception is thrown when internal expectations
+ * of the performance data is stored within a database are not met.
+ */
+class corrupt_performance_data : public std::logic_error
 {
 public:
     explicit corrupt_performance_data(int track_id) noexcept :
-        invalid_argument{"PerformanceData is corrupted or of unknown format"},
+        logic_error{"PerformanceData is corrupted or of unknown format"},
         track_id_{track_id}
     {}
     explicit corrupt_performance_data(int track_id, const char *msg) noexcept :
-        invalid_argument{msg},
+        logic_error{msg},
         track_id_{track_id}
     {}
 	virtual ~corrupt_performance_data() = default;
@@ -63,6 +72,10 @@ private:
 	int track_id_;
 };
 
+/**
+ * The `musical_key` enumeration contains a list all known musical keys that a
+ * track may be detected to initially follow.
+ */
 enum class musical_key
 {
     a_minor = 1,
@@ -91,6 +104,13 @@ enum class musical_key
     c_major
 };
 
+/**
+ * The `pad_colour` struct holds information about the colour that a given
+ * hot cue / loop / etc. pad on the Denon SC5000 prime deck may be lit up as.
+ *
+ * Note that the alpha channel is typically not used, and is usually set to
+ * full brightness.
+ */
 struct pad_colour
 {
     uint_least8_t r;
@@ -148,29 +168,127 @@ typedef std::vector<track_loop>::const_iterator track_loop_const_iterator;
 class performance_data
 {
 public:
+    /**
+     * \brief Construct performance data, loading from a database
+     */
 	performance_data(const database &db, int track_id);
+
+    /**
+     * \brief Construct an empty performance data record for a given track,
+     *        not yet saved in any database
+     */
+    performance_data(int track_id);
+
+    /**
+     * \brief Destructor
+     */
 	~performance_data();
 
+    /**
+     * \brief Gets the id of the track that this performance data relates to
+     */
 	int track_id() const;
+
+    /**
+     * \brief Gets the sample rate of the track
+     */
     double sample_rate() const;
+
+    /**
+     * \brief Get the total number of samples in the track
+     */
     int_least64_t total_samples() const;
+
+    /**
+     * \brief Get the initial musical key of the track
+     */
     musical_key key() const;
+
+    /**
+     * \brief Get the average loudness of the track
+     *
+     * The loudness value ranges from zero to one, and is typically close to
+     * 0.5 for a well-mastered track.  The exact algorithm for determining
+     * loudness is not yet known.
+     */
     double average_loudness() const;
+
+    /**
+     * \brief Get the default beat grid, i.e. the one detected by automated
+     *        analysis
+     */
     track_beat_grid default_beat_grid() const;
+
+    /**
+     * \brief Get the adjusted beat grid, i.e. the one that may have been
+     *        adjusted or tweaked by the user
+     *
+     * Note that if the beat grid has not been adjusted, then this will be equal
+     * to the default beatgrid.
+     */
     track_beat_grid adjusted_beat_grid() const;
+
+    /**
+     * \brief Gets an iterator pointing to the first hot cue slot
+     *
+     * Note that there are always 8 hot cues per track in an Engine Prime library
+     */
     hot_cue_const_iterator hot_cues_begin() const;
+
+    /**
+     * \brief Gets an iterator pointing beyond the last hot cue slot
+     *
+     * Note that there are always 8 hot cues per track in an Engine Prime library
+     */
     hot_cue_const_iterator hot_cues_end() const;
-    double adjusted_main_cue_sample_offset() const;
+
+    /**
+     * \brief Gets the sample at which the main cue point is set, as determined
+     *        by automated analysis of the track
+     */
     double default_main_cue_sample_offset() const;
+
+    /**
+     * \brief Gets the sample at which the main cue point is set, which may have
+     *        been adjusted/tweaked by the user
+     *
+     * Note that if the user has not adjusted the main cue point, this will be
+     * equal to the default main cue point.
+     */
+    double adjusted_main_cue_sample_offset() const;
+    
+    /**
+     * \brief Gets an iterator pointing to the first loop
+     *
+     * Note that there are always 8 loops per track in an Engine Prime Library.
+     */
     track_loop_const_iterator loops_begin() const;
+
+    /**
+     * \brief Gets an iterator pointing beyond the last loop
+     *
+     * Note that there are always 8 loops per track in an Engine Prime Library.
+     */
     track_loop_const_iterator loops_end() const;
 
+    /**
+     * \brief Gets the duration of the track, in milliseconds
+     *
+     * This is calculated from the number of samples in the track, and the
+     * sample rate.
+     */
     std::chrono::milliseconds duration() const
     {
         auto ms = 1000 * total_samples() / (int_least64_t)sample_rate();
         return std::chrono::milliseconds{ms};
     }
 
+    /**
+     * \brief Get the BPM of the track
+     *
+     * This is calculated from the adjusted beat grid associated with the track
+     * (which is measured in samples), and the sample rate of the track.
+     */
 	double bpm() const
 	{
 		return sample_rate() * 60 *
@@ -179,6 +297,35 @@ public:
 			(adjusted_beat_grid().last_beat_sample_offset -
 			 adjusted_beat_grid().first_beat_sample_offset);
 	}
+
+    void set_sample_rate(double sample_rate);
+
+    void set_total_samples(int_least64_t total_samples);
+
+    void set_key(musical_key key);
+
+    void set_average_loudness(double average_loudness);
+
+    void set_default_beat_grid(track_beat_grid beat_grid);
+
+    void set_adjusted_beat_grid(track_beat_grid beat_grid);
+
+    void set_hot_cues(
+            hot_cue_const_iterator begin,
+            hot_cue_const_iterator end);
+
+    void set_default_main_cue_sample_offset(double sample_offset);
+
+    void set_adjusted_main_cue_sample_offset(double sample_offset);
+    
+    void set_loops(
+            track_loop_const_iterator begin,
+            track_loop_const_iterator end);
+
+    /**
+     * \brief Save track performance data to a given database
+     */
+    void save(const database &database);
 
 private:
 	class impl;
