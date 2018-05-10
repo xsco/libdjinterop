@@ -30,6 +30,8 @@ AX_CXX_COMPILE_STDCXX([11], [noext], [mandatory])
 
 # Check some mandatory dependencies
 PKG_CHECK_MODULES([ZLIB], [zlib])
+AC_CHECK_HEADERS([boost/optional.hpp], [],
+    [AC_MSG_ERROR([couldn't find boost/optional.hpp])])
 AC_CHECK_HEADERS([boost/uuid/uuid.hpp], [],
     [AC_MSG_ERROR([couldn't find boost/uuid/uuid.hpp])])
 AC_CHECK_HEADERS([boost/uuid/uuid_generators.hpp], [],

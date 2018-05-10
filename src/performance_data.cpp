@@ -156,19 +156,24 @@ double performance_data::average_loudness() const
     return pimpl_->pd_.track_data.average_loudness;
 }
 
-const track_beat_grid &performance_data::default_beat_grid() const
+track_beat_grid performance_data::default_beat_grid() const
 {
     return pimpl_->default_beat_grid_;
 }
 
-const track_beat_grid &performance_data::adjusted_beat_grid() const
+track_beat_grid performance_data::adjusted_beat_grid() const
 {
     return pimpl_->adjusted_beat_grid_;
 }
 
-const std::vector<track_hot_cue_point> &performance_data::hot_cues() const
+hot_cue_const_iterator performance_data::hot_cues_begin() const
 {
-    return pimpl_->pd_.quick_cues.hot_cues;
+    return pimpl_->pd_.quick_cues.hot_cues.begin();
+}
+
+hot_cue_const_iterator performance_data::hot_cues_end() const
+{
+    return pimpl_->pd_.quick_cues.hot_cues.end();
 }
 
 double performance_data::adjusted_main_cue_sample_offset() const
@@ -181,9 +186,14 @@ double performance_data::default_main_cue_sample_offset() const
     return pimpl_->pd_.quick_cues.default_main_cue_sample_offset;
 }
 
-const std::vector<track_loop> &performance_data::loops() const
+track_loop_const_iterator performance_data::loops_begin() const
 {
-    return pimpl_->pd_.loops.loops;
+    return pimpl_->pd_.loops.loops.begin();
+}
+
+track_loop_const_iterator performance_data::loops_end() const
+{
+    return pimpl_->pd_.loops.loops.end();
 }
 
 } // namespace engineprime

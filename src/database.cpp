@@ -112,23 +112,23 @@ void database::verify() const
     pimpl_->verify();
 }
 
-const std::string &database::directory_path() const
+std::string database::directory_path() const
 {
     return pimpl_->dir_path_;
 }
-const std::string &database::music_db_path() const
+std::string database::music_db_path() const
 {
     return pimpl_->db_m_path_;
 }
-const std::string &database::performance_db_path() const
+std::string database::performance_db_path() const
 {
     return pimpl_->db_p_path_;
 }
-const std::string &database::uuid() const
+std::string database::uuid() const
 {
     return pimpl_->uuid_;
 }
-const schema_version &database::version() const
+schema_version database::version() const
 {
     return pimpl_->version_;
 }

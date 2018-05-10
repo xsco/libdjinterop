@@ -139,6 +139,9 @@ struct track_loop
     bool is_set() const { return is_start_set && is_end_set; }
 };
 
+typedef std::vector<track_hot_cue_point>::const_iterator hot_cue_const_iterator;
+typedef std::vector<track_loop>::const_iterator track_loop_const_iterator;
+
 /**
  * The results of track analysis
  */
@@ -153,12 +156,14 @@ public:
     int_least64_t total_samples() const;
     musical_key key() const;
     double average_loudness() const;
-    const track_beat_grid &default_beat_grid() const;
-    const track_beat_grid &adjusted_beat_grid() const;
-    const std::vector<track_hot_cue_point> &hot_cues() const;
+    track_beat_grid default_beat_grid() const;
+    track_beat_grid adjusted_beat_grid() const;
+    hot_cue_const_iterator hot_cues_begin() const;
+    hot_cue_const_iterator hot_cues_end() const;
     double adjusted_main_cue_sample_offset() const;
     double default_main_cue_sample_offset() const;
-    const std::vector<track_loop> &loops() const;
+    track_loop_const_iterator loops_begin() const;
+    track_loop_const_iterator loops_end() const;
 
     std::chrono::milliseconds duration() const
     {

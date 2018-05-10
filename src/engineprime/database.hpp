@@ -53,12 +53,12 @@ public:
 
     void verify() const;
 
-    const std::string &directory_path() const;
-    const std::string &music_db_path() const;
-    const std::string &performance_db_path() const;
+    std::string directory_path() const;
+    std::string music_db_path() const;
+    std::string performance_db_path() const;
 
-    const std::string &uuid() const;
-	const schema_version &version() const;
+    std::string uuid() const;
+	schema_version version() const;
 
 private:
     class impl;
