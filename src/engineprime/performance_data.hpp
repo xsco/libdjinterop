@@ -33,7 +33,6 @@
 #include "musical_key.hpp"
 #include "pad_colour.hpp"
 
-
 namespace engineprime {
 
 /**
@@ -130,7 +129,7 @@ struct track_hot_cue_point
     track_hot_cue_point() :
         is_set{false},
         label{},
-        sample_offset{0},
+        sample_offset{-1},
         colour{}
     {}
 
@@ -164,8 +163,8 @@ struct track_loop
         is_start_set{false},
         is_end_set{false},
         label{},
-        start_sample_offset{0},
-        end_sample_offset{0},
+        start_sample_offset{-1},
+        end_sample_offset{-1},
         colour{}
     {}
 
@@ -356,6 +355,12 @@ public:
 
     void set_adjusted_beat_grid(track_beat_grid &&beat_grid);
 
+    /**
+     * \brief Set the hot cues
+     *
+     * Note that the SC5000 Prime allows a maximum of 8 hot cues.  If more than
+     * 8 are supplied, only the first 8 will be considered.
+     */
     void set_hot_cues(
             hot_cue_const_iterator begin,
             hot_cue_const_iterator end);
@@ -363,7 +368,13 @@ public:
     void set_default_main_cue_sample_offset(double sample_offset);
 
     void set_adjusted_main_cue_sample_offset(double sample_offset);
-    
+
+    /**
+     * \brief Set the loops
+     *
+     * Note that the SC5000 Prime allows a maximum of 8 hot cues.  If more than
+     * 8 are supplied, only the first 8 will be considered.
+     */
     void set_loops(
             track_loop_const_iterator begin,
             track_loop_const_iterator end);

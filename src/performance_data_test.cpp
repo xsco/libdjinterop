@@ -21,6 +21,7 @@
 
 #include <iostream>
 #include <cstdio>
+#include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
@@ -29,6 +30,7 @@
 #define STRINGIFY_(x) #x
 
 namespace ep = engineprime;
+namespace fs = boost::filesystem;
 namespace c = std::chrono;
 
 const std::string sample_path{STRINGIFY(TESTDATA_DIR) "/el3"};
@@ -64,6 +66,24 @@ namespace test_tools {
     };
 } // test_tools
 } // boost
+
+static fs::path create_temp_dir()
+{
+    fs::path temp_dir{fs::temp_directory_path()};
+    temp_dir /= fs::unique_path();
+    if (!fs::create_directory(temp_dir))
+    {
+        throw std::runtime_error{"Failed to create tmp_dir"};
+    }
+    std::cout << "Created temp dir at " << temp_dir.string() << std::endl;
+    return temp_dir;
+}
+
+static void remove_temp_dir(const fs::path &temp_dir)
+{
+    fs::remove_all(temp_dir);
+    std::cout << "Removed temp dir at " << temp_dir.string() << std::endl;
+}
 
 static void populate_track_1(ep::performance_data &p)
 {
@@ -225,6 +245,139 @@ static void check_track_1(const ep::performance_data &p)
     BOOST_CHECK(loop == p.loops_end());
 }
 
+static void populate_track_2(ep::performance_data &p)
+{
+    // Track data fields
+    p.set_sample_rate(48000);
+    p.set_total_samples(10795393);
+    p.set_key(ep::musical_key::b_minor);
+    p.set_average_loudness(0.5);
+
+    // Beat data fields
+    p.set_default_beat_grid(ep::track_beat_grid{
+            -4,
+            -107595.55,
+            402,
+            10820254.92});
+    p.set_adjusted_beat_grid(ep::track_beat_grid{
+            -4,
+            -107595.55,
+            402,
+            10820254.92});
+
+    // Quick cue fields
+    std::vector<ep::track_hot_cue_point> cues;
+    cues.emplace_back();
+    cues.emplace_back(true, "Cue 2", 1234567.89, ep::standard_pad_colours::pad_2);
+    p.set_hot_cues(std::begin(cues), std::end(cues));
+    p.set_adjusted_main_cue_sample_offset(1234500.01);
+    p.set_default_main_cue_sample_offset(12345.678);
+
+    // Loop fields
+    std::vector<ep::track_loop> loops;
+    loops.emplace_back();
+    loops.emplace_back(
+            true, true,
+            "Loop 2", 2345600, 2345700, ep::standard_pad_colours::pad_2);
+    p.set_loops(std::begin(loops), std::end(loops));
+}
+
+static void check_track_2(const ep::performance_data &p)
+{
+    // Track data fields
+    BOOST_CHECK_CLOSE(p.sample_rate(), 48000.0, 0.001);
+    BOOST_CHECK_EQUAL(p.total_samples(), 10795393);
+    BOOST_CHECK_EQUAL(p.key(), ep::musical_key::b_minor);
+    BOOST_CHECK_CLOSE(p.average_loudness(), 0.5, 0.001);
+    BOOST_CHECK_EQUAL(p.duration(), c::milliseconds{224904});
+
+    // Beat data fields
+    auto default_beat_grid = p.default_beat_grid();
+    BOOST_CHECK_EQUAL(default_beat_grid.first_beat_index, -4);
+    BOOST_CHECK_CLOSE(default_beat_grid.first_beat_sample_offset, -107595.55, 0.001);
+    BOOST_CHECK_EQUAL(default_beat_grid.last_beat_index, 402);
+    BOOST_CHECK_CLOSE(default_beat_grid.last_beat_sample_offset, 10820254.92, 0.001);
+    auto adjusted_beat_grid = p.adjusted_beat_grid();
+    BOOST_CHECK_EQUAL(adjusted_beat_grid.first_beat_index, -4);
+    BOOST_CHECK_CLOSE(adjusted_beat_grid.first_beat_sample_offset, -107595.55, 0.001);
+    BOOST_CHECK_EQUAL(adjusted_beat_grid.last_beat_index, 402);
+    BOOST_CHECK_CLOSE(adjusted_beat_grid.last_beat_sample_offset, 10820254.92, 0.001);
+    BOOST_CHECK_CLOSE(p.bpm(), 107, 0.001);
+
+    // Quick cue fields
+    auto hot_cue = p.hot_cues_begin();
+    BOOST_REQUIRE(hot_cue != p.hot_cues_end());
+    BOOST_CHECK_EQUAL(hot_cue->is_set, false);
+    ++hot_cue;
+    BOOST_REQUIRE(hot_cue != p.hot_cues_end());
+    BOOST_CHECK_EQUAL(hot_cue->is_set, true);
+    BOOST_CHECK_EQUAL(hot_cue->label, "Cue 2");
+    BOOST_CHECK_CLOSE(hot_cue->sample_offset, 1234567.89, 0.001);
+    BOOST_CHECK_EQUAL(hot_cue->colour, ep::standard_pad_colours::pad_2);
+    ++hot_cue;
+    BOOST_REQUIRE(hot_cue != p.hot_cues_end());
+    BOOST_CHECK_EQUAL(hot_cue->is_set, false);
+    ++hot_cue;
+    BOOST_REQUIRE(hot_cue != p.hot_cues_end());
+    BOOST_CHECK_EQUAL(hot_cue->is_set, false);
+    ++hot_cue;
+    BOOST_REQUIRE(hot_cue != p.hot_cues_end());
+    BOOST_CHECK_EQUAL(hot_cue->is_set, false);
+    ++hot_cue;
+    BOOST_REQUIRE(hot_cue != p.hot_cues_end());
+    BOOST_CHECK_EQUAL(hot_cue->is_set, false);
+    ++hot_cue;
+    BOOST_REQUIRE(hot_cue != p.hot_cues_end());
+    BOOST_CHECK_EQUAL(hot_cue->is_set, false);
+    ++hot_cue;
+    BOOST_REQUIRE(hot_cue != p.hot_cues_end());
+    BOOST_CHECK_EQUAL(hot_cue->is_set, false);
+    ++hot_cue;
+    BOOST_CHECK(hot_cue == p.hot_cues_end());
+    BOOST_CHECK_CLOSE(p.adjusted_main_cue_sample_offset(), 1234500.01, 0.001);
+    BOOST_CHECK_CLOSE(p.default_main_cue_sample_offset(), 12345.678, 0.001);
+
+    // Loop fields
+    auto loop = p.loops_begin();
+    BOOST_REQUIRE(loop != p.loops_end());
+    BOOST_CHECK_EQUAL(loop->is_start_set, false);
+    BOOST_CHECK_EQUAL(loop->is_end_set, false);
+    ++loop;
+    BOOST_REQUIRE(loop != p.loops_end());
+    BOOST_CHECK_EQUAL(loop->is_start_set, true);
+    BOOST_CHECK_EQUAL(loop->is_end_set, true);
+    BOOST_CHECK_EQUAL(loop->label, "Loop 2");
+    BOOST_CHECK_CLOSE(loop->start_sample_offset, 2345600, 0.001);
+    BOOST_CHECK_CLOSE(loop->end_sample_offset, 2345700, 0.001);
+    BOOST_CHECK_EQUAL(loop->colour, ep::standard_pad_colours::pad_2);
+    ++loop;
+    BOOST_REQUIRE(loop != p.loops_end());
+    BOOST_CHECK_EQUAL(loop->is_start_set, false);
+    BOOST_CHECK_EQUAL(loop->is_end_set, false);
+    ++loop;
+    BOOST_REQUIRE(loop != p.loops_end());
+    BOOST_CHECK_EQUAL(loop->is_start_set, false);
+    BOOST_CHECK_EQUAL(loop->is_end_set, false);
+    ++loop;
+    BOOST_REQUIRE(loop != p.loops_end());
+    BOOST_CHECK_EQUAL(loop->is_start_set, false);
+    BOOST_CHECK_EQUAL(loop->is_end_set, false);
+    ++loop;
+    BOOST_REQUIRE(loop != p.loops_end());
+    BOOST_CHECK_EQUAL(loop->is_start_set, false);
+    BOOST_CHECK_EQUAL(loop->is_end_set, false);
+    ++loop;
+    BOOST_REQUIRE(loop != p.loops_end());
+    BOOST_CHECK_EQUAL(loop->is_start_set, false);
+    BOOST_CHECK_EQUAL(loop->is_end_set, false);
+    ++loop;
+    BOOST_REQUIRE(loop != p.loops_end());
+    BOOST_CHECK_EQUAL(loop->is_start_set, false);
+    BOOST_CHECK_EQUAL(loop->is_end_set, false);
+    ++loop;
+    BOOST_CHECK(loop == p.loops_end());
+}
+
 BOOST_AUTO_TEST_CASE (ctor__track_1__correct_fields)
 {
     // Arrange
@@ -250,3 +403,71 @@ BOOST_AUTO_TEST_CASE (setters__good_values__values_stored)
     BOOST_CHECK_EQUAL(p.track_id(), 123);
     check_track_1(p);
 }
+
+BOOST_AUTO_TEST_CASE (save__new_track_no_values__doesnt_throw)
+{
+    // Arrange
+    auto temp_dir = create_temp_dir();
+    auto db = create_database(temp_dir.string(), ep::version_firmware_1_0_3);
+    ep::performance_data p{123};
+
+    // Act/Assert
+    BOOST_CHECK_NO_THROW(p.save(db));
+    remove_temp_dir(temp_dir);
+}
+
+BOOST_AUTO_TEST_CASE (ctor__new_track_no_values__doesnt_throw)
+{
+    // Arrange
+    auto temp_dir = create_temp_dir();
+    auto db = create_database(temp_dir.string(), ep::version_firmware_1_0_3);
+    ep::performance_data p{123};
+    p.save(db);
+
+    // Act/Assert
+    // Note use of () for ctor invocation rather than {}, as Boost's macros
+    // are confused by {} in the statement below.
+    BOOST_CHECK_NO_THROW(ep::performance_data p_reloaded(db, 123));
+    remove_temp_dir(temp_dir);
+}
+
+BOOST_AUTO_TEST_CASE (save__new_track_good_values__saves)
+{
+    // Arrange
+    auto temp_dir = create_temp_dir();
+    auto db = create_database(temp_dir.string(), ep::version_firmware_1_0_3);
+    ep::performance_data p{123};
+    populate_track_1(p);
+
+    // Act
+    p.save(db);
+
+    // Assert
+    check_track_1(p);
+    ep::performance_data p_reloaded{db, 123};
+    BOOST_CHECK_EQUAL(p_reloaded.track_id(), 123);
+    check_track_1(p_reloaded);
+    remove_temp_dir(temp_dir);
+}
+
+BOOST_AUTO_TEST_CASE (save__existing_track__saves)
+{
+    // Arrange
+    auto temp_dir = create_temp_dir();
+    auto db = create_database(temp_dir.string(), ep::version_firmware_1_0_3);
+    ep::performance_data p{1};
+    populate_track_1(p);
+    p.save(db);
+    populate_track_2(p);
+
+    // Act
+    p.save(db);
+
+    // Assert
+    check_track_2(p);
+    ep::performance_data p_reloaded{db, 1};
+    BOOST_CHECK_EQUAL(p_reloaded.track_id(), 1);
+    check_track_2(p_reloaded);
+    remove_temp_dir(temp_dir);
+}
+

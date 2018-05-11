@@ -20,6 +20,7 @@
 #define BOOST_TEST_MODULE schema_test 
 
 #include <cstdio>
+#include <iostream>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include "engineprime/schema_version.hpp"
@@ -61,7 +62,48 @@ static fs::path create_temp_dir()
     {
         throw std::runtime_error{"Failed to create tmp_dir"};
     }
+    std::cout << "Created temp dir at " << temp_dir.string() << std::endl;
     return temp_dir;
+}
+
+static void remove_temp_dir(const fs::path &temp_dir)
+{
+    fs::remove_all(temp_dir);
+    std::cout << "Removed temp dir at " << temp_dir.string() << std::endl;
+}
+
+BOOST_AUTO_TEST_CASE (operators_equality__various__expected)
+{
+    // Arrange/Act/Assert
+    BOOST_CHECK(  ep::version_firmware_1_0_0 == ep::version_firmware_1_0_0);
+    BOOST_CHECK(  ep::version_firmware_1_0_3 == ep::version_firmware_1_0_3);
+    BOOST_CHECK(!(ep::version_firmware_1_0_0 == ep::version_firmware_1_0_3));
+    BOOST_CHECK(!(ep::version_firmware_1_0_3 == ep::version_firmware_1_0_0));
+    BOOST_CHECK(  ep::version_firmware_1_0_0 != ep::version_firmware_1_0_3);
+    BOOST_CHECK(  ep::version_firmware_1_0_3 != ep::version_firmware_1_0_0);
+    BOOST_CHECK(!(ep::version_firmware_1_0_0 != ep::version_firmware_1_0_0));
+    BOOST_CHECK(!(ep::version_firmware_1_0_3 != ep::version_firmware_1_0_3));
+}
+
+BOOST_AUTO_TEST_CASE (operators_ordering__various__expected)
+{
+    // Arrange/Act/Assert
+    BOOST_CHECK(  ep::version_firmware_1_0_0 <= ep::version_firmware_1_0_0);
+    BOOST_CHECK(  ep::version_firmware_1_0_3 <= ep::version_firmware_1_0_3);
+    BOOST_CHECK(  ep::version_firmware_1_0_0 <= ep::version_firmware_1_0_3);
+    BOOST_CHECK(!(ep::version_firmware_1_0_3 <= ep::version_firmware_1_0_0));
+    BOOST_CHECK(!(ep::version_firmware_1_0_0 < ep::version_firmware_1_0_0));
+    BOOST_CHECK(!(ep::version_firmware_1_0_3 < ep::version_firmware_1_0_3));
+    BOOST_CHECK(  ep::version_firmware_1_0_0 < ep::version_firmware_1_0_3);
+    BOOST_CHECK(!(ep::version_firmware_1_0_3 < ep::version_firmware_1_0_0));
+    BOOST_CHECK(  ep::version_firmware_1_0_0 >= ep::version_firmware_1_0_0);
+    BOOST_CHECK(  ep::version_firmware_1_0_3 >= ep::version_firmware_1_0_3);
+    BOOST_CHECK(!(ep::version_firmware_1_0_0 >= ep::version_firmware_1_0_3));
+    BOOST_CHECK(  ep::version_firmware_1_0_3 >= ep::version_firmware_1_0_0);
+    BOOST_CHECK(!(ep::version_firmware_1_0_0 > ep::version_firmware_1_0_0));
+    BOOST_CHECK(!(ep::version_firmware_1_0_3 > ep::version_firmware_1_0_3));
+    BOOST_CHECK(!(ep::version_firmware_1_0_0 > ep::version_firmware_1_0_3));
+    BOOST_CHECK(  ep::version_firmware_1_0_3 > ep::version_firmware_1_0_0);
 }
 
 BOOST_AUTO_TEST_CASE (verify_music_schema__db_at_1_0_0__verified)
@@ -115,6 +157,6 @@ BOOST_AUTO_TEST_CASE (create_performance_schema__version_1_0_0__creates_verified
 
     // Assert
     ep::verify_performance_schema(db);
-    fs::remove_all(temp_dir);
+    remove_temp_dir(temp_dir);
 }
 

@@ -80,6 +80,7 @@ performance_data_test_CXXFLAGS = \
 	-DTESTDATA_DIR="../testdata"
 performance_data_test_LDADD = \
 	$(BOOST_SYSTEM_LIBS) \
+	$(BOOST_FILESYSTEM_LIBS) \
 	$(BOOST_UTF_LIBS) \
 	libengineprime.la \
 	-lpthread -ldl

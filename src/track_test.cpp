@@ -259,6 +259,7 @@ BOOST_AUTO_TEST_CASE (save__new_track_good_values__saves)
 
     // Assert
     BOOST_CHECK_NE(t.id(), 0);
+    check_track_1(t);
     ep::track t_reloaded{db, t.id()};
     check_track_1(t_reloaded);
     remove_temp_dir(temp_dir);

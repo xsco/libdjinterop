@@ -22,6 +22,8 @@
 #ifndef ENGINEPRIME_SCHEMA_VERSION_HPP
 #define ENGINEPRIME_SCHEMA_VERSION_HPP
 
+#include <ostream>
+
 namespace engineprime {
 
 struct schema_version
@@ -62,6 +64,12 @@ private:
 } // engineprime
 
 
+inline std::ostream &operator <<(std::ostream &os,
+		const engineprime::schema_version &version)
+{
+	return os << version.maj << "." << version.min << "." << version.pat;
+}
+
 inline bool operator ==(const engineprime::schema_version &a,
                         const engineprime::schema_version &b)
 {
@@ -74,10 +82,44 @@ inline bool operator !=(const engineprime::schema_version &a,
 	return !(a.maj == b.maj && a.min == b.min && a.pat == b.pat);
 }
 
-inline std::ostream &operator <<(std::ostream &os,
-		const engineprime::schema_version &version)
+inline bool operator >=(const engineprime::schema_version &a,
+                        const engineprime::schema_version &b)
 {
-	return os << version.maj << "." << version.min << "." << version.pat;
+    if (a.maj != b.maj)
+        return a.maj > b.maj;
+    if (a.min != b.min)
+        return a.min > b.min;
+    return a.pat >= b.pat;
+}
+
+inline bool operator >(const engineprime::schema_version &a,
+                        const engineprime::schema_version &b)
+{
+    if (a.maj != b.maj)
+        return a.maj > b.maj;
+    if (a.min != b.min)
+        return a.min > b.min;
+    return a.pat > b.pat;
+}
+
+inline bool operator <=(const engineprime::schema_version &a,
+                        const engineprime::schema_version &b)
+{
+    if (a.maj != b.maj)
+        return a.maj < b.maj;
+    if (a.min != b.min)
+        return a.min < b.min;
+    return a.pat <= b.pat;
+}
+
+inline bool operator <(const engineprime::schema_version &a,
+                        const engineprime::schema_version &b)
+{
+    if (a.maj != b.maj)
+        return a.maj < b.maj;
+    if (a.min != b.min)
+        return a.min < b.min;
+    return a.pat < b.pat;
 }
 
 #endif // ENGINEPRIME_DATABASE_HPP

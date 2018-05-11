@@ -906,13 +906,18 @@ static void verify_track(sqlite::database &db)
     }
 }
 
-static void verify_performance_data(sqlite::database &db)
+static void verify_performance_data(sqlite::database &db, const schema_version &version)
 {
     {
         table_info cols{db, "PerformanceData"};
         auto iter = cols.begin(), end = cols.end();
         validate(iter, end, "beatData", "BLOB", 0, "", 0);
         ++iter;
+        if (version >= version_firmware_1_0_3)
+        {
+            validate(iter, end, "hasRekordboxValues", "NUMERIC", 0, "", 0);
+            ++iter;
+        }
         validate(iter, end, "hasSeratoValues", "NUMERIC", 0, "", 0);
         ++iter;
         validate(iter, end, "highResolutionWaveFormData", "BLOB", 0, "", 0);
@@ -997,9 +1002,7 @@ schema_version verify_performance_schema(sqlite::database &db)
     verify_information(db);
     auto version = get_version(db);
 
-    // Note: the version can be used to verify schema differently, should it
-    // ever change in future.
-    verify_performance_data(db);
+    verify_performance_data(db, version);
 
     return version;
 }
@@ -1175,12 +1178,26 @@ void create_performance_schema(
 
     // PerformanceData
     db << "DROP TABLE IF EXISTS PerformanceData";
-    db << "CREATE TABLE PerformanceData ( [id] INTEGER, [isAnalyzed] NUMERIC , "
-          "[isRendered] NUMERIC , [trackData] BLOB , "
-          "[highResolutionWaveFormData] BLOB , [overviewWaveFormData] BLOB , "
-          "[beatData] BLOB , [quickCues] BLOB , [loops] BLOB , "
-          "[hasSeratoValues] NUMERIC , PRIMARY KEY ( [id] ) )";
-    db << "CREATE INDEX index_PerformanceData_id ON PerformanceData ( id )";
+    if (version >= version_firmware_1_0_3)
+    {
+        db << "CREATE TABLE PerformanceData ( [id] INTEGER, [isAnalyzed] NUMERIC , "
+              "[isRendered] NUMERIC , [trackData] BLOB , "
+              "[highResolutionWaveFormData] BLOB , [overviewWaveFormData] BLOB , "
+              "[beatData] BLOB , [quickCues] BLOB , [loops] BLOB , "
+              "[hasSeratoValues] NUMERIC , [hasRekordboxValues] NUMERIC , "
+              "PRIMARY KEY ( [id] ) )";
+        db << "CREATE INDEX index_PerformanceData_id ON PerformanceData ( id )";
+    }
+    else
+    {
+        // No `hasRekordboxValues` column in this schema version
+        db << "CREATE TABLE PerformanceData ( [id] INTEGER, [isAnalyzed] NUMERIC , "
+              "[isRendered] NUMERIC , [trackData] BLOB , "
+              "[highResolutionWaveFormData] BLOB , [overviewWaveFormData] BLOB , "
+              "[beatData] BLOB , [quickCues] BLOB , [loops] BLOB , "
+              "[hasSeratoValues] NUMERIC , PRIMARY KEY ( [id] ) )";
+        db << "CREATE INDEX index_PerformanceData_id ON PerformanceData ( id )";
+    }
 
     // Generate UUIDs for the Information table
     boost::uuids::uuid uuid{boost::uuids::random_generator()()};

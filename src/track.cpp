@@ -177,7 +177,7 @@ struct track::impl
 
     impl(const track::impl &other) :
         id_{0},
-        load_db_uuid_{""},
+        load_db_uuid_{},
         track_row_{other.track_row_},
         str_metadata_vec_{other.str_metadata_vec_},
         int_metadata_vec_{other.int_metadata_vec_}

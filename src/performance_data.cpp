@@ -23,7 +23,11 @@
 #include <iterator>
 #include <string>
 #include <vector>
+#include <boost/optional.hpp>
+
+#define _MODERN_SQLITE_BOOST_OPTIONAL_SUPPORT
 #include "sqlite_modern_cpp.h"
+
 #include "performance_data_format.hpp"
 
 namespace engineprime {
@@ -43,45 +47,84 @@ struct performance_data_row
     quick_cues_blob quick_cues;
     loops_blob loops;
     double has_serato_values = 0.0;
+    double has_rekordbox_values = 0.0;
 };
 
 // Select out a row from the PerformanceData table
 static performance_data_row extract_performance_data(
-        const std::string &performance_db_path, int track_id)
+        const database &db, int track_id)
 {
-	sqlite::database m_db{performance_db_path};
+	sqlite::database m_db{db.performance_db_path()};
 	performance_data_row row{track_id};
 	int rows_found = 0;
-	m_db
-		<< "SELECT id, isAnalyzed, isRendered, "
-           "trackData, "
-           "highResolutionWaveFormData, overviewWaveFormData, "
-           "beatData, quickCues, loops, "
-           "hasSeratoValues "
-		   "FROM PerformanceData WHERE id = :1"
-		<< track_id
-		>> [&](
-                int id,
-                double is_analyzed,
-                double is_rendered,
-                std::vector<char> track_data,
-                std::vector<char> high_resolution_wave_form_data,
-                std::vector<char> overview_wave_form_data,
-                std::vector<char> beat_data,
-                std::vector<char> quick_cues,
-                std::vector<char> loops,
-                double has_serato_values)
-		{
-			row.is_analyzed = is_analyzed;
-            row.is_rendered = is_rendered;
-            extract_track_data(id, track_data, row.track_data);
-            extract_beat_data(id, beat_data, row.beat_data);
-            extract_quick_cues(id, quick_cues, row.quick_cues);
-            extract_loops(id, loops, row.loops);
-
-            row.has_serato_values = has_serato_values;
-			++rows_found;
-		};
+    if (db.version() >= version_firmware_1_0_3)
+    {
+    	m_db
+    		<< "SELECT id, isAnalyzed, isRendered, "
+               "trackData, "
+               "highResolutionWaveFormData, overviewWaveFormData, "
+               "beatData, quickCues, loops, "
+               "hasSeratoValues, hasRekordboxValues "
+    		   "FROM PerformanceData WHERE id = :1"
+    		<< track_id
+    		>> [&](
+                    int id,
+                    double is_analyzed,
+                    double is_rendered,
+                    std::vector<char> track_data,
+                    std::vector<char> high_resolution_wave_form_data,
+                    std::vector<char> overview_wave_form_data,
+                    std::vector<char> beat_data,
+                    std::vector<char> quick_cues,
+                    std::vector<char> loops,
+                    double has_serato_values,
+                    double has_rekordbox_values)
+    		{
+    			row.is_analyzed = is_analyzed;
+                row.is_rendered = is_rendered;
+                row.track_data = decode_track_data(id, track_data);
+                row.beat_data = decode_beat_data(id, beat_data);
+                row.quick_cues = decode_quick_cues(id, quick_cues);
+                row.loops = decode_loops(id, loops);
+                row.has_serato_values = has_serato_values;
+                row.has_rekordbox_values = has_rekordbox_values;
+    			++rows_found;
+    		};
+    }
+    else
+    {
+        // No `hasRekordboxValues` column in this schema version
+    	m_db
+    		<< "SELECT id, isAnalyzed, isRendered, "
+               "trackData, "
+               "highResolutionWaveFormData, overviewWaveFormData, "
+               "beatData, quickCues, loops, "
+               "hasSeratoValues "
+    		   "FROM PerformanceData WHERE id = :1"
+    		<< track_id
+    		>> [&](
+                    int id,
+                    double is_analyzed,
+                    double is_rendered,
+                    std::vector<char> track_data,
+                    std::vector<char> high_resolution_wave_form_data,
+                    std::vector<char> overview_wave_form_data,
+                    std::vector<char> beat_data,
+                    std::vector<char> quick_cues,
+                    std::vector<char> loops,
+                    double has_serato_values)
+    		{
+    			row.is_analyzed = is_analyzed;
+                row.is_rendered = is_rendered;
+                row.track_data = decode_track_data(id, track_data);
+                row.beat_data = decode_beat_data(id, beat_data);
+                row.quick_cues = decode_quick_cues(id, quick_cues);
+                row.loops = decode_loops(id, loops);
+                row.has_serato_values = has_serato_values;
+                row.has_rekordbox_values = 0.0;
+    			++rows_found;
+    		};
+    }
 
 	if (rows_found == 0)
 		throw nonexistent_performance_data{track_id};
@@ -92,6 +135,8 @@ static performance_data_row extract_performance_data(
 static track_beat_grid beat_markers_to_beat_grid(
         const std::vector<beat_data_marker_blob> beat_markers)
 {
+    if (beat_markers.size() == 0)
+        return track_beat_grid{};
     if (beat_markers.size() < 2)
         throw std::invalid_argument{"Not enough markers in beat data"};
 
@@ -128,14 +173,17 @@ static std::vector<beat_data_marker_blob> beat_grid_to_beat_markers(
 struct performance_data::impl
 {
     impl(const database &db, int track_id) :
-        pd_{extract_performance_data(db.performance_db_path(), track_id)},
+        load_db_uuid_{db.uuid()},
+        pd_{extract_performance_data(db, track_id)},
         default_beat_grid_{
             beat_markers_to_beat_grid(pd_.beat_data.default_markers)},
         adjusted_beat_grid_{
             beat_markers_to_beat_grid(pd_.beat_data.adjusted_markers)}
     {}
 
-    impl(int track_id) : pd_{track_id}
+    impl(int track_id) :
+        load_db_uuid_{},
+        pd_{track_id}
     {
         pd_.track_data.sample_rate = 0;
         pd_.track_data.total_samples = 0;
@@ -143,6 +191,7 @@ struct performance_data::impl
         pd_.track_data.average_loudness = 0.5;
     }
     
+    std::string load_db_uuid_;
     performance_data_row pd_;
     track_beat_grid default_beat_grid_;
     track_beat_grid adjusted_beat_grid_;
@@ -337,7 +386,52 @@ void performance_data::set_loops(
 
 void performance_data::save(const database &database)
 {
-    // TODO - implement save of performance data to DB
+	sqlite::database m_db{database.performance_db_path()};
+    if (database.version() >= version_firmware_1_0_3)
+    {
+        m_db <<
+            "INSERT OR REPLACE INTO PerformanceData ("
+            "  id, isAnalyzed, isRendered, trackData, "
+            "  highResolutionWaveFormData, overviewWaveFormData, "
+            "  beatData, quickCues, loops, "
+            "  hasSeratoValues, hasRekordboxValues)"
+            "VALUES ("
+            "  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            << pimpl_->pd_.track_id
+            << pimpl_->pd_.is_analyzed
+            << pimpl_->pd_.is_rendered
+            << encode_track_data(pimpl_->pd_.track_data)
+            << std::vector<char>{} // waveforms not yet implemented
+            << std::vector<char>{} // waveforms not yet implemented
+            << encode_beat_data(pimpl_->pd_.beat_data)
+            << encode_quick_cues(pimpl_->pd_.quick_cues)
+            << encode_loops(pimpl_->pd_.loops)
+            << pimpl_->pd_.has_serato_values
+            << pimpl_->pd_.has_rekordbox_values;
+    }
+    else
+    {
+        m_db <<
+            "INSERT OR REPLACE INTO PerformanceData ("
+            "  id, isAnalyzed, isRendered, trackData, "
+            "  highResolutionWaveFormData, overviewWaveFormData, "
+            "  beatData, quickCues, loops, "
+            "  hasSeratoValues)"
+            "VALUES ("
+            "  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            << pimpl_->pd_.track_id
+            << pimpl_->pd_.is_analyzed
+            << pimpl_->pd_.is_rendered
+            << encode_track_data(pimpl_->pd_.track_data)
+            << std::vector<char>{} // waveforms not yet implemented
+            << std::vector<char>{} // waveforms not yet implemented
+            << encode_beat_data(pimpl_->pd_.beat_data)
+            << encode_quick_cues(pimpl_->pd_.quick_cues)
+            << encode_loops(pimpl_->pd_.loops)
+            << pimpl_->pd_.has_serato_values;
+    }
+
+    pimpl_->load_db_uuid_ = database.uuid();
 }
 
 void normalise_beat_grid(track_beat_grid &beat_grid, double last_sample)

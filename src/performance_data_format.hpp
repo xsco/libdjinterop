@@ -29,6 +29,22 @@ namespace engineprime {
 
 struct track_data_blob
 {
+    track_data_blob() :
+        sample_rate{0},
+        total_samples{0},
+        average_loudness{0.5},
+        key{0}
+    {}
+
+    track_data_blob(
+            double sample_rate, int64_t total_samples,
+            double average_loudness, int32_t key) :
+        sample_rate{sample_rate},
+        total_samples{total_samples},
+        average_loudness{average_loudness},
+        key{key}
+    {}
+
     double sample_rate;
     int64_t total_samples;
     double average_loudness;
@@ -45,17 +61,35 @@ struct beat_data_marker_blob
 
 struct beat_data_blob
 {
+    beat_data_blob() :
+        sample_rate{0},
+        total_samples{0},
+        is_beat_data_set{0}
+    {}
+
+    beat_data_blob(
+            double sample_rate, int64_t total_samples,
+            int8_t is_beat_data_set) :
+        sample_rate{sample_rate},
+        total_samples{total_samples},
+        is_beat_data_set{is_beat_data_set}
+    {}
+
     double sample_rate;
     int64_t total_samples;
     int8_t is_beat_data_set;
-    int64_t default_num_beatgrid_markers;
     std::vector<beat_data_marker_blob> default_markers;
-    int64_t adjusted_num_beatgrid_markers;
     std::vector<beat_data_marker_blob> adjusted_markers;
 };
 
 struct quick_cues_blob
 {
+    quick_cues_blob() :
+        adjusted_main_cue_sample_offset{0},
+        is_main_cue_adjusted_from_default{false},
+        default_main_cue_sample_offset{0}
+    {}
+
     std::vector<track_hot_cue_point> hot_cues;
     double adjusted_main_cue_sample_offset;
     bool is_main_cue_adjusted_from_default;
@@ -69,31 +103,39 @@ struct loops_blob
 
 
 // Extract track data from a blob
-void extract_track_data(
+track_data_blob decode_track_data(
         int track_id,
-        const std::vector<char> &compressed_track_data,
-        track_data_blob &track_data);
+        const std::vector<char> &compressed_track_data);
 
 // Extract beat data from a blob
-void extract_beat_data(
+beat_data_blob decode_beat_data(
         int track_id,
-        const std::vector<char> &compressed_beat_data,
-        beat_data_blob &beat_data);
+        const std::vector<char> &compressed_beat_data);
 
 // Extract quick cues data from a blob
-void extract_quick_cues(
+quick_cues_blob decode_quick_cues(
         int track_id,
-        const std::vector<char> &compressed_quick_cues_data,
-        quick_cues_blob &quick_cues);
+        const std::vector<char> &compressed_quick_cues_data);
 
 // Extract loops from a blob
-void extract_loops(
+loops_blob decode_loops(
         int track_id,
-        const std::vector<char> &loops_data,
-        loops_blob &loops);
+        const std::vector<char> &loops_data);
+
+// Encode track data into a blob
+std::vector<char> encode_track_data(const track_data_blob &track_data);
+
+// Encode beat data into a blob
+std::vector<char> encode_beat_data(const beat_data_blob &beat_data);
+
+// Encode quick cues data into a blob
+std::vector<char> encode_quick_cues(const quick_cues_blob &quick_cues);
+
+// Encode loops into a blob
+std::vector<char> encode_loops(const loops_blob &loops);
 
 
 } // namespace engineprime
 
-#endif // ENGINEPRIME_PERFORMANCE_DATA_HPP
+#endif // ENGINEPRIME_PERFORMANCE_DATA_FORMAT_HPP
 
