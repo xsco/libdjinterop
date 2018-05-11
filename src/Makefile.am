@@ -21,7 +21,9 @@ nobase_include_HEADERS = \
 	engineprime/schema_version.hpp \
 	engineprime/database.hpp \
 	engineprime/track.hpp
-	engineprime/performance_data.hpp
+	engineprime/performance_data.hpp \
+	engineprime/musical_key.hpp \
+	engineprime/pad_colour.hpp \
 	engineprime/album_art.hpp
 
 # Unit test programs

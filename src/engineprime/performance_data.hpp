@@ -30,6 +30,9 @@
 #include <vector>
 
 #include "database.hpp"
+#include "musical_key.hpp"
+#include "pad_colour.hpp"
+
 
 namespace engineprime {
 
@@ -73,82 +76,114 @@ private:
 };
 
 /**
- * The `musical_key` enumeration contains a list all known musical keys that a
- * track may be detected to initially follow.
- */
-enum class musical_key
-{
-    a_minor = 1,
-    g_major,
-    e_minor,
-    d_major,
-    b_minor,
-    a_major,
-    f_sharp_minor,
-    e_major,
-    d_flat_minor,
-    b_major,
-    a_flat_minor,
-    f_sharp_major,
-    e_flat_minor,
-    d_flat_major,
-    b_flat_minor,
-    a_flat_major,
-    f_minor,
-    e_flat_major,
-    c_minor,
-    b_flat_major,
-    g_minor,
-    f_major,
-    d_minor,
-    c_major
-};
-
-/**
- * The `pad_colour` struct holds information about the colour that a given
- * hot cue / loop / etc. pad on the Denon SC5000 prime deck may be lit up as.
+ * The `track_beat_grid` struct holds information about a beat grid.
  *
- * Note that the alpha channel is typically not used, and is usually set to
- * full brightness.
+ * A beat grid is represented by two points (measured as a sample offset) in a
+ * track, each with an associated beat number/index.
+ *
+ * By convention, the Engine Prime analyses tracks so that the first beat is
+ * at index -4 (yes, negative!) and the last beat is the first beat past the
+ * usable end of the track, which may not necessarily be aligned to the first
+ * beat of a 4-beat bar.  Therefore, the sample offsets typically recorded by
+ * Engine Prime do not usually lie within the actual track.  If you want to
+ * normalise any `track_beat_grid` to this approach, use the
+ * `normalise_beat_grid` method.
  */
-struct pad_colour
-{
-    uint_least8_t r;
-    uint_least8_t g;
-    uint_least8_t b;
-    uint_least8_t a;
-};
-
-namespace standard_pad_colours
-{
-    constexpr pad_colour pad_1{ 0xEA, 0xC5, 0x32, 0xFF };
-    constexpr pad_colour pad_2{ 0xEA, 0x8F, 0x32, 0xFF };
-    constexpr pad_colour pad_3{ 0xB8, 0x55, 0xBF, 0xFF };
-    constexpr pad_colour pad_4{ 0xBA, 0x2A, 0x41, 0xFF };
-    constexpr pad_colour pad_5{ 0x86, 0xC6, 0x4B, 0xFF };
-    constexpr pad_colour pad_6{ 0x20, 0xC6, 0x7C, 0xFF };
-    constexpr pad_colour pad_7{ 0x00, 0xA8, 0xB1, 0xFF };
-    constexpr pad_colour pad_8{ 0x15, 0x8E, 0xE2, 0xFF };
-}
-
 struct track_beat_grid
 {
+    /**
+     * \brief Default constructor
+     */
+    track_beat_grid() :
+        first_beat_index{0},
+        first_beat_sample_offset{0},
+        last_beat_index{0},
+        last_beat_sample_offset{0}
+    {}
+
+    /**
+     * \brief Construct a `track_beat_grid` from explicit values
+     */
+    track_beat_grid(
+            int first_beat_index, double first_beat_sample_offset,
+            int last_beat_index, double last_beat_sample_offset) :
+        first_beat_index{first_beat_index},
+        first_beat_sample_offset{first_beat_sample_offset},
+        last_beat_index{last_beat_index},
+        last_beat_sample_offset{last_beat_sample_offset}
+    {}
+
 	int first_beat_index;
     double first_beat_sample_offset;
 	int last_beat_index;
     double last_beat_sample_offset;
 };
 
+/**
+ * The `track_hot_cue_point` struct represents a hot cue within a track.
+ */
 struct track_hot_cue_point
 {
+    /**
+     * \brief Default constructor
+     */
+    track_hot_cue_point() :
+        is_set{false},
+        label{},
+        sample_offset{0},
+        colour{}
+    {}
+
+    /**
+     * \brief Construct a `track_hot_cue_point` from explicit field values
+     */
+    track_hot_cue_point(
+            bool is_set, const std::string &label,
+            double sample_offset, const pad_colour &colour) :
+        is_set{is_set},
+        label{label},
+        sample_offset{sample_offset},
+        colour{colour}
+    {}
+
     bool is_set;
     std::string label;
     double sample_offset;
     pad_colour colour;
 };
 
+/**
+ * The `track_loop` struct represents a loop within a track.
+ */
 struct track_loop
 {
+    /**
+     * \brief Default constructor
+     */
+    track_loop() :
+        is_start_set{false},
+        is_end_set{false},
+        label{},
+        start_sample_offset{0},
+        end_sample_offset{0},
+        colour{}
+    {}
+
+    /**
+     * \brief Construct a `track loop` from explicit field values
+     */
+    track_loop(
+            bool is_start_set, bool is_end_set, const std::string &label,
+            double start_sample_offset, double end_sample_offset,
+            const pad_colour &colour) :
+        is_start_set{is_start_set},
+        is_end_set{is_end_set},
+        label{label},
+        start_sample_offset{start_sample_offset},
+        end_sample_offset{end_sample_offset},
+        colour{colour}
+    {}
+
     bool is_start_set;
     bool is_end_set;
     std::string label;
@@ -279,7 +314,9 @@ public:
      */
     std::chrono::milliseconds duration() const
     {
-        auto ms = 1000 * total_samples() / (int_least64_t)sample_rate();
+        auto ms = sample_rate() != 0
+            ? 1000 * total_samples() / (int_least64_t)sample_rate()
+            : 0;
         return std::chrono::milliseconds{ms};
     }
 
@@ -291,6 +328,11 @@ public:
      */
 	double bpm() const
 	{
+        if (
+                adjusted_beat_grid().last_beat_index -
+                adjusted_beat_grid().first_beat_index == 0)
+            return 0;
+
 		return sample_rate() * 60 *
 			(double)(adjusted_beat_grid().last_beat_index -
 			 adjusted_beat_grid().first_beat_index) /
@@ -306,9 +348,13 @@ public:
 
     void set_average_loudness(double average_loudness);
 
-    void set_default_beat_grid(track_beat_grid beat_grid);
+    void set_default_beat_grid(const track_beat_grid &beat_grid);
 
-    void set_adjusted_beat_grid(track_beat_grid beat_grid);
+    void set_default_beat_grid(track_beat_grid &&beat_grid);
+
+    void set_adjusted_beat_grid(const track_beat_grid &beat_grid);
+
+    void set_adjusted_beat_grid(track_beat_grid &&beat_grid);
 
     void set_hot_cues(
             hot_cue_const_iterator begin,
@@ -332,10 +378,17 @@ private:
 	std::unique_ptr<impl> pimpl_;
 };
 
-inline bool operator ==(const pad_colour &x, const pad_colour &y)
-{
-	return x.r == y.r && x.g == y.g && x.b == y.b && x.a == y.a;
-}
+/**
+ * \brief Normalise a beat-grid, so that the beat indexes are in the form
+ *        normally expected by Engine Prime.
+ *
+ * By convention, the Engine Prime analyses tracks so that the first beat is
+ * at index -4 (yes, negative!) and the last beat is the first beat past the
+ * usable end of the track, which may not necessarily be aligned to the first
+ * beat of a 4-beat bar.  Therefore, the sample offsets typically recorded by
+ * Engine Prime do not usually lie within the actual track.
+ */
+void normalise_beat_grid(track_beat_grid &beat_grid, double last_sample);
 
 } // engineprime
 

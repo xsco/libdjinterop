@@ -221,6 +221,19 @@ BOOST_AUTO_TEST_CASE (ctor__nonexistent_track__throws)
 			[](const ep::nonexistent_track &e) { return e.id() == 123; });
 }
 
+BOOST_AUTO_TEST_CASE (setters__good_values__values_stored)
+{
+    // Arrange
+    ep::track t{};
+
+    // Act
+    populate_example_track_1(t);
+
+    // Assert
+    BOOST_CHECK_EQUAL(t.id(), 0);
+    check_track_1(t);
+}
+
 BOOST_AUTO_TEST_CASE (save__new_track_no_values__throws)
 {
     // Arrange

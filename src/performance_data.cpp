@@ -89,36 +89,59 @@ static performance_data_row extract_performance_data(
 	return row;
 }
 
+static track_beat_grid beat_markers_to_beat_grid(
+        const std::vector<beat_data_marker_blob> beat_markers)
+{
+    if (beat_markers.size() < 2)
+        throw std::invalid_argument{"Not enough markers in beat data"};
+
+    auto &first = beat_markers.front();
+    auto &last = beat_markers.back();
+    return track_beat_grid{
+        static_cast<int>(first.beat_index),
+        first.sample_offset,
+        static_cast<int>(last.beat_index),
+        last.sample_offset};
+}
+
+static std::vector<beat_data_marker_blob> beat_grid_to_beat_markers(
+        const track_beat_grid &beat_grid)
+{
+    // The beat markers have an int32_t field, the meaning of which is currently
+    // unknown.  Some default hex values, that have been observed in the wild,
+    // are used below as a temporary measure until the real meaning of the field
+    // can be identified.
+    std::vector<beat_data_marker_blob> markers;
+    markers.push_back(beat_data_marker_blob{
+            beat_grid.first_beat_sample_offset,
+            beat_grid.first_beat_index,
+            beat_grid.last_beat_index - beat_grid.first_beat_index,
+            0x7fc9});
+    markers.push_back(beat_data_marker_blob{
+            beat_grid.last_beat_sample_offset,
+            beat_grid.last_beat_index,
+            0,
+            0x7fff});
+    return markers;
+}
+
 struct performance_data::impl
 {
     impl(const database &db, int track_id) :
-        pd_{extract_performance_data(db.performance_db_path(), track_id)}
-    {
-        // Fill in tailored default beat grid info from blob
-        default_beat_grid_.first_beat_index =
-            pd_.beat_data.default_markers[0].beat_index;
-        default_beat_grid_.first_beat_sample_offset =
-            pd_.beat_data.default_markers[0].sample_offset;
-        auto ldmi = pd_.beat_data.default_num_beatgrid_markers - 1;
-        default_beat_grid_.last_beat_index =
-            pd_.beat_data.default_markers[ldmi].beat_index;
-        default_beat_grid_.last_beat_sample_offset =
-            pd_.beat_data.default_markers[ldmi].sample_offset;
-
-        // Fill in tailored adjusted beat grid info from blob
-        adjusted_beat_grid_.first_beat_index =
-            pd_.beat_data.adjusted_markers[0].beat_index;
-        adjusted_beat_grid_.first_beat_sample_offset =
-            pd_.beat_data.adjusted_markers[0].sample_offset;
-        auto lami = pd_.beat_data.adjusted_num_beatgrid_markers - 1;
-        adjusted_beat_grid_.last_beat_index =
-            pd_.beat_data.adjusted_markers[lami].beat_index;
-        adjusted_beat_grid_.last_beat_sample_offset =
-            pd_.beat_data.adjusted_markers[lami].sample_offset;
-    }
+        pd_{extract_performance_data(db.performance_db_path(), track_id)},
+        default_beat_grid_{
+            beat_markers_to_beat_grid(pd_.beat_data.default_markers)},
+        adjusted_beat_grid_{
+            beat_markers_to_beat_grid(pd_.beat_data.adjusted_markers)}
+    {}
 
     impl(int track_id) : pd_{track_id}
-    {}
+    {
+        pd_.track_data.sample_rate = 0;
+        pd_.track_data.total_samples = 0;
+        pd_.track_data.key = 0;
+        pd_.track_data.average_loudness = 0.5;
+    }
     
     performance_data_row pd_;
     track_beat_grid default_beat_grid_;
@@ -204,11 +227,13 @@ track_loop_const_iterator performance_data::loops_end() const
 void performance_data::set_sample_rate(double sample_rate)
 {
     pimpl_->pd_.track_data.sample_rate = sample_rate;
+    pimpl_->pd_.beat_data.sample_rate = sample_rate;
 }
 
 void performance_data::set_total_samples(int_least64_t total_samples)
 {
     pimpl_->pd_.track_data.total_samples = total_samples;
+    pimpl_->pd_.beat_data.total_samples = total_samples;
 }
 
 void performance_data::set_key(musical_key key)
@@ -221,19 +246,32 @@ void performance_data::set_average_loudness(double average_loudness)
     pimpl_->pd_.track_data.average_loudness = average_loudness;
 }
 
-void performance_data::set_default_beat_grid(track_beat_grid beat_grid)
+void performance_data::set_default_beat_grid(const track_beat_grid &beat_grid)
 {
     pimpl_->default_beat_grid_ = beat_grid;
-
-    // TODO - update the beat_data blob as well
-    // adjust beat grid to span from beat -4 to last usable beat in a bar of 4
+    pimpl_->pd_.beat_data.default_markers =
+        beat_grid_to_beat_markers(pimpl_->default_beat_grid_);
 }
 
-void performance_data::set_adjusted_beat_grid(track_beat_grid beat_grid)
+void performance_data::set_default_beat_grid(track_beat_grid &&beat_grid)
+{
+    pimpl_->default_beat_grid_ = std::move(beat_grid);
+    pimpl_->pd_.beat_data.default_markers =
+        beat_grid_to_beat_markers(pimpl_->default_beat_grid_);
+}
+
+void performance_data::set_adjusted_beat_grid(const track_beat_grid &beat_grid)
 {
     pimpl_->adjusted_beat_grid_ = beat_grid;
+    pimpl_->pd_.beat_data.adjusted_markers =
+        beat_grid_to_beat_markers(pimpl_->adjusted_beat_grid_);
+}
 
-    // TODO - update the beat_data blob as well
+void performance_data::set_adjusted_beat_grid(track_beat_grid &&beat_grid)
+{
+    pimpl_->adjusted_beat_grid_ = std::move(beat_grid);
+    pimpl_->pd_.beat_data.adjusted_markers =
+        beat_grid_to_beat_markers(pimpl_->adjusted_beat_grid_);
 }
 
 void performance_data::set_hot_cues(
@@ -251,8 +289,15 @@ void performance_data::set_hot_cues(
                     return true;
                 return false;
             });
-    if (pimpl_->pd_.quick_cues.hot_cues.size() < 8)
+
+    auto cur_size = pimpl_->pd_.quick_cues.hot_cues.size(); 
+    if (cur_size < 8)
+    {
         pimpl_->pd_.quick_cues.hot_cues.resize(8);
+        for (int i = cur_size; i < 8; ++i)
+            pimpl_->pd_.quick_cues.hot_cues[i].colour =
+                standard_pad_colours::pads[i];
+    }
 }
 
 void performance_data::set_default_main_cue_sample_offset(double sample_offset)
@@ -280,13 +325,45 @@ void performance_data::set_loops(
                     return true;
                 return false;
             });
-    if (pimpl_->pd_.loops.loops.size() < 8)
+
+    auto cur_size = pimpl_->pd_.loops.loops.size();
+    if (cur_size < 8)
+    {
         pimpl_->pd_.loops.loops.resize(8);
+        for (int i = cur_size; i < 8; ++i)
+            pimpl_->pd_.loops.loops[i].colour = standard_pad_colours::pads[i];
+    }
 }
 
 void performance_data::save(const database &database)
 {
     // TODO - implement save of performance data to DB
+}
+
+void normalise_beat_grid(track_beat_grid &beat_grid, double last_sample)
+{
+    double samples_per_beat =
+        (
+            beat_grid.last_beat_sample_offset -
+            beat_grid.first_beat_sample_offset) /
+        (
+            beat_grid.last_beat_index -
+            beat_grid.first_beat_index);
+
+    // Adjust first beat sample offset to be aligned to beat -4
+    double first_adjust_offset =
+        (beat_grid.first_beat_index + 4) * samples_per_beat;
+    beat_grid.first_beat_index = -4;
+    beat_grid.first_beat_sample_offset -= first_adjust_offset;
+
+    // Work out what beat number is just beyond the last sample
+    int last_beats_adjust =
+        1 + 
+        ((last_sample - beat_grid.last_beat_sample_offset) / samples_per_beat);
+    // Adjust last beat sample offset
+    double last_adjust_offset = last_beats_adjust * samples_per_beat;
+    beat_grid.last_beat_index += last_beats_adjust;
+    beat_grid.last_beat_sample_offset += last_adjust_offset;
 }
 
 } // namespace engineprime
