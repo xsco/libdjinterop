@@ -10,6 +10,7 @@ libengineprime_la_SOURCES = \
 	schema.cpp schema.hpp \
 	database.cpp \
 	track.cpp \
+	encode_decode_utils.hpp \
 	performance_data_format.cpp performance_data_format.hpp \
 	performance_data.cpp
 libengineprime_la_CXXFLAGS = $(ZLIB_CFLAGS)
@@ -17,14 +18,14 @@ libengineprime_la_LDFLAGS = -version-info $(LIBENGINEPRIME_INTERFACE_VERSION)
 libengineprime_la_LIBADD = $(ZLIB_LIBS) $(BOOST_IOSTREAMS_LIBS)
 
 nobase_include_HEADERS = \
-	engineprime/engineprime.hpp \
-	engineprime/schema_version.hpp \
+	engineprime/album_art.hpp \
 	engineprime/database.hpp \
-	engineprime/track.hpp
-	engineprime/performance_data.hpp \
+	engineprime/engineprime.hpp \
 	engineprime/musical_key.hpp \
-	engineprime/pad_colour.hpp \
-	engineprime/album_art.hpp
+	engineprime/pad_colour.hpp
+	engineprime/performance_data.hpp \
+	engineprime/schema_version.hpp \
+	engineprime/track.hpp
 
 # Unit test programs
 check_PROGRAMS = database_test track_test schema_test performance_data_test
@@ -41,6 +42,8 @@ database_test_LDADD = \
 	$(BOOST_SYSTEM_LIBS) \
 	$(BOOST_FILESYSTEM_LIBS) \
 	$(BOOST_UTF_LIBS) \
+	$(BOOST_IOSTREAMS_LIBS) \
+	$(ZLIB_LIBS) \
 	libengineprime.la \
 	-lpthread -ldl
 
@@ -55,6 +58,8 @@ track_test_LDADD = \
 	$(BOOST_SYSTEM_LIBS) \
 	$(BOOST_FILESYSTEM_LIBS) \
 	$(BOOST_UTF_LIBS) \
+	$(BOOST_IOSTREAMS_LIBS) \
+	$(ZLIB_LIBS) \
 	libengineprime.la \
 	-lpthread -ldl
 
@@ -68,6 +73,8 @@ schema_test_LDADD = \
 	$(BOOST_SYSTEM_LIBS) \
 	$(BOOST_FILESYSTEM_LIBS) \
 	$(BOOST_UTF_LIBS) \
+	$(BOOST_IOSTREAMS_LIBS) \
+	$(ZLIB_LIBS) \
 	libengineprime.la \
 	-lpthread -ldl
 
@@ -82,6 +89,8 @@ performance_data_test_LDADD = \
 	$(BOOST_SYSTEM_LIBS) \
 	$(BOOST_FILESYSTEM_LIBS) \
 	$(BOOST_UTF_LIBS) \
+	$(BOOST_IOSTREAMS_LIBS) \
+	$(ZLIB_LIBS) \
 	libengineprime.la \
 	-lpthread -ldl
 
