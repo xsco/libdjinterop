@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "database.hpp"
+#include "musical_key.hpp"
 
 namespace engineprime {
 
@@ -197,6 +198,14 @@ public:
     std::string composer() const;
 
     /**
+     * \brief Get the key of this track
+     *
+     * Note that this is just tag metadata, and does not have to match the
+     * track's actual musical key as identified by track analysis.
+     */
+    musical_key key() const;
+
+    /**
      * \brief Get the path to this track's file on disk, relative to the music
      *        database.
      */
@@ -298,6 +307,11 @@ public:
     bool has_composer() const;
 
     /**
+     * \brief Get a `bool` indicating if a key has been set for this track
+     */
+    bool has_key() const;
+
+    /**
      * \brief Return a `bool` indicating whether this track has album art set
      */
 	bool has_album_art() const { return album_art_id() != 1; }
@@ -313,6 +327,7 @@ public:
     void set_comment(const std::string &comment);
     void set_publisher(const std::string &publisher);
     void set_composer(const std::string &composer);
+    void set_key(musical_key key);
     void set_path(const std::string &path);
     void set_filename(const std::string &filename);
     void set_file_extension(const std::string &file_extension);
@@ -336,6 +351,11 @@ public:
             const std::string &external_database_uuid,
             int track_id_in_external_database);
     void set_album_art_id(int album_art_id);
+
+    /**
+     * \brief Removes any album art from this track
+     */
+    void set_no_album_art();
 
     /**
      * \brief Save a track to a given database

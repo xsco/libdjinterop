@@ -22,7 +22,7 @@ nobase_include_HEADERS = \
 	engineprime/database.hpp \
 	engineprime/engineprime.hpp \
 	engineprime/musical_key.hpp \
-	engineprime/pad_colour.hpp
+	engineprime/pad_colour.hpp \
 	engineprime/performance_data.hpp \
 	engineprime/schema_version.hpp \
 	engineprime/track.hpp

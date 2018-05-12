@@ -149,7 +149,7 @@ database create_database(const std::string &dir_path,
     if (stat(dir_path.c_str(), &buf) != 0)
     {
         // Create the dir
-        if (mkdir(dir_path.c_str(), 0755) == 0 || errno == EEXIST)
+        if (mkdir(dir_path.c_str(), 0755) != 0)
         {
             throw std::runtime_error{
                 "Failed to create directory to hold new database"};

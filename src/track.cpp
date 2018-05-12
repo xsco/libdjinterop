@@ -18,6 +18,8 @@
 #include <engineprime/track.hpp>
 
 #include <chrono>
+#include <iomanip>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <boost/optional.hpp>
@@ -43,6 +45,7 @@ struct track_row
     boost::optional<std::string> uuid_of_external_database;
     boost::optional<int> id_track_in_external_database;
     int id_album_art;
+    int pdb_import_key; // schema versions >= 1.0.3
 };
 
 struct metadata_types
@@ -90,31 +93,58 @@ typedef std::vector<metadata_integer_row> int_metadata_vec;
 
 
 // Select a row from the Track table
-track_row select_track_row(const std::string &music_db_path, int id)
+track_row select_track_row(const database &db, int id)
 {
-    sqlite::database m_db{music_db_path};
+    sqlite::database m_db{db.music_db_path()};
     track_row row;
     int rows_found = 0;
-    m_db
-        << "SELECT id, playOrder, length, lengthCalculated, bpm, year, "
-           "path, filename, bitrate, bpmAnalyzed, trackType, "
-           "isExternalTrack, uuidOfExternalDatabase, "
-           "idTrackInExternalDatabase, idAlbumArt "
-           "FROM Track WHERE id = :1"
-        << id
-        >> [&](int id, int play_order, int length, int length_calculated,
-              int bpm, int year, std::string path, std::string filename,
-              int bitrate, double bpm_analysed, int track_type,
-              double is_external_track, std::string uuid_of_external_database,
-              int id_track_in_external_database, int id_album_art)
-        {
-            row = track_row{
-                play_order, length, length_calculated, bpm, year, path,
-                filename, bitrate, bpm_analysed, track_type, is_external_track,
-                uuid_of_external_database, id_track_in_external_database,
-                id_album_art};
-            ++rows_found;
-        };
+    if (db.version() >= version_firmware_1_0_3)
+    {
+        m_db
+            << "SELECT id, playOrder, length, lengthCalculated, bpm, year, "
+               "path, filename, bitrate, bpmAnalyzed, trackType, "
+               "isExternalTrack, uuidOfExternalDatabase, "
+               "idTrackInExternalDatabase, idAlbumArt, pdbImportKey "
+               "FROM Track WHERE id = :1"
+            << id
+            >> [&](int id, int play_order, int length, int length_calculated,
+                  int bpm, int year, std::string path, std::string filename,
+                  int bitrate, double bpm_analysed, int track_type,
+                  double is_external_track, std::string uuid_of_external_database,
+                  int id_track_in_external_database, int id_album_art,
+                  int pdb_import_key)
+            {
+                row = track_row{
+                    play_order, length, length_calculated, bpm, year, path,
+                    filename, bitrate, bpm_analysed, track_type, is_external_track,
+                    uuid_of_external_database, id_track_in_external_database,
+                    id_album_art, pdb_import_key};
+                ++rows_found;
+            };
+    }
+    else
+    {
+        m_db
+            << "SELECT id, playOrder, length, lengthCalculated, bpm, year, "
+               "path, filename, bitrate, bpmAnalyzed, trackType, "
+               "isExternalTrack, uuidOfExternalDatabase, "
+               "idTrackInExternalDatabase, idAlbumArt "
+               "FROM Track WHERE id = :1"
+            << id
+            >> [&](int id, int play_order, int length, int length_calculated,
+                  int bpm, int year, std::string path, std::string filename,
+                  int bitrate, double bpm_analysed, int track_type,
+                  double is_external_track, std::string uuid_of_external_database,
+                  int id_track_in_external_database, int id_album_art)
+            {
+                row = track_row{
+                    play_order, length, length_calculated, bpm, year, path,
+                    filename, bitrate, bpm_analysed, track_type, is_external_track,
+                    uuid_of_external_database, id_track_in_external_database,
+                    id_album_art, 0};
+                ++rows_found;
+            };
+    }
 
     if (rows_found == 0)
         throw nonexistent_track{id};
@@ -170,7 +200,7 @@ struct track::impl
     impl(const database &db, int id) :
         id_{id},
         load_db_uuid_{db.uuid()},
-        track_row_{select_track_row(db.music_db_path(), id)},
+        track_row_{select_track_row(db, id)},
         str_metadata_vec_{select_metadata_rows(db.music_db_path(), id)},
         int_metadata_vec_{select_int_metadata_rows(db.music_db_path(), id)}
     {}
@@ -198,8 +228,8 @@ struct track::impl
         track_row_.bpm_analysed = 0;
         track_row_.track_type = 1; // All tracks appear to be of type 1
         track_row_.is_external_track = 0;
-        track_row_.id_track_in_external_database = 0;
         track_row_.id_album_art = 1; // 1 is the magic "no album art" value
+        track_row_.pdb_import_key = 0;
 
         // Set defaults for all metadata
         int i = 0;
@@ -213,7 +243,6 @@ struct track::impl
         {
             im.id = 0;
             im.type = i++;
-            im.value = 0;
         }
 
         // Metadata type-specific defaults and overrides
@@ -312,6 +341,13 @@ std::string track::publisher() const
 std::string track::composer() const
 {
     return pimpl_->str_metadata_vec_[metadata_types::composer].text.value_or("");
+}
+
+musical_key track::key() const
+{
+    auto key_int_value = pimpl_->int_metadata_vec_[
+        metadata_integer_types::musical_key].value.value_or(1);
+    return (musical_key)key_int_value;
 }
 
 std::string track::path() const
@@ -422,6 +458,11 @@ bool track::has_composer() const
     return (bool)pimpl_->str_metadata_vec_[metadata_types::composer].text;
 }
 
+bool track::has_key() const
+{
+    return (bool)pimpl_->int_metadata_vec_[metadata_integer_types::musical_key].value;
+}
+
 void track::set_track_number(int track_number)
 {
     pimpl_->track_row_.play_order = track_number;
@@ -431,6 +472,14 @@ void track::set_duration(std::chrono::seconds duration)
 {
     pimpl_->track_row_.length = duration.count();
     pimpl_->track_row_.length_calculated = duration.count();
+
+    // Set string metadata, type 10, as "MM:SS";
+    std::stringstream ss;
+    ss << std::setw(2) << std::setfill('0');
+    ss << (duration.count() / 60);
+    ss << ":";
+    ss << (duration.count() % 60);
+    pimpl_->str_metadata_vec_[metadata_types::duration_mm_ss].text = ss.str();
 }
 
 void track::set_bpm(int bpm)
@@ -498,6 +547,12 @@ void track::set_composer(const std::string &composer)
         composer != ""
         ? boost::optional<std::string>(composer)
         : boost::none;
+}
+
+void track::set_key(musical_key key)
+{
+    pimpl_->int_metadata_vec_[
+        metadata_integer_types::musical_key].value = (int)key;
 }
 
 void track::set_path(const std::string &path)
@@ -585,6 +640,13 @@ void track::set_album_art_id(int album_art_id)
     pimpl_->track_row_.id_album_art = album_art_id;
 }
 
+void track::set_no_album_art()
+{
+    // 1 is the magic number for "no album art", and it is a valid entry in the
+    // AlbumArt table with no image data
+    pimpl_->track_row_.id_album_art = 1;
+}
+
 
 /**
  * Save a track to a given database
@@ -613,67 +675,138 @@ void track::save(const database &database)
     if (new_entry)
     {
         // Insert a new entry in the track table
-        m_db <<
-            "INSERT INTO Track ("
-            "  playOrder, length, lengthCalculated, bpm, "
-            "  year, path, filename, bitrate, bpmAnalyzed, trackType, "
-            "  isExternalTrack, uuidOfExternalDatabase, "
-            "  idTrackInExternalDatabase, idAlbumArt"
-            ")"
-            "VALUES ("
-            "  ?,?,?,?,?,?,?,?,?,?,?,?,?,?"
-            ")"
-            << track_number()
-            << duration().count()
-            << duration().count()
-            << bpm()
-            << year()
-            << path()
-            << filename()
-            << bitrate()
-            << bpm() // no differentiation between BPM and BPM-analysed currently
-            << 1
-            << imported()
-            << external_database_uuid()
-            << track_id_in_external_database()
-            << album_art_id();
+        if (database.version() >= version_firmware_1_0_3)
+        {
+            m_db <<
+                "INSERT INTO Track ("
+                "  playOrder, length, lengthCalculated, bpm, "
+                "  year, path, filename, bitrate, bpmAnalyzed, trackType, "
+                "  isExternalTrack, uuidOfExternalDatabase, "
+                "  idTrackInExternalDatabase, idAlbumArt, pdbImportKey"
+                ")"
+                "VALUES ("
+                "  ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?"
+                ")"
+                << pimpl_->track_row_.play_order
+                << pimpl_->track_row_.length
+                << pimpl_->track_row_.length_calculated
+                << pimpl_->track_row_.bpm
+                << pimpl_->track_row_.year
+                << pimpl_->track_row_.path
+                << pimpl_->track_row_.filename
+                << pimpl_->track_row_.bitrate
+                << pimpl_->track_row_.bpm_analysed
+                << pimpl_->track_row_.track_type
+                << pimpl_->track_row_.is_external_track
+                << pimpl_->track_row_.uuid_of_external_database
+                << pimpl_->track_row_.id_track_in_external_database
+                << pimpl_->track_row_.id_album_art
+                << pimpl_->track_row_.pdb_import_key;
+        }
+        else
+        {
+            m_db <<
+                "INSERT INTO Track ("
+                "  playOrder, length, lengthCalculated, bpm, "
+                "  year, path, filename, bitrate, bpmAnalyzed, trackType, "
+                "  isExternalTrack, uuidOfExternalDatabase, "
+                "  idTrackInExternalDatabase, idAlbumArt"
+                ")"
+                "VALUES ("
+                "  ?,?,?,?,?,?,?,?,?,?,?,?,?,?"
+                ")"
+                << pimpl_->track_row_.play_order
+                << pimpl_->track_row_.length
+                << pimpl_->track_row_.length_calculated
+                << pimpl_->track_row_.bpm
+                << pimpl_->track_row_.year
+                << pimpl_->track_row_.path
+                << pimpl_->track_row_.filename
+                << pimpl_->track_row_.bitrate
+                << pimpl_->track_row_.bpm_analysed
+                << pimpl_->track_row_.track_type
+                << pimpl_->track_row_.is_external_track
+                << pimpl_->track_row_.uuid_of_external_database
+                << pimpl_->track_row_.id_track_in_external_database
+                << pimpl_->track_row_.id_album_art;
+        }
         pimpl_->id_ = m_db.last_insert_rowid();
     }
     else
     {
         // Update existing entry
-        m_db <<
-            "UPDATE Track SET "
-            "  playOrder = ?, "
-            "  length = ?, "
-            "  lengthCalculated = ?, "
-            "  bpm = ?, "
-            "  year = ?, "
-            "  path = ?, "
-            "  filename = ?, "
-            "  bitrate = ?, "
-            "  bpmAnalyzed = ?, "
-            "  trackType = ?, "
-            "  isExternalTrack = ?, "
-            "  uuidOfExternalDatabase = ?, "
-            "  idTrackInExternalDatabase = ?, "
-            "  idAlbumArt = ? "
-            "WHERE id = ?"
-            << track_number()
-            << duration().count()
-            << duration().count()
-            << bpm()
-            << year()
-            << path()
-            << filename()
-            << bitrate()
-            << bpm() // no differentiation between BPM and BPM-analysed currently
-            << 1
-            << imported()
-            << external_database_uuid()
-            << track_id_in_external_database()
-            << album_art_id()
-            << pimpl_->id_;
+        if (database.version() >= version_firmware_1_0_3)
+        {
+            m_db <<
+                "UPDATE Track SET "
+                "  playOrder = ?, "
+                "  length = ?, "
+                "  lengthCalculated = ?, "
+                "  bpm = ?, "
+                "  year = ?, "
+                "  path = ?, "
+                "  filename = ?, "
+                "  bitrate = ?, "
+                "  bpmAnalyzed = ?, "
+                "  trackType = ?, "
+                "  isExternalTrack = ?, "
+                "  uuidOfExternalDatabase = ?, "
+                "  idTrackInExternalDatabase = ?, "
+                "  idAlbumArt = ?, "
+                "  pdbImportKey = ? "
+                "WHERE id = ?"
+                << pimpl_->track_row_.play_order
+                << pimpl_->track_row_.length
+                << pimpl_->track_row_.length_calculated
+                << pimpl_->track_row_.bpm
+                << pimpl_->track_row_.year
+                << pimpl_->track_row_.path
+                << pimpl_->track_row_.filename
+                << pimpl_->track_row_.bitrate
+                << pimpl_->track_row_.bpm_analysed
+                << pimpl_->track_row_.track_type
+                << pimpl_->track_row_.is_external_track
+                << pimpl_->track_row_.uuid_of_external_database
+                << pimpl_->track_row_.id_track_in_external_database
+                << pimpl_->track_row_.id_album_art
+                << pimpl_->track_row_.pdb_import_key
+                << pimpl_->id_;
+        }
+        else
+        {
+            m_db <<
+                "UPDATE Track SET "
+                "  playOrder = ?, "
+                "  length = ?, "
+                "  lengthCalculated = ?, "
+                "  bpm = ?, "
+                "  year = ?, "
+                "  path = ?, "
+                "  filename = ?, "
+                "  bitrate = ?, "
+                "  bpmAnalyzed = ?, "
+                "  trackType = ?, "
+                "  isExternalTrack = ?, "
+                "  uuidOfExternalDatabase = ?, "
+                "  idTrackInExternalDatabase = ?, "
+                "  idAlbumArt = ? "
+                "WHERE id = ?"
+                << pimpl_->track_row_.play_order
+                << pimpl_->track_row_.length
+                << pimpl_->track_row_.length_calculated
+                << pimpl_->track_row_.bpm
+                << pimpl_->track_row_.year
+                << pimpl_->track_row_.path
+                << pimpl_->track_row_.filename
+                << pimpl_->track_row_.bitrate
+                << pimpl_->track_row_.bpm_analysed
+                << pimpl_->track_row_.track_type
+                << pimpl_->track_row_.is_external_track
+                << pimpl_->track_row_.uuid_of_external_database
+                << pimpl_->track_row_.id_track_in_external_database
+                << pimpl_->track_row_.id_album_art
+                << pimpl_->id_;
+        }
     }
 
     // Insert/update the Metadata table

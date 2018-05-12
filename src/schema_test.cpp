@@ -160,3 +160,33 @@ BOOST_AUTO_TEST_CASE (create_performance_schema__version_1_0_0__creates_verified
     remove_temp_dir(temp_dir);
 }
 
+BOOST_AUTO_TEST_CASE (create_music_schema__version_1_0_3__creates_verified)
+{
+    // Arrange
+    auto temp_dir = create_temp_dir();
+    auto db_path = temp_dir / "m.db";
+    sqlite::database db{db_path.string()};
+
+    // Act
+    ep::create_music_schema(db, ep::version_firmware_1_0_3);
+
+    // Assert
+    ep::verify_music_schema(db);
+    fs::remove_all(temp_dir);
+}
+
+BOOST_AUTO_TEST_CASE (create_performance_schema__version_1_0_3__creates_verified)
+{
+    // Arrange
+    auto temp_dir = create_temp_dir();
+    auto db_path = temp_dir / "p.db";
+    sqlite::database db{db_path.string()};
+
+    // Act
+    ep::create_performance_schema(db, ep::version_firmware_1_0_3);
+
+    // Assert
+    ep::verify_performance_schema(db);
+    remove_temp_dir(temp_dir);
+}
+

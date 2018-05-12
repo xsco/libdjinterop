@@ -510,7 +510,7 @@ static void verify_historylist_track_list(sqlite::database &db)
     }
 }
 
-static void verify_information(sqlite::database &db)
+static void verify_information(sqlite::database &db, const schema_version &version)
 {
     {
         table_info cols{db, "Information"};
@@ -519,6 +519,11 @@ static void verify_information(sqlite::database &db)
         ++iter;
         validate(iter, end, "id", "INTEGER", 0, "", 1);
         ++iter;
+        if (version >= version_firmware_1_0_3)
+        {
+            validate(iter, end, "lastRekordBoxLibraryImportReadCounter", "INTEGER", 0, "", 0);
+            ++iter;
+        }
         validate(iter, end, "schemaVersionMajor", "INTEGER", 0, "", 0);
         ++iter;
         validate(iter, end, "schemaVersionMinor", "INTEGER", 0, "", 0);
@@ -799,7 +804,7 @@ static void verify_preparelist_track_list(sqlite::database &db)
     }
 }
 
-static void verify_track(sqlite::database &db)
+static void verify_track(sqlite::database &db, const schema_version &version)
 {
     {
         table_info cols{db, "Track"};
@@ -826,6 +831,11 @@ static void verify_track(sqlite::database &db)
         ++iter;
         validate(iter, end, "path", "TEXT", 0, "", 0);
         ++iter;
+        if (version >= version_firmware_1_0_3)
+        {
+            validate(iter, end, "pdbImportKey", "INTEGER", 0, "", 0);
+            ++iter;
+        }
         validate(iter, end, "playOrder", "INTEGER", 0, "", 0);
         ++iter;
         validate(iter, end, "trackType", "INTEGER", 0, "", 0);
@@ -973,8 +983,8 @@ bool is_supported(const schema_version &version)
 
 schema_version verify_music_schema(sqlite::database &db)
 {
-    verify_information(db);
     auto version = get_version(db);
+    verify_information(db, version);
 
     // Note: the version can be used to verify schema differently, should it
     // ever change in future.
@@ -992,15 +1002,15 @@ schema_version verify_music_schema(sqlite::database &db)
     verify_playlist_track_list(db);
     verify_preparelist(db);
     verify_preparelist_track_list(db);
-    verify_track(db);
+    verify_track(db, version);
 
     return version;
 }
 
 schema_version verify_performance_schema(sqlite::database &db)
 {
-    verify_information(db);
     auto version = get_version(db);
+    verify_information(db, version);
 
     verify_performance_data(db, version);
 
@@ -1012,10 +1022,22 @@ void create_music_schema(
 {
     // Information
     db << "DROP TABLE IF EXISTS Information";
-    db << "CREATE TABLE Information ( "
-          "[id] INTEGER, [uuid] TEXT , [schemaVersionMajor] INTEGER , "
-          "[schemaVersionMinor] INTEGER , [schemaVersionPatch] INTEGER , "
-          "[currentPlayedIndiciator] INTEGER , PRIMARY KEY ( [id] ) )";
+    if (version >= version_firmware_1_0_3)
+    {
+        db << "CREATE TABLE Information ( "
+              "[id] INTEGER, [uuid] TEXT , [schemaVersionMajor] INTEGER , "
+              "[schemaVersionMinor] INTEGER , [schemaVersionPatch] INTEGER , "
+              "[currentPlayedIndiciator] INTEGER , "
+              "[lastRekordBoxLibraryImportReadCounter] INTEGER , "
+              "PRIMARY KEY ( [id] ) )";
+    }
+    else
+    {
+        db << "CREATE TABLE Information ( "
+              "[id] INTEGER, [uuid] TEXT , [schemaVersionMajor] INTEGER , "
+              "[schemaVersionMinor] INTEGER , [schemaVersionPatch] INTEGER , "
+              "[currentPlayedIndiciator] INTEGER , PRIMARY KEY ( [id] ) )";
+    }
     db << "CREATE INDEX index_Information_id ON Information ( id )";
 
     // AlbumArt
@@ -1133,13 +1155,27 @@ void create_music_schema(
           "PreparelistTrackList ( trackId )";
 
     // Track
-    db << "CREATE TABLE Track ( [id] INTEGER, [playOrder] INTEGER , "
-          "[length] INTEGER , [lengthCalculated] INTEGER , [bpm] INTEGER , "
-          "[year] INTEGER , [path] TEXT , [filename] TEXT , "
-          "[bitrate] INTEGER , [bpmAnalyzed] REAL , [trackType] INTEGER , "
-          "[isExternalTrack] NUMERIC , [uuidOfExternalDatabase] TEXT , "
-          "[idTrackInExternalDatabase] INTEGER , [idAlbumArt] INTEGER  "
-          "REFERENCES AlbumArt ( id )  ON DELETE RESTRICT, PRIMARY KEY ( [id] ) )";
+    if (version >= version_firmware_1_0_3)
+    {
+        db << "CREATE TABLE Track ( [id] INTEGER, [playOrder] INTEGER , "
+              "[length] INTEGER , [lengthCalculated] INTEGER , [bpm] INTEGER , "
+              "[year] INTEGER , [path] TEXT , [filename] TEXT , "
+              "[bitrate] INTEGER , [bpmAnalyzed] REAL , [trackType] INTEGER , "
+              "[isExternalTrack] NUMERIC , [uuidOfExternalDatabase] TEXT , "
+              "[idTrackInExternalDatabase] INTEGER , [idAlbumArt] INTEGER  "
+              "REFERENCES AlbumArt ( id )  ON DELETE RESTRICT, "
+              "[pdbImportKey] INTEGER , PRIMARY KEY ( [id] ) )";
+    }
+    else
+    {
+        db << "CREATE TABLE Track ( [id] INTEGER, [playOrder] INTEGER , "
+              "[length] INTEGER , [lengthCalculated] INTEGER , [bpm] INTEGER , "
+              "[year] INTEGER , [path] TEXT , [filename] TEXT , "
+              "[bitrate] INTEGER , [bpmAnalyzed] REAL , [trackType] INTEGER , "
+              "[isExternalTrack] NUMERIC , [uuidOfExternalDatabase] TEXT , "
+              "[idTrackInExternalDatabase] INTEGER , [idAlbumArt] INTEGER  "
+              "REFERENCES AlbumArt ( id )  ON DELETE RESTRICT, PRIMARY KEY ( [id] ) )";
+    }
     db << "CREATE INDEX index_Track_id ON Track ( id )";
     db << "CREATE INDEX index_Track_path ON Track ( path )";
     db << "CREATE INDEX index_Track_filename ON Track ( filename )";
@@ -1154,15 +1190,43 @@ void create_music_schema(
     boost::uuids::uuid uuid{boost::uuids::random_generator()()};
     auto uuid_str = boost::uuids::to_string(uuid);
 
+    // Not yet sure how the currentPlayedIndiciator value is formed.
+    auto current_played_indicator_fake_value = 5100658837829259927l;
+
     // Insert row into Information
-    db << "INSERT INTO Information ([uuid], [schemaVersionMajor], "
-          "[schemaVersionMinor], [schemaVersionPatch], "
-          "[currentPlayedIndiciator]) VALUES (?, ?, ?, ?, ?)"
-       << uuid_str
-       << version.maj
-       << version.min
-       << version.pat
-       << 0;
+    if (version >= version_firmware_1_0_3)
+    {
+        db << "INSERT INTO Information ([uuid], [schemaVersionMajor], "
+              "[schemaVersionMinor], [schemaVersionPatch], "
+              "[currentPlayedIndiciator], [lastRekordBoxLibraryImportReadCounter]) "
+              "VALUES (?, ?, ?, ?, ?, ?)"
+           << uuid_str
+           << version.maj
+           << version.min
+           << version.pat
+           << current_played_indicator_fake_value
+           << 0;
+    }
+    else
+    {
+        db << "INSERT INTO Information ([uuid], [schemaVersionMajor], "
+              "[schemaVersionMinor], [schemaVersionPatch], "
+              "[currentPlayedIndiciator]) VALUES (?, ?, ?, ?, ?)"
+           << uuid_str
+           << version.maj
+           << version.min
+           << version.pat
+           << current_played_indicator_fake_value;
+    }
+
+    // Insert default album art entry
+    db << "INSERT INTO AlbumArt VALUES (1, NULL, NULL)";
+
+    // Default history list entry
+    db << "INSERT INTO Historylist VALUES (1, 'History 1')";
+
+    // Default prepare list entry
+    db << "INSERT INTO Preparelist VALUES (1, 'Prepare')";
 }
 
 void create_performance_schema(
@@ -1170,10 +1234,22 @@ void create_performance_schema(
 {
     // Information
     db << "DROP TABLE IF EXISTS Information";
-    db << "CREATE TABLE Information ( "
-          "[id] INTEGER, [uuid] TEXT , [schemaVersionMajor] INTEGER , "
-          "[schemaVersionMinor] INTEGER , [schemaVersionPatch] INTEGER , "
-          "[currentPlayedIndiciator] INTEGER , PRIMARY KEY ( [id] ) )";
+    if (version >= version_firmware_1_0_3)
+    {
+        db << "CREATE TABLE Information ( "
+              "[id] INTEGER, [uuid] TEXT , [schemaVersionMajor] INTEGER , "
+              "[schemaVersionMinor] INTEGER , [schemaVersionPatch] INTEGER , "
+              "[currentPlayedIndiciator] INTEGER , "
+              "[lastRekordBoxLibraryImportReadCounter] INTEGER , "
+              "PRIMARY KEY ( [id] ) )";
+    }
+    else
+    {
+        db << "CREATE TABLE Information ( "
+              "[id] INTEGER, [uuid] TEXT , [schemaVersionMajor] INTEGER , "
+              "[schemaVersionMinor] INTEGER , [schemaVersionPatch] INTEGER , "
+              "[currentPlayedIndiciator] INTEGER , PRIMARY KEY ( [id] ) )";
+    }
     db << "CREATE INDEX index_Information_id ON Information ( id )";
 
     // PerformanceData
@@ -1204,14 +1280,30 @@ void create_performance_schema(
     auto uuid_str = boost::uuids::to_string(uuid);
 
     // Insert row into Information
-    db << "INSERT INTO Information ([uuid], [schemaVersionMajor], "
-          "[schemaVersionMinor], [schemaVersionPatch], "
-          "[currentPlayedIndiciator]) VALUES (?, ?, ?, ?, ?)"
-       << uuid_str
-       << version.maj
-       << version.min
-       << version.pat
-       << 0;
+    if (version >= version_firmware_1_0_3)
+    {
+        db << "INSERT INTO Information ([uuid], [schemaVersionMajor], "
+              "[schemaVersionMinor], [schemaVersionPatch], "
+              "[currentPlayedIndiciator], [lastRekordBoxLibraryImportReadCounter]) "
+              "VALUES (?, ?, ?, ?, ?, ?)"
+           << uuid_str
+           << version.maj
+           << version.min
+           << version.pat
+           << 0
+           << 0;
+    }
+    else
+    {
+        db << "INSERT INTO Information ([uuid], [schemaVersionMajor], "
+              "[schemaVersionMinor], [schemaVersionPatch], "
+              "[currentPlayedIndiciator]) VALUES (?, ?, ?, ?, ?)"
+           << uuid_str
+           << version.maj
+           << version.min
+           << version.pat
+           << 0;
+    }
 }
 
 } // engineprime

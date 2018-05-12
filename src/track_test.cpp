@@ -34,6 +34,19 @@ namespace c = std::chrono;
 
 const std::string sample_path{STRINGIFY(TESTDATA_DIR) "/el2"};
 
+namespace boost {
+namespace test_tools {
+    template<>
+    struct print_log_value<ep::musical_key>
+    {
+        void operator ()(std::ostream &os, ep::musical_key o)
+        {
+            os << static_cast<int>(o);
+        }
+    };
+} // test_tools
+} // boost
+
 
 static fs::path create_temp_dir()
 {
@@ -66,6 +79,7 @@ static void populate_example_track_1(ep::track &t)
 	t.set_comment("Purchased at Beatport.com");
 	t.set_publisher("Stereo Productions");
 	t.set_composer("");
+    t.set_key(ep::musical_key::a_minor);
 	t.set_path("../01 - Dennis Cruz - Mad (Original Mix).mp3");
 	t.set_filename("01 - Dennis Cruz - Mad (Original Mix).mp3");
 	t.set_file_extension("mp3");
@@ -91,6 +105,7 @@ static void check_track_1(ep::track &t)
 	BOOST_CHECK_EQUAL(t.comment(), "Purchased at Beatport.com");
 	BOOST_CHECK_EQUAL(t.publisher(), "Stereo Productions");
 	BOOST_CHECK_EQUAL(t.composer(), "");
+    BOOST_CHECK_EQUAL(t.key(), ep::musical_key::a_minor);
 	BOOST_CHECK_EQUAL(t.path(), "../01 - Dennis Cruz - Mad (Original Mix).mp3");
 	BOOST_CHECK_EQUAL(t.filename(), "01 - Dennis Cruz - Mad (Original Mix).mp3");
 	BOOST_CHECK_EQUAL(t.file_extension(), "mp3");
@@ -115,6 +130,7 @@ static void check_track_1(ep::track &t)
     BOOST_CHECK(t.has_comment());
     BOOST_CHECK(t.has_publisher());
     BOOST_CHECK(!t.has_composer());
+    BOOST_CHECK(t.has_key());
 }
 
 static void populate_example_track_2(ep::track &t)
@@ -130,6 +146,7 @@ static void populate_example_track_2(ep::track &t)
 	t.set_comment("Comment goes here");
 	t.set_publisher("Here is the publisher text");
 	t.set_composer("And the composer text");
+    t.set_key(ep::musical_key::c_major);
 	t.set_path("../03 - Not A Real Artist - Made-up Track (Foo Bar Remix).flac");
 	t.set_filename("03 - Not A Real Artist - Made-up Track (Foo Bar Remix).flac");
 	t.set_file_extension("flac");
@@ -155,6 +172,7 @@ static void check_track_2(ep::track &t)
 	BOOST_CHECK_EQUAL(t.comment(), "Comment goes here");
 	BOOST_CHECK_EQUAL(t.publisher(), "Here is the publisher text");
 	BOOST_CHECK_EQUAL(t.composer(), "And the composer text");
+    BOOST_CHECK_EQUAL(t.key(), ep::musical_key::c_major);
 	BOOST_CHECK_EQUAL(t.path(), "../03 - Not A Real Artist - Made-up Track (Foo Bar Remix).flac");
 	BOOST_CHECK_EQUAL(t.filename(), "03 - Not A Real Artist - Made-up Track (Foo Bar Remix).flac");
 	BOOST_CHECK_EQUAL(t.file_extension(), "flac");
@@ -181,6 +199,7 @@ static void check_track_2(ep::track &t)
     BOOST_CHECK(t.has_comment());
     BOOST_CHECK(t.has_publisher());
     BOOST_CHECK(t.has_composer());
+    BOOST_CHECK(t.has_key());
 }
 
 BOOST_AUTO_TEST_CASE (all_track_ids__sample_db__expected_ids)
