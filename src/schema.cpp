@@ -1220,7 +1220,7 @@ void create_music_schema(
     }
 
     // Insert default album art entry
-    db << "INSERT INTO AlbumArt VALUES (1, NULL, NULL)";
+    db << "INSERT INTO AlbumArt VALUES (1, '', NULL)";
 
     // Default history list entry
     db << "INSERT INTO Historylist VALUES (1, 'History 1')";

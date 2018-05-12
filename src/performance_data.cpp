@@ -38,8 +38,8 @@ struct performance_data_row
     {}
 
     int track_id;
-    double is_analyzed = true;
-    double is_rendered = true;
+    double is_analyzed = 1.0;
+    double is_rendered = 0.0;
     track_data_blob track_data;
     // TODO - high_resolution_wave_form_data
     // TODO - overview_wave_form_data
@@ -341,12 +341,7 @@ void performance_data::set_hot_cues(
 
     auto cur_size = pimpl_->pd_.quick_cues.hot_cues.size(); 
     if (cur_size < 8)
-    {
         pimpl_->pd_.quick_cues.hot_cues.resize(8);
-        for (int i = cur_size; i < 8; ++i)
-            pimpl_->pd_.quick_cues.hot_cues[i].colour =
-                standard_pad_colours::pads[i];
-    }
 }
 
 void performance_data::set_default_main_cue_sample_offset(double sample_offset)
@@ -377,11 +372,7 @@ void performance_data::set_loops(
 
     auto cur_size = pimpl_->pd_.loops.loops.size();
     if (cur_size < 8)
-    {
         pimpl_->pd_.loops.loops.resize(8);
-        for (int i = cur_size; i < 8; ++i)
-            pimpl_->pd_.loops.loops[i].colour = standard_pad_colours::pads[i];
-    }
 }
 
 void performance_data::save(const database &database)

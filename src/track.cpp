@@ -74,11 +74,11 @@ typedef std::vector<metadata_row> str_metadata_vec;
 
 struct metadata_integer_types
 {
-    static const int last_played_ts      = 1;
-    static const int last_modified_ts    = 2;
-    static const int last_loaded_date_ts = 3;
-    static const int musical_key         = 4;
-    static const int hash                = 10;
+    static const int last_played_ts   = 1;
+    static const int last_modified_ts = 2;
+    static const int last_accessed_ts = 3; // Note truncated to date on VFAT (see FAT "ACCDATE")
+    static const int musical_key      = 4;
+    static const int hash             = 10;
 };
 
 struct metadata_integer_row
@@ -395,11 +395,11 @@ std::chrono::system_clock::time_point track::last_played_at() const
                 .value
                 .value_or(0)}};
 }
-std::chrono::system_clock::time_point track::last_loaded_at() const
+std::chrono::system_clock::time_point track::last_accessed_at() const
 {
     return std::chrono::system_clock::time_point{
         std::chrono::seconds{
-            pimpl_->int_metadata_vec_[metadata_integer_types::last_loaded_date_ts]
+            pimpl_->int_metadata_vec_[metadata_integer_types::last_accessed_ts]
                 .value
                 .value_or(0)}};
 }
@@ -604,12 +604,22 @@ void track::set_last_played_at(std::chrono::system_clock::time_point last_played
         : boost::none;
 }
 
-void track::set_last_loaded_at(std::chrono::system_clock::time_point last_loaded_at)
+void track::set_last_accessed_at(std::chrono::system_clock::time_point last_accessed_at)
 {
-    pimpl_->int_metadata_vec_[metadata_integer_types::last_loaded_date_ts].value =
-        last_loaded_at.time_since_epoch().count() != 0
+    // Field is always truncated to the midnight at the end of the day the
+    // track is played, it seems.
+    auto secs = last_accessed_at.time_since_epoch().count() *
+        std::chrono::system_clock::period::num /
+        std::chrono::system_clock::period::den;
+    if (secs % 86400 != 0)
+        secs = secs + 86400 - (secs % 86400);
+    last_accessed_at = std::chrono::system_clock::time_point{
+        std::chrono::seconds{secs}};
+
+    pimpl_->int_metadata_vec_[metadata_integer_types::last_accessed_ts].value =
+        last_accessed_at.time_since_epoch().count() != 0
         ? boost::optional<int>{
-            last_loaded_at.time_since_epoch().count() *
+            last_accessed_at.time_since_epoch().count() *
             std::chrono::system_clock::period::num /
             std::chrono::system_clock::period::den}
         : boost::none;

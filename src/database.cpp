@@ -157,20 +157,22 @@ database create_database(const std::string &dir_path,
     }
 
     // Create schema for m.db
-    {
-        auto m_db_path = dir_path + "/m.db";
-        sqlite::database m_db{m_db_path};
-        create_music_schema(m_db, version);
-        verify_music_schema(m_db);
-    }
+    auto m_db_path = dir_path + "/m.db";
+    if (stat(m_db_path.c_str(), &buf) == 0)
+        throw std::runtime_error{
+            "Can't create new database because m.db file already exists"};
+    sqlite::database m_db{m_db_path};
+    create_music_schema(m_db, version);
+    verify_music_schema(m_db);
 
     // Create schema for p.db
-    {
-        auto p_db_path = dir_path + "/p.db";
-        sqlite::database p_db{p_db_path};
-        create_performance_schema(p_db, version);
-        verify_performance_schema(p_db);
-    }
+    auto p_db_path = dir_path + "/p.db";
+    if (stat(p_db_path.c_str(), &buf) == 0)
+        throw std::runtime_error{
+            "Can't create new database because p.db file already exists"};
+    sqlite::database p_db{p_db_path};
+    create_performance_schema(p_db, version);
+    verify_performance_schema(p_db);
 
     database db{dir_path};
     return db;

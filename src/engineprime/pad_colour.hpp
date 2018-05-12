@@ -34,9 +34,9 @@ namespace engineprime {
 struct pad_colour
 {
     /**
-     * \brief Construct a `pad_colour` with a default grey colour
+     * \brief Construct a `pad_colour` with a default black colour
      */
-    constexpr pad_colour() : r{0x88}, g{0x88}, b{0x88}, a{0xFF}
+    constexpr pad_colour() : r{0x00}, g{0x00}, b{0x00}, a{0x00}
     {}
 
     /**

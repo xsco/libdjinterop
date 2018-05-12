@@ -87,7 +87,7 @@ static void populate_example_track_1(ep::track &t)
     t.set_bitrate(320);
     t.set_ever_played(false);
     t.set_last_played_at(c::system_clock::time_point{});
-    t.set_last_loaded_at(c::system_clock::time_point{c::seconds{1509321600}});
+    t.set_last_accessed_at(c::system_clock::time_point{c::seconds{1509321600}});
     t.set_imported(false);
     t.set_album_art_id(2);
 }
@@ -115,7 +115,7 @@ static void check_track_1(ep::track &t)
 	BOOST_CHECK_EQUAL(t.bitrate(), 320);
 	BOOST_CHECK_EQUAL(t.ever_played(), false);
 	BOOST_CHECK_EQUAL(t.last_played_at().time_since_epoch().count(), 0);
-	BOOST_CHECK_EQUAL(t.last_loaded_at().time_since_epoch().count() *
+	BOOST_CHECK_EQUAL(t.last_accessed_at().time_since_epoch().count() *
 			c::system_clock::period::num /
 			c::system_clock::period::den, 1509321600);
 	BOOST_CHECK_EQUAL(t.imported(), false);
@@ -154,7 +154,7 @@ static void populate_example_track_2(ep::track &t)
     t.set_bitrate(1411);
     t.set_ever_played(true);
     t.set_last_played_at(c::system_clock::time_point{c::seconds{1518739200}});
-    t.set_last_loaded_at(c::system_clock::time_point{c::seconds{1518815683}});
+    t.set_last_accessed_at(c::system_clock::time_point{c::seconds{1518815683}});
     t.set_imported(true, "e535b170-26ef-4f30-8cb2-5b9fa4c2a27f", 123);
     t.set_album_art_id(1);
 }
@@ -184,9 +184,9 @@ static void check_track_2(ep::track &t)
 	BOOST_CHECK_EQUAL(t.last_played_at().time_since_epoch().count() *
             c::system_clock::period::num /
             c::system_clock::period::den, 1518739200);
-	BOOST_CHECK_EQUAL(t.last_loaded_at().time_since_epoch().count() *
+	BOOST_CHECK_EQUAL(t.last_accessed_at().time_since_epoch().count() *
 			c::system_clock::period::num /
-			c::system_clock::period::den, 1518815683);
+			c::system_clock::period::den, 1518825600);
 	BOOST_CHECK_EQUAL(t.imported(), true);
 	BOOST_CHECK_EQUAL(t.external_database_uuid(), "e535b170-26ef-4f30-8cb2-5b9fa4c2a27f");
 	BOOST_CHECK_EQUAL(t.track_id_in_external_database(), 123);

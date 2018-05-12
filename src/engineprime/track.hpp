@@ -224,7 +224,10 @@ public:
 	std::string file_extension() const;
 
     /**
-     * \brief Get the time of last modification of this track's file
+     * \brief Get the time of last attribute modification of this track's file
+     *
+     * Note that this is the attribute modification time, not the data
+     * modification time, i.e. ctime not mtime.
      */
     std::chrono::system_clock::time_point last_modified_at() const;
 
@@ -239,14 +242,17 @@ public:
 	bool ever_played() const;
 
     /**
-     * \brief Get the time at which this track was last played.
+     * \brief Get the time at which this track was last played
      */
 	std::chrono::system_clock::time_point last_played_at() const;
 
     /**
-     * \brief Get the time at which this track was last loaded into any player
+     * \brief Get the time at which this track was last accessed
+     *
+     * Note that on VFAT filesystems, the access time is truncated to just a
+     * date, and loses any time precision.
      */
-	std::chrono::system_clock::time_point last_loaded_at() const;
+	std::chrono::system_clock::time_point last_accessed_at() const;
 
     /**
      * \brief Get a `bool` indicating whether this track was imported into the
@@ -331,11 +337,18 @@ public:
     void set_path(const std::string &path);
     void set_filename(const std::string &filename);
     void set_file_extension(const std::string &file_extension);
+
+    /**
+     * \brief Set the last attribute modification time
+     *
+     * Note that this is the attribute modification time, not the data
+     * modification time, i.e. ctime not mtime.
+     */
     void set_last_modified_at(std::chrono::system_clock::time_point last_modified_at);
     void set_bitrate(int bitrate);
     void set_ever_played(bool ever_played);
     void set_last_played_at(std::chrono::system_clock::time_point last_played_at);
-    void set_last_loaded_at(std::chrono::system_clock::time_point last_loaded_at);
+    void set_last_accessed_at(std::chrono::system_clock::time_point last_accessed_at);
 
     /**
      * \brief Set whether this track was imported from another Engine Prime
