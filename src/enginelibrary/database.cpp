@@ -1,21 +1,21 @@
 /*
-    This file is part of libengineprime.
+    This file is part of libdjinterop.
 
-    libengineprime is free software: you can redistribute it and/or modify
+    libdjinterop is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    libengineprime is distributed in the hope that it will be useful,
+    libdjinterop is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with libengineprime.  If not, see <http://www.gnu.org/licenses/>.
+    along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <engineprime/database.hpp>
+#include <djinterop/enginelibrary/database.hpp>
 
 #include <string>
 #include <sys/stat.h>
@@ -24,7 +24,8 @@
 
 #include "schema.hpp"
 
-namespace engineprime {
+namespace djinterop {
+namespace enginelibrary {
 
 struct database::impl
 {
@@ -54,7 +55,7 @@ struct database::impl
 
     bool is_supported() const
     {
-        return ::engineprime::is_supported(version_);
+        return djinterop::enginelibrary::is_supported(version_);
     }
 
     void verify()
@@ -178,5 +179,6 @@ database create_database(const std::string &dir_path,
     return db;
 }
 
-} // namespace engineprime
+} // enginelibrary
+} // djinterop
 

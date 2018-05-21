@@ -1,96 +1,100 @@
-lib_LTLIBRARIES = libengineprime.la
+lib_LTLIBRARIES = libdjinterop.la
 
-libengineprime_la_SOURCES = \
+libdjinterop_la_SOURCES = \
 	sqlite3.c sqlite3.h \
 	sqlite_modern_cpp.h sqlite_modern_cpp/errors.h sqlite_modern_cpp/log.h \
 	sqlite_modern_cpp/sqlcipher.h sqlite_modern_cpp/lists/error_codes.h \
 	sqlite_modern_cpp/utility/function_traits.h \
 	sqlite_modern_cpp/utility/uncaught_exceptions.h \
 	sqlite_modern_cpp/utility/variant.h \
-	schema.cpp schema.hpp \
-	database.cpp \
-	track.cpp \
-	encode_decode_utils.hpp \
-	performance_data_format.cpp performance_data_format.hpp \
-	performance_data.cpp
-libengineprime_la_CXXFLAGS = $(ZLIB_CFLAGS)
-libengineprime_la_LDFLAGS = -version-info $(LIBENGINEPRIME_INTERFACE_VERSION)
-libengineprime_la_LIBADD = $(ZLIB_LIBS) $(BOOST_IOSTREAMS_LIBS)
+	enginelibrary/schema.cpp enginelibrary/schema.hpp \
+	enginelibrary/database.cpp \
+	enginelibrary/track.cpp \
+	enginelibrary/encode_decode_utils.hpp \
+	enginelibrary/performance_data_format.cpp enginelibrary/performance_data_format.hpp \
+	enginelibrary/performance_data.cpp
+libdjinterop_la_CXXFLAGS = $(ZLIB_CFLAGS)
+libdjinterop_la_LDFLAGS = -version-info $(LIBRARY_INTERFACE_VERSION)
+libdjinterop_la_LIBADD = $(ZLIB_LIBS) $(BOOST_IOSTREAMS_LIBS)
 
 nobase_include_HEADERS = \
-	engineprime/album_art.hpp \
-	engineprime/database.hpp \
-	engineprime/engineprime.hpp \
-	engineprime/musical_key.hpp \
-	engineprime/pad_colour.hpp \
-	engineprime/performance_data.hpp \
-	engineprime/schema_version.hpp \
-	engineprime/track.hpp
+	djinterop/enginelibrary.hpp \
+	djinterop/enginelibrary/album_art.hpp \
+	djinterop/enginelibrary/database.hpp \
+	djinterop/enginelibrary/musical_key.hpp \
+	djinterop/enginelibrary/pad_colour.hpp \
+	djinterop/enginelibrary/performance_data.hpp \
+	djinterop/enginelibrary/schema_version.hpp \
+	djinterop/enginelibrary/track.hpp
 
 # Unit test programs
-check_PROGRAMS = database_test track_test schema_test performance_data_test
+check_PROGRAMS = \
+	el_database_test \
+	el_track_test \
+	el_schema_test \
+	el_performance_data_test
 TESTS = $(check_PROGRAMS)
 
 # Database test
-database_test_SOURCES = \
-	database_test.cpp \
-	database.cpp \
-	schema.cpp
-database_test_CXXFLAGS = \
+el_database_test_SOURCES = \
+	enginelibrary/database_test.cpp \
+	enginelibrary/database.cpp \
+	enginelibrary/schema.cpp
+el_database_test_CXXFLAGS = \
 	-DTESTDATA_DIR="../testdata"
-database_test_LDADD = \
+el_database_test_LDADD = \
 	$(BOOST_SYSTEM_LIBS) \
 	$(BOOST_FILESYSTEM_LIBS) \
 	$(BOOST_UTF_LIBS) \
 	$(BOOST_IOSTREAMS_LIBS) \
 	$(ZLIB_LIBS) \
-	libengineprime.la \
+	libdjinterop.la \
 	-lpthread -ldl
 
 # Track test
-track_test_SOURCES = \
-	track_test.cpp \
-	track.cpp \
-	database.cpp
-track_test_CXXFLAGS = \
+el_track_test_SOURCES = \
+	enginelibrary/track_test.cpp \
+	enginelibrary/track.cpp \
+	enginelibrary/database.cpp
+el_track_test_CXXFLAGS = \
 	-DTESTDATA_DIR="../testdata"
-track_test_LDADD = \
+el_track_test_LDADD = \
 	$(BOOST_SYSTEM_LIBS) \
 	$(BOOST_FILESYSTEM_LIBS) \
 	$(BOOST_UTF_LIBS) \
 	$(BOOST_IOSTREAMS_LIBS) \
 	$(ZLIB_LIBS) \
-	libengineprime.la \
+	libdjinterop.la \
 	-lpthread -ldl
 
 # Schema test
-schema_test_SOURCES = \
-	schema_test.cpp \
-	schema.cpp 
-schema_test_CXXFLAGS = \
+el_schema_test_SOURCES = \
+	enginelibrary/schema_test.cpp \
+	enginelibrary/schema.cpp 
+el_schema_test_CXXFLAGS = \
 	-DTESTDATA_DIR="../testdata"
-schema_test_LDADD = \
+el_schema_test_LDADD = \
 	$(BOOST_SYSTEM_LIBS) \
 	$(BOOST_FILESYSTEM_LIBS) \
 	$(BOOST_UTF_LIBS) \
 	$(BOOST_IOSTREAMS_LIBS) \
 	$(ZLIB_LIBS) \
-	libengineprime.la \
+	libdjinterop.la \
 	-lpthread -ldl
 
 # Performance data test
-performance_data_test_SOURCES = \
-	performance_data_test.cpp \
-	performance_data_format.cpp performance_data_format.hpp \
-	performance_data.cpp 
-performance_data_test_CXXFLAGS = \
+el_performance_data_test_SOURCES = \
+	enginelibrary/performance_data_test.cpp \
+	enginelibrary/performance_data_format.cpp performance_data_format.hpp \
+	enginelibrary/performance_data.cpp 
+el_performance_data_test_CXXFLAGS = \
 	-DTESTDATA_DIR="../testdata"
-performance_data_test_LDADD = \
+el_performance_data_test_LDADD = \
 	$(BOOST_SYSTEM_LIBS) \
 	$(BOOST_FILESYSTEM_LIBS) \
 	$(BOOST_UTF_LIBS) \
 	$(BOOST_IOSTREAMS_LIBS) \
 	$(ZLIB_LIBS) \
-	libengineprime.la \
+	libdjinterop.la \
 	-lpthread -ldl
 

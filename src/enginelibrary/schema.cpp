@@ -1,18 +1,18 @@
 /*
-    This file is part of libengineprime.
+    This file is part of libdjinterop.
 
-    libengineprime is free software: you can redistribute it and/or modify
+    libdjinterop is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    libengineprime is distributed in the hope that it will be useful,
+    libdjinterop is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with libengineprime.  If not, see <http://www.gnu.org/licenses/>.
+    along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "schema.hpp"
@@ -25,7 +25,8 @@
 #include <set>
 #include "sqlite_modern_cpp.h"
 
-namespace engineprime {
+namespace djinterop {
+namespace enginelibrary {
 
 struct table_info_entry
 {
@@ -1306,4 +1307,5 @@ void create_performance_schema(
     }
 }
 
-} // engineprime
+} // enginelibrary
+} // djinterop

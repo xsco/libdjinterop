@@ -1,26 +1,26 @@
 /*
-    This file is part of libengineprime.
+    This file is part of libdjinterop.
 
-    libengineprime is free software: you can redistribute it and/or modify
+    libdjinterop is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    libengineprime is distributed in the hope that it will be useful,
+    libdjinterop is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with libengineprime.  If not, see <http://www.gnu.org/licenses/>.
+    along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #if __cplusplus <= 199711L
   #error This library needs at least a C++11 compliant compiler
 #endif
 
-#ifndef ENGINEPRIME_PERFORMANCE_DATA_HPP
-#define ENGINEPRIME_PERFORMANCE_DATA_HPP
+#ifndef DJINTEROP_ENGINELIBRARY_PERFORMANCE_DATA_HPP
+#define DJINTEROP_ENGINELIBRARY_PERFORMANCE_DATA_HPP
 
 #include <chrono>
 #include <cstdint>
@@ -33,7 +33,8 @@
 #include "musical_key.hpp"
 #include "pad_colour.hpp"
 
-namespace engineprime {
+namespace djinterop {
+namespace enginelibrary {
 
 /**
  * The `nonexistent_performance_data` exception is thrown when a request is
@@ -401,6 +402,7 @@ private:
  */
 void normalise_beat_grid(track_beat_grid &beat_grid, double last_sample);
 
-} // engineprime
+} // enginelibrary
+} // djinterop
 
-#endif // ENGINEPRIME_PERFORMANCE_DATA_HPP
+#endif // DJINTEROP_ENGINELIBRARY_PERFORMANCE_DATA_HPP

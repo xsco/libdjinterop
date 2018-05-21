@@ -1,26 +1,26 @@
 /*
-    This file is part of libengineprime.
+    This file is part of libdjinterop.
 
-    libengineprime is free software: you can redistribute it and/or modify
+    libdjinterop is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    libengineprime is distributed in the hope that it will be useful,
+    libdjinterop is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with libengineprime.  If not, see <http://www.gnu.org/licenses/>.
+    along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #if __cplusplus <= 199711L
   #error This library needs at least a C++11 compliant compiler
 #endif
 
-#ifndef ENGINEPRIME_DATABASE_HPP
-#define ENGINEPRIME_DATABASE_HPP
+#ifndef DJINTEROP_ENGINELIBRARY_DATABASE_HPP
+#define DJINTEROP_ENGINELIBRARY_DATABASE_HPP
 
 #include <memory>
 #include <ostream>
@@ -29,7 +29,8 @@
 
 #include "schema_version.hpp"
 
-namespace engineprime {
+namespace djinterop {
+namespace enginelibrary {
 
 class database_not_found : public std::runtime_error
 {
@@ -68,7 +69,7 @@ public:
 
     /**
      * \brief Returns a `bool` indicating whether the database version is
-     *        supported by this version of libengineprime or not
+     *        supported by this version of libdjinterop or not
      */
     bool is_supported() const;
 
@@ -115,6 +116,7 @@ private:
 database create_database(
         const std::string &dir_path, const schema_version &version);
 
-} // engineprime
+} // enginelibrary
+} // djinterop
 
-#endif // ENGINEPRIME_DATABASE_HPP
+#endif // DJINTEROP_ENGINELIBRARY_DATABASE_HPP

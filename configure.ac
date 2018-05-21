@@ -1,6 +1,6 @@
-AC_INIT([libengineprime], [0.5.0], [bugs@xsco.org], [libengineprime])
+AC_INIT([libdjinterop], [0.6.0], [bugs@xsco.org], [libdjinterop])
 #AM_SILENT_RULES([yes])
-AM_INIT_AUTOMAKE([-Wall -Werror])
+AM_INIT_AUTOMAKE([subdir-objects -Wall -Werror])
 
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -13,7 +13,7 @@ AM_PROG_AR
 LT_INIT
 
 # Library interface version
-AC_SUBST([LIBENGINEPRIME_INTERFACE_VERSION], [0:0:0])
+AC_SUBST([LIBRARY_INTERFACE_VERSION], [0:0:0])
 
 # Documentation generation
 AC_CHECK_PROGS([DOXYGEN], [doxygen])

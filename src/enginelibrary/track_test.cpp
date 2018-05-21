@@ -1,20 +1,20 @@
 /*
-    This file is part of libengineprime.
+    This file is part of libdjinterop.
 
-    libengineprime is free software: you can redistribute it and/or modify
+    libdjinterop is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    libengineprime is distributed in the hope that it will be useful,
+    libdjinterop is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with libengineprime.  If not, see <http://www.gnu.org/licenses/>.
+    along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <engineprime/track.hpp>
+#include <djinterop/enginelibrary/track.hpp>
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE track_test
@@ -28,7 +28,7 @@
 #define STRINGIFY(x) STRINGIFY_(x)
 #define STRINGIFY_(x) #x
 
-namespace ep = engineprime;
+namespace el = djinterop::enginelibrary;
 namespace fs = boost::filesystem;
 namespace c = std::chrono;
 
@@ -37,9 +37,9 @@ const std::string sample_path{STRINGIFY(TESTDATA_DIR) "/el2"};
 namespace boost {
 namespace test_tools {
     template<>
-    struct print_log_value<ep::musical_key>
+    struct print_log_value<el::musical_key>
     {
-        void operator ()(std::ostream &os, ep::musical_key o)
+        void operator ()(std::ostream &os, el::musical_key o)
         {
             os << static_cast<int>(o);
         }
@@ -66,7 +66,7 @@ static void remove_temp_dir(const fs::path &temp_dir)
     std::cout << "Removed temp dir at " << temp_dir.string() << std::endl;
 }
 
-static void populate_example_track_1(ep::track &t)
+static void populate_example_track_1(el::track &t)
 {
     t.set_track_number(1);
     t.set_duration(std::chrono::seconds{396});
@@ -79,7 +79,7 @@ static void populate_example_track_1(ep::track &t)
 	t.set_comment("Purchased at Beatport.com");
 	t.set_publisher("Stereo Productions");
 	t.set_composer("");
-    t.set_key(ep::musical_key::a_minor);
+    t.set_key(el::musical_key::a_minor);
 	t.set_path("../01 - Dennis Cruz - Mad (Original Mix).mp3");
 	t.set_filename("01 - Dennis Cruz - Mad (Original Mix).mp3");
 	t.set_file_extension("mp3");
@@ -92,7 +92,7 @@ static void populate_example_track_1(ep::track &t)
     t.set_album_art_id(2);
 }
 
-static void check_track_1(ep::track &t)
+static void check_track_1(el::track &t)
 {
 	BOOST_CHECK_EQUAL(t.track_number(), 1);
 	BOOST_CHECK_EQUAL(t.duration().count(), 396);
@@ -105,7 +105,7 @@ static void check_track_1(ep::track &t)
 	BOOST_CHECK_EQUAL(t.comment(), "Purchased at Beatport.com");
 	BOOST_CHECK_EQUAL(t.publisher(), "Stereo Productions");
 	BOOST_CHECK_EQUAL(t.composer(), "");
-    BOOST_CHECK_EQUAL(t.key(), ep::musical_key::a_minor);
+    BOOST_CHECK_EQUAL(t.key(), el::musical_key::a_minor);
 	BOOST_CHECK_EQUAL(t.path(), "../01 - Dennis Cruz - Mad (Original Mix).mp3");
 	BOOST_CHECK_EQUAL(t.filename(), "01 - Dennis Cruz - Mad (Original Mix).mp3");
 	BOOST_CHECK_EQUAL(t.file_extension(), "mp3");
@@ -133,7 +133,7 @@ static void check_track_1(ep::track &t)
     BOOST_CHECK(t.has_key());
 }
 
-static void populate_example_track_2(ep::track &t)
+static void populate_example_track_2(el::track &t)
 {
     t.set_track_number(3);
     t.set_duration(std::chrono::seconds{301});
@@ -146,7 +146,7 @@ static void populate_example_track_2(ep::track &t)
 	t.set_comment("Comment goes here");
 	t.set_publisher("Here is the publisher text");
 	t.set_composer("And the composer text");
-    t.set_key(ep::musical_key::c_major);
+    t.set_key(el::musical_key::c_major);
 	t.set_path("../03 - Not A Real Artist - Made-up Track (Foo Bar Remix).flac");
 	t.set_filename("03 - Not A Real Artist - Made-up Track (Foo Bar Remix).flac");
 	t.set_file_extension("flac");
@@ -159,7 +159,7 @@ static void populate_example_track_2(ep::track &t)
     t.set_album_art_id(1);
 }
 
-static void check_track_2(ep::track &t)
+static void check_track_2(el::track &t)
 {
 	BOOST_CHECK_EQUAL(t.track_number(), 3);
 	BOOST_CHECK_EQUAL(t.duration().count(), 301);
@@ -172,7 +172,7 @@ static void check_track_2(ep::track &t)
 	BOOST_CHECK_EQUAL(t.comment(), "Comment goes here");
 	BOOST_CHECK_EQUAL(t.publisher(), "Here is the publisher text");
 	BOOST_CHECK_EQUAL(t.composer(), "And the composer text");
-    BOOST_CHECK_EQUAL(t.key(), ep::musical_key::c_major);
+    BOOST_CHECK_EQUAL(t.key(), el::musical_key::c_major);
 	BOOST_CHECK_EQUAL(t.path(), "../03 - Not A Real Artist - Made-up Track (Foo Bar Remix).flac");
 	BOOST_CHECK_EQUAL(t.filename(), "03 - Not A Real Artist - Made-up Track (Foo Bar Remix).flac");
 	BOOST_CHECK_EQUAL(t.file_extension(), "flac");
@@ -205,10 +205,10 @@ static void check_track_2(ep::track &t)
 BOOST_AUTO_TEST_CASE (all_track_ids__sample_db__expected_ids)
 {
     // Arrange
-    ep::database db{sample_path};
+    el::database db{sample_path};
     
     // Act
-    auto results = ep::all_track_ids(db);
+    auto results = el::all_track_ids(db);
     
     // Assert
     BOOST_CHECK_EQUAL(results.size(), 1);
@@ -218,10 +218,10 @@ BOOST_AUTO_TEST_CASE (all_track_ids__sample_db__expected_ids)
 BOOST_AUTO_TEST_CASE (ctor__track1__correct_fields)
 {
 	// Arrange
-	ep::database db{sample_path};
+	el::database db{sample_path};
 
 	// Act
-	ep::track t{db, 1};
+	el::track t{db, 1};
 
 	// Assert
 	BOOST_CHECK_EQUAL(t.id(), 1);
@@ -231,19 +231,19 @@ BOOST_AUTO_TEST_CASE (ctor__track1__correct_fields)
 BOOST_AUTO_TEST_CASE (ctor__nonexistent_track__throws)
 {
 	// Arrange
-	ep::database db{sample_path};
+	el::database db{sample_path};
 
 	// Act / Assert
 	// Note the extra brackets around the invocation, because the preprocessor
 	// doesn't understand curly braces!
-	BOOST_CHECK_EXCEPTION((ep::track{db, 123}), ep::nonexistent_track,
-			[](const ep::nonexistent_track &e) { return e.id() == 123; });
+	BOOST_CHECK_EXCEPTION((el::track{db, 123}), el::nonexistent_track,
+			[](const el::nonexistent_track &e) { return e.id() == 123; });
 }
 
 BOOST_AUTO_TEST_CASE (setters__good_values__values_stored)
 {
     // Arrange
-    ep::track t{};
+    el::track t{};
 
     // Act
     populate_example_track_1(t);
@@ -257,8 +257,8 @@ BOOST_AUTO_TEST_CASE (save__new_track_no_values__throws)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
-    auto db = ep::create_database(temp_dir.string(), ep::version_firmware_1_0_3);
-    ep::track t{};
+    auto db = el::create_database(temp_dir.string(), el::version_firmware_1_0_3);
+    el::track t{};
 
     // Act/Assert
     BOOST_CHECK_THROW(t.save(db), std::invalid_argument);
@@ -269,8 +269,8 @@ BOOST_AUTO_TEST_CASE (save__new_track_good_values__saves)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
-    auto db = ep::create_database(temp_dir.string(), ep::version_firmware_1_0_3);
-    ep::track t{};
+    auto db = el::create_database(temp_dir.string(), el::version_firmware_1_0_3);
+    el::track t{};
     populate_example_track_1(t);
 
     // Act
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE (save__new_track_good_values__saves)
     // Assert
     BOOST_CHECK_NE(t.id(), 0);
     check_track_1(t);
-    ep::track t_reloaded{db, t.id()};
+    el::track t_reloaded{db, t.id()};
     check_track_1(t_reloaded);
     remove_temp_dir(temp_dir);
 }
@@ -288,13 +288,13 @@ BOOST_AUTO_TEST_CASE (ctor_copy__saved_track__zero_id_and_copied_fields)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
-    auto db = ep::create_database(temp_dir.string(), ep::version_firmware_1_0_3);
-    ep::track t{};
+    auto db = el::create_database(temp_dir.string(), el::version_firmware_1_0_3);
+    el::track t{};
     populate_example_track_1(t);
     t.save(db);
 
     // Act
-    ep::track copy{t};
+    el::track copy{t};
 
     // Assert
     BOOST_CHECK_EQUAL(copy.id(), 0);
@@ -307,8 +307,8 @@ BOOST_AUTO_TEST_CASE (save__existing_track_good_values__saves)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
-    auto db = ep::create_database(temp_dir.string(), ep::version_firmware_1_0_3);
-    ep::track t{};
+    auto db = el::create_database(temp_dir.string(), el::version_firmware_1_0_3);
+    el::track t{};
     populate_example_track_1(t);
     t.save(db);
     auto track_id = t.id();
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE (save__existing_track_good_values__saves)
 
     // Assert
     BOOST_CHECK_EQUAL(t.id(), track_id);
-    ep::track t_reloaded{db, t.id()};
+    el::track t_reloaded{db, t.id()};
     check_track_2(t);
     check_track_2(t_reloaded);
     remove_temp_dir(temp_dir);
@@ -329,8 +329,8 @@ BOOST_AUTO_TEST_CASE (op_copy_assign__saved_track__zero_id_and_copied_fields)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
-    auto db = ep::create_database(temp_dir.string(), ep::version_firmware_1_0_3);
-    ep::track t{};
+    auto db = el::create_database(temp_dir.string(), el::version_firmware_1_0_3);
+    el::track t{};
     populate_example_track_1(t);
     t.save(db);
 

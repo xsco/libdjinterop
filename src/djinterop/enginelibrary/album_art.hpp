@@ -1,26 +1,26 @@
 /*
-    This file is part of libengineprime.
+    This file is part of libdjinterop.
 
-    libengineprime is free software: you can redistribute it and/or modify
+    libdjinterop is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    libengineprime is distributed in the hope that it will be useful,
+    libdjinterop is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with libengineprime.  If not, see <http://www.gnu.org/licenses/>.
+    along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #if __cplusplus <= 199711L
   #error This library needs at least a C++11 compliant compiler
 #endif
 
-#ifndef ENGINEPRIME_ALBUM_ART_HPP
-#define ENGINEPRIME_ALBUM_ART_HPP
+#ifndef DJINTEROP_ENGINELIBRARY_ALBUM_ART_HPP
+#define DJINTEROP_ENGINELIBRARY_ALBUM_ART_HPP
 
 #include <chrono>
 #include <cstdint>
@@ -31,7 +31,8 @@
 
 #include "database.hpp"
 
-namespace engineprime {
+namespace djinterop {
+namespace enginelibrary {
 
 // Artwork for tracks
 struct album_art
@@ -44,6 +45,7 @@ struct album_art
     // TODO - implement rest of album_art class
 };
 
-} // engineprime
+} // enginelibrary
+} // djinterop
 
-#endif // ENGINEPRIME_ALBUM_ART_HPP
+#endif // DJINTEROP_ENGINELIBRARY_ALBUM_ART_HPP
