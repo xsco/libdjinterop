@@ -24,6 +24,7 @@
 
 #include <djinterop/enginelibrary/database.hpp>
 #include <djinterop/enginelibrary/track.hpp>
+#include <djinterop/enginelibrary/crate.hpp>
 #include <djinterop/enginelibrary/performance_data.hpp>
 
 #endif // DJINTEROP_ENGINELIBRARY_HPP

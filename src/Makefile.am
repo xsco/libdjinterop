@@ -13,6 +13,7 @@ libdjinterop_la_SOURCES = \
 	enginelibrary/schema_1_7_1.cpp enginelibrary/schema_1_7_1.hpp \
 	enginelibrary/database.cpp \
 	enginelibrary/track.cpp \
+	enginelibrary/crate.cpp \
 	enginelibrary/encode_decode_utils.hpp \
 	enginelibrary/performance_data_format.cpp enginelibrary/performance_data_format.hpp \
 	enginelibrary/performance_data.cpp
@@ -23,6 +24,7 @@ libdjinterop_la_LIBADD = $(ZLIB_LIBS) $(BOOST_IOSTREAMS_LIBS)
 nobase_include_HEADERS = \
 	djinterop/enginelibrary.hpp \
 	djinterop/enginelibrary/album_art.hpp \
+	djinterop/enginelibrary/crate.hpp \
 	djinterop/enginelibrary/database.hpp \
 	djinterop/enginelibrary/musical_key.hpp \
 	djinterop/enginelibrary/pad_colour.hpp \
@@ -34,6 +36,7 @@ nobase_include_HEADERS = \
 check_PROGRAMS = \
 	el_database_test \
 	el_track_test \
+	el_crate_test \
 	el_schema_test \
 	el_performance_data_test
 TESTS = $(check_PROGRAMS)
@@ -62,6 +65,22 @@ el_track_test_SOURCES = \
 el_track_test_CXXFLAGS = \
 	-DTESTDATA_DIR="../testdata"
 el_track_test_LDADD = \
+	$(BOOST_SYSTEM_LIBS) \
+	$(BOOST_FILESYSTEM_LIBS) \
+	$(BOOST_UTF_LIBS) \
+	$(BOOST_IOSTREAMS_LIBS) \
+	$(ZLIB_LIBS) \
+	libdjinterop.la \
+	-lpthread -ldl
+
+# Crate test
+el_crate_test_SOURCES = \
+	enginelibrary/crate_test.cpp \
+	enginelibrary/crate.cpp \
+	enginelibrary/database.cpp
+el_crate_test_CXXFLAGS = \
+	-DTESTDATA_DIR="../testdata"
+el_crate_test_LDADD = \
 	$(BOOST_SYSTEM_LIBS) \
 	$(BOOST_FILESYSTEM_LIBS) \
 	$(BOOST_UTF_LIBS) \

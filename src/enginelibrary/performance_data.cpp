@@ -24,10 +24,7 @@
 #include <string>
 #include <vector>
 #include <boost/optional.hpp>
-
-#define _MODERN_SQLITE_BOOST_OPTIONAL_SUPPORT
 #include "sqlite_modern_cpp.h"
-
 #include "performance_data_format.hpp"
 
 namespace djinterop {
