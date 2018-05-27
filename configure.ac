@@ -1,4 +1,4 @@
-AC_INIT([libdjinterop], [0.6.0], [bugs@xsco.org], [libdjinterop])
+AC_INIT([libdjinterop], [0.6.1], [bugs@xsco.org], [libdjinterop])
 #AM_SILENT_RULES([yes])
 AM_INIT_AUTOMAKE([subdir-objects -Wall -Werror])
 
@@ -53,7 +53,7 @@ AC_SUBST([BOOST_IOSTREAMS_LIBS], [-lboost_iostreams])
 AC_SUBST([BOOST_FILESYSTEM_LIBS], [-lboost_filesystem])
 AC_SUBST([BOOST_UTF_LIBS], [-lboost_unit_test_framework])
 
-# Consider generating a pkg-config file:
+# TODO - Consider generating a pkg-config file for libdjinterop
 # https://www.gnu.org/software/autoconf-archive/ax_create_pkgconfig_info.html
 
 # Makefiles

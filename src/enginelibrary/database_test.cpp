@@ -120,16 +120,16 @@ BOOST_AUTO_TEST_CASE (information__valid_db__expected)
     BOOST_CHECK_EQUAL(db.performance_db_path(), sample_path + "/p.db");
     
 	BOOST_CHECK_EQUAL(db.uuid(), "e535b170-26ef-4f30-8cb2-5b9fa4c2a27f");
-	BOOST_CHECK_EQUAL(db.version(), el::version_firmware_1_0_0);
+	BOOST_CHECK_EQUAL(db.version(), el::version_1_6_0);
 }
 
-BOOST_AUTO_TEST_CASE (create_database__version_1_0_0__creates_verified)
+BOOST_AUTO_TEST_CASE (create_database__version_1_6_0__creates_verified)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
 
     // Act
-    auto db = el::create_database(temp_dir.string(), el::version_firmware_1_0_0);
+    auto db = el::create_database(temp_dir.string(), el::version_1_6_0);
 
     // Assert
     BOOST_CHECK_EQUAL(db.exists(), true);
@@ -137,18 +137,18 @@ BOOST_AUTO_TEST_CASE (create_database__version_1_0_0__creates_verified)
     BOOST_CHECK_EQUAL(db.directory_path(), temp_dir.string());
     BOOST_CHECK_EQUAL(db.music_db_path(), (temp_dir / "m.db").string());
     BOOST_CHECK_EQUAL(db.performance_db_path(), (temp_dir / "p.db").string());
-    BOOST_CHECK_EQUAL(db.version(), el::version_firmware_1_0_0);
+    BOOST_CHECK_EQUAL(db.version(), el::version_1_6_0);
     db.verify();
     fs::remove_all(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE (create_database__version_1_0_3__creates_verified)
+BOOST_AUTO_TEST_CASE (create_database__version_1_7_1__creates_verified)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
 
     // Act
-    auto db = el::create_database(temp_dir.string(), el::version_firmware_1_0_3);
+    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
 
     // Assert
     BOOST_CHECK_EQUAL(db.exists(), true);
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE (create_database__version_1_0_3__creates_verified)
     BOOST_CHECK_EQUAL(db.directory_path(), temp_dir.string());
     BOOST_CHECK_EQUAL(db.music_db_path(), (temp_dir / "m.db").string());
     BOOST_CHECK_EQUAL(db.performance_db_path(), (temp_dir / "p.db").string());
-    BOOST_CHECK_EQUAL(db.version(), el::version_firmware_1_0_3);
+    BOOST_CHECK_EQUAL(db.version(), el::version_1_7_1);
     db.verify();
     fs::remove_all(temp_dir);
 }

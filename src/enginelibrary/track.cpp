@@ -46,7 +46,7 @@ struct track_row
     boost::optional<std::string> uuid_of_external_database;
     boost::optional<int> id_track_in_external_database;
     int id_album_art;
-    int pdb_import_key; // schema versions >= 1.0.3
+    int pdb_import_key; // schema versions >= 1.7.1
 };
 
 struct metadata_types
@@ -99,7 +99,7 @@ track_row select_track_row(const database &db, int id)
     sqlite::database m_db{db.music_db_path()};
     track_row row;
     int rows_found = 0;
-    if (db.version() >= version_firmware_1_0_3)
+    if (db.version() >= version_1_7_1)
     {
         m_db
             << "SELECT id, playOrder, length, lengthCalculated, bpm, year, "
@@ -686,7 +686,7 @@ void track::save(const database &database)
     if (new_entry)
     {
         // Insert a new entry in the track table
-        if (database.version() >= version_firmware_1_0_3)
+        if (database.version() >= version_1_7_1)
         {
             m_db <<
                 "INSERT INTO Track ("
@@ -746,7 +746,7 @@ void track::save(const database &database)
     else
     {
         // Update existing entry
-        if (database.version() >= version_firmware_1_0_3)
+        if (database.version() >= version_1_7_1)
         {
             m_db <<
                 "UPDATE Track SET "

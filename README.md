@@ -19,9 +19,9 @@ What is supported:
 * Beat grids
 * Hot cues
 * Loops
-* Engine library formats for the following firmware versions:
-  * Firmware 1.0.0 (schema 1.6.0)
-  * Firmware 1.0.3 (schema 1.7.1)
+* Engine library formats for the following database schema versions:
+  * Schema 1.6.0 (used by firmware 1.0.0)
+  * Schema 1.7.1 (used by firmware 1.0.3)
 
 What is not supported (yet):
 
@@ -51,7 +51,7 @@ namespace el = djinterop::enginelibrary;
 int main(int argc, char **argv)
 {
     auto db_dir = "Engine Library";
-    auto db = el::create_database(db_dir, el::version_firmware_1_0_3);
+    auto db = el::create_database(db_dir, el::version_1_7_1);
 
     el::track t;
     t.set_track_number(1);
@@ -59,11 +59,11 @@ int main(int argc, char **argv)
     t.set_bpm(120);
     t.set_year(1970);
     t.set_title("Some Song");
-	t.set_artist("Some Artist");
+    t.set_artist("Some Artist");
     t.set_key(el::musical_key::a_minor);
-	t.set_path("../01 - Some Artist - Some Song.mp3");
-	t.set_filename("01 - Some Artist - Some Song.mp3");
-	t.set_file_extension("mp3");
+    t.set_path("../01 - Some Artist - Some Song.mp3");
+    t.set_filename("01 - Some Artist - Some Song.mp3");
+    t.set_file_extension("mp3");
     t.set_bitrate(320);
     t.save(db);
 
@@ -103,4 +103,5 @@ Dependencies
 * [Boost](https://boost.org)
 * [SQLite](https://sqlite.org)
 * [SQLite Modern C++ Wrapper](https://github.com/SqliteModernCpp/sqlite_modern_cpp)
+* [zlib](http://zlib.net)
 

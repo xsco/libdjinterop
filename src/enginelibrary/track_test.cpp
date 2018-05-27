@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE (save__new_track_no_values__throws)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
-    auto db = el::create_database(temp_dir.string(), el::version_firmware_1_0_3);
+    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
     el::track t{};
 
     // Act/Assert
@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE (save__new_track_good_values__saves)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
-    auto db = el::create_database(temp_dir.string(), el::version_firmware_1_0_3);
+    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
     el::track t{};
     populate_example_track_1(t);
 
@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE (ctor_copy__saved_track__zero_id_and_copied_fields)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
-    auto db = el::create_database(temp_dir.string(), el::version_firmware_1_0_3);
+    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
     el::track t{};
     populate_example_track_1(t);
     t.save(db);
@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE (save__existing_track_good_values__saves)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
-    auto db = el::create_database(temp_dir.string(), el::version_firmware_1_0_3);
+    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
     el::track t{};
     populate_example_track_1(t);
     t.save(db);
@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE (op_copy_assign__saved_track__zero_id_and_copied_fields)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
-    auto db = el::create_database(temp_dir.string(), el::version_firmware_1_0_3);
+    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
     el::track t{};
     populate_example_track_1(t);
     t.save(db);

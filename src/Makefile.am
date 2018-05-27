@@ -8,6 +8,9 @@ libdjinterop_la_SOURCES = \
 	sqlite_modern_cpp/utility/uncaught_exceptions.h \
 	sqlite_modern_cpp/utility/variant.h \
 	enginelibrary/schema.cpp enginelibrary/schema.hpp \
+	enginelibrary/schema_validation_utils.hpp \
+	enginelibrary/schema_1_6_0.cpp enginelibrary/schema_1_6_0.hpp \
+	enginelibrary/schema_1_7_1.cpp enginelibrary/schema_1_7_1.hpp \
 	enginelibrary/database.cpp \
 	enginelibrary/track.cpp \
 	enginelibrary/encode_decode_utils.hpp \

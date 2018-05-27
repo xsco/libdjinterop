@@ -34,10 +34,15 @@ struct schema_version
     int pat;
 };
 
-static constexpr schema_version version_firmware_1_0_0 { 1, 6, 0 };
-static constexpr schema_version version_firmware_1_0_3 { 1, 7, 1 };
-static constexpr schema_version version_latest = version_firmware_1_0_3;
+static constexpr schema_version version_1_6_0 { 1, 6, 0 };
+static constexpr schema_version version_1_7_1 { 1, 7, 1 };
+static constexpr schema_version version_latest = version_1_7_1;
 
+/**
+ * The `database_inconsistency` exception is thrown when the schema of a
+ * database does not match the expectations suggested by its reported version
+ * number.
+ */
 class database_inconsistency : public std::logic_error
 {
 public:
@@ -47,9 +52,19 @@ public:
     virtual ~database_inconsistency() = default;
 };
 
+/**
+ * The `unsupported_database_version` exception is thrown when a database schema
+ * version is encountered that is not yet supported by this version of the
+ * library.
+ */
 class unsupported_database_version : public std::runtime_error
 {
 public:
+    explicit unsupported_database_version(
+            const schema_version version) noexcept :
+        runtime_error{"Unsupported database version"},
+        version_{version}
+    {}
     explicit unsupported_database_version(
             const std::string &what_arg,
             const schema_version version) noexcept :

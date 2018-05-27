@@ -69,35 +69,35 @@ static void remove_temp_dir(const fs::path &temp_dir)
 BOOST_AUTO_TEST_CASE (operators_equality__various__expected)
 {
     // Arrange/Act/Assert
-    BOOST_CHECK(  el::version_firmware_1_0_0 == el::version_firmware_1_0_0);
-    BOOST_CHECK(  el::version_firmware_1_0_3 == el::version_firmware_1_0_3);
-    BOOST_CHECK(!(el::version_firmware_1_0_0 == el::version_firmware_1_0_3));
-    BOOST_CHECK(!(el::version_firmware_1_0_3 == el::version_firmware_1_0_0));
-    BOOST_CHECK(  el::version_firmware_1_0_0 != el::version_firmware_1_0_3);
-    BOOST_CHECK(  el::version_firmware_1_0_3 != el::version_firmware_1_0_0);
-    BOOST_CHECK(!(el::version_firmware_1_0_0 != el::version_firmware_1_0_0));
-    BOOST_CHECK(!(el::version_firmware_1_0_3 != el::version_firmware_1_0_3));
+    BOOST_CHECK(  el::version_1_6_0 == el::version_1_6_0);
+    BOOST_CHECK(  el::version_1_7_1 == el::version_1_7_1);
+    BOOST_CHECK(!(el::version_1_6_0 == el::version_1_7_1));
+    BOOST_CHECK(!(el::version_1_7_1 == el::version_1_6_0));
+    BOOST_CHECK(  el::version_1_6_0 != el::version_1_7_1);
+    BOOST_CHECK(  el::version_1_7_1 != el::version_1_6_0);
+    BOOST_CHECK(!(el::version_1_6_0 != el::version_1_6_0));
+    BOOST_CHECK(!(el::version_1_7_1 != el::version_1_7_1));
 }
 
 BOOST_AUTO_TEST_CASE (operators_ordering__various__expected)
 {
     // Arrange/Act/Assert
-    BOOST_CHECK(  el::version_firmware_1_0_0 <= el::version_firmware_1_0_0);
-    BOOST_CHECK(  el::version_firmware_1_0_3 <= el::version_firmware_1_0_3);
-    BOOST_CHECK(  el::version_firmware_1_0_0 <= el::version_firmware_1_0_3);
-    BOOST_CHECK(!(el::version_firmware_1_0_3 <= el::version_firmware_1_0_0));
-    BOOST_CHECK(!(el::version_firmware_1_0_0 < el::version_firmware_1_0_0));
-    BOOST_CHECK(!(el::version_firmware_1_0_3 < el::version_firmware_1_0_3));
-    BOOST_CHECK(  el::version_firmware_1_0_0 < el::version_firmware_1_0_3);
-    BOOST_CHECK(!(el::version_firmware_1_0_3 < el::version_firmware_1_0_0));
-    BOOST_CHECK(  el::version_firmware_1_0_0 >= el::version_firmware_1_0_0);
-    BOOST_CHECK(  el::version_firmware_1_0_3 >= el::version_firmware_1_0_3);
-    BOOST_CHECK(!(el::version_firmware_1_0_0 >= el::version_firmware_1_0_3));
-    BOOST_CHECK(  el::version_firmware_1_0_3 >= el::version_firmware_1_0_0);
-    BOOST_CHECK(!(el::version_firmware_1_0_0 > el::version_firmware_1_0_0));
-    BOOST_CHECK(!(el::version_firmware_1_0_3 > el::version_firmware_1_0_3));
-    BOOST_CHECK(!(el::version_firmware_1_0_0 > el::version_firmware_1_0_3));
-    BOOST_CHECK(  el::version_firmware_1_0_3 > el::version_firmware_1_0_0);
+    BOOST_CHECK(  el::version_1_6_0 <= el::version_1_6_0);
+    BOOST_CHECK(  el::version_1_7_1 <= el::version_1_7_1);
+    BOOST_CHECK(  el::version_1_6_0 <= el::version_1_7_1);
+    BOOST_CHECK(!(el::version_1_7_1 <= el::version_1_6_0));
+    BOOST_CHECK(!(el::version_1_6_0 < el::version_1_6_0));
+    BOOST_CHECK(!(el::version_1_7_1 < el::version_1_7_1));
+    BOOST_CHECK(  el::version_1_6_0 < el::version_1_7_1);
+    BOOST_CHECK(!(el::version_1_7_1 < el::version_1_6_0));
+    BOOST_CHECK(  el::version_1_6_0 >= el::version_1_6_0);
+    BOOST_CHECK(  el::version_1_7_1 >= el::version_1_7_1);
+    BOOST_CHECK(!(el::version_1_6_0 >= el::version_1_7_1));
+    BOOST_CHECK(  el::version_1_7_1 >= el::version_1_6_0);
+    BOOST_CHECK(!(el::version_1_6_0 > el::version_1_6_0));
+    BOOST_CHECK(!(el::version_1_7_1 > el::version_1_7_1));
+    BOOST_CHECK(!(el::version_1_6_0 > el::version_1_7_1));
+    BOOST_CHECK(  el::version_1_7_1 > el::version_1_6_0);
 }
 
 BOOST_AUTO_TEST_CASE (verify_music_schema__db_at_1_0_0__verified)
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE (verify_music_schema__db_at_1_0_0__verified)
     auto version = el::verify_music_schema(db);
 
     // Assert
-	BOOST_CHECK_EQUAL(version, el::version_firmware_1_0_0);
+	BOOST_CHECK_EQUAL(version, el::version_1_6_0);
 }
 
 BOOST_AUTO_TEST_CASE (verify_performance_schema__db_at_1_0_0__verified)
@@ -121,10 +121,10 @@ BOOST_AUTO_TEST_CASE (verify_performance_schema__db_at_1_0_0__verified)
     auto version = el::verify_performance_schema(db);
 
     // Assert
-	BOOST_CHECK_EQUAL(version, el::version_firmware_1_0_0);
+	BOOST_CHECK_EQUAL(version, el::version_1_6_0);
 }
 
-BOOST_AUTO_TEST_CASE (create_music_schema__version_1_0_0__creates_verified)
+BOOST_AUTO_TEST_CASE (create_music_schema__version_1_6_0__creates_verified)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
@@ -132,14 +132,14 @@ BOOST_AUTO_TEST_CASE (create_music_schema__version_1_0_0__creates_verified)
     sqlite::database db{db_path.string()};
 
     // Act
-    el::create_music_schema(db, el::version_firmware_1_0_0);
+    el::create_music_schema(db, el::version_1_6_0);
 
     // Assert
     el::verify_music_schema(db);
     fs::remove_all(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE (create_performance_schema__version_1_0_0__creates_verified)
+BOOST_AUTO_TEST_CASE (create_performance_schema__version_1_6_0__creates_verified)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
@@ -147,14 +147,14 @@ BOOST_AUTO_TEST_CASE (create_performance_schema__version_1_0_0__creates_verified
     sqlite::database db{db_path.string()};
 
     // Act
-    el::create_performance_schema(db, el::version_firmware_1_0_0);
+    el::create_performance_schema(db, el::version_1_6_0);
 
     // Assert
     el::verify_performance_schema(db);
     remove_temp_dir(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE (create_music_schema__version_1_0_3__creates_verified)
+BOOST_AUTO_TEST_CASE (create_music_schema__version_1_7_1__creates_verified)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
@@ -162,14 +162,14 @@ BOOST_AUTO_TEST_CASE (create_music_schema__version_1_0_3__creates_verified)
     sqlite::database db{db_path.string()};
 
     // Act
-    el::create_music_schema(db, el::version_firmware_1_0_3);
+    el::create_music_schema(db, el::version_1_7_1);
 
     // Assert
     el::verify_music_schema(db);
     fs::remove_all(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE (create_performance_schema__version_1_0_3__creates_verified)
+BOOST_AUTO_TEST_CASE (create_performance_schema__version_1_7_1__creates_verified)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE (create_performance_schema__version_1_0_3__creates_verified
     sqlite::database db{db_path.string()};
 
     // Act
-    el::create_performance_schema(db, el::version_firmware_1_0_3);
+    el::create_performance_schema(db, el::version_1_7_1);
 
     // Assert
     el::verify_performance_schema(db);

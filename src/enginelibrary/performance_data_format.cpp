@@ -35,6 +35,7 @@ namespace io = boost::iostreams;
 namespace djinterop {
 namespace enginelibrary {
 
+// TODO - consider replacing boost::iostreams with direct use of zlib, to remove any client boost dependency
 // Uncompress a zlib'ed BLOB
 static void uncompress(
         int track_id,

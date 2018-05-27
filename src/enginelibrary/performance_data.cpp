@@ -58,7 +58,7 @@ static performance_data_row extract_performance_data(
 	sqlite::database m_db{db.performance_db_path()};
 	performance_data_row row{track_id};
 	int rows_found = 0;
-    if (db.version() >= version_firmware_1_0_3)
+    if (db.version() >= version_1_7_1)
     {
     	m_db
     		<< "SELECT id, isAnalyzed, isRendered, "
@@ -379,7 +379,7 @@ void performance_data::set_loops(
 void performance_data::save(const database &database)
 {
 	sqlite::database m_db{database.performance_db_path()};
-    if (database.version() >= version_firmware_1_0_3)
+    if (database.version() >= version_1_7_1)
     {
         m_db <<
             "INSERT OR REPLACE INTO PerformanceData ("

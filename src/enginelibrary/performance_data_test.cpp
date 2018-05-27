@@ -408,7 +408,7 @@ BOOST_AUTO_TEST_CASE (save__new_track_no_values__doesnt_throw)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
-    auto db = create_database(temp_dir.string(), el::version_firmware_1_0_3);
+    auto db = create_database(temp_dir.string(), el::version_1_7_1);
     el::performance_data p{123};
 
     // Act/Assert
@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE (ctor__new_track_no_values__doesnt_throw)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
-    auto db = create_database(temp_dir.string(), el::version_firmware_1_0_3);
+    auto db = create_database(temp_dir.string(), el::version_1_7_1);
     el::performance_data p{123};
     p.save(db);
 
@@ -435,7 +435,7 @@ BOOST_AUTO_TEST_CASE (save__new_track_good_values__saves)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
-    auto db = create_database(temp_dir.string(), el::version_firmware_1_0_3);
+    auto db = create_database(temp_dir.string(), el::version_1_7_1);
     el::performance_data p{123};
     populate_track_1(p);
 
@@ -454,7 +454,7 @@ BOOST_AUTO_TEST_CASE (save__existing_track__saves)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
-    auto db = create_database(temp_dir.string(), el::version_firmware_1_0_3);
+    auto db = create_database(temp_dir.string(), el::version_1_7_1);
     el::performance_data p{1};
     populate_track_1(p);
     p.save(db);
