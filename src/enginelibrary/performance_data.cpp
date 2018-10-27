@@ -449,6 +449,51 @@ void normalise_beat_grid(track_beat_grid &beat_grid, double last_sample)
     beat_grid.last_beat_sample_offset += last_adjust_offset;
 }
 
+/**
+ * \brief Calculate details for an overview waveform, given a track's total
+ *        number of samples and sample rate
+ */
+void calculate_overview_waveform_details(
+        int_least64_t total_samples, double sample_rate,
+        int_least64_t &adjusted_total_samples,
+        int_least64_t &num_entries,
+        double &samples_per_entry)
+{
+    int quantNum = 2 * (int)(sample_rate / 210);
+
+    // The overview waveform always has 1024 entries
+    num_entries = 1024;
+
+    // Quantise the total samples to the quantNum
+    adjusted_total_samples = total_samples - (total_samples % quantNum);
+    samples_per_entry = (double)adjusted_total_samples / num_entries;
+}
+
+/**
+ * \brief Calculate details for an high-resolution waveform, given a track's
+ *        total number of samples and sample rate
+ *
+ * Note that the `adjusted_total_samples` value written will be larger than the
+ * value for `total_samples` provided to the method; any extra waveform data can
+ * be padded with zeroes to make up the extra space.
+ */
+void calculate_high_res_waveform_details(
+        int_least64_t total_samples, double sample_rate,
+        int_least64_t &adjusted_total_samples,
+        int_least64_t &num_entries,
+        double &samples_per_entry)
+{
+    int quantNum = 2 * (int)(sample_rate / 210);
+
+    // Samples per entry is the same as the quantNum
+    samples_per_entry = quantNum;
+
+    // The adjusted total number of samples has an extra quantNum on the end,
+    // as compared to the overview waveform
+    adjusted_total_samples = total_samples - (total_samples % quantNum) + quantNum;
+    num_entries = adjusted_total_samples / samples_per_entry;
+}
+
 } // enginelibrary
 } // djinterop
 

@@ -378,6 +378,60 @@ static void check_track_2(const el::performance_data &p)
     BOOST_CHECK(loop == p.loops_end());
 }
 
+BOOST_AUTO_TEST_CASE (calculate_overview_waveform_details__sample_values__expected)
+{
+    // Arrange
+    int_least64_t total_samples_1;
+    int_least64_t num_entries_1;
+    double samples_per_entry_1;
+    int_least64_t total_samples_2;
+    int_least64_t num_entries_2;
+    double samples_per_entry_2;
+
+    // Act
+    el::calculate_overview_waveform_details(
+            17452800, 44100,
+            total_samples_1, num_entries_1, samples_per_entry_1);
+    el::calculate_overview_waveform_details(
+            8640000, 48000,
+            total_samples_2, num_entries_2, samples_per_entry_2);
+
+    // Assert
+    BOOST_CHECK_EQUAL(total_samples_1, 17452680);
+    BOOST_CHECK_EQUAL(num_entries_1, 1024);
+    BOOST_CHECK_CLOSE(samples_per_entry_1, 17043.6328125, 0.001);
+    BOOST_CHECK_EQUAL(total_samples_2, 8639832);
+    BOOST_CHECK_EQUAL(num_entries_2, 1024);
+    BOOST_CHECK_CLOSE(samples_per_entry_2, 8437.3359375, 0.001);
+}
+
+BOOST_AUTO_TEST_CASE (calculate_high_res_waveform_details__sample_values__expected)
+{
+    // Arrange
+    int_least64_t total_samples_1;
+    int_least64_t num_entries_1;
+    double samples_per_entry_1;
+    int_least64_t total_samples_2;
+    int_least64_t num_entries_2;
+    double samples_per_entry_2;
+
+    // Act
+    el::calculate_high_res_waveform_details(
+            17452800, 44100,
+            total_samples_1, num_entries_1, samples_per_entry_1);
+    el::calculate_high_res_waveform_details(
+            8640000, 48000,
+            total_samples_2, num_entries_2, samples_per_entry_2);
+
+    // Assert
+    BOOST_CHECK_EQUAL(total_samples_1, 17453100);
+    BOOST_CHECK_EQUAL(num_entries_1, 41555);
+    BOOST_CHECK_CLOSE(samples_per_entry_1, 420, 0.001);
+    BOOST_CHECK_EQUAL(total_samples_2, 8640288);
+    BOOST_CHECK_EQUAL(num_entries_2, 18948);
+    BOOST_CHECK_CLOSE(samples_per_entry_2, 456, 0.001);
+}
+
 BOOST_AUTO_TEST_CASE (ctor__track_1__correct_fields)
 {
     // Arrange

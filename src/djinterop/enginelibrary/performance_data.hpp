@@ -198,6 +198,35 @@ typedef std::vector<track_hot_cue_point>::const_iterator hot_cue_const_iterator;
 typedef std::vector<track_loop>::const_iterator track_loop_const_iterator;
 
 /**
+ * A single overview waveform entry
+ */
+struct overview_waveform_entry
+{
+    uint_least8_t low_frequency_point;
+    uint_least8_t mid_frequency_point;
+    uint_least8_t high_frequency_point;
+};
+
+typedef std::vector<overview_waveform_entry>::const_iterator
+    overview_waveform_entry_const_iterator;
+
+/**
+ * A single high-resolution waveform entry
+ */
+struct high_res_waveform_entry
+{
+    uint_least8_t positive_low_frequency_point;
+    uint_least8_t positive_mid_frequency_point;
+    uint_least8_t positive_high_frequency_point;
+    uint_least8_t negative_low_frequency_point;
+    uint_least8_t negative_mid_frequency_point;
+    uint_least8_t negative_high_frequency_point;
+};
+
+typedef std::vector<high_res_waveform_entry>::const_iterator
+    high_res_waveform_entry_const_iterator;
+
+/**
  * The results of track analysis
  */
 class performance_data
@@ -230,17 +259,17 @@ public:
     double sample_rate() const;
 
     /**
-     * \brief Get the total number of samples in the track
+     * \brief Gets the total number of samples in the track
      */
     int_least64_t total_samples() const;
 
     /**
-     * \brief Get the initial musical key of the track
+     * \brief Gets the initial musical key of the track
      */
     musical_key key() const;
 
     /**
-     * \brief Get the average loudness of the track
+     * \brief Gets the average loudness of the track
      *
      * The loudness value ranges from zero to one, and is typically close to
      * 0.5 for a well-mastered track.  The exact algorithm for determining
@@ -249,13 +278,13 @@ public:
     double average_loudness() const;
 
     /**
-     * \brief Get the default beat grid, i.e. the one detected by automated
+     * \brief Gets the default beat grid, i.e. the one detected by automated
      *        analysis
      */
     track_beat_grid default_beat_grid() const;
 
     /**
-     * \brief Get the adjusted beat grid, i.e. the one that may have been
+     * \brief Gets the adjusted beat grid, i.e. the one that may have been
      *        adjusted or tweaked by the user
      *
      * Note that if the beat grid has not been adjusted, then this will be equal
@@ -305,6 +334,51 @@ public:
      * Note that there are always 8 loops per track in an Engine Prime Library.
      */
     track_loop_const_iterator loops_end() const;
+
+    /**
+     * \brief Gets the number of overview waveform entries
+     */
+    int num_overview_waveform_entries() const;
+
+    /**
+     * \brief Gets the number of samples per overview waveform entry
+     *
+     * Note that the number is unlikely to be a round number, as there are
+     * always a fixed number of entries for the overview waveform.
+     */
+    double samples_per_overview_waveform_entry() const;
+
+    /**
+     * \brief Gets an iterator pointing to the first overview waveform entry
+     */
+    overview_waveform_entry_const_iterator overview_waveform_begin() const;
+
+    /**
+     * \brief Gets an iterator pointing beyond the last overview waveform entry
+     */
+    overview_waveform_entry_const_iterator overview_waveform_end() const;
+
+    /**
+     * \brief Gets the number of high-resolution waveform entries
+     */
+    int num_high_res_waveform_entries() const;
+
+    /**
+     * \brief Gets the number of samples per high-resolution waveform entry
+     *
+     * Note that this is a fixed number, derived from the track's sample rate.
+     */
+    double samples_per_high_res_waveform_entry() const;
+
+    /**
+     * \brief Gets an iterator pointing to the first high-res waveform entry
+     */
+    high_res_waveform_entry_const_iterator high_res_waveform_begin() const;
+
+    /**
+     * \brief Gets an iterator pointing beyond the last high-res waveform entry
+     */
+    high_res_waveform_entry_const_iterator high_res_waveform_end() const;
 
     /**
      * \brief Gets the duration of the track, in milliseconds
@@ -381,6 +455,30 @@ public:
             track_loop_const_iterator end);
 
     /**
+     * \brief Set overview waveform data
+     *
+     * Ensure that the number of entries and samples-per-entry has been
+     * calculated via the `calculate_overview_waveform_details` function.
+     */
+    void set_overview_waveform_entries(
+            int_least64_t num_entries,
+            double samples_per_entry,
+            overview_waveform_entry_const_iterator begin,
+            overview_waveform_entry_const_iterator end);
+
+    /**
+     * \brief Set high-resolution waveform data
+     *
+     * Ensure that the number of entries and samples-per-entry has been
+     * calculated via the `calculate_high_res_waveform_details` function.
+     */
+    void set_high_res_waveform_entries(
+            int_least64_t num_entries,
+            double samples_per_entry,
+            high_res_waveform_entry_const_iterator begin,
+            high_res_waveform_entry_const_iterator end);
+
+    /**
      * \brief Save track performance data to a given database
      */
     void save(const database &database);
@@ -398,9 +496,33 @@ private:
  * at index -4 (yes, negative!) and the last beat is the first beat past the
  * usable end of the track, which may not necessarily be aligned to the first
  * beat of a 4-beat bar.  Therefore, the sample offsets typically recorded by
- * Engine Prime do not usually lie within the actual track.
+ * Engine Prime do not lie within the actual track.
  */
 void normalise_beat_grid(track_beat_grid &beat_grid, double last_sample);
+
+/**
+ * \brief Calculate details for an overview waveform, given a track's total
+ *        number of samples and sample rate
+ */
+void calculate_overview_waveform_details(
+        int_least64_t total_samples, double sample_rate,
+        int_least64_t &adjusted_total_samples,
+        int_least64_t &num_entries,
+        double &samples_per_entry);
+
+/**
+ * \brief Calculate details for an high-resolution waveform, given a track's
+ *        total number of samples and sample rate
+ *
+ * Note that the `adjusted_total_samples` value written will be larger than the
+ * value for `total_samples` provided to the method; any extra waveform data can
+ * be padded with zeroes to make up the extra space.
+ */
+void calculate_high_res_waveform_details(
+        int_least64_t total_samples, double sample_rate,
+        int_least64_t &adjusted_total_samples,
+        int_least64_t &num_entries,
+        double &samples_per_entry);
 
 } // enginelibrary
 } // djinterop
