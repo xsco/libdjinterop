@@ -202,6 +202,18 @@ typedef std::vector<track_loop>::const_iterator track_loop_const_iterator;
  */
 struct overview_waveform_entry
 {
+    overview_waveform_entry()
+    {}
+
+    overview_waveform_entry(
+            uint_least8_t low_frequency_point,
+            uint_least8_t mid_frequency_point,
+            uint_least8_t high_frequency_point) :
+        low_frequency_point{low_frequency_point},
+        mid_frequency_point{mid_frequency_point},
+        high_frequency_point{high_frequency_point}
+    {}
+
     uint_least8_t low_frequency_point;
     uint_least8_t mid_frequency_point;
     uint_least8_t high_frequency_point;
@@ -215,6 +227,25 @@ typedef std::vector<overview_waveform_entry>::const_iterator
  */
 struct high_res_waveform_entry
 {
+    high_res_waveform_entry()
+    {}
+
+    high_res_waveform_entry(
+            uint_least8_t positive_low_frequency_point,
+            uint_least8_t positive_mid_frequency_point,
+            uint_least8_t positive_high_frequency_point,
+            uint_least8_t negative_low_frequency_point,
+            uint_least8_t negative_mid_frequency_point,
+            uint_least8_t negative_high_frequency_point) :
+        positive_low_frequency_point{positive_low_frequency_point},
+        positive_mid_frequency_point{positive_mid_frequency_point},
+        positive_high_frequency_point{positive_high_frequency_point},
+        negative_low_frequency_point{negative_low_frequency_point},
+        negative_mid_frequency_point{negative_mid_frequency_point},
+        negative_high_frequency_point{negative_high_frequency_point}
+    {}
+
+    // TODO - verify that the 3/3 split is definitely positive and negative
     uint_least8_t positive_low_frequency_point;
     uint_least8_t positive_mid_frequency_point;
     uint_least8_t positive_high_frequency_point;
@@ -338,7 +369,7 @@ public:
     /**
      * \brief Gets the number of overview waveform entries
      */
-    int num_overview_waveform_entries() const;
+    uint_least64_t num_overview_waveform_entries() const;
 
     /**
      * \brief Gets the number of samples per overview waveform entry
@@ -361,7 +392,7 @@ public:
     /**
      * \brief Gets the number of high-resolution waveform entries
      */
-    int num_high_res_waveform_entries() const;
+    uint_least64_t num_high_res_waveform_entries() const;
 
     /**
      * \brief Gets the number of samples per high-resolution waveform entry
@@ -461,7 +492,7 @@ public:
      * calculated via the `calculate_overview_waveform_details` function.
      */
     void set_overview_waveform_entries(
-            int_least64_t num_entries,
+            uint_least64_t num_entries,
             double samples_per_entry,
             overview_waveform_entry_const_iterator begin,
             overview_waveform_entry_const_iterator end);
@@ -473,7 +504,7 @@ public:
      * calculated via the `calculate_high_res_waveform_details` function.
      */
     void set_high_res_waveform_entries(
-            int_least64_t num_entries,
+            uint_least64_t num_entries,
             double samples_per_entry,
             high_res_waveform_entry_const_iterator begin,
             high_res_waveform_entry_const_iterator end);
@@ -505,9 +536,10 @@ void normalise_beat_grid(track_beat_grid &beat_grid, double last_sample);
  *        number of samples and sample rate
  */
 void calculate_overview_waveform_details(
-        int_least64_t total_samples, double sample_rate,
-        int_least64_t &adjusted_total_samples,
-        int_least64_t &num_entries,
+        uint_least64_t total_samples,
+        double sample_rate,
+        uint_least64_t &adjusted_total_samples,
+        uint_least64_t &num_entries,
         double &samples_per_entry);
 
 /**
@@ -519,9 +551,10 @@ void calculate_overview_waveform_details(
  * be padded with zeroes to make up the extra space.
  */
 void calculate_high_res_waveform_details(
-        int_least64_t total_samples, double sample_rate,
-        int_least64_t &adjusted_total_samples,
-        int_least64_t &num_entries,
+        uint_least64_t total_samples,
+        double sample_rate,
+        uint_least64_t &adjusted_total_samples,
+        uint_least64_t &num_entries,
         double &samples_per_entry);
 
 } // enginelibrary

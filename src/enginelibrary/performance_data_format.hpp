@@ -22,6 +22,7 @@
 #ifndef DJINTEROP_ENGINELIBRARY_PERFORMANCE_DATA_FORMAT_HPP
 #define DJINTEROP_ENGINELIBRARY_PERFORMANCE_DATA_FORMAT_HPP
 
+#include <cstdint>
 #include <vector>
 #include "djinterop/enginelibrary/performance_data.hpp"
 
@@ -70,7 +71,7 @@ struct beat_data_blob
 
     beat_data_blob(
             double sample_rate, int64_t total_samples,
-            int8_t is_beat_data_set) :
+            uint8_t is_beat_data_set) :
         sample_rate{sample_rate},
         total_samples{total_samples},
         is_beat_data_set{is_beat_data_set}
@@ -78,7 +79,7 @@ struct beat_data_blob
 
     double sample_rate;
     int64_t total_samples;
-    int8_t is_beat_data_set;
+    uint8_t is_beat_data_set;
     std::vector<beat_data_marker_blob> default_markers;
     std::vector<beat_data_marker_blob> adjusted_markers;
 };
@@ -102,39 +103,79 @@ struct loops_blob
     std::vector<track_loop> loops;
 };
 
+struct overview_waveform_blob
+{
+    overview_waveform_blob() :
+        num_entries{0},
+        samples_per_entry{0}
+    {}
 
-// Extract track data from a blob
+    int64_t num_entries;
+    double samples_per_entry;
+    std::vector<overview_waveform_entry> entry_data;
+};
+
+struct high_res_waveform_blob
+{
+    high_res_waveform_blob() :
+        num_entries{0},
+        samples_per_entry{0}
+    {}
+
+    int64_t num_entries;
+    double samples_per_entry;
+    std::vector<high_res_waveform_entry> entry_data;
+};
+
+// Extract track data from a byte array
 track_data_blob decode_track_data(
         int track_id,
         const std::vector<char> &compressed_track_data);
 
-// Extract beat data from a blob
+// Extract beat data from a byte array
 beat_data_blob decode_beat_data(
         int track_id,
         const std::vector<char> &compressed_beat_data);
 
-// Extract quick cues data from a blob
+// Extract quick cues data from a byte array
 quick_cues_blob decode_quick_cues(
         int track_id,
         const std::vector<char> &compressed_quick_cues_data);
 
-// Extract loops from a blob
+// Extract loops from a byte array
 loops_blob decode_loops(
         int track_id,
         const std::vector<char> &loops_data);
 
-// Encode track data into a blob
+// Extract overview waveform from a byte array
+overview_waveform_blob decode_overview_waveform_data(
+        int track_id,
+        const std::vector<char> &waveform_data);
+
+// Extract high-resolution waveform from a byte array
+high_res_waveform_blob decode_high_res_waveform_data(
+        int track_id,
+        const std::vector<char> &waveform_data);
+
+// Encode track data into a byte array
 std::vector<char> encode_track_data(const track_data_blob &track_data);
 
-// Encode beat data into a blob
+// Encode beat data into a byte array
 std::vector<char> encode_beat_data(const beat_data_blob &beat_data);
 
-// Encode quick cues data into a blob
+// Encode quick cues data into a byte array
 std::vector<char> encode_quick_cues(const quick_cues_blob &quick_cues);
 
-// Encode loops into a blob
+// Encode loops into a byte array
 std::vector<char> encode_loops(const loops_blob &loops);
 
+// Encode overview waveform data into a byte array
+std::vector<char> encode_overview_waveform_data(
+        const overview_waveform_blob &waveform_data);
+
+// Encode high-resolution waveform data into a byte array
+std::vector<char> encode_high_res_waveform_data(
+        const high_res_waveform_blob &waveform_data);
 
 } // enginelibrary
 } // djinterop

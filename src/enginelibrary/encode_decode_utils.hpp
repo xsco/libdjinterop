@@ -28,13 +28,13 @@ namespace djinterop {
 namespace enginelibrary {
 
 // Extract an int8_t from a raw value at ptr address
-inline int8_t decode_int8(const char *ptr)
+inline uint8_t decode_uint8(const char *ptr)
 {
     return static_cast<const unsigned char>(*ptr);
 }
 
-// Encode an int8_t as a raw byte to an output pointer
-inline void encode_int8(int8_t value, char *ptr)
+// Encode an uint8_t as a raw byte to an output pointer
+inline void encode_uint8(uint8_t value, char *ptr)
 {
     *ptr = static_cast<char>(value);
 }

@@ -39,8 +39,8 @@ struct performance_data_row
     double is_analyzed = 1.0;
     double is_rendered = 0.0;
     track_data_blob track_data;
-    // TODO - high_resolution_wave_form_data
-    // TODO - overview_wave_form_data
+    overview_waveform_blob overview_waveform_data;
+    high_res_waveform_blob high_res_waveform_data;
     beat_data_blob beat_data;
     quick_cues_blob quick_cues;
     loops_blob loops;
@@ -84,6 +84,10 @@ static performance_data_row extract_performance_data(
                 row.beat_data = decode_beat_data(id, beat_data);
                 row.quick_cues = decode_quick_cues(id, quick_cues);
                 row.loops = decode_loops(id, loops);
+                row.high_res_waveform_data = decode_high_res_waveform_data(
+                        id, high_resolution_wave_form_data);
+                row.overview_waveform_data = decode_overview_waveform_data(
+                        id, overview_wave_form_data);
                 row.has_serato_values = has_serato_values;
                 row.has_rekordbox_values = has_rekordbox_values;
     			++rows_found;
@@ -118,6 +122,10 @@ static performance_data_row extract_performance_data(
                 row.beat_data = decode_beat_data(id, beat_data);
                 row.quick_cues = decode_quick_cues(id, quick_cues);
                 row.loops = decode_loops(id, loops);
+                row.high_res_waveform_data = decode_high_res_waveform_data(
+                        id, high_resolution_wave_form_data);
+                row.overview_waveform_data = decode_overview_waveform_data(
+                        id, overview_wave_form_data);
                 row.has_serato_values = has_serato_values;
                 row.has_rekordbox_values = 0.0;
     			++rows_found;
@@ -271,6 +279,75 @@ track_loop_const_iterator performance_data::loops_end() const
     return pimpl_->pd_.loops.loops.end();
 }
 
+/**
+ * \brief Gets the number of overview waveform entries
+ */
+uint_least64_t performance_data::num_overview_waveform_entries() const
+{
+    return pimpl_->pd_.overview_waveform_data.num_entries;
+}
+
+/**
+ * \brief Gets the number of samples per overview waveform entry
+ *
+ * Note that the number is unlikely to be a round number, as there are
+ * always a fixed number of entries for the overview waveform.
+ */
+double performance_data::samples_per_overview_waveform_entry() const
+{
+    return pimpl_->pd_.overview_waveform_data.samples_per_entry;
+}
+
+/**
+ * \brief Gets an iterator pointing to the first overview waveform entry
+ */
+overview_waveform_entry_const_iterator performance_data::overview_waveform_begin() const
+{
+    return pimpl_->pd_.overview_waveform_data.entry_data.begin();
+}
+
+/**
+ * \brief Gets an iterator pointing beyond the last overview waveform entry
+ */
+overview_waveform_entry_const_iterator performance_data::overview_waveform_end() const
+{
+    return pimpl_->pd_.overview_waveform_data.entry_data.end();
+}
+
+/**
+ * \brief Gets the number of high-resolution waveform entries
+ */
+uint_least64_t performance_data::num_high_res_waveform_entries() const
+{
+    return pimpl_->pd_.high_res_waveform_data.num_entries;
+}
+
+/**
+ * \brief Gets the number of samples per high-resolution waveform entry
+ *
+ * Note that this is a fixed number, derived from the track's sample rate.
+ */
+double performance_data::samples_per_high_res_waveform_entry() const
+{
+    return pimpl_->pd_.high_res_waveform_data.samples_per_entry;
+}
+
+/**
+ * \brief Gets an iterator pointing to the first high-res waveform entry
+ */
+high_res_waveform_entry_const_iterator performance_data::high_res_waveform_begin() const
+{
+    return pimpl_->pd_.high_res_waveform_data.entry_data.begin();
+}
+
+/**
+ * \brief Gets an iterator pointing beyond the last high-res waveform entry
+ */
+high_res_waveform_entry_const_iterator performance_data::high_res_waveform_end() const
+{
+    return pimpl_->pd_.high_res_waveform_data.entry_data.end();
+}
+
 void performance_data::set_sample_rate(double sample_rate)
 {
     pimpl_->pd_.track_data.sample_rate = sample_rate;
@@ -373,6 +450,46 @@ void performance_data::set_loops(
         pimpl_->pd_.loops.loops.resize(8);
 }
 
+/**
+ * \brief Set overview waveform data
+ *
+ * Ensure that the number of entries and samples-per-entry has been
+ * calculated via the `calculate_overview_waveform_details` function.
+ */
+void performance_data::set_overview_waveform_entries(
+        uint_least64_t num_entries,
+        double samples_per_entry,
+        overview_waveform_entry_const_iterator begin,
+        overview_waveform_entry_const_iterator end)
+{
+    pimpl_->pd_.overview_waveform_data.num_entries = num_entries;
+    pimpl_->pd_.overview_waveform_data.samples_per_entry = samples_per_entry;
+    pimpl_->pd_.overview_waveform_data.entry_data.clear();
+    std::copy(
+            begin, end,
+            std::back_inserter(pimpl_->pd_.overview_waveform_data.entry_data));
+}
+
+/**
+ * \brief Set high-resolution waveform data
+ *
+ * Ensure that the number of entries and samples-per-entry has been
+ * calculated via the `calculate_high_res_waveform_details` function.
+ */
+void performance_data::set_high_res_waveform_entries(
+        uint_least64_t num_entries,
+        double samples_per_entry,
+        high_res_waveform_entry_const_iterator begin,
+        high_res_waveform_entry_const_iterator end)
+{
+    pimpl_->pd_.high_res_waveform_data.num_entries = num_entries;
+    pimpl_->pd_.high_res_waveform_data.samples_per_entry = samples_per_entry;
+    pimpl_->pd_.high_res_waveform_data.entry_data.clear();
+    std::copy(
+            begin, end,
+            std::back_inserter(pimpl_->pd_.high_res_waveform_data.entry_data));
+}
+
 void performance_data::save(const database &database)
 {
 	sqlite::database m_db{database.performance_db_path()};
@@ -390,8 +507,8 @@ void performance_data::save(const database &database)
             << pimpl_->pd_.is_analyzed
             << pimpl_->pd_.is_rendered
             << encode_track_data(pimpl_->pd_.track_data)
-            << std::vector<char>{} // waveforms not yet implemented
-            << std::vector<char>{} // waveforms not yet implemented
+            << encode_high_res_waveform_data(pimpl_->pd_.high_res_waveform_data)
+            << encode_overview_waveform_data(pimpl_->pd_.overview_waveform_data)
             << encode_beat_data(pimpl_->pd_.beat_data)
             << encode_quick_cues(pimpl_->pd_.quick_cues)
             << encode_loops(pimpl_->pd_.loops)
@@ -412,8 +529,8 @@ void performance_data::save(const database &database)
             << pimpl_->pd_.is_analyzed
             << pimpl_->pd_.is_rendered
             << encode_track_data(pimpl_->pd_.track_data)
-            << std::vector<char>{} // waveforms not yet implemented
-            << std::vector<char>{} // waveforms not yet implemented
+            << encode_high_res_waveform_data(pimpl_->pd_.high_res_waveform_data)
+            << encode_overview_waveform_data(pimpl_->pd_.overview_waveform_data)
             << encode_beat_data(pimpl_->pd_.beat_data)
             << encode_quick_cues(pimpl_->pd_.quick_cues)
             << encode_loops(pimpl_->pd_.loops)
@@ -454,9 +571,10 @@ void normalise_beat_grid(track_beat_grid &beat_grid, double last_sample)
  *        number of samples and sample rate
  */
 void calculate_overview_waveform_details(
-        int_least64_t total_samples, double sample_rate,
-        int_least64_t &adjusted_total_samples,
-        int_least64_t &num_entries,
+        uint_least64_t total_samples,
+        double sample_rate,
+        uint_least64_t &adjusted_total_samples,
+        uint_least64_t &num_entries,
         double &samples_per_entry)
 {
     int quantNum = 2 * (int)(sample_rate / 210);
@@ -478,9 +596,10 @@ void calculate_overview_waveform_details(
  * be padded with zeroes to make up the extra space.
  */
 void calculate_high_res_waveform_details(
-        int_least64_t total_samples, double sample_rate,
-        int_least64_t &adjusted_total_samples,
-        int_least64_t &num_entries,
+        uint_least64_t total_samples,
+        double sample_rate,
+        uint_least64_t &adjusted_total_samples,
+        uint_least64_t &num_entries,
         double &samples_per_entry)
 {
     int quantNum = 2 * (int)(sample_rate / 210);

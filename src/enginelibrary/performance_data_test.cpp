@@ -130,6 +130,57 @@ static void populate_track_1(el::performance_data &p)
             true, true,
             "Loop 4", 4131485.476, 4303583.037, el::standard_pad_colours::pad_4);
     p.set_loops(std::begin(loops), std::end(loops));
+
+    // Overview waveform data
+    std::vector<el::overview_waveform_entry> ov_waveform_entries;
+    uint_least64_t ov_adjusted_total_samples;
+    uint_least64_t ov_num_entries;
+    double ov_samples_per_entry;
+    el::calculate_overview_waveform_details(
+            p.total_samples(),
+            p.sample_rate(),
+            ov_adjusted_total_samples,
+            ov_num_entries,
+            ov_samples_per_entry);
+    for (auto i = 0; i < ov_num_entries; ++i)
+    {
+        ov_waveform_entries.emplace_back(
+                i * 255 / ov_num_entries,
+                i * 127 / ov_num_entries,
+                i * 63  / ov_num_entries);
+    }
+    p.set_overview_waveform_entries(
+            ov_num_entries,
+            ov_samples_per_entry,
+            std::begin(ov_waveform_entries),
+            std::end(ov_waveform_entries));
+
+    // High-resolution waveform data
+    std::vector<el::high_res_waveform_entry> hr_waveform_entries;
+    uint_least64_t hr_adjusted_total_samples;
+    uint_least64_t hr_num_entries;
+    double hr_samples_per_entry;
+    el::calculate_high_res_waveform_details(
+            p.total_samples(),
+            p.sample_rate(),
+            hr_adjusted_total_samples,
+            hr_num_entries,
+            hr_samples_per_entry);
+    for (auto i = 0; i < hr_num_entries; ++i)
+    {
+        hr_waveform_entries.emplace_back(
+                i * 255 / hr_num_entries,
+                i * 127 / hr_num_entries,
+                i * 63  / hr_num_entries,
+                i * 255 / hr_num_entries,
+                i * 127 / hr_num_entries,
+                i * 63  / hr_num_entries);
+    }
+    p.set_high_res_waveform_entries(
+            hr_num_entries,
+            hr_samples_per_entry,
+            std::begin(hr_waveform_entries),
+            std::end(hr_waveform_entries));
 }
 
 static void check_track_1(const el::performance_data &p)
@@ -243,6 +294,32 @@ static void check_track_1(const el::performance_data &p)
     BOOST_CHECK_EQUAL(loop->is_end_set, false);
     ++loop;
     BOOST_CHECK(loop == p.loops_end());
+
+    // Overview waveform data
+    BOOST_CHECK_EQUAL(p.num_overview_waveform_entries(), 1024);
+    BOOST_CHECK_CLOSE(p.samples_per_overview_waveform_entry(), 17043.6328125, 0.001);
+    auto ov_entries = 0;
+    for (auto ov_entry = p.overview_waveform_begin();
+            ov_entry != p.overview_waveform_end();
+            ++ov_entry)
+    {
+        // Just count entries, don't try to validate exact waveform data
+        ++ov_entries;
+    }
+    BOOST_CHECK_EQUAL(ov_entries, 1024);
+
+    // High-res waveform data
+    BOOST_CHECK_EQUAL(p.num_high_res_waveform_entries(), 41555);
+    BOOST_CHECK_CLOSE(p.samples_per_high_res_waveform_entry(), 420, 0.001);
+    auto hr_entries = 0;
+    for (auto hr_entry = p.high_res_waveform_begin();
+            hr_entry != p.high_res_waveform_end();
+            ++hr_entry)
+    {
+        // Just count entries, don't try to validate exact waveform data
+        ++hr_entries;
+    }
+    BOOST_CHECK_EQUAL(hr_entries, 41555);
 }
 
 static void populate_track_2(el::performance_data &p)
@@ -280,6 +357,57 @@ static void populate_track_2(el::performance_data &p)
             true, true,
             "Loop 2", 2345600, 2345700, el::standard_pad_colours::pad_2);
     p.set_loops(std::begin(loops), std::end(loops));
+
+    // Overview waveform data
+    std::vector<el::overview_waveform_entry> ov_waveform_entries;
+    uint_least64_t ov_adjusted_total_samples;
+    uint_least64_t ov_num_entries;
+    double ov_samples_per_entry;
+    el::calculate_overview_waveform_details(
+            p.total_samples(),
+            p.sample_rate(),
+            ov_adjusted_total_samples,
+            ov_num_entries,
+            ov_samples_per_entry);
+    for (auto i = 0; i < ov_num_entries; ++i)
+    {
+        ov_waveform_entries.emplace_back(
+                i * 255 / ov_num_entries,
+                i * 127 / ov_num_entries,
+                i * 63  / ov_num_entries);
+    }
+    p.set_overview_waveform_entries(
+            ov_num_entries,
+            ov_samples_per_entry,
+            std::begin(ov_waveform_entries),
+            std::end(ov_waveform_entries));
+
+    // High-resolution waveform data
+    std::vector<el::high_res_waveform_entry> hr_waveform_entries;
+    uint_least64_t hr_adjusted_total_samples;
+    uint_least64_t hr_num_entries;
+    double hr_samples_per_entry;
+    el::calculate_high_res_waveform_details(
+            p.total_samples(),
+            p.sample_rate(),
+            hr_adjusted_total_samples,
+            hr_num_entries,
+            hr_samples_per_entry);
+    for (auto i = 0; i < hr_num_entries; ++i)
+    {
+        hr_waveform_entries.emplace_back(
+                i * 255 / hr_num_entries,
+                i * 127 / hr_num_entries,
+                i * 63  / hr_num_entries,
+                i * 255 / hr_num_entries,
+                i * 127 / hr_num_entries,
+                i * 63  / hr_num_entries);
+    }
+    p.set_high_res_waveform_entries(
+            hr_num_entries,
+            hr_samples_per_entry,
+            std::begin(hr_waveform_entries),
+            std::end(hr_waveform_entries));
 }
 
 static void check_track_2(const el::performance_data &p)
@@ -376,16 +504,42 @@ static void check_track_2(const el::performance_data &p)
     BOOST_CHECK_EQUAL(loop->is_end_set, false);
     ++loop;
     BOOST_CHECK(loop == p.loops_end());
+
+    // Overview waveform data
+    BOOST_CHECK_EQUAL(p.num_overview_waveform_entries(), 1024);
+    BOOST_CHECK_CLOSE(p.samples_per_overview_waveform_entry(), 10542.328125, 0.001);
+    auto ov_entries = 0;
+    for (auto ov_entry = p.overview_waveform_begin();
+            ov_entry != p.overview_waveform_end();
+            ++ov_entry)
+    {
+        // Just count entries, don't try to validate exact waveform data
+        ++ov_entries;
+    }
+    BOOST_CHECK_EQUAL(ov_entries, 1024);
+
+    // High-res waveform data
+    BOOST_CHECK_EQUAL(p.num_high_res_waveform_entries(), 23675);
+    BOOST_CHECK_CLOSE(p.samples_per_high_res_waveform_entry(), 456, 0.001);
+    auto hr_entries = 0;
+    for (auto hr_entry = p.high_res_waveform_begin();
+            hr_entry != p.high_res_waveform_end();
+            ++hr_entry)
+    {
+        // Just count entries, don't try to validate exact waveform data
+        ++hr_entries;
+    }
+    BOOST_CHECK_EQUAL(hr_entries, 23675);
 }
 
 BOOST_AUTO_TEST_CASE (calculate_overview_waveform_details__sample_values__expected)
 {
     // Arrange
-    int_least64_t total_samples_1;
-    int_least64_t num_entries_1;
+    uint_least64_t total_samples_1;
+    uint_least64_t num_entries_1;
     double samples_per_entry_1;
-    int_least64_t total_samples_2;
-    int_least64_t num_entries_2;
+    uint_least64_t total_samples_2;
+    uint_least64_t num_entries_2;
     double samples_per_entry_2;
 
     // Act
@@ -408,11 +562,11 @@ BOOST_AUTO_TEST_CASE (calculate_overview_waveform_details__sample_values__expect
 BOOST_AUTO_TEST_CASE (calculate_high_res_waveform_details__sample_values__expected)
 {
     // Arrange
-    int_least64_t total_samples_1;
-    int_least64_t num_entries_1;
+    uint_least64_t total_samples_1;
+    uint_least64_t num_entries_1;
     double samples_per_entry_1;
-    int_least64_t total_samples_2;
-    int_least64_t num_entries_2;
+    uint_least64_t total_samples_2;
+    uint_least64_t num_entries_2;
     double samples_per_entry_2;
 
     // Act
