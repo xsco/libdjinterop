@@ -224,6 +224,16 @@ typedef std::vector<overview_waveform_entry>::const_iterator
 
 /**
  * A single high-resolution waveform entry
+ *
+ * Note that, when rendering the high-resolution waveform, each individual
+ * band is scaled so that the largest value across the entire waveform hits the
+ * top of the display.  Note also that the mid frequency is always drawn over
+ * the low, and the high frequency is always drawn over the low and mid, meaning
+ * that very loud high-frequency sounds will hide any low or mid activity on the
+ * waveform rendering.
+ *
+ * A further note is that when the opacity is set to zero, this appears to
+ * translate into roughly 50% opacity on a real rendering.
  */
 struct high_res_waveform_entry
 {
@@ -231,27 +241,26 @@ struct high_res_waveform_entry
     {}
 
     high_res_waveform_entry(
-            uint_least8_t positive_low_frequency_point,
-            uint_least8_t positive_mid_frequency_point,
-            uint_least8_t positive_high_frequency_point,
-            uint_least8_t negative_low_frequency_point,
-            uint_least8_t negative_mid_frequency_point,
-            uint_least8_t negative_high_frequency_point) :
-        positive_low_frequency_point{positive_low_frequency_point},
-        positive_mid_frequency_point{positive_mid_frequency_point},
-        positive_high_frequency_point{positive_high_frequency_point},
-        negative_low_frequency_point{negative_low_frequency_point},
-        negative_mid_frequency_point{negative_mid_frequency_point},
-        negative_high_frequency_point{negative_high_frequency_point}
+            uint_least8_t low_frequency_point,
+            uint_least8_t mid_frequency_point,
+            uint_least8_t high_frequency_point,
+            uint_least8_t low_frequency_opacity,
+            uint_least8_t mid_frequency_opacity,
+            uint_least8_t high_frequency_opacity) :
+        low_frequency_point{low_frequency_point},
+        mid_frequency_point{mid_frequency_point},
+        high_frequency_point{high_frequency_point},
+        low_frequency_opacity{low_frequency_opacity},
+        mid_frequency_opacity{mid_frequency_opacity},
+        high_frequency_opacity{high_frequency_opacity}
     {}
 
-    // TODO - verify that the 3/3 split is definitely positive and negative
-    uint_least8_t positive_low_frequency_point;
-    uint_least8_t positive_mid_frequency_point;
-    uint_least8_t positive_high_frequency_point;
-    uint_least8_t negative_low_frequency_point;
-    uint_least8_t negative_mid_frequency_point;
-    uint_least8_t negative_high_frequency_point;
+    uint_least8_t low_frequency_point;
+    uint_least8_t mid_frequency_point;
+    uint_least8_t high_frequency_point;
+    uint_least8_t low_frequency_opacity;
+    uint_least8_t mid_frequency_opacity;
+    uint_least8_t high_frequency_opacity;
 };
 
 typedef std::vector<high_res_waveform_entry>::const_iterator

@@ -651,43 +651,43 @@ std::vector<char> encode_high_res_waveform_data(
     encode_double_be(waveform_data.samples_per_entry, ptr + 16);
     ptr += 24;
 
-    uint_least8_t max_pos_low = 0;
-    uint_least8_t max_pos_mid = 0;
-    uint_least8_t max_pos_high = 0;
-    uint_least8_t max_neg_low = 0;
-    uint_least8_t max_neg_mid = 0;
-    uint_least8_t max_neg_high = 0;
+    uint_least8_t max_low = 0;
+    uint_least8_t max_mid = 0;
+    uint_least8_t max_high = 0;
+    uint_least8_t max_low_opc = 0;
+    uint_least8_t max_mid_opc = 0;
+    uint_least8_t max_high_opc = 0;
     for (auto &entry : waveform_data.entry_data)
     {
-        if (entry.positive_low_frequency_point > max_pos_low)
-            max_pos_low = entry.positive_low_frequency_point;
-        if (entry.positive_mid_frequency_point > max_pos_mid)
-            max_pos_mid = entry.positive_mid_frequency_point;
-        if (entry.positive_high_frequency_point > max_pos_high)
-            max_pos_high = entry.positive_high_frequency_point;
-        if (entry.negative_low_frequency_point > max_neg_low)
-            max_neg_low = entry.negative_low_frequency_point;
-        if (entry.negative_mid_frequency_point > max_neg_mid)
-            max_neg_mid = entry.negative_mid_frequency_point;
-        if (entry.negative_high_frequency_point > max_neg_high)
-            max_neg_high = entry.negative_high_frequency_point;
+        if (entry.low_frequency_point > max_low)
+            max_low = entry.low_frequency_point;
+        if (entry.mid_frequency_point > max_mid)
+            max_mid = entry.mid_frequency_point;
+        if (entry.high_frequency_point > max_high)
+            max_high = entry.high_frequency_point;
+        if (entry.low_frequency_opacity > max_low_opc)
+            max_low_opc = entry.low_frequency_opacity;
+        if (entry.mid_frequency_opacity > max_mid_opc)
+            max_mid_opc = entry.mid_frequency_opacity;
+        if (entry.high_frequency_opacity > max_high_opc)
+            max_high_opc = entry.high_frequency_opacity;
 
-        encode_uint8(entry.positive_low_frequency_point,  ptr + 0);
-        encode_uint8(entry.positive_mid_frequency_point,  ptr + 1);
-        encode_uint8(entry.positive_high_frequency_point, ptr + 2);
-        encode_uint8(entry.negative_low_frequency_point,  ptr + 3);
-        encode_uint8(entry.negative_mid_frequency_point,  ptr + 4);
-        encode_uint8(entry.negative_high_frequency_point, ptr + 5);
+        encode_uint8(entry.low_frequency_point,  ptr + 0);
+        encode_uint8(entry.mid_frequency_point,  ptr + 1);
+        encode_uint8(entry.high_frequency_point, ptr + 2);
+        encode_uint8(entry.low_frequency_opacity,  ptr + 3);
+        encode_uint8(entry.mid_frequency_opacity,  ptr + 4);
+        encode_uint8(entry.high_frequency_opacity, ptr + 5);
         ptr += 6;
     }
 
     // Encode the maximum values across all entries
-    encode_uint8(max_pos_low,  ptr + 0);
-    encode_uint8(max_pos_mid,  ptr + 1);
-    encode_uint8(max_pos_high, ptr + 2);
-    encode_uint8(max_neg_low,  ptr + 3);
-    encode_uint8(max_neg_mid,  ptr + 4);
-    encode_uint8(max_neg_high, ptr + 5);
+    encode_uint8(max_low,  ptr + 0);
+    encode_uint8(max_mid,  ptr + 1);
+    encode_uint8(max_high, ptr + 2);
+    encode_uint8(max_low_opc,  ptr + 3);
+    encode_uint8(max_mid_opc,  ptr + 4);
+    encode_uint8(max_high_opc, ptr + 5);
 
     return compress(uncompressed);
 }
