@@ -1,4 +1,4 @@
-AC_INIT([libdjinterop], [0.8.0], [bugs@xsco.org], [libdjinterop])
+AC_INIT([libdjinterop], [0.8.1], [bugs@xsco.org], [libdjinterop])
 #AM_SILENT_RULES([yes])
 AM_INIT_AUTOMAKE([subdir-objects -Wall -Werror])
 
@@ -38,8 +38,6 @@ AC_CHECK_HEADERS([boost/uuid/uuid_generators.hpp], [],
     [AC_MSG_ERROR([couldn't find boost/uuid/uuid_generators.hpp])])
 AC_CHECK_HEADERS([boost/uuid/uuid_io.hpp], [],
     [AC_MSG_ERROR([couldn't find boost/uuid/uuid_io.hpp])])
-AC_CHECK_HEADERS([boost/iostreams/filter/zlib.hpp], [],
-    [AC_MSG_ERROR([couldn't find boost/iostreams/filter/zlib.hpp])])
 
 # Check optional dependencies
 AC_CHECK_HEADERS([boost/test/unit_test.hpp], [],
@@ -49,7 +47,6 @@ AC_CHECK_HEADERS([boost/filesystem.hpp], [],
 
 # Library names
 AC_SUBST([BOOST_SYSTEM_LIBS], [-lboost_system])
-AC_SUBST([BOOST_IOSTREAMS_LIBS], [-lboost_iostreams])
 AC_SUBST([BOOST_FILESYSTEM_LIBS], [-lboost_filesystem])
 AC_SUBST([BOOST_UTF_LIBS], [-lboost_unit_test_framework])
 

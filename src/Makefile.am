@@ -14,12 +14,12 @@ libdjinterop_la_SOURCES = \
 	enginelibrary/database.cpp \
 	enginelibrary/track.cpp \
 	enginelibrary/crate.cpp \
-	enginelibrary/encode_decode_utils.hpp \
+	enginelibrary/encode_decode_utils.cpp enginelibrary/encode_decode_utils.hpp \
 	enginelibrary/performance_data_format.cpp enginelibrary/performance_data_format.hpp \
 	enginelibrary/performance_data.cpp
 libdjinterop_la_CXXFLAGS = $(ZLIB_CFLAGS)
 libdjinterop_la_LDFLAGS = -version-info $(LIBRARY_INTERFACE_VERSION)
-libdjinterop_la_LIBADD = $(ZLIB_LIBS) $(BOOST_IOSTREAMS_LIBS)
+libdjinterop_la_LIBADD = $(ZLIB_LIBS)
 
 nobase_include_HEADERS = \
 	djinterop/enginelibrary.hpp \
@@ -52,7 +52,6 @@ el_database_test_LDADD = \
 	$(BOOST_SYSTEM_LIBS) \
 	$(BOOST_FILESYSTEM_LIBS) \
 	$(BOOST_UTF_LIBS) \
-	$(BOOST_IOSTREAMS_LIBS) \
 	$(ZLIB_LIBS) \
 	libdjinterop.la \
 	-lpthread -ldl
@@ -68,7 +67,6 @@ el_track_test_LDADD = \
 	$(BOOST_SYSTEM_LIBS) \
 	$(BOOST_FILESYSTEM_LIBS) \
 	$(BOOST_UTF_LIBS) \
-	$(BOOST_IOSTREAMS_LIBS) \
 	$(ZLIB_LIBS) \
 	libdjinterop.la \
 	-lpthread -ldl
@@ -84,7 +82,6 @@ el_crate_test_LDADD = \
 	$(BOOST_SYSTEM_LIBS) \
 	$(BOOST_FILESYSTEM_LIBS) \
 	$(BOOST_UTF_LIBS) \
-	$(BOOST_IOSTREAMS_LIBS) \
 	$(ZLIB_LIBS) \
 	libdjinterop.la \
 	-lpthread -ldl
@@ -99,7 +96,6 @@ el_schema_test_LDADD = \
 	$(BOOST_SYSTEM_LIBS) \
 	$(BOOST_FILESYSTEM_LIBS) \
 	$(BOOST_UTF_LIBS) \
-	$(BOOST_IOSTREAMS_LIBS) \
 	$(ZLIB_LIBS) \
 	libdjinterop.la \
 	-lpthread -ldl
@@ -115,7 +111,6 @@ el_performance_data_test_LDADD = \
 	$(BOOST_SYSTEM_LIBS) \
 	$(BOOST_FILESYSTEM_LIBS) \
 	$(BOOST_UTF_LIBS) \
-	$(BOOST_IOSTREAMS_LIBS) \
 	$(ZLIB_LIBS) \
 	libdjinterop.la \
 	-lpthread -ldl

@@ -22,67 +22,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <boost/iostreams/copy.hpp>
-#include <boost/iostreams/device/array.hpp>
-#include <boost/iostreams/device/back_inserter.hpp>
-#include <boost/iostreams/filtering_stream.hpp>
-#include <boost/iostreams/filter/zlib.hpp>
 
 #include "encode_decode_utils.hpp"
 
-namespace io = boost::iostreams;
-
 namespace djinterop {
 namespace enginelibrary {
-
-// TODO - consider replacing boost::iostreams with direct use of zlib, to remove any client boost dependency
-// Uncompress a zlib'ed BLOB
-static void uncompress(
-        int track_id,
-        const std::vector<char> &compressed,
-        std::vector<char> &uncompressed)
-{
-    if (compressed.size() == 0)
-        // No data, which is a valid situation
-        return;
-
-    if (compressed.size() < 4)
-        throw corrupt_performance_data(
-                track_id,
-                "Compressed data is less than the minimum size of 4 bytes");
-
-    auto apparent_size = decode_int32_be(compressed.data());
-    if (apparent_size == 0)
-        // No data (explicitly so!), which is a valid situation
-        return;
-
-    uncompressed.clear();
-    uncompressed.reserve(apparent_size);
-
-    io::filtering_istream src;
-    src.push(io::zlib_decompressor{});
-    src.push(io::basic_array_source<char>{
-            &compressed[4], compressed.size() - 4});
-    io::copy(src, io::back_inserter(uncompressed));
-}
-
-// Compress a byte array using zlib
-static std::vector<char> compress(const std::vector<char> &uncompressed)
-{
-    std::vector<char> compressed;
-
-    // Put a placeholder four bytes to hold the uncompressed buffer size
-    compressed.resize(4);
-    encode_int32_be(uncompressed.size(), compressed.data());
-
-    // Compress
-    io::filtering_istream src;
-    src.push(io::zlib_compressor{});
-    src.push(io::basic_array_source<char>{
-            uncompressed.data(), uncompressed.size()});
-    io::copy(src, io::back_inserter(compressed));
-    return compressed;
-}
 
 // Extract track data from a byte array
 track_data_blob decode_track_data(
@@ -91,7 +35,7 @@ track_data_blob decode_track_data(
 {
     // Uncompress
     std::vector<char> raw_data;
-    uncompress(track_id, compressed_track_data, raw_data);
+    zlib_uncompress(compressed_track_data, raw_data);
     auto ptr = raw_data.data();
 
     if (raw_data.size() == 0)
@@ -120,7 +64,7 @@ beat_data_blob decode_beat_data(
 {
     // Uncompress
     std::vector<char> raw_data;
-    uncompress(track_id, compressed_beat_data, raw_data);
+    zlib_uncompress(compressed_beat_data, raw_data);
     auto ptr = raw_data.data();
 
     if (raw_data.size() == 0)
@@ -191,7 +135,7 @@ quick_cues_blob decode_quick_cues(
 {
     // Uncompress
     std::vector<char> raw_data;
-    uncompress(track_id, compressed_quick_cues_data, raw_data);
+    zlib_uncompress(compressed_quick_cues_data, raw_data);
     auto ptr = raw_data.data();
 
     if (raw_data.size() == 0)
@@ -327,7 +271,7 @@ overview_waveform_blob decode_overview_waveform_data(
 {
     // Uncompress
     std::vector<char> raw_data;
-    uncompress(track_id, waveform_data, raw_data);
+    zlib_uncompress(waveform_data, raw_data);
     auto ptr = raw_data.data();
 
     if (raw_data.size() < 24)
@@ -379,7 +323,7 @@ high_res_waveform_blob decode_high_res_waveform_data(
 {
     // Uncompress
     std::vector<char> raw_data;
-    uncompress(track_id, waveform_data, raw_data);
+    zlib_uncompress(waveform_data, raw_data);
     auto ptr = raw_data.data();
 
     if (raw_data.size() < 24)
@@ -445,7 +389,7 @@ std::vector<char> encode_track_data(const track_data_blob &track_data)
     encode_double_be(track_data.average_loudness, ptr + 16);
     encode_int32_be ((int32_t)track_data.key,     ptr + 24);
 
-    return compress(uncompressed);
+    return zlib_compress(uncompressed);
 }
 
 // Encode beat data into a byte array
@@ -490,7 +434,7 @@ std::vector<char> encode_beat_data(const beat_data_blob &beat_data)
         ptr += 24;
     }
 
-    return compress(uncompressed);
+    return zlib_compress(uncompressed);
 }
 
 // Encode quick cues data into a byte array
@@ -540,7 +484,7 @@ std::vector<char> encode_quick_cues(const quick_cues_blob &quick_cues)
     encode_uint8    (quick_cues.is_main_cue_adjusted_from_default, ptr + 8);
     encode_double_be(quick_cues.default_main_cue_sample_offset,   ptr + 9);
 
-    return compress(uncompressed);
+    return zlib_compress(uncompressed);
 }
 
 // Encode loops into a byte array
@@ -589,7 +533,7 @@ std::vector<char> encode_loops(const loops_blob &loops)
         ptr += 22;
     }
 
-    // Note that loops is not compressed
+    // Note that 'loops' is not compressed
     return uncompressed;
 }
 
@@ -632,7 +576,7 @@ std::vector<char> encode_overview_waveform_data(
     encode_uint8(max_mid,  ptr + 1);
     encode_uint8(max_high, ptr + 2);
 
-    return compress(uncompressed);
+    return zlib_compress(uncompressed);
 }
 
 // Encode high-resolution waveform data into a byte array
@@ -689,7 +633,7 @@ std::vector<char> encode_high_res_waveform_data(
     encode_uint8(max_mid_opc,  ptr + 4);
     encode_uint8(max_high_opc, ptr + 5);
 
-    return compress(uncompressed);
+    return zlib_compress(uncompressed);
 }
 
 } // enginelibrary

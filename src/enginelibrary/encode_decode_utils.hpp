@@ -22,10 +22,18 @@
 #ifndef DJINTEROP_ENGINELIBRARY_ENCODE_DECODE_UTILS_HPP
 #define DJINTEROP_ENGINELIBRARY_ENCODE_DECODE_UTILS_HPP
 
+#include <vector>
 #include <cstdint>
 
 namespace djinterop {
 namespace enginelibrary {
+
+// Uncompress a zlib'ed BLOB
+void zlib_uncompress(
+        const std::vector<char> &compressed, std::vector<char> &uncompressed);
+
+// Compress a byte array using zlib
+std::vector<char> zlib_compress(const std::vector<char> &uncompressed);
 
 // Extract an int8_t from a raw value at ptr address
 inline uint8_t decode_uint8(const char *ptr)

@@ -156,17 +156,13 @@ int main(int argc, char **argv)
 }
 ```
 
-Dependencies
-============
+How Do I Build It?
+============================
 
-`libdjinterop` makes use of:
+`libdjinterop` requires headers to be installed for:
 
-* [Boost](https://boost.org)
-* [SQLite](https://sqlite.org)
-* [SQLite Modern C++ Wrapper](https://github.com/SqliteModernCpp/sqlite_modern_cpp)
 * [zlib](http://zlib.net)
-
-# How Do I Compile And Use It?
+* [Boost](https://boost.org) (only for building unit tests; not needed for the main library)
 
 Assuming you have the above dependencies in place, and the build tools, you can issue the following commands:
 
@@ -184,3 +180,14 @@ $ ./autogen.sh --disable-shared --prefix=/usr
 ...
 ```
 
+Thanks To
+=========
+
+`libdjinterop` makes use of a number of software libraries, and is extremely grateful for:
+
+* [Boost](https://boost.org)
+* [SQLite](https://sqlite.org)
+* [SQLite Modern C++ Wrapper](https://github.com/SqliteModernCpp/sqlite_modern_cpp)
+* [zlib](http://zlib.net)
+
+Interfacing with the Engine Library database format was made a lot easier with the help of MixMasterG from ATGR, who author the [Denon Conversion Utility](https://sellfy.com/atgr_production_team).
