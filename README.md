@@ -190,4 +190,4 @@ Thanks To
 * [SQLite Modern C++ Wrapper](https://github.com/SqliteModernCpp/sqlite_modern_cpp)
 * [zlib](http://zlib.net)
 
-Interfacing with the Engine Library database format was made a lot easier with the help of MixMasterG from ATGR, who author the [Denon Conversion Utility](https://sellfy.com/atgr_production_team).
+Interfacing with the Engine Library database format was made a lot easier with the help of MixMasterG from ATGR, who is the author of the [Denon Conversion Utility](https://sellfy.com/atgr_production_team).

@@ -1,6 +1,9 @@
 SUBDIRS = src
 ACLOCAL_AMFLAGS = -I m4
 
+# pkgconfig file
+pkgconfig_DATA = $(PACKAGE_NAME).pc
+
 if HAVE_DOXYGEN
 
 doxyfile.stamp:
@@ -14,7 +17,6 @@ clean-local:
 	rm -rf $(top_srcdir)/html
 
 EXTRA_DIST = $(top_srcdir)/html
-
 
 endif 
 

@@ -21,5 +21,9 @@ rm -rf \
     install-sh \
     ltmain.sh \
     missing \
-    test-driver
+    test-driver \
+    libdjinterop.pc \
+    libdjinterop.pc.in \
+    libdjinterop-uninstalled.pc \
+    libdjinterop-uninstalled.sh
 

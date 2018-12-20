@@ -1,4 +1,4 @@
-AC_INIT([libdjinterop], [0.8.1], [bugs@xsco.org], [libdjinterop])
+AC_INIT([libdjinterop], [0.8.2], [bugs@xsco.org], [libdjinterop])
 #AM_SILENT_RULES([yes])
 AM_INIT_AUTOMAKE([subdir-objects -Wall -Werror])
 
@@ -53,9 +53,10 @@ AC_SUBST([BOOST_UTF_LIBS], [-lboost_unit_test_framework])
 # Setup for some libraries
 AC_DEFINE([_MODERN_SQLITE_BOOST_OPTIONAL_SUPPORT])
 
-
-# TODO - Consider generating a pkg-config file for libdjinterop
+# Generate a pkg-config file
 # https://www.gnu.org/software/autoconf-archive/ax_create_pkgconfig_info.html
+PKG_INSTALLDIR
+AX_CREATE_PKGCONFIG_INFO
 
 # Makefiles
 AC_CONFIG_FILES([
