@@ -51,6 +51,11 @@ public:
      */
     explicit database(const std::string &dir_path);
 
+	/**
+	 * \brief Copying is disallowed
+	 */
+	database(const database &db) = delete;
+
     /**
      * \brief Move constructor
      */
@@ -60,6 +65,16 @@ public:
      * \brief Destructor
      */
     ~database();
+
+	/**
+	 * \brief Copy assignment is disallowed
+	 */
+	database &operator =(const database &db) = delete;
+
+	/**
+	 * \brief Move assignment
+	 */
+	database &operator =(database &&db);
 
     /**
      * \brief Returns a `bool` indicating whether the database files exist on

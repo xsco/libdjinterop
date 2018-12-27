@@ -101,6 +101,8 @@ database::database(database &&db) :
 
 database::~database() = default;
 
+database &database::operator =(database &&db) = default;
+
 bool database::exists() const
 {
     return pimpl_->exists();
