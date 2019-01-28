@@ -214,6 +214,20 @@ performance_data::performance_data(int track_id) : pimpl_{new impl{track_id}}
 
 performance_data::~performance_data() = default;
 
+/**
+ * \brief Tests whether performance data already exists for a given track
+ */
+bool performance_data::exists(const database &db, int track_id)
+{
+    sqlite::database p_db{db.performance_db_path()};
+    int found = 0;
+    p_db
+        << "SELECT COUNT(*) FROM PerformanceData WHERE id = ?"
+        << track_id
+        >> found;
+    return found > 0;
+}
+
 int performance_data::track_id() const
 {
     return pimpl_->pd_.track_id;

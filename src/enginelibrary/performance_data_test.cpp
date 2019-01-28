@@ -586,6 +586,30 @@ BOOST_AUTO_TEST_CASE (calculate_high_res_waveform_details__sample_values__expect
     BOOST_CHECK_CLOSE(samples_per_entry_2, 456, 0.001);
 }
 
+BOOST_AUTO_TEST_CASE (exists__valid_track__true)
+{
+    // Arrange
+    el::database db{sample_path};
+
+    // Act
+    auto exists = el::performance_data::exists(db, 1);
+
+    // Assert
+    BOOST_CHECK_EQUAL(exists, true);
+}
+
+BOOST_AUTO_TEST_CASE (exists__invalid_track__false)
+{
+    // Arrange
+    el::database db{sample_path};
+
+    // Act
+    auto exists = el::performance_data::exists(db, 123);
+
+    // Assert
+    BOOST_CHECK_EQUAL(exists, false);
+}
+
 BOOST_AUTO_TEST_CASE (ctor__track_1__correct_fields)
 {
     // Arrange

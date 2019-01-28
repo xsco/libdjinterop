@@ -289,6 +289,11 @@ public:
 	~performance_data();
 
     /**
+     * \brief Tests whether performance data already exists for a given track
+     */
+    static bool exists(const database &db, int track_id);
+
+    /**
      * \brief Gets the id of the track that this performance data relates to
      */
 	int track_id() const;
