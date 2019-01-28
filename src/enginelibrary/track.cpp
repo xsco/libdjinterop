@@ -853,6 +853,9 @@ void track::save(const database &database)
 }
 
 
+/**
+ * \brief Get a list of all track ids in a given database
+ */
 std::vector<int> all_track_ids(const database &database)
 {
     sqlite::database m_db{database.music_db_path()};
@@ -860,6 +863,26 @@ std::vector<int> all_track_ids(const database &database)
     std::vector<int> ids;
     m_db
         << "SELECT id FROM Track ORDER BY id"
+        >> [&ids](int id) { ids.push_back(id); };
+
+    return ids;
+}
+
+/**
+ * \brief Get a list of all track ids that refer to a specific file path
+ */
+std::vector<int> find_track_ids_by_path(
+        const database &database, const std::string &path)
+{
+    sqlite::database m_db{database.music_db_path()};
+
+    std::vector<int> ids;
+    m_db
+        <<
+            "SELECT id FROM Track "
+            "WHERE path = ?"
+            "ORDER BY id"
+        << path
         >> [&ids](int id) { ids.push_back(id); };
 
     return ids;

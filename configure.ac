@@ -1,4 +1,4 @@
-AC_INIT([libdjinterop], [0.8.3], [bugs@xsco.org], [libdjinterop])
+AC_INIT([libdjinterop], [0.8.4], [bugs@xsco.org], [libdjinterop])
 #AM_SILENT_RULES([yes])
 AM_INIT_AUTOMAKE([subdir-objects -Wall -Werror])
 

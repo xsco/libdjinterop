@@ -391,6 +391,12 @@ private:
  */
 std::vector<int> all_track_ids(const database &database);
 
+/**
+ * \brief Get a list of all track ids that refer to a specific file path
+ */
+std::vector<int> find_track_ids_by_path(
+        const database &database, const std::string &path);
+
 } // enginelibrary
 } // djinterop
 

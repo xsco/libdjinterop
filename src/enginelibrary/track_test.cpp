@@ -215,6 +215,33 @@ BOOST_AUTO_TEST_CASE (all_track_ids__sample_db__expected_ids)
     BOOST_CHECK_EQUAL(results[0], 1);
 }
 
+BOOST_AUTO_TEST_CASE (find_track_ids_by_path__valid_path__expected_id)
+{
+    // Arrange
+    el::database db{sample_path};
+    
+    // Act
+    auto results = el::find_track_ids_by_path(
+            db, "../01 - Dennis Cruz - Mad (Original Mix).mp3");
+    
+    // Assert
+    BOOST_CHECK_EQUAL(results.size(), 1);
+    BOOST_CHECK_EQUAL(results[0], 1);
+}
+
+BOOST_AUTO_TEST_CASE (find_track_ids_by_path__invalid_path__no_ids)
+{
+    // Arrange
+    el::database db{sample_path};
+    
+    // Act
+    auto results = el::find_track_ids_by_path(
+            db, "Does Not Exist.mp3");
+    
+    // Assert
+    BOOST_CHECK_EQUAL(results.size(), 0);
+}
+
 BOOST_AUTO_TEST_CASE (ctor__track1__correct_fields)
 {
 	// Arrange
