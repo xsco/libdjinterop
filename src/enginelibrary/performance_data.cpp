@@ -212,7 +212,38 @@ performance_data::performance_data(
 performance_data::performance_data(int track_id) : pimpl_{new impl{track_id}}
 {}
 
+/**
+ * \brief Copy constructor
+ */
+performance_data::performance_data(const performance_data &other)
+    : pimpl_{new impl{*other.pimpl_}}
+{}
+
+/**
+ * \brief Move constructor
+ */
+performance_data::performance_data(performance_data &&other) noexcept = default;
+
+/**
+ * \brief Destructor
+ */
 performance_data::~performance_data() = default;
+
+/**
+ * \brief Copy assignment
+ */
+performance_data &performance_data::operator =(const performance_data &other)
+{
+    if (this != &other)
+        pimpl_.reset(new impl{*other.pimpl_});
+    return *this;
+}
+
+/**
+ * \brief Move assignment
+ */
+performance_data &performance_data::operator =(
+        performance_data &&other) noexcept = default;
 
 /**
  * \brief Tests whether performance data already exists for a given track

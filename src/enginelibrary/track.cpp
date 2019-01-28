@@ -204,9 +204,9 @@ struct track::impl
         int_metadata_vec_{select_int_metadata_rows(db.music_db_path(), id)}
     {}
 
-    impl(const track::impl &other) :
-        id_{0},
-        load_db_uuid_{},
+    impl(const track::impl &other, bool copy_id) :
+        id_{copy_id ? other.id_ : 0},
+        load_db_uuid_{copy_id ? other.load_db_uuid_ : ""},
         track_row_{other.track_row_},
         str_metadata_vec_{other.str_metadata_vec_},
         int_metadata_vec_{other.int_metadata_vec_}
@@ -264,23 +264,39 @@ struct track::impl
 };
 
 
-track::track(const database &database, int id) : pimpl_{new impl{database, id}}
-{}
-
-track::track(const track &other) : pimpl_{new impl{*other.pimpl_}}
-{}
-
 track::track() : pimpl_{new impl{}}
 {}
 
+track::track(const database &database, int id) : pimpl_{new impl{database, id}}
+{}
+
+/**
+ * \brief Copy constructor
+ */
+track::track(const track &other) : pimpl_{new impl{*other.pimpl_, true}}
+{}
+
+/**
+ * \brief Move constructor
+ */
+track::track(track &&other) noexcept = default;
+
 track::~track() = default;
 
+/**
+ * \brief Copy assignment
+ */
 track &track::operator =(const track &other)
 {
     if (this != &other)
-        pimpl_.reset(new impl{*other.pimpl_});
+        pimpl_.reset(new impl{*other.pimpl_, true});
     return *this;
 }
+
+/**
+ * \brief Move assignment
+ */
+track &track::operator =(track &&other) noexcept = default;
 
 int track::id() const
 {
@@ -656,6 +672,21 @@ void track::set_no_album_art()
     pimpl_->track_row_.id_album_art = 1;
 }
 
+/**
+ * \brief Clone the contents of this track to a new, unsaved track
+ *
+ * Note that the new copied track will not be considered to belong in any
+ * database, and hence will have its `id` set to zero.
+ */
+track track::clone_unsaved() const
+{
+    // We will achieve an unsaved clone by simply copying and then erasing
+    // any reference to the previous database.
+    auto copy = *this;
+    copy.pimpl_->id_ = 0;
+    copy.pimpl_->load_db_uuid_ = "";
+    return copy;
+}
 
 /**
  * Save a track to a given database

@@ -59,7 +59,7 @@ public:
     /**
      * \brief Move constructor
      */
-	database(database &&db);
+	database(database &&db) noexcept;
 
     /**
      * \brief Destructor
@@ -74,7 +74,7 @@ public:
 	/**
 	 * \brief Move assignment
 	 */
-	database &operator =(database &&db);
+	database &operator =(database &&db) noexcept;
 
     /**
      * \brief Returns a `bool` indicating whether the database files exist on

@@ -105,12 +105,14 @@ public:
     track();
 
     /**
-     * \brief Copy a track from another
-     *
-     * Note that the new copied track will not be considered to belong in any
-     * database, and hence will have its `id` set to zero.
+     * \brief Copy constructor
      */
     track(const track &other);
+
+    /**
+     * \brief Move constructor
+     */
+    track(track &&other) noexcept;
 
     /**
      * \brief Construct a track, loaded from a given database by its id
@@ -123,12 +125,14 @@ public:
     ~track();
 
     /**
-     * \brief Copy from another track into this track
-     *
-     * Note that this track will not be considered to belong in any database
-     * after copy assignment, and hence will have its `id` set to zero.
+     * \brief Copy assignment
      */
     track &operator =(const track &other);
+
+    /**
+     * \brief Move assignment
+     */
+    track &operator =(track &&other) noexcept;
 
     /**
      * \brief Get the id of this track, as stored in the database.
@@ -370,6 +374,14 @@ public:
      * \brief Removes any album art from this track
      */
     void set_no_album_art();
+
+    /**
+     * \brief Clone the contents of this track to a new, unsaved track
+     *
+     * Note that the new copied track will not be considered to belong in any
+     * database, and hence will have its `id` set to zero.
+     */
+    track clone_unsaved() const;
 
     /**
      * \brief Save a track to a given database

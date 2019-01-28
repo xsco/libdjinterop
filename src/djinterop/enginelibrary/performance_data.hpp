@@ -284,9 +284,29 @@ public:
     performance_data(int track_id);
 
     /**
+     * \brief Copy constructor
+     */
+    performance_data(const performance_data &other);
+
+    /**
+     * \brief Move constructor
+     */
+    performance_data(performance_data &&other) noexcept;
+
+    /**
      * \brief Destructor
      */
 	~performance_data();
+
+    /**
+     * \brief Copy assignment
+     */
+    performance_data &operator =(const performance_data &other);
+
+    /**
+     * \brief Move assignment
+     */
+    performance_data &operator =(performance_data &&other) noexcept;
 
     /**
      * \brief Tests whether performance data already exists for a given track

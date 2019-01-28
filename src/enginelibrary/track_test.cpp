@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE (save__new_track_good_values__saves)
     remove_temp_dir(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE (ctor_copy__saved_track__zero_id_and_copied_fields)
+BOOST_AUTO_TEST_CASE (ctor_copy__saved_track__copied_fields)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE (ctor_copy__saved_track__zero_id_and_copied_fields)
     el::track copy{t};
 
     // Assert
-    BOOST_CHECK_EQUAL(copy.id(), 0);
+    BOOST_CHECK_EQUAL(copy.id(), t.id());
     check_track_1(t);
     check_track_1(copy);
     remove_temp_dir(temp_dir);
@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE (save__existing_track_good_values__saves)
     remove_temp_dir(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE (op_copy_assign__saved_track__zero_id_and_copied_fields)
+BOOST_AUTO_TEST_CASE (op_copy_assign__saved_track__copied_fields)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
@@ -365,8 +365,26 @@ BOOST_AUTO_TEST_CASE (op_copy_assign__saved_track__zero_id_and_copied_fields)
     auto copy = t;
 
     // Assert
-    BOOST_CHECK_EQUAL(copy.id(), 0);
+    BOOST_CHECK_EQUAL(copy.id(), t.id());
     check_track_1(copy);
+    remove_temp_dir(temp_dir);
+}
+
+BOOST_AUTO_TEST_CASE (clone_unsaved__saved_track__zero_id_and_copied_fields)
+{
+    // Arrange
+    auto temp_dir = create_temp_dir();
+    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
+    el::track t{};
+    populate_example_track_1(t);
+    t.save(db);
+
+    // Act
+    auto unsaved = t.clone_unsaved();
+
+    // Assert
+    BOOST_CHECK_EQUAL(unsaved.id(), 0);
+    check_track_1(unsaved);
     remove_temp_dir(temp_dir);
 }
 
