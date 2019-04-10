@@ -402,11 +402,16 @@ void performance_data::set_sample_rate(double sample_rate)
 /**
  * \brief Set the total number of samples in the track
  *
- * Note that the stored number will be quantised downwards to the nearest
- * multiple of 4096.
+ * Note that the stored number may be quantised, and hence the number stored
+ * is not guaranteed to be exactly the same as the number passed in here.
  */
 void performance_data::set_total_samples(int_least64_t total_samples)
 {
+    // TODO - work out how total samples number is rounded.
+    // Observations:
+    // 1. Sometimes rounded down to nearest multiple of 256
+    // 2. Sometimes rounded down to nearest multiple of 4096
+    // 3. Sometimes not apparently rounded
     pimpl_->pd_.track_data.total_samples = total_samples;
     pimpl_->pd_.beat_data.total_samples = total_samples;
 }
