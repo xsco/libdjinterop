@@ -22,8 +22,8 @@ rm -rf \
     ltmain.sh \
     missing \
     test-driver \
-    libdjinterop.pc \
-    libdjinterop.pc.in \
-    libdjinterop-uninstalled.pc \
-    libdjinterop-uninstalled.sh
+    djinterop.pc \
+    djinterop.pc.in \
+    djinterop-uninstalled.pc \
+    djinterop-uninstalled.sh
 
