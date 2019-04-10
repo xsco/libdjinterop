@@ -399,6 +399,12 @@ void performance_data::set_sample_rate(double sample_rate)
     pimpl_->pd_.beat_data.sample_rate = sample_rate;
 }
 
+/**
+ * \brief Set the total number of samples in the track
+ *
+ * Note that the stored number will be quantised downwards to the nearest
+ * multiple of 4096.
+ */
 void performance_data::set_total_samples(int_least64_t total_samples)
 {
     pimpl_->pd_.track_data.total_samples = total_samples;

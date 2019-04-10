@@ -330,6 +330,9 @@ public:
 
     /**
      * \brief Gets the total number of samples in the track
+     *
+     * Note that the total number of samples will always be quantised to the
+     * nearest multiple of 4096.
      */
     int_least64_t total_samples() const;
 
@@ -486,6 +489,12 @@ public:
 
     void set_sample_rate(double sample_rate);
 
+    /**
+     * \brief Set the total number of samples in the track
+     *
+     * Note that the stored number will be quantised downwards to the nearest
+     * multiple of 4096.
+     */
     void set_total_samples(int_least64_t total_samples);
 
     void set_key(musical_key key);

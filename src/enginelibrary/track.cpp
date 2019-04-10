@@ -19,6 +19,7 @@
 
 #include <chrono>
 #include <iomanip>
+#include <random>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -253,6 +254,12 @@ struct track::impl
         int_metadata_vec_[0].persist_nulls = false;
         int_metadata_vec_[5].value = 0;
         int_metadata_vec_[11].value = 1;
+
+        // Use a random 64-bit number as a hash for the track
+        std::random_device rd;
+        std::mt19937_64 gen{rd()};
+        std::uniform_int_distribution<int64_t> dist{1ll << 61, 1ll << 62};
+        int_metadata_vec_[10].value = dist(gen);
     }
     
     int id_;
@@ -865,6 +872,7 @@ void track::save(const database &database)
     }
 
     // Insert/update the MetadataInteger table
+    // TODO - integer metadata should actually be recorded in the order 4,5,1,2,3,6,8,7,9,10,11 to be consistent with real hardware players!
     for (auto &int_metadata : pimpl_->int_metadata_vec_)
     {
         if (int_metadata.persist_nulls || int_metadata.value)
