@@ -88,6 +88,11 @@ private:
  * Engine Prime do not usually lie within the actual track.  If you want to
  * normalise any `track_beat_grid` to this approach, use the
  * `normalise_beat_grid` method.
+ *
+ * TODO - change this structure to allow multiple BPMs over the track.
+ * There to be any number of points during the track where the BPM can change.
+ * The "normalise" method can still work as before, but only extends the first
+ * beat 'section' to beat -4, and the last beat section to 1 beyond the end.
  */
 struct track_beat_grid
 {

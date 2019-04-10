@@ -90,7 +90,9 @@ struct quick_cues_blob
         adjusted_main_cue_sample_offset{0},
         is_main_cue_adjusted_from_default{false},
         default_main_cue_sample_offset{0}
-    {}
+    {
+        hot_cues.resize(8);
+    }
 
     std::vector<track_hot_cue_point> hot_cues;
     double adjusted_main_cue_sample_offset;
@@ -100,6 +102,11 @@ struct quick_cues_blob
 
 struct loops_blob
 {
+    loops_blob()
+    {
+        loops.resize(8);
+    }
+
     std::vector<track_loop> loops;
 };
 
