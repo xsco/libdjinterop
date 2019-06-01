@@ -324,3 +324,31 @@ BOOST_AUTO_TEST_CASE (op_copy_assign__saved_track__zero_id_and_copied_fields)
     check_crate_2(copy);
     remove_temp_dir(temp_dir);
 }
+
+BOOST_AUTO_TEST_CASE (find_crate_by_name__crate2__found)
+{
+	// Arrange
+	el::database db{sample_path};
+    int crateId;
+
+	// Act
+    auto found = el::find_crate_by_name(db, "Bar Crate", crateId);
+
+	// Assert
+    BOOST_CHECK(found);
+    BOOST_CHECK_EQUAL(crateId, 2);
+}
+
+BOOST_AUTO_TEST_CASE (find_crate_by_name__invalid_crate__not_found)
+{
+	// Arrange
+	el::database db{sample_path};
+    int crateId;
+
+	// Act
+    auto found = el::find_crate_by_name(db, "Non-existent Crate", crateId);
+
+	// Assert
+    BOOST_CHECK(!found);
+}
+

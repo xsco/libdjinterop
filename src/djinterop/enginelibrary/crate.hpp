@@ -237,6 +237,17 @@ std::vector<int> all_crate_ids(const database &database);
  */
 std::vector<int> all_root_crate_ids(const database &database);
 
+/**
+ * \brief Try to find a crate by its (unique) name
+ *
+ * If the crate is found, its id will be written to the provided reference
+ * variable.
+ */
+bool find_crate_by_name(
+        const database &database,
+        const std::string &name,
+        int &crate_id);
+
 } // enginelibrary
 } // djinterop
 

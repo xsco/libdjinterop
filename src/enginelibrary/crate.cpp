@@ -379,5 +379,26 @@ std::vector<int> all_root_crate_ids(const database &database)
     return ids;
 }
 
+/**
+ * \brief Try to find a crate by its (unique) name
+ *
+ * If the crate is found, its id will be written to the provided reference
+ * variable.
+ */
+bool find_crate_by_name(
+        const database &database,
+        const std::string &name,
+        int &crate_id)
+{
+    sqlite::database m_db{database.music_db_path()};
+    bool found = false;
+    m_db
+        << "SELECT id FROM Crate WHERE title = ?"
+        << name
+        >> [&](int id) { crate_id = id; found = true; };
+
+    return found;
+}
+
 } // enginelibrary
 } // djinterop
