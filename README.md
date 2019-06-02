@@ -10,7 +10,7 @@ This library currently supports:
 State of Support
 ================
 
-The library is currently in an early alpha stage, and is almost certainly not usable for Production systems just yet.  It currently supports only the Engine Library format.
+The library is currently in an early alpha stage, and not all features are implemented yet.  It currently supports only the Engine Library format.
 
 What is supported:
 
@@ -162,22 +162,15 @@ How Do I Build It?
 `libdjinterop` requires headers to be installed for:
 
 * [zlib](http://zlib.net)
-* [Boost](https://boost.org) (only for building unit tests; not needed for the main library)
+* [Boost](https://boost.org) (libraries required for unit tests; headers only for the main library)
 
-Assuming you have the above dependencies in place, and the build tools, you can issue the following commands:
-
-```
-$ ./autogen.sh
-$ make
-$ make check               (optional, run unit tests)
-# make install
-```
-
-The `autogen.sh` script is a wrapper around `configure`, so you can pass parameters into it as you desire, such as:
+`libdjinterop` uses the [Meson build system](https://mesonbuild.com).  Assuming you have the above dependencies in place, and the build tools, you can issue the following commands:
 
 ```
-$ ./autogen.sh --disable-shared --prefix=/usr
-...
+$ meson build/
+$ ninja -C build/
+$ ninja -C build/ check               (optional, run unit tests)
+# ninja -C build/ install             (as a suitably-privileged user)
 ```
 
 Thanks To
