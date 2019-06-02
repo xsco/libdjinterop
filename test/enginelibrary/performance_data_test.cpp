@@ -142,7 +142,7 @@ static void populate_track_1(el::performance_data &p)
             ov_adjusted_total_samples,
             ov_num_entries,
             ov_samples_per_entry);
-    for (auto i = 0; i < ov_num_entries; ++i)
+    for (auto i = 0u; i < ov_num_entries; ++i)
     {
         ov_waveform_entries.emplace_back(
                 i * 255 / ov_num_entries,
@@ -166,7 +166,7 @@ static void populate_track_1(el::performance_data &p)
             hr_adjusted_total_samples,
             hr_num_entries,
             hr_samples_per_entry);
-    for (auto i = 0; i < hr_num_entries; ++i)
+    for (auto i = 0u; i < hr_num_entries; ++i)
     {
         hr_waveform_entries.emplace_back(
                 i * 255 / hr_num_entries,
@@ -369,7 +369,7 @@ static void populate_track_2(el::performance_data &p)
             ov_adjusted_total_samples,
             ov_num_entries,
             ov_samples_per_entry);
-    for (auto i = 0; i < ov_num_entries; ++i)
+    for (auto i = 0u; i < ov_num_entries; ++i)
     {
         ov_waveform_entries.emplace_back(
                 i * 255 / ov_num_entries,
@@ -393,7 +393,7 @@ static void populate_track_2(el::performance_data &p)
             hr_adjusted_total_samples,
             hr_num_entries,
             hr_samples_per_entry);
-    for (auto i = 0; i < hr_num_entries; ++i)
+    for (auto i = 0u; i < hr_num_entries; ++i)
     {
         hr_waveform_entries.emplace_back(
                 i * 255 / hr_num_entries,

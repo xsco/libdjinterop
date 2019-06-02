@@ -88,7 +88,7 @@ static int select_crate_parent_id(const database &db, int id)
     else if (parent_list_parent_id == id && hierarchy_rows_found > 0)
         throw crate_database_inconsistency{
             "Entry in CrateHierarchy for root Crate", id};
-    else if (parent_list_parent_id != id & hierarchy_rows_found == 0)
+    else if (parent_list_parent_id != id && hierarchy_rows_found == 0)
         throw crate_database_inconsistency{
             "No entry in CrateHierarchy", id};
     else if (parent_list_parent_id != id &&

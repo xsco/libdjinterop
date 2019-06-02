@@ -86,6 +86,8 @@ static void check_crate_2(el::crate &c)
     BOOST_CHECK(track_iter == c.tracks_end());
 }
 
+/*
+// Not currently used in any test cases.
 static void populate_crate_3(el::crate &c)
 {
     c.set_name("Sub-Foo Crate");
@@ -94,6 +96,7 @@ static void populate_crate_3(el::crate &c)
     track_ids.insert(1);
     c.set_tracks(std::begin(track_ids), std::end(track_ids));
 }
+*/
 
 static void check_crate_3(el::crate &c)
 {

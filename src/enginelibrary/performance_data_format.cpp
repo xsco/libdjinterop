@@ -25,6 +25,8 @@
 
 #include "encode_decode_utils.hpp"
 
+typedef std::vector<char>::size_type data_size_t;
+
 namespace djinterop {
 namespace enginelibrary {
 
@@ -96,7 +98,7 @@ beat_data_blob decode_beat_data(
     auto marker_ptr = ptr + 25;
     for (auto &marker : beat_data.default_markers)
     {
-        if (marker_ptr - ptr > raw_data.size())
+        if (static_cast<data_size_t>(marker_ptr - ptr) > raw_data.size())
             throw corrupt_performance_data{track_id};
         marker.sample_offset           = decode_double_le(marker_ptr     );
         marker.beat_index              = decode_int64_le (marker_ptr + 8 );
@@ -116,7 +118,7 @@ beat_data_blob decode_beat_data(
     beat_data.adjusted_markers.resize(adjusted_num_beatgrid_markers);
     for (auto &marker : beat_data.adjusted_markers)
     {
-        if (marker_ptr - ptr > raw_data.size())
+        if (static_cast<data_size_t>(marker_ptr - ptr) > raw_data.size())
             throw corrupt_performance_data{track_id};
         marker.sample_offset           = decode_double_le(marker_ptr     );
         marker.beat_index              = decode_int64_le (marker_ptr + 8 );
@@ -153,7 +155,7 @@ quick_cues_blob decode_quick_cues(
 
     // Work out how many quick cues we have, and check minimum data length
     auto num_quick_cues = decode_int64_be(ptr);
-    if (raw_data.size() < 25 + (num_quick_cues * 13))
+    if (raw_data.size() < static_cast<data_size_t>(25 + (num_quick_cues * 13)))
         throw corrupt_performance_data{
             track_id,
             "Quick cue data is less than the absolute minimum expected size of "
@@ -166,7 +168,8 @@ quick_cues_blob decode_quick_cues(
     {
         // Get label length, and check minimum data length
         auto label_length = decode_uint8(cue_ptr);
-        if (raw_data.size() < (cue_ptr - ptr) + label_length + 13)
+        if (raw_data.size() <
+                static_cast<data_size_t>(cue_ptr - ptr + label_length) + 13)
             throw corrupt_performance_data{track_id};
         if (label_length < 0)
             throw corrupt_performance_data{track_id};
@@ -190,7 +193,7 @@ quick_cues_blob decode_quick_cues(
     }
 
     // Check length, and get cue positions
-    if (raw_data.size() < (cue_ptr - ptr) + 17)
+    if (raw_data.size() < static_cast<data_size_t>(cue_ptr - ptr) + 17)
         throw corrupt_performance_data{track_id};
     quick_cues.adjusted_main_cue_sample_offset = decode_double_be(cue_ptr);
     cue_ptr += 8;
@@ -225,7 +228,7 @@ loops_blob decode_loops(
 
     // Check how many loops there are, and minimum data length
     auto num_loops = decode_int64_le(ptr);
-    if (raw_data.size() < 8 + (num_loops * 23))
+    if (raw_data.size() < 8 + (static_cast<data_size_t>(num_loops) * 23))
         throw corrupt_performance_data{
             track_id,
             "Loops data is less than the absolute minimum size of 23 bytes per "
@@ -238,7 +241,8 @@ loops_blob decode_loops(
     {
         // Get label length, and check minimum data length
         auto label_length = decode_uint8(loop_ptr);
-        if (raw_data.size() < (loop_ptr - ptr) + label_length + 23)
+        if (raw_data.size() <
+                static_cast<data_size_t>(loop_ptr - ptr + label_length) + 23)
             throw corrupt_performance_data{track_id};
         if (label_length < 0)
             throw corrupt_performance_data{track_id};
@@ -294,7 +298,8 @@ overview_waveform_blob decode_overview_waveform_data(
     }
 
     // There are three data points per entry, and an additional entry at the end
-    if (raw_data.size() < 24 + ((waveform.num_entries + 1) * 3))
+    if (raw_data.size() <
+            24 + (static_cast<data_size_t>(waveform.num_entries + 1) * 3))
     {
         throw corrupt_performance_data{
             track_id,
@@ -347,7 +352,8 @@ high_res_waveform_blob decode_high_res_waveform_data(
     }
 
     // There are six data points per entry, and an additional entry at the end
-    if (raw_data.size() < 24 + ((waveform.num_entries + 1) * 6))
+    if (raw_data.size() <
+            24 + (static_cast<data_size_t>(waveform.num_entries + 1) * 6))
     {
         throw corrupt_performance_data{
             track_id,
