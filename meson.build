@@ -12,10 +12,10 @@ cpp_compiler = meson.get_compiler('cpp')
 dl_dep = cpp_compiler.find_library('dl', required: false)
 
 thread_dep = dependency('threads')
-z_dep = dependency('zlib', version: '>=1.2.8')
+zlib_dep = dependency('zlib', version: '>=1.2.8', fallback: ['zlib', 'zlib_dep'])
 boost_dep = dependency('boost') # Header-only libraries
 
-core_deps = [thread_dep, dl_dep, z_dep, boost_dep]
+core_deps = [thread_dep, dl_dep, zlib_dep, boost_dep]
 
 inc = include_directories('include')
 

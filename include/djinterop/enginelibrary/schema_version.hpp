@@ -15,8 +15,8 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if __cplusplus <= 199711L
-  #error This library needs at least a C++11 compliant compiler
+#if __cplusplus < 201402L && _MSVC_LANG < 201402L
+  #error This library needs at least a C++14 compliant compiler
 #endif
 
 #ifndef DJINTEROP_ENGINELIBRARY_SCHEMA_VERSION_HPP

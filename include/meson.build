@@ -1,15 +1,15 @@
 public_header_files = [
-    'enginelibrary.hpp',
+    'djinterop/enginelibrary.hpp',
 ]
 el_public_header_files = [
-    'enginelibrary/album_art.hpp',
-    'enginelibrary/crate.hpp',
-    'enginelibrary/database.hpp',
-    'enginelibrary/musical_key.hpp',
-    'enginelibrary/pad_colour.hpp',
-    'enginelibrary/performance_data.hpp',
-    'enginelibrary/schema_version.hpp',
-    'enginelibrary/track.hpp'
+    'djinterop/enginelibrary/album_art.hpp',
+    'djinterop/enginelibrary/crate.hpp',
+    'djinterop/enginelibrary/database.hpp',
+    'djinterop/enginelibrary/musical_key.hpp',
+    'djinterop/enginelibrary/pad_colour.hpp',
+    'djinterop/enginelibrary/performance_data.hpp',
+    'djinterop/enginelibrary/schema_version.hpp',
+    'djinterop/enginelibrary/track.hpp'
 ]
 
 # Meson appears to flatten header files into the subdir when installing, so we

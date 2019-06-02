@@ -15,37 +15,16 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if __cplusplus <= 199711L
-  #error This library needs at least a C++11 compliant compiler
+#if __cplusplus < 201402L && _MSVC_LANG < 201402L
+  #error This library needs at least a C++14 compliant compiler
 #endif
 
-#ifndef DJINTEROP_ENGINELIBRARY_ALBUM_ART_HPP
-#define DJINTEROP_ENGINELIBRARY_ALBUM_ART_HPP
+#ifndef DJINTEROP_ENGINELIBRARY_HPP
+#define DJINTEROP_ENGINELIBRARY_HPP
 
-#include <chrono>
-#include <cstdint>
-#include <memory>
-#include <stdexcept>
-#include <string>
-#include <vector>
+#include <djinterop/enginelibrary/database.hpp>
+#include <djinterop/enginelibrary/track.hpp>
+#include <djinterop/enginelibrary/crate.hpp>
+#include <djinterop/enginelibrary/performance_data.hpp>
 
-#include "database.hpp"
-
-namespace djinterop {
-namespace enginelibrary {
-
-// Artwork for tracks
-struct album_art
-{
-    typedef uint_least8_t image_data_type;
-
-    std::string hash_hex_str;
-    std::vector<image_data_type> image_data;
-
-    // TODO - implement rest of album_art class
-};
-
-} // enginelibrary
-} // djinterop
-
-#endif // DJINTEROP_ENGINELIBRARY_ALBUM_ART_HPP
+#endif // DJINTEROP_ENGINELIBRARY_HPP
