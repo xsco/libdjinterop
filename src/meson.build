@@ -14,7 +14,7 @@ sources = [
 # Used by unit tests to reference internal classes.
 internal_inc = include_directories('.')
 
-djinterop_lib = shared_library(
+djinterop_lib = library(
     'djinterop',
     sources: sources,
     include_directories: inc,

@@ -1,6 +1,9 @@
 # The typical build output directory
 build/
 
+# Sub-projects
+subprojects/*
+
 # Helper for bear (b-ear)
 compile_commands.json
 

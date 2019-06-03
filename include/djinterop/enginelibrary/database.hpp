@@ -120,7 +120,7 @@ public:
 	schema_version version() const;
 
 private:
-    class impl;
+    struct impl;
     std::unique_ptr<impl> pimpl_;
 };
 

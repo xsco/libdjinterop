@@ -560,7 +560,7 @@ public:
     void save(const database &database);
 
 private:
-	class impl;
+	struct impl;
 	std::unique_ptr<impl> pimpl_;
 };
 
