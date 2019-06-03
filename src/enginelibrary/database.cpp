@@ -19,6 +19,9 @@
 
 #include <string>
 #include <sys/stat.h>
+#if defined(_WIN32)
+  #include <direct.h>
+#endif
 #include <tuple>
 #include "sqlite_modern_cpp.h"
 
@@ -152,7 +155,11 @@ database create_database(const std::string &dir_path,
     if (stat(dir_path.c_str(), &buf) != 0)
     {
         // Create the dir
+#if defined(_WIN32)
+        if (_mkdir(dir_path.c_str()) != 0)
+#else
         if (mkdir(dir_path.c_str(), 0755) != 0)
+#endif
         {
             throw std::runtime_error{
                 "Failed to create directory to hold new database"};
