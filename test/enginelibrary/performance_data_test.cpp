@@ -22,7 +22,6 @@
 #include <iostream>
 #include <cstdio>
 #include <boost/filesystem.hpp>
-#include <boost/format.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 
@@ -34,38 +33,6 @@ namespace fs = boost::filesystem;
 namespace c = std::chrono;
 
 const std::string sample_path{STRINGIFY(TESTDATA_DIR) "/el3"};
-
-namespace boost {
-namespace test_tools {
-
-    template<>
-    struct print_log_value<std::chrono::milliseconds>
-    {
-        void operator ()(std::ostream &os, const c::milliseconds &o)
-        {
-            os << o.count();
-        }
-    };
-
-    template<>
-    struct print_log_value<el::musical_key>
-    {
-        void operator ()(std::ostream &os, el::musical_key o)
-        {
-            os << static_cast<int>(o);
-        }
-    };
-
-    template<>
-    struct print_log_value<el::pad_colour>
-    {
-        void operator ()(std::ostream &os, el::pad_colour o)
-        {
-            os << boost::format("(%02X,%02X,%02X,%02X)") % o.r % o.g % o.b % o.a;
-        }
-    };
-} // test_tools
-} // boost
 
 static fs::path create_temp_dir()
 {
@@ -188,9 +155,9 @@ static void check_track_1(const el::performance_data &p)
     // Track data fields
     BOOST_CHECK_CLOSE(p.sample_rate(), 44100.0, 0.001);
     BOOST_CHECK_EQUAL(p.total_samples(), 17452800);
-    BOOST_CHECK_EQUAL(p.key(), el::musical_key::a_minor);
+    BOOST_CHECK(p.key() == el::musical_key::a_minor);
     BOOST_CHECK_CLOSE(p.average_loudness(), 0.520831584930419921875, 0.001);
-    BOOST_CHECK_EQUAL(p.duration(), c::milliseconds{395755});
+    BOOST_CHECK(p.duration() == c::milliseconds{395755});
 
     // Beat data fields
     auto default_beat_grid = p.default_beat_grid();
@@ -211,7 +178,7 @@ static void check_track_1(const el::performance_data &p)
     BOOST_CHECK_EQUAL(hot_cue->is_set, true);
     BOOST_CHECK_EQUAL(hot_cue->label, "Cue 1");
     BOOST_CHECK_CLOSE(hot_cue->sample_offset, 1377924.5, 0.001);
-    BOOST_CHECK_EQUAL(hot_cue->colour, el::standard_pad_colours::pad_1);
+    BOOST_CHECK(hot_cue->colour == el::standard_pad_colours::pad_1);
     ++hot_cue;
     BOOST_REQUIRE(hot_cue != p.hot_cues_end());
     BOOST_CHECK_EQUAL(hot_cue->is_set, false);
@@ -220,7 +187,7 @@ static void check_track_1(const el::performance_data &p)
     BOOST_CHECK_EQUAL(hot_cue->is_set, true);
     BOOST_CHECK_EQUAL(hot_cue->label, "Cue 3");
     BOOST_CHECK_CLOSE(hot_cue->sample_offset, 5508265.964, 0.001);
-    BOOST_CHECK_EQUAL(hot_cue->colour, el::standard_pad_colours::pad_3);
+    BOOST_CHECK(hot_cue->colour == el::standard_pad_colours::pad_3);
     ++hot_cue;
     BOOST_REQUIRE(hot_cue != p.hot_cues_end());
     BOOST_CHECK_EQUAL(hot_cue->is_set, false);
@@ -229,13 +196,13 @@ static void check_track_1(const el::performance_data &p)
     BOOST_CHECK_EQUAL(hot_cue->is_set, true);
     BOOST_CHECK_EQUAL(hot_cue->label, "Cue 5");
     BOOST_CHECK_CLOSE(hot_cue->sample_offset, 8261826.939, 0.001);
-    BOOST_CHECK_EQUAL(hot_cue->colour, el::standard_pad_colours::pad_5);
+    BOOST_CHECK(hot_cue->colour == el::standard_pad_colours::pad_5);
     ++hot_cue;
     BOOST_REQUIRE(hot_cue != p.hot_cues_end());
     BOOST_CHECK_EQUAL(hot_cue->is_set, true);
     BOOST_CHECK_EQUAL(hot_cue->label, "Cue 6");
     BOOST_CHECK_CLOSE(hot_cue->sample_offset, 9638607.427, 0.001);
-    BOOST_CHECK_EQUAL(hot_cue->colour, el::standard_pad_colours::pad_6);
+    BOOST_CHECK(hot_cue->colour == el::standard_pad_colours::pad_6);
     ++hot_cue;
     BOOST_REQUIRE(hot_cue != p.hot_cues_end());
     BOOST_CHECK_EQUAL(hot_cue->is_set, false);
@@ -255,7 +222,7 @@ static void check_track_1(const el::performance_data &p)
     BOOST_CHECK_EQUAL(loop->label, "Loop 1");
     BOOST_CHECK_CLOSE(loop->start_sample_offset, 1144.012, 0.001);
     BOOST_CHECK_CLOSE(loop->end_sample_offset, 345339.134, 0.001);
-    BOOST_CHECK_EQUAL(loop->colour, el::standard_pad_colours::pad_1);
+    BOOST_CHECK(loop->colour == el::standard_pad_colours::pad_1);
     ++loop;
     BOOST_REQUIRE(loop != p.loops_end());
     BOOST_CHECK_EQUAL(loop->is_start_set, true);
@@ -263,7 +230,7 @@ static void check_track_1(const el::performance_data &p)
     BOOST_CHECK_EQUAL(loop->label, "Loop 2");
     BOOST_CHECK_CLOSE(loop->start_sample_offset, 2582607.427, 0.001);
     BOOST_CHECK_CLOSE(loop->end_sample_offset, 2754704.988, 0.001);
-    BOOST_CHECK_EQUAL(loop->colour, el::standard_pad_colours::pad_2);
+    BOOST_CHECK(loop->colour == el::standard_pad_colours::pad_2);
     ++loop;
     BOOST_REQUIRE(loop != p.loops_end());
     BOOST_CHECK_EQUAL(loop->is_start_set, false);
@@ -275,7 +242,7 @@ static void check_track_1(const el::performance_data &p)
     BOOST_CHECK_EQUAL(loop->label, "Loop 4");
     BOOST_CHECK_CLOSE(loop->start_sample_offset, 4131485.476, 0.001);
     BOOST_CHECK_CLOSE(loop->end_sample_offset, 4303583.037, 0.001);
-    BOOST_CHECK_EQUAL(loop->colour, el::standard_pad_colours::pad_4);
+    BOOST_CHECK(loop->colour == el::standard_pad_colours::pad_4);
     ++loop;
     BOOST_REQUIRE(loop != p.loops_end());
     BOOST_CHECK_EQUAL(loop->is_start_set, false);
@@ -415,9 +382,9 @@ static void check_track_2(const el::performance_data &p)
     // Track data fields
     BOOST_CHECK_CLOSE(p.sample_rate(), 48000.0, 0.001);
     BOOST_CHECK_EQUAL(p.total_samples(), 10795393);
-    BOOST_CHECK_EQUAL(p.key(), el::musical_key::b_minor);
+    BOOST_CHECK(p.key() == el::musical_key::b_minor);
     BOOST_CHECK_CLOSE(p.average_loudness(), 0.5, 0.001);
-    BOOST_CHECK_EQUAL(p.duration(), c::milliseconds{224904});
+    BOOST_CHECK(p.duration() == c::milliseconds{224904});
 
     // Beat data fields
     auto default_beat_grid = p.default_beat_grid();
@@ -441,7 +408,7 @@ static void check_track_2(const el::performance_data &p)
     BOOST_CHECK_EQUAL(hot_cue->is_set, true);
     BOOST_CHECK_EQUAL(hot_cue->label, "Cue 2");
     BOOST_CHECK_CLOSE(hot_cue->sample_offset, 1234567.89, 0.001);
-    BOOST_CHECK_EQUAL(hot_cue->colour, el::standard_pad_colours::pad_2);
+    BOOST_CHECK(hot_cue->colour == el::standard_pad_colours::pad_2);
     ++hot_cue;
     BOOST_REQUIRE(hot_cue != p.hot_cues_end());
     BOOST_CHECK_EQUAL(hot_cue->is_set, false);
@@ -477,7 +444,7 @@ static void check_track_2(const el::performance_data &p)
     BOOST_CHECK_EQUAL(loop->label, "Loop 2");
     BOOST_CHECK_CLOSE(loop->start_sample_offset, 2345600, 0.001);
     BOOST_CHECK_CLOSE(loop->end_sample_offset, 2345700, 0.001);
-    BOOST_CHECK_EQUAL(loop->colour, el::standard_pad_colours::pad_2);
+    BOOST_CHECK(loop->colour == el::standard_pad_colours::pad_2);
     ++loop;
     BOOST_REQUIRE(loop != p.loops_end());
     BOOST_CHECK_EQUAL(loop->is_start_set, false);

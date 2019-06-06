@@ -34,21 +34,6 @@ using namespace std;
 const std::string sample_path{STRINGIFY(TESTDATA_DIR) "/el1"};
 const std::string fake_path{STRINGIFY(TESTDATA_DIR) "/elfake"};
 
-namespace boost {
-namespace test_tools {
-
-	// Why can't BOOST_CHECK_EQUAL find these operators in the global ns?
-	template<>
-	struct print_log_value<el::schema_version>
-	{
-		void operator ()(std::ostream &os, const el::schema_version &v)
-		{
-            os << v;
-		}
-	};
-} // test_tools
-} // boost
-
 static fs::path create_temp_dir()
 {
     fs::path temp_dir{fs::temp_directory_path()};

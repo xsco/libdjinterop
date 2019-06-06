@@ -34,20 +34,6 @@ namespace c = std::chrono;
 
 const std::string sample_path{STRINGIFY(TESTDATA_DIR) "/el2"};
 
-namespace boost {
-namespace test_tools {
-    template<>
-    struct print_log_value<el::musical_key>
-    {
-        void operator ()(std::ostream &os, el::musical_key o)
-        {
-            os << static_cast<int>(o);
-        }
-    };
-} // test_tools
-} // boost
-
-
 static fs::path create_temp_dir()
 {
     fs::path temp_dir{fs::temp_directory_path()};
@@ -105,7 +91,7 @@ static void check_track_1(el::track &t)
 	BOOST_CHECK_EQUAL(t.comment(), "Purchased at Beatport.com");
 	BOOST_CHECK_EQUAL(t.publisher(), "Stereo Productions");
 	BOOST_CHECK_EQUAL(t.composer(), "");
-    BOOST_CHECK_EQUAL(t.key(), el::musical_key::a_minor);
+    BOOST_CHECK(t.key() == el::musical_key::a_minor);
 	BOOST_CHECK_EQUAL(t.path(), "../01 - Dennis Cruz - Mad (Original Mix).mp3");
 	BOOST_CHECK_EQUAL(t.filename(), "01 - Dennis Cruz - Mad (Original Mix).mp3");
 	BOOST_CHECK_EQUAL(t.file_extension(), "mp3");
@@ -172,7 +158,7 @@ static void check_track_2(el::track &t)
 	BOOST_CHECK_EQUAL(t.comment(), "Comment goes here");
 	BOOST_CHECK_EQUAL(t.publisher(), "Here is the publisher text");
 	BOOST_CHECK_EQUAL(t.composer(), "And the composer text");
-    BOOST_CHECK_EQUAL(t.key(), el::musical_key::c_major);
+    BOOST_CHECK(t.key() == el::musical_key::c_major);
 	BOOST_CHECK_EQUAL(t.path(), "../03 - Not A Real Artist - Made-up Track (Foo Bar Remix).flac");
 	BOOST_CHECK_EQUAL(t.filename(), "03 - Not A Real Artist - Made-up Track (Foo Bar Remix).flac");
 	BOOST_CHECK_EQUAL(t.file_extension(), "flac");
