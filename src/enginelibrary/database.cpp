@@ -35,25 +35,15 @@ struct database::impl
 {
     impl(const std::string &dir_path)
         : dir_path_{dir_path},
-          db_m_path_{dir_path_ + "/m.db"},
-          db_p_path_{dir_path_ + "/p.db"}
+          m_db_path_{dir_path_ + "/m.db"},
+          p_db_path_{dir_path_ + "/p.db"},
+          m_db_{m_db_path_},
+          p_db_{p_db_path_}
     {
-        if (exists())
-        {
-            sqlite::database m_db{db_m_path_};
-            m_db << "SELECT uuid, schemaVersionMajor, schemaVersionMinor, "
-                    "schemaVersionPatch "
-                    "FROM Information" >>
-                std::tie(uuid_, version_.maj, version_.min, version_.pat);
-        }
-    }
-
-    bool exists() const
-    {
-        struct stat buffer;
-        auto m_exists = stat(db_m_path_.c_str(), &buffer) == 0;
-        auto p_exists = stat(db_p_path_.c_str(), &buffer) == 0;
-        return m_exists && p_exists;
+        m_db_ << "SELECT uuid, schemaVersionMajor, schemaVersionMinor, "
+                 "schemaVersionPatch "
+                 "FROM Information" >>
+            std::tie(uuid_, version_.maj, version_.min, version_.pat);
     }
 
     bool is_supported() const
@@ -65,30 +55,30 @@ struct database::impl
     {
         // Check for existence of files on disk
         struct stat buffer;
-        auto m_exists = stat(db_m_path_.c_str(), &buffer) == 0;
+        auto m_exists = stat(m_db_path_.c_str(), &buffer) == 0;
         if (!m_exists)
         {
-            throw database_not_found{db_m_path_};
+            throw database_not_found{m_db_path_};
         }
 
-        auto p_exists = stat(db_p_path_.c_str(), &buffer) == 0;
+        auto p_exists = stat(p_db_path_.c_str(), &buffer) == 0;
         if (!p_exists)
         {
-            throw database_not_found{db_p_path_};
+            throw database_not_found{p_db_path_};
         }
 
         // Verify music schema
-        sqlite::database m_db{db_m_path_};
-        verify_music_schema(m_db);
+        verify_music_schema(m_db_);
 
         // Verify performance schema
-        sqlite::database p_db{db_p_path_};
-        verify_performance_schema(p_db);
+        verify_performance_schema(p_db_);
     }
 
     std::string dir_path_;
-    std::string db_m_path_;
-    std::string db_p_path_;
+    std::string m_db_path_;
+    std::string p_db_path_;
+    sqlite::database m_db_;
+    sqlite::database p_db_;
     std::string uuid_;
     schema_version version_;
 };
@@ -103,11 +93,6 @@ database::database(const database &db) = default;
 database::~database() = default;
 
 database &database::operator=(const database &db) = default;
-
-bool database::exists() const
-{
-    return pimpl_->exists();
-}
 
 bool database::is_supported() const
 {
@@ -126,12 +111,12 @@ std::string database::directory_path() const
 
 std::string database::music_db_path() const
 {
-    return pimpl_->db_m_path_;
+    return pimpl_->m_db_path_;
 }
 
 std::string database::performance_db_path() const
 {
-    return pimpl_->db_p_path_;
+    return pimpl_->p_db_path_;
 }
 
 std::string database::uuid() const
@@ -142,6 +127,16 @@ std::string database::uuid() const
 schema_version database::version() const
 {
     return pimpl_->version_;
+}
+
+sqlite::database &database::music_db()
+{
+    return pimpl_->m_db_;
+}
+
+sqlite::database &database::performance_db()
+{
+    return pimpl_->m_db_;
 }
 
 database create_database(
@@ -187,8 +182,7 @@ database create_database(
     create_performance_schema(p_db, version);
     verify_performance_schema(p_db);
 
-    database db{dir_path};
-    return db;
+    return database{dir_path};
 }
 
 }  // namespace enginelibrary

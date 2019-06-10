@@ -52,24 +52,11 @@ BOOST_AUTO_TEST_CASE (ctor__sample_path__constructed)
     el::database{sample_path};
 }
 
-BOOST_AUTO_TEST_CASE (exists__valid_db__true)
-{
-    // Check that a valid database is reported as existing
-    // Arrange/Act
-    el::database db{sample_path};
-
-    // Assert
-    BOOST_CHECK_EQUAL(db.exists(), true);
-}
-
-BOOST_AUTO_TEST_CASE (exists__fake_db__false)
+BOOST_AUTO_TEST_CASE(ctor__fake_path__throw)
 {
     // Check that a fake database is reported as not existing
-    // Arrange/Act
-    el::database db{fake_path};
-
-    // Assert
-    BOOST_CHECK_EQUAL(db.exists(), false);
+    // Arrange/Act/Assert
+    BOOST_CHECK_THROW(el::database db{fake_path}, sqlite::errors::cantopen);
 }
 
 BOOST_AUTO_TEST_CASE(is_supported__valid_db__valid_version)
@@ -117,7 +104,7 @@ BOOST_AUTO_TEST_CASE (create_database__version_1_6_0__creates_verified)
     auto db = el::create_database(temp_dir.string(), el::version_1_6_0);
 
     // Assert
-    BOOST_CHECK_EQUAL(db.exists(), true);
+    BOOST_CHECK_NO_THROW(db.verify());
     BOOST_CHECK_EQUAL(db.is_supported(), true);
     BOOST_CHECK_EQUAL(db.directory_path(), temp_dir.string());
     BOOST_CHECK_EQUAL(db.music_db_path(), (temp_dir / "m.db").string());
@@ -136,7 +123,7 @@ BOOST_AUTO_TEST_CASE (create_database__version_1_7_1__creates_verified)
     auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
 
     // Assert
-    BOOST_CHECK_EQUAL(db.exists(), true);
+    BOOST_CHECK_NO_THROW(db.verify());
     BOOST_CHECK_EQUAL(db.is_supported(), true);
     BOOST_CHECK_EQUAL(db.directory_path(), temp_dir.string());
     BOOST_CHECK_EQUAL(db.music_db_path(), (temp_dir / "m.db").string());

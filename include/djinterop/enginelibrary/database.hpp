@@ -26,8 +26,14 @@
 #include <ostream>
 #include <stdexcept>
 #include <string>
+#include "sqlite_modern_cpp.h"
 
 #include "schema_version.hpp"
+
+namespace sqlite
+{
+class database;
+}
 
 namespace djinterop
 {
@@ -68,12 +74,6 @@ public:
     database &operator=(const database &db);
 
     /**
-     * \brief Returns a `bool` indicating whether the database files exist on
-     *        disk or not
-     */
-    bool exists() const;
-
-    /**
      * \brief Returns a `bool` indicating whether the database version is
      *        supported by this version of libdjinterop or not
      */
@@ -111,6 +111,9 @@ public:
     schema_version version() const;
 
 private:
+    sqlite::database &music_db();
+    sqlite::database &performance_db();
+
     struct impl;
     std::shared_ptr<impl> pimpl_;
 };
