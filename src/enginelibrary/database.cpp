@@ -93,14 +93,22 @@ struct database::impl
     schema_version version_;
 };
 
-database::database(const std::string &dir_path) : pimpl_{new impl{dir_path}} {}
+database::database(const std::string &dir_path)
+    : pimpl_{std::make_shared<impl>(dir_path)}
+{
+}
+
+database::database(const database &db) = default;
 
 database::~database() = default;
+
+database &database::operator=(const database &db) = default;
 
 bool database::exists() const
 {
     return pimpl_->exists();
 }
+
 bool database::is_supported() const
 {
     return pimpl_->is_supported();
@@ -115,18 +123,22 @@ std::string database::directory_path() const
 {
     return pimpl_->dir_path_;
 }
+
 std::string database::music_db_path() const
 {
     return pimpl_->db_m_path_;
 }
+
 std::string database::performance_db_path() const
 {
     return pimpl_->db_p_path_;
 }
+
 std::string database::uuid() const
 {
     return pimpl_->uuid_;
 }
+
 schema_version database::version() const
 {
     return pimpl_->version_;

@@ -55,7 +55,7 @@ public:
     /**
      * \brief Copying is disallowed
      */
-    database(const database &db) = delete;
+    database(const database &db);
 
     /**
      * \brief Destructor
@@ -65,7 +65,7 @@ public:
     /**
      * \brief Copy assignment is disallowed
      */
-    database &operator=(const database &db) = delete;
+    database &operator=(const database &db);
 
     /**
      * \brief Returns a `bool` indicating whether the database files exist on
@@ -112,7 +112,7 @@ public:
 
 private:
     struct impl;
-    std::unique_ptr<impl> pimpl_;
+    std::shared_ptr<impl> pimpl_;
 };
 
 /**
