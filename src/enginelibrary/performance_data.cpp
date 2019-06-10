@@ -198,11 +198,6 @@ performance_data::performance_data(const performance_data &other)
 }
 
 /**
- * \brief Move constructor
- */
-performance_data::performance_data(performance_data &&other) noexcept = default;
-
-/**
  * \brief Destructor
  */
 performance_data::~performance_data() = default;
@@ -216,12 +211,6 @@ performance_data &performance_data::operator=(const performance_data &other)
         pimpl_.reset(new impl{*other.pimpl_});
     return *this;
 }
-
-/**
- * \brief Move assignment
- */
-performance_data &performance_data::operator=(
-    performance_data &&other) noexcept = default;
 
 /**
  * \brief Tests whether performance data already exists for a given track

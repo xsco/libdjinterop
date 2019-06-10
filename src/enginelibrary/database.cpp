@@ -95,11 +95,7 @@ struct database::impl
 
 database::database(const std::string &dir_path) : pimpl_{new impl{dir_path}} {}
 
-database::database(database &&db) noexcept : pimpl_{std::move(db.pimpl_)} {}
-
 database::~database() = default;
-
-database &database::operator=(database &&db) noexcept = default;
 
 bool database::exists() const
 {

@@ -58,11 +58,6 @@ public:
     database(const database &db) = delete;
 
     /**
-     * \brief Move constructor
-     */
-    database(database &&db) noexcept;
-
-    /**
      * \brief Destructor
      */
     ~database();
@@ -71,11 +66,6 @@ public:
      * \brief Copy assignment is disallowed
      */
     database &operator=(const database &db) = delete;
-
-    /**
-     * \brief Move assignment
-     */
-    database &operator=(database &&db) noexcept;
 
     /**
      * \brief Returns a `bool` indicating whether the database files exist on
