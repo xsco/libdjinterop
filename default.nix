@@ -2,7 +2,7 @@ with import <nixpkgs> {};
 
 stdenv.mkDerivation {
   name = "libdjinterop";
-  version = "2019-06-05";
+  version = "unstable";
   src = builtins.fetchGit ./.;
   nativeBuildInputs = [
     meson
