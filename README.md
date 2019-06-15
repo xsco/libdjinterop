@@ -192,6 +192,16 @@ $ nix-shell
 You can then build `libdjinterop` by using Meson as described above.
 This is advantageous when developing since it only recompiles sources that it needs to.
 
+
+Contributing
+============
+
+Feel free to help developing `libdjinterop` and open a pull request.
+Please note:
+
+* New code should be formatted using [clang-format](https://clang.llvm.org/docs/ClangFormat.html).
+
+
 Thanks To
 =========
 
@@ -201,5 +211,6 @@ Thanks To
 * [SQLite](https://sqlite.org)
 * [SQLite Modern C++ Wrapper](https://github.com/SqliteModernCpp/sqlite_modern_cpp)
 * [zlib](http://zlib.net)
+* [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html)
 
 Interfacing with the Engine Library database format was made a lot easier with the help of MixMasterG from ATGR, who is the author of the [Denon Conversion Utility](https://sellfy.com/atgr_production_team).

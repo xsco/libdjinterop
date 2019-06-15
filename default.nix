@@ -8,6 +8,7 @@ stdenv.mkDerivation {
     meson
     ninja
     pkg-config
+    clang-tools
   ];
   outputs = [ "out" "dev" ];
   buildInputs = [
