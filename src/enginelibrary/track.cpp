@@ -15,880 +15,1092 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <djinterop/enginelibrary/track.hpp>
+#include <djinterop/enginelibrary.hpp>
 
-#include <boost/optional.hpp>
 #include <chrono>
 #include <iomanip>
 #include <random>
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include <boost/optional.hpp>
+#include <boost/optional/optional_io.hpp>
+
+#include "enginelibrary/database_impl.hpp"
+#include "enginelibrary/performance_data_format.hpp"
+#include "enginelibrary/util.hpp"
 #include "sqlite_modern_cpp.h"
+
+using std::chrono::duration_cast;
+using std::chrono::milliseconds;
+using std::chrono::seconds;
+using std::chrono::system_clock;
 
 namespace djinterop
 {
 namespace enginelibrary
 {
-struct track_row
+enum class metadata_str_type
 {
-    int play_order;
-    int length;
-    int length_calculated;
-    int bpm;
-    int year;
-    std::string path;
-    std::string filename;
-    int bitrate;
-    double bpm_analysed;
-    int track_type;
-    double is_external_track;
-    boost::optional<std::string> uuid_of_external_database;
-    boost::optional<int> id_track_in_external_database;
-    int id_album_art;
-    int pdb_import_key;  // schema versions >= 1.7.1
+    title = 1,
+    artist = 2,
+    album = 3,
+    genre = 4,
+    comment = 5,
+    publisher = 6,
+    composer = 7,
+    duration_mm_ss = 10,
+    ever_played = 12,
+    file_extension = 13
 };
 
-struct metadata_types
+enum class metadata_int_type
 {
-    static const int title = 1;
-    static const int artist = 2;
-    static const int album = 3;
-    static const int genre = 4;
-    static const int comment = 5;
-    static const int publisher = 6;
-    static const int composer = 7;
-    static const int duration_mm_ss = 10;
-    static const int ever_played = 12;
-    static const int file_extension = 13;
+    last_played_ts = 1,
+    last_modified_ts = 2,
+    last_accessed_ts =
+        3,  // NOTE: truncated to date on VFAT (see FAT "ACCDATE")
+    musical_key = 4,
+    hash = 10
 };
 
-struct metadata_row
+namespace
 {
-    bool persist_nulls = true;
-    int id;
-    int type;
-    boost::optional<std::string> text;
-};
-
-typedef std::vector<metadata_row> str_metadata_vec;
-
-struct metadata_integer_types
+boost::optional<system_clock::time_point> to_time_point(
+    boost::optional<int64_t> timestamp)
 {
-    static const int last_played_ts = 1;
-    static const int last_modified_ts = 2;
-    static const int last_accessed_ts =
-        3;  // Note truncated to date on VFAT (see FAT "ACCDATE")
-    static const int musical_key = 4;
-    static const int hash = 10;
-};
-
-struct metadata_integer_row
-{
-    bool persist_nulls = true;
-    int id;
-    int type;
-    boost::optional<int> value;
-};
-
-typedef std::vector<metadata_integer_row> int_metadata_vec;
-
-// Select a row from the Track table
-track_row select_track_row(const database &db, int id)
-{
-    sqlite::database m_db{db.music_db_path()};
-    track_row row;
-    int rows_found = 0;
-    if (db.version() >= version_1_7_1)
+    boost::optional<system_clock::time_point> result;
+    if (timestamp)
     {
-        m_db << "SELECT id, playOrder, length, lengthCalculated, bpm, year, "
-                "path, filename, bitrate, bpmAnalyzed, trackType, "
-                "isExternalTrack, uuidOfExternalDatabase, "
-                "idTrackInExternalDatabase, idAlbumArt, pdbImportKey "
-                "FROM Track WHERE id = :1"
-             << id >>
-            [&](int id, int play_order, int length, int length_calculated,
-                int bpm, int year, std::string path, std::string filename,
-                int bitrate, double bpm_analysed, int track_type,
-                double is_external_track, std::string uuid_of_external_database,
-                int id_track_in_external_database, int id_album_art,
-                int pdb_import_key) {
-                row = track_row{play_order,
-                                length,
-                                length_calculated,
-                                bpm,
-                                year,
-                                path,
-                                filename,
-                                bitrate,
-                                bpm_analysed,
-                                track_type,
-                                is_external_track,
-                                uuid_of_external_database,
-                                id_track_in_external_database,
-                                id_album_art,
-                                pdb_import_key};
-                ++rows_found;
-            };
+        result = system_clock::time_point{seconds(*timestamp)};
     }
-    else
-    {
-        m_db << "SELECT id, playOrder, length, lengthCalculated, bpm, year, "
-                "path, filename, bitrate, bpmAnalyzed, trackType, "
-                "isExternalTrack, uuidOfExternalDatabase, "
-                "idTrackInExternalDatabase, idAlbumArt "
-                "FROM Track WHERE id = :1"
-             << id >>
-            [&](int id, int play_order, int length, int length_calculated,
-                int bpm, int year, std::string path, std::string filename,
-                int bitrate, double bpm_analysed, int track_type,
-                double is_external_track, std::string uuid_of_external_database,
-                int id_track_in_external_database, int id_album_art) {
-                row = track_row{play_order,
-                                length,
-                                length_calculated,
-                                bpm,
-                                year,
-                                path,
-                                filename,
-                                bitrate,
-                                bpm_analysed,
-                                track_type,
-                                is_external_track,
-                                uuid_of_external_database,
-                                id_track_in_external_database,
-                                id_album_art,
-                                0};
-                ++rows_found;
-            };
-    }
-
-    if (rows_found == 0)
-        throw nonexistent_track{id};
-
-    return row;
+    return result;
 }
 
-str_metadata_vec select_metadata_rows(const std::string &music_db_path, int id)
+boost::optional<int64_t> to_timestamp(
+    boost::optional<system_clock::time_point> time)
 {
-    sqlite::database m_db{music_db_path};
-    str_metadata_vec results{17};
-    m_db << "SELECT id, type, text FROM Metadata WHERE id = ?" << id >>
-        [&results](int id, int type, boost::optional<std::string> text) {
-            if (type > 16)
-                // Some new metadata that we don't know about yet!
-                return;
+    boost::optional<int64_t> result;
+    if (time)
+    {
+        result = duration_cast<seconds>(time->time_since_epoch()).count();
+    }
+    return result;
+}
+}  // namespace
 
-            results[type].id = id;
-            results[type].type = type;
-            results[type].text = text;
-        };
+track_import_info::track_import_info() noexcept = default;
 
-    return results;
+track_import_info::track_import_info(
+    std::string external_db_uuid, int64_t external_track_id) noexcept
+    : external_db_uuid_{std::move(external_db_uuid)},
+      external_track_id_{external_track_id}
+{
 }
 
-int_metadata_vec select_int_metadata_rows(
-    const std::string &music_db_path, int id)
+std::string& track_import_info::external_db_uuid()
 {
-    sqlite::database m_db{music_db_path};
-    int_metadata_vec results{12};
-    m_db << "SELECT id, type, value FROM MetadataInteger WHERE id = ?" << id >>
-        [&results](int id, int type, boost::optional<int> value) {
-            if (type > 11)
-                // Some new metadata that we don't know about yet!
-                return;
+    return external_db_uuid_;
+}
 
-            results[type].id = id;
-            results[type].type = type;
-            results[type].value = value;
-        };
+const std::string& track_import_info::external_db_uuid() const
+{
+    return external_db_uuid_;
+}
 
-    return results;
+int64_t& track_import_info::external_track_id()
+{
+    return external_track_id_;
+}
+
+const int64_t& track_import_info::external_track_id() const
+{
+    return external_track_id_;
 }
 
 struct track::impl
 {
-    impl(const database &db, int id)
-        : id_{id},
-          load_db_uuid_{db.uuid()},
-          track_row_{select_track_row(db, id)},
-          str_metadata_vec_{select_metadata_rows(db.music_db_path(), id)},
-          int_metadata_vec_{select_int_metadata_rows(db.music_db_path(), id)}
+    impl(database db, int64_t id) : db_{std::move(db)}, id_{id} {}
+
+    boost::optional<std::string> get_metadata_str(metadata_str_type type) const
     {
+        boost::optional<std::string> result;
+        db_.pimpl_->music_db_ << "SELECT text FROM MetaData WHERE id = ? AND "
+                                 "type = ? AND text IS NOT NULL"
+                              << id_ << static_cast<int64_t>(type) >>
+            [&](std::string text) {
+                if (!result)
+                {
+                    result = std::move(text);
+                }
+                else
+                {
+                    throw track_database_inconsistency{
+                        "More than one MetaData entry of the same type for the "
+                        "same track",
+                        id_};
+                }
+            };
+        return result;
     }
 
-    impl(const track::impl &other, bool copy_id)
-        : id_{copy_id ? other.id_ : 0},
-          load_db_uuid_{copy_id ? other.load_db_uuid_ : ""},
-          track_row_{other.track_row_},
-          str_metadata_vec_{other.str_metadata_vec_},
-          int_metadata_vec_{other.int_metadata_vec_}
+    void set_metadata_str(
+        metadata_str_type type,
+        boost::optional<boost::string_view> content) const
     {
-    }
-
-    impl() : id_{0}, str_metadata_vec_{17}, int_metadata_vec_{12}
-    {
-        // Set defaults for all otherwise-uninitialised fields
-        track_row_.play_order = 0;
-        track_row_.length = 0;
-        track_row_.length_calculated = 0;
-        track_row_.bpm = 0;
-        track_row_.year = 0;
-        track_row_.bitrate = 0;
-        track_row_.bpm_analysed = 0;
-        track_row_.track_type = 1;  // All tracks appear to be of type 1
-        track_row_.is_external_track = 0;
-        track_row_.id_album_art = 1;  // 1 is the magic "no album art" value
-        track_row_.pdb_import_key = 0;
-
-        // Set defaults for all metadata
-        int i = 0;
-        for (auto &sm : str_metadata_vec_)
+        if (content)
         {
-            sm.id = 0;
-            sm.type = i++;
+            set_metadata_str(type, std::string{*content});
         }
-        i = 0;
-        for (auto &im : int_metadata_vec_)
+        else
         {
-            im.id = 0;
-            im.type = i++;
+            db_.pimpl_->music_db_
+                << "REPLACE INTO MetaData (id, type, text) VALUES (?, ?, ?)"
+                << id_ << static_cast<int64_t>(type) << nullptr;
         }
-
-        // Metadata type-specific defaults and overrides
-        str_metadata_vec_[0].persist_nulls = false;
-        str_metadata_vec_[11].persist_nulls = false;
-        str_metadata_vec_[14].persist_nulls = false;
-        str_metadata_vec_[15].text = "1";
-        str_metadata_vec_[16].text = "1";
-        int_metadata_vec_[0].persist_nulls = false;
-        int_metadata_vec_[5].value = 0;
-        int_metadata_vec_[11].value = 1;
-
-        // Use a random 64-bit number as a hash for the track
-        std::random_device rd;
-        std::mt19937_64 gen{rd()};
-        std::uniform_int_distribution<int64_t> dist{1ll << 61, 1ll << 62};
-        int_metadata_vec_[10].value = dist(gen);
     }
 
-    int id_;
-    std::string load_db_uuid_;
+    void set_metadata_str(
+        metadata_str_type type, const std::string& content) const
+    {
+        db_.pimpl_->music_db_
+            << "REPLACE INTO MetaData (id, type, text) VALUES (?, ?, ?)" << id_
+            << static_cast<int64_t>(type) << content;
+    }
 
-    track_row track_row_;
-    str_metadata_vec str_metadata_vec_;
-    int_metadata_vec int_metadata_vec_;
+    boost::optional<int64_t> get_metadata_int(metadata_int_type type) const
+    {
+        boost::optional<int64_t> result;
+        db_.pimpl_->music_db_ << "SELECT value FROM MetaDataInteger WHERE id = "
+                                 "? AND type = ? AND value IS NOT NULL"
+                              << id_ << static_cast<int64_t>(type) >>
+            [&](int64_t value) {
+                if (!result)
+                {
+                    result = value;
+                }
+                else
+                {
+                    throw track_database_inconsistency{
+                        "More than one MetaDataInteger entry of the same type "
+                        "for the same track",
+                        id_};
+                }
+            };
+        return result;
+    }
+
+    void set_metadata_int(
+        metadata_int_type type, boost::optional<int64_t> content) const
+    {
+        db_.pimpl_->music_db_
+            << "REPLACE INTO MetaDataInteger (id, type, value) VALUES (?, ?, ?)"
+            << id_ << static_cast<int64_t>(type) << content;
+    }
+
+    template <typename T>
+    T get_cell(const char* column_name) const
+    {
+        boost::optional<T> result;
+        db_.pimpl_->music_db_ << (std::string{"SELECT "} + column_name +
+                                  " FROM Track WHERE id = ?")
+                              << id_ >>
+            [&](T cell) {
+                if (!result)
+                {
+                    result = cell;
+                }
+                else
+                {
+                    throw track_database_inconsistency{
+                        "More than one track with the same ID", id_};
+                }
+            };
+        if (!result)
+        {
+            throw track_deleted{id_};
+        }
+        return *result;
+    }
+
+    template <typename T>
+    void set_cell(const char* column_name, const T& content) const
+    {
+        db_.pimpl_->music_db_ << (std::string{"UPDATE Track SET "} +
+                                  column_name + " = ? WHERE id = ?")
+                              << content << id_;
+    }
+
+    template <typename T>
+    T get_perfdata(const char* column_name) const
+    {
+        boost::optional<T> result;
+        db_.pimpl_->perfdata_db_ << (std::string{"SELECT "} + column_name +
+                                     " From PerformanceData WHERE id = ?")
+                                 << id_ >>
+            [&](const std::vector<char>& encoded_data) {
+                if (!result)
+                {
+                    result = T::decode(encoded_data);
+                }
+                else
+                {
+                    throw track_database_inconsistency{
+                        "More than one PerformanceData entry for the same "
+                        "track",
+                        id_};
+                }
+            };
+        return result.value_or(T{});
+    }
+
+    // NOTE: No transaction
+    template <typename T>
+    void set_perfdata(const char* column_name, const T& content) const
+    {
+        bool found = false;
+        db_.pimpl_->perfdata_db_
+                << "SELECT COUNT(*) FROM PerformanceData WHERE id = ?" << id_ >>
+            [&](int32_t count) {
+                if (count == 1)
+                {
+                    found = true;
+                }
+                else if (count > 1)
+                {
+                    throw track_database_inconsistency{
+                        "More than one PerformanceData entry for the same "
+                        "track",
+                        id_};
+                }
+            };
+
+        if (!found)
+        {
+            db_.pimpl_->perfdata_db_
+                << "INSERT INTO PerformanceData (id, isAnalyzed, isRendered, "
+                   "trackData, highResolutionWaveFormData, "
+                   "overviewWaveFormData, beatData, quickCues, loops, "
+                   "hasSeratoValues) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                << id_                                //
+                << 0.0                                // isAnalyzed
+                << 0.0                                // isRendered
+                << track_data{}.encode()              //
+                << high_res_waveform_data{}.encode()  //
+                << overview_waveform_data{}.encode()  //
+                << beat_data{}.encode()               //
+                << quick_cues_data{}.encode()         //
+                << loops_data{}.encode()              //
+                << 0.0;                               // hasSeratoValues
+
+            if (db_.version() >= version_1_7_1)
+            {
+                db_.pimpl_->perfdata_db_
+                    << "UPDATE PerformanceData SET hasRekordboxValues = 0 "
+                       "WHERE id = ?"
+                    << id_;
+            }
+        }
+
+        db_.pimpl_->perfdata_db_
+            << (std::string{"UPDATE PerformanceData SET "} + column_name +
+                " = ? WHERE id = ?")
+            << content.encode() << id_;
+    }
+
+    beat_data get_beat_data() const
+    {
+        return get_perfdata<beat_data>("beatData");
+    }
+
+    void set_beat_data(beat_data data) const { set_perfdata("beatData", data); }
+
+    high_res_waveform_data get_high_res_waveform_data() const
+    {
+        return get_perfdata<high_res_waveform_data>(
+            "highResolutionWaveFormData");
+    }
+
+    void set_high_res_waveform_data(high_res_waveform_data data) const
+    {
+        set_perfdata("highResolutionWaveFormData", data);
+    }
+
+    loops_data get_loops_data() const
+    {
+        return get_perfdata<loops_data>("loops");
+    }
+
+    void set_loops_data(loops_data data) const { set_perfdata("loops", data); }
+
+    overview_waveform_data get_overview_waveform_data() const
+    {
+        return get_perfdata<overview_waveform_data>("overviewWaveFormData");
+    }
+
+    void set_overview_waveform_data(overview_waveform_data data) const
+    {
+        set_perfdata("overviewWaveFormData", data);
+    }
+
+    quick_cues_data get_quick_cues_data() const
+    {
+        return get_perfdata<quick_cues_data>("quickCues");
+    }
+
+    void set_quick_cues_data(quick_cues_data data) const
+    {
+        set_perfdata("quickCues", data);
+    }
+
+    track_data get_track_data() const
+    {
+        return get_perfdata<track_data>("trackData");
+    }
+
+    void set_track_data(track_data data) const
+    {
+        set_perfdata("trackData", data);
+    }
+
+    database db_;
+    int64_t id_;
 };
 
-track::track() : pimpl_{new impl{}} {}
-
-track::track(const database &database, int id) : pimpl_{new impl{database, id}}
-{
-}
-
-/**
- * \brief Copy constructor
- */
-track::track(const track &other) : pimpl_{new impl{*other.pimpl_, true}} {}
-
-/**
- * \brief Move constructor
- */
-track::track(track &&other) noexcept = default;
+track::track(const track& other) noexcept = default;
 
 track::~track() = default;
 
-/**
- * \brief Copy assignment
- */
-track &track::operator=(const track &other)
+track& track::operator=(const track& other) noexcept = default;
+
+std::vector<beatgrid_marker> track::adjusted_beatgrid() const
 {
-    if (this != &other)
-        pimpl_.reset(new impl{*other.pimpl_, true});
-    return *this;
+    auto beat_d = pimpl_->get_beat_data();
+    return std::move(beat_d.adjusted_beatgrid);
 }
 
-/**
- * \brief Move assignment
- */
-track &track::operator=(track &&other) noexcept = default;
-
-int track::id() const
+void track::set_adjusted_beatgrid(std::vector<beatgrid_marker> beatgrid) const
 {
-    return pimpl_->id_;
+    db().pimpl_->perfdata_db_ << "BEGIN";
+    auto beat_d = pimpl_->get_beat_data();
+    beat_d.adjusted_beatgrid = std::move(beatgrid);
+    pimpl_->set_beat_data(std::move(beat_d));
+    db().pimpl_->perfdata_db_ << "COMMIT";
 }
 
-int track::track_number() const
+double track::adjusted_main_cue() const
 {
-    return pimpl_->track_row_.play_order;
+    return pimpl_->get_quick_cues_data().adjusted_main_cue;
 }
 
-std::chrono::seconds track::duration() const
+void track::set_adjusted_main_cue(double sample_offset) const
 {
-    return std::chrono::seconds{pimpl_->track_row_.length};
+    db().pimpl_->perfdata_db_ << "BEGIN";
+    auto quick_cues_d = pimpl_->get_quick_cues_data();
+    quick_cues_d.adjusted_main_cue = sample_offset;
+    pimpl_->set_quick_cues_data(std::move(quick_cues_d));
+    db().pimpl_->perfdata_db_ << "COMMIT";
 }
 
-int track::bpm() const
+boost::optional<std::string> track::album() const
 {
-    return pimpl_->track_row_.bpm;
+    return pimpl_->get_metadata_str(metadata_str_type::album);
 }
 
-int track::year() const
+void track::set_album(boost::optional<boost::string_view> album) const
 {
-    return pimpl_->track_row_.year;
+    pimpl_->set_metadata_str(metadata_str_type::album, album);
 }
 
-std::string track::title() const
+void track::set_album(boost::string_view album) const
 {
-    return pimpl_->str_metadata_vec_[metadata_types::title].text.value_or("");
+    set_album(boost::make_optional(album));
 }
 
-std::string track::artist() const
+boost::optional<int64_t> track::album_art_id() const
 {
-    return pimpl_->str_metadata_vec_[metadata_types::artist].text.value_or("");
+    int64_t cell = pimpl_->get_cell<int64_t>("idAlbumArt");
+    boost::optional<int64_t> album_art_id;
+    if (cell < 1)
+    {
+        // TODO (haslersn): Throw something.
+    }
+    else if (cell > 1)
+    {
+        album_art_id = cell;
+    }
+    return album_art_id;
 }
 
-std::string track::album() const
+void track::set_album_art_id(boost::optional<int64_t> album_art_id) const
 {
-    return pimpl_->str_metadata_vec_[metadata_types::album].text.value_or("");
+    if (album_art_id && *album_art_id <= 1)
+    {
+        // TODO (haslersn): Throw something.
+    }
+    pimpl_->set_cell("idAlbumArt", album_art_id.value_or(1));
+    // 1 is the magic number for "no album art"
 }
 
-std::string track::genre() const
+void track::set_album_art_id(int64_t album_art_id) const
 {
-    return pimpl_->str_metadata_vec_[metadata_types::genre].text.value_or("");
+    set_album_art_id(boost::make_optional(album_art_id));
 }
 
-std::string track::comment() const
+boost::optional<std::string> track::artist() const
 {
-    return pimpl_->str_metadata_vec_[metadata_types::comment].text.value_or("");
+    return pimpl_->get_metadata_str(metadata_str_type::artist);
 }
 
-std::string track::publisher() const
+void track::set_artist(boost::optional<boost::string_view> artist) const
 {
-    return pimpl_->str_metadata_vec_[metadata_types::publisher].text.value_or(
-        "");
+    pimpl_->set_metadata_str(metadata_str_type::artist, artist);
 }
 
-std::string track::composer() const
+void track::set_artist(boost::string_view artist) const
 {
-    return pimpl_->str_metadata_vec_[metadata_types::composer].text.value_or(
-        "");
+    set_artist(boost::make_optional(artist));
 }
 
-musical_key track::key() const
+boost::optional<double> track::average_loudness() const
 {
-    auto key_int_value =
-        pimpl_->int_metadata_vec_[metadata_integer_types::musical_key]
-            .value.value_or(1);
-    return (musical_key)key_int_value;
+    return pimpl_->get_track_data().average_loudness;
 }
 
-std::string track::path() const
+void track::set_average_loudness(boost::optional<double> average_loudness) const
 {
-    return pimpl_->track_row_.path;
+    db().pimpl_->perfdata_db_ << "BEGIN";
+    auto track_d = pimpl_->get_track_data();
+    track_d.average_loudness = average_loudness;
+    pimpl_->set_track_data(track_d);
+    db().pimpl_->perfdata_db_ << "COMMIT";
 }
 
-std::string track::filename() const
+void track::set_average_loudness(double average_loudness) const
 {
-    return pimpl_->track_row_.filename;
+    set_average_loudness(boost::make_optional(average_loudness));
+}
+
+boost::optional<int64_t> track::bitrate() const
+{
+    return pimpl_->get_cell<boost::optional<int64_t>>("bitrate");
+}
+
+void track::set_bitrate(boost::optional<int64_t> bitrate) const
+{
+    pimpl_->set_cell("bitrate", bitrate);
+}
+
+void track::set_bitrate(int64_t bitrate) const
+{
+    set_bitrate(boost::make_optional(bitrate));
+}
+
+boost::optional<double> track::bpm() const
+{
+    return pimpl_->get_cell<boost::optional<double>>("bpmAnalyzed");
+}
+
+void track::set_bpm(boost::optional<double> bpm) const
+{
+    pimpl_->set_cell("bpmAnalyzed", bpm);
+    boost::optional<int64_t> ceiled_bpm;
+    if (bpm)
+    {
+        ceiled_bpm = static_cast<int64_t>(std::ceil(*bpm));
+    }
+    pimpl_->set_cell("bpm", ceiled_bpm);
+}
+
+void track::set_bpm(double bpm) const
+{
+    set_bpm(boost::make_optional(bpm));
+}
+
+boost::optional<std::string> track::comment() const
+{
+    return pimpl_->get_metadata_str(metadata_str_type::comment);
+}
+
+void track::set_comment(boost::optional<boost::string_view> comment) const
+{
+    pimpl_->set_metadata_str(metadata_str_type::comment, comment);
+}
+
+void track::set_comment(boost::string_view comment) const
+{
+    set_comment(boost::make_optional(comment));
+}
+
+boost::optional<std::string> track::composer() const
+{
+    return pimpl_->get_metadata_str(metadata_str_type::composer);
+}
+
+void track::set_composer(boost::optional<boost::string_view> composer) const
+{
+    pimpl_->set_metadata_str(metadata_str_type::composer, composer);
+}
+
+void track::set_composer(boost::string_view composer) const
+{
+    set_composer(boost::make_optional(composer));
+}
+
+std::vector<crate> track::containing_crates() const
+{
+    std::vector<crate> results;
+    db().pimpl_->music_db_
+            << "SELECT crateId FROM CrateTrackList WHERE trackId = ?" << id() >>
+        [&](int64_t id) {
+            results.push_back(crate{db(), id});
+        };
+    return results;
+}
+
+database track::db() const
+{
+    return pimpl_->db_;
+}
+
+std::vector<beatgrid_marker> track::default_beatgrid() const
+{
+    auto beat_d = pimpl_->get_beat_data();
+    return std::move(beat_d.default_beatgrid);
+}
+
+void track::set_default_beatgrid(std::vector<beatgrid_marker> beatgrid) const
+{
+    db().pimpl_->perfdata_db_ << "BEGIN";
+    auto beat_d = pimpl_->get_beat_data();
+    beat_d.default_beatgrid = std::move(beatgrid);
+    pimpl_->set_beat_data(std::move(beat_d));
+    db().pimpl_->perfdata_db_ << "COMMIT";
+}
+
+double track::default_main_cue() const
+{
+    return pimpl_->get_quick_cues_data().default_main_cue;
+}
+
+void track::set_default_main_cue(double sample_offset) const
+{
+    db().pimpl_->perfdata_db_ << "BEGIN";
+    auto quick_cues_d = pimpl_->get_quick_cues_data();
+    quick_cues_d.default_main_cue = sample_offset;
+    pimpl_->set_quick_cues_data(std::move(quick_cues_d));
+    db().pimpl_->perfdata_db_ << "COMMIT";
+}
+
+boost::optional<milliseconds> track::duration() const
+{
+    boost::optional<milliseconds> result;
+    auto smp = sampling();
+    if (smp)
+    {
+        double secs = smp->sample_count / smp->sample_rate;
+        return milliseconds{static_cast<int64_t>(1000 * secs)};
+    }
+    auto secs = pimpl_->get_cell<boost::optional<int64_t>>("length");
+    if (secs)
+    {
+        return milliseconds{*secs * 1000};
+    }
+    return boost::none;
 }
 
 std::string track::file_extension() const
 {
-    return pimpl_->str_metadata_vec_[metadata_types::file_extension]
-        .text.value_or("");
+    auto rel_path = relative_path();
+    return get_file_extension(rel_path)
+        .value_or(boost::string_view{})
+        .to_string();
 }
 
-std::chrono::system_clock::time_point track::last_modified_at() const
+std::string track::filename() const
 {
-    return std::chrono::system_clock::time_point{std::chrono::seconds{
-        pimpl_->int_metadata_vec_[metadata_integer_types::last_modified_ts]
-            .value.value_or(0)}};
+    auto rel_path = relative_path();
+    return get_filename(rel_path).to_string();
 }
 
-int track::bitrate() const
+boost::optional<std::string> track::genre() const
 {
-    return pimpl_->track_row_.bitrate;
+    return pimpl_->get_metadata_str(metadata_str_type::genre);
 }
 
-bool track::ever_played() const
+void track::set_genre(boost::optional<boost::string_view> genre) const
 {
-    auto &entry = pimpl_->str_metadata_vec_[metadata_types::ever_played].text;
-    return entry && entry.value() == "1";
+    pimpl_->set_metadata_str(metadata_str_type::genre, genre);
 }
 
-std::chrono::system_clock::time_point track::last_played_at() const
+void track::set_genre(boost::string_view genre) const
 {
-    return std::chrono::system_clock::time_point{std::chrono::seconds{
-        pimpl_->int_metadata_vec_[metadata_integer_types::last_played_ts]
-            .value.value_or(0)}};
-}
-std::chrono::system_clock::time_point track::last_accessed_at() const
-{
-    return std::chrono::system_clock::time_point{std::chrono::seconds{
-        pimpl_->int_metadata_vec_[metadata_integer_types::last_accessed_ts]
-            .value.value_or(0)}};
-}
-bool track::imported() const
-{
-    return pimpl_->track_row_.is_external_track != 0;
+    set_genre(boost::make_optional(genre));
 }
 
-std::string track::external_database_uuid() const
+boost::optional<hot_cue> track::hot_cue_at(int32_t index) const
 {
-    return pimpl_->track_row_.uuid_of_external_database.value_or("");
+    auto quick_cues_d = pimpl_->get_quick_cues_data();
+    return std::move(quick_cues_d.hot_cues[index]);
 }
 
-int track::track_id_in_external_database() const
+void track::set_hot_cue_at(int32_t index, boost::optional<hot_cue> cue) const
 {
-    return pimpl_->track_row_.id_track_in_external_database.value_or(0);
+    db().pimpl_->perfdata_db_ << "BEGIN";
+    auto quick_cues_d = pimpl_->get_quick_cues_data();
+    quick_cues_d.hot_cues[index] = std::move(cue);
+    pimpl_->set_quick_cues_data(std::move(quick_cues_d));
+    db().pimpl_->perfdata_db_ << "END";
 }
 
-int track::album_art_id() const
+void track::set_hot_cue_at(int32_t index, hot_cue cue) const
 {
-    return pimpl_->track_row_.id_album_art;
+    set_hot_cue_at(index, boost::make_optional(cue));
 }
 
-bool track::has_title() const
+std::array<boost::optional<hot_cue>, 8> track::hot_cues() const
 {
-    return (bool)pimpl_->str_metadata_vec_[metadata_types::title].text;
+    auto quick_cues_d = pimpl_->get_quick_cues_data();
+    return std::move(quick_cues_d.hot_cues);
 }
 
-bool track::has_artist() const
+void track::set_hot_cues(std::array<boost::optional<hot_cue>, 8> cues) const
 {
-    return (bool)pimpl_->str_metadata_vec_[metadata_types::artist].text;
+    db().pimpl_->perfdata_db_ << "BEGIN";
+    // TODO (haslersn): The following can be optimized because in this case we
+    // overwrite all hot_cues
+    auto quick_cues_d = pimpl_->get_quick_cues_data();
+    quick_cues_d.hot_cues = std::move(cues);
+    pimpl_->set_quick_cues_data(std::move(quick_cues_d));
+    db().pimpl_->perfdata_db_ << "END";
 }
 
-bool track::has_album() const
+int64_t track::id() const
 {
-    return (bool)pimpl_->str_metadata_vec_[metadata_types::album].text;
+    return pimpl_->id_;
 }
 
-bool track::has_genre() const
+boost::optional<track_import_info> track::import_info() const
 {
-    return (bool)pimpl_->str_metadata_vec_[metadata_types::genre].text;
-}
-
-bool track::has_comment() const
-{
-    return (bool)pimpl_->str_metadata_vec_[metadata_types::comment].text;
-}
-
-bool track::has_publisher() const
-{
-    return (bool)pimpl_->str_metadata_vec_[metadata_types::publisher].text;
-}
-
-bool track::has_composer() const
-{
-    return (bool)pimpl_->str_metadata_vec_[metadata_types::composer].text;
-}
-
-bool track::has_key() const
-{
-    return (bool)pimpl_->int_metadata_vec_[metadata_integer_types::musical_key]
-        .value;
-}
-
-void track::set_track_number(int track_number)
-{
-    pimpl_->track_row_.play_order = track_number;
-}
-
-void track::set_duration(std::chrono::seconds duration)
-{
-    pimpl_->track_row_.length = duration.count();
-    pimpl_->track_row_.length_calculated = duration.count();
-
-    // Set string metadata, type 10, as "MM:SS";
-    std::stringstream ss;
-    ss << std::setw(2) << std::setfill('0');
-    ss << (duration.count() / 60);
-    ss << ":";
-    ss << (duration.count() % 60);
-    pimpl_->str_metadata_vec_[metadata_types::duration_mm_ss].text = ss.str();
-}
-
-void track::set_bpm(int bpm)
-{
-    pimpl_->track_row_.bpm = bpm;
-    pimpl_->track_row_.bpm_analysed = bpm;
-}
-
-void track::set_year(int year)
-{
-    pimpl_->track_row_.year = year;
-}
-
-void track::set_title(const std::string &title)
-{
-    pimpl_->str_metadata_vec_[metadata_types::title].text =
-        title != "" ? boost::optional<std::string>(title) : boost::none;
-}
-
-void track::set_artist(const std::string &artist)
-{
-    pimpl_->str_metadata_vec_[metadata_types::artist].text =
-        artist != "" ? boost::optional<std::string>(artist) : boost::none;
-}
-
-void track::set_album(const std::string &album)
-{
-    pimpl_->str_metadata_vec_[metadata_types::album].text =
-        album != "" ? boost::optional<std::string>(album) : boost::none;
-}
-
-void track::set_genre(const std::string &genre)
-{
-    pimpl_->str_metadata_vec_[metadata_types::genre].text =
-        genre != "" ? boost::optional<std::string>(genre) : boost::none;
-}
-
-void track::set_comment(const std::string &comment)
-{
-    pimpl_->str_metadata_vec_[metadata_types::comment].text =
-        comment != "" ? boost::optional<std::string>(comment) : boost::none;
-}
-
-void track::set_publisher(const std::string &publisher)
-{
-    pimpl_->str_metadata_vec_[metadata_types::publisher].text =
-        publisher != "" ? boost::optional<std::string>(publisher) : boost::none;
-}
-
-void track::set_composer(const std::string &composer)
-{
-    pimpl_->str_metadata_vec_[metadata_types::composer].text =
-        composer != "" ? boost::optional<std::string>(composer) : boost::none;
-}
-
-void track::set_key(musical_key key)
-{
-    pimpl_->int_metadata_vec_[metadata_integer_types::musical_key].value =
-        (int)key;
-}
-
-void track::set_path(const std::string &path)
-{
-    pimpl_->track_row_.path = path;
-}
-
-void track::set_filename(const std::string &filename)
-{
-    pimpl_->track_row_.filename = filename;
-}
-
-void track::set_file_extension(const std::string &file_extension)
-{
-    pimpl_->str_metadata_vec_[metadata_types::file_extension].text =
-        file_extension;
-}
-
-void track::set_last_modified_at(
-    std::chrono::system_clock::time_point last_modified_at)
-{
-    pimpl_->int_metadata_vec_[metadata_integer_types::last_modified_ts].value =
-        last_modified_at.time_since_epoch().count() != 0
-            ? boost::optional<int>{last_modified_at.time_since_epoch().count() *
-                                   std::chrono::system_clock::period::num /
-                                   std::chrono::system_clock::period::den}
-            : boost::none;
-}
-
-void track::set_bitrate(int bitrate)
-{
-    pimpl_->track_row_.bitrate = bitrate;
-}
-
-void track::set_ever_played(bool ever_played)
-{
-    pimpl_->str_metadata_vec_[metadata_types::ever_played].text =
-        ever_played ? boost::optional<std::string>{"1"} : boost::none;
-}
-
-void track::set_last_played_at(
-    std::chrono::system_clock::time_point last_played_at)
-{
-    pimpl_->int_metadata_vec_[metadata_integer_types::last_played_ts].value =
-        last_played_at.time_since_epoch().count() != 0
-            ? boost::optional<int>{last_played_at.time_since_epoch().count() *
-                                   std::chrono::system_clock::period::num /
-                                   std::chrono::system_clock::period::den}
-            : boost::none;
-}
-
-void track::set_last_accessed_at(
-    std::chrono::system_clock::time_point last_accessed_at)
-{
-    // Field is always truncated to the midnight at the end of the day the
-    // track is played, it seems.
-    auto secs = last_accessed_at.time_since_epoch().count() *
-                std::chrono::system_clock::period::num /
-                std::chrono::system_clock::period::den;
-    if (secs % 86400 != 0)
-        secs = secs + 86400 - (secs % 86400);
-    last_accessed_at =
-        std::chrono::system_clock::time_point{std::chrono::seconds{secs}};
-
-    pimpl_->int_metadata_vec_[metadata_integer_types::last_accessed_ts].value =
-        last_accessed_at.time_since_epoch().count() != 0
-            ? boost::optional<int>{last_accessed_at.time_since_epoch().count() *
-                                   std::chrono::system_clock::period::num /
-                                   std::chrono::system_clock::period::den}
-            : boost::none;
-}
-
-void track::set_imported(bool imported)
-{
-    pimpl_->track_row_.is_external_track = imported ? 1 : 0;
-    if (!imported)
+    if (pimpl_->get_cell<int64_t>("isExternalTrack") == 0)
     {
-        pimpl_->track_row_.uuid_of_external_database = boost::none;
-        pimpl_->track_row_.id_track_in_external_database = boost::none;
+        return boost::none;
     }
+    return track_import_info{
+        pimpl_->get_cell<std::string>("uuidOfExternalDatabase"),
+        pimpl_->get_cell<int64_t>("idTrackInExternalDatabase")};
+    // TODO (haslersn): How should we handle cells that unexpectedly don't
+    // contain integral values?
 }
 
-void track::set_imported(
-    bool imported, const std::string &external_database_uuid,
-    int track_id_in_external_database)
+void track::set_import_info(
+    const boost::optional<track_import_info>& import_info) const
 {
-    pimpl_->track_row_.is_external_track = imported ? 1 : 0;
-    pimpl_->track_row_.uuid_of_external_database = external_database_uuid;
-    pimpl_->track_row_.id_track_in_external_database =
-        track_id_in_external_database;
-}
-
-void track::set_album_art_id(int album_art_id)
-{
-    pimpl_->track_row_.id_album_art = album_art_id;
-}
-
-void track::set_no_album_art()
-{
-    // 1 is the magic number for "no album art", and it is a valid entry in the
-    // AlbumArt table with no image data
-    pimpl_->track_row_.id_album_art = 1;
-}
-
-/**
- * \brief Clone the contents of this track to a new, unsaved track
- *
- * Note that the new copied track will not be considered to belong in any
- * database, and hence will have its `id` set to zero.
- */
-track track::clone_unsaved() const
-{
-    // We will achieve an unsaved clone by simply copying and then erasing
-    // any reference to the previous database.
-    auto copy = *this;
-    copy.pimpl_->id_ = 0;
-    copy.pimpl_->load_db_uuid_ = "";
-    return copy;
-}
-
-/**
- * Save a track to a given database
- *
- * If the track came from the supplied database originally, it is updated
- * in-place.  If the track does not already exist in the supplied database,
- * then it will be saved as a new track there.  The `id()` method will
- * return a new value after a new track is saved.
- */
-void track::save(const database &database)
-{
-    // Check mandatory fields
-    if (path() == "")
-        throw std::invalid_argument{"Path must be populated"};
-    if (filename() == "")
-        throw std::invalid_argument{"Filename must be populated"};
-
-    // Work out if we are creating a new entry or not
-    auto new_entry = id() == 0 || pimpl_->load_db_uuid_ != database.uuid();
-
-    // Do all DB writing in a transaction
-    sqlite::database m_db{database.music_db_path()};
-    m_db << "BEGIN";
-
-    // Insert/update the Track table
-    if (new_entry)
+    if (import_info)
     {
-        // Insert a new entry in the track table
-        if (database.version() >= version_1_7_1)
-        {
-            m_db << "INSERT INTO Track ("
-                    "  playOrder, length, lengthCalculated, bpm, "
-                    "  year, path, filename, bitrate, bpmAnalyzed, trackType, "
-                    "  isExternalTrack, uuidOfExternalDatabase, "
-                    "  idTrackInExternalDatabase, idAlbumArt, pdbImportKey"
-                    ")"
-                    "VALUES ("
-                    "  ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?"
-                    ")"
-                 << pimpl_->track_row_.play_order << pimpl_->track_row_.length
-                 << pimpl_->track_row_.length_calculated
-                 << pimpl_->track_row_.bpm << pimpl_->track_row_.year
-                 << pimpl_->track_row_.path << pimpl_->track_row_.filename
-                 << pimpl_->track_row_.bitrate
-                 << pimpl_->track_row_.bpm_analysed
-                 << pimpl_->track_row_.track_type
-                 << pimpl_->track_row_.is_external_track
-                 << pimpl_->track_row_.uuid_of_external_database
-                 << pimpl_->track_row_.id_track_in_external_database
-                 << pimpl_->track_row_.id_album_art
-                 << pimpl_->track_row_.pdb_import_key;
-        }
-        else
-        {
-            m_db << "INSERT INTO Track ("
-                    "  playOrder, length, lengthCalculated, bpm, "
-                    "  year, path, filename, bitrate, bpmAnalyzed, trackType, "
-                    "  isExternalTrack, uuidOfExternalDatabase, "
-                    "  idTrackInExternalDatabase, idAlbumArt"
-                    ")"
-                    "VALUES ("
-                    "  ?,?,?,?,?,?,?,?,?,?,?,?,?,?"
-                    ")"
-                 << pimpl_->track_row_.play_order << pimpl_->track_row_.length
-                 << pimpl_->track_row_.length_calculated
-                 << pimpl_->track_row_.bpm << pimpl_->track_row_.year
-                 << pimpl_->track_row_.path << pimpl_->track_row_.filename
-                 << pimpl_->track_row_.bitrate
-                 << pimpl_->track_row_.bpm_analysed
-                 << pimpl_->track_row_.track_type
-                 << pimpl_->track_row_.is_external_track
-                 << pimpl_->track_row_.uuid_of_external_database
-                 << pimpl_->track_row_.id_track_in_external_database
-                 << pimpl_->track_row_.id_album_art;
-        }
-        pimpl_->id_ = m_db.last_insert_rowid();
+        set_import_info(*import_info);
     }
     else
     {
-        // Update existing entry
-        if (database.version() >= version_1_7_1)
-        {
-            m_db << "UPDATE Track SET "
-                    "  playOrder = ?, "
-                    "  length = ?, "
-                    "  lengthCalculated = ?, "
-                    "  bpm = ?, "
-                    "  year = ?, "
-                    "  path = ?, "
-                    "  filename = ?, "
-                    "  bitrate = ?, "
-                    "  bpmAnalyzed = ?, "
-                    "  trackType = ?, "
-                    "  isExternalTrack = ?, "
-                    "  uuidOfExternalDatabase = ?, "
-                    "  idTrackInExternalDatabase = ?, "
-                    "  idAlbumArt = ?, "
-                    "  pdbImportKey = ? "
-                    "WHERE id = ?"
-                 << pimpl_->track_row_.play_order << pimpl_->track_row_.length
-                 << pimpl_->track_row_.length_calculated
-                 << pimpl_->track_row_.bpm << pimpl_->track_row_.year
-                 << pimpl_->track_row_.path << pimpl_->track_row_.filename
-                 << pimpl_->track_row_.bitrate
-                 << pimpl_->track_row_.bpm_analysed
-                 << pimpl_->track_row_.track_type
-                 << pimpl_->track_row_.is_external_track
-                 << pimpl_->track_row_.uuid_of_external_database
-                 << pimpl_->track_row_.id_track_in_external_database
-                 << pimpl_->track_row_.id_album_art
-                 << pimpl_->track_row_.pdb_import_key << pimpl_->id_;
-        }
-        else
-        {
-            m_db << "UPDATE Track SET "
-                    "  playOrder = ?, "
-                    "  length = ?, "
-                    "  lengthCalculated = ?, "
-                    "  bpm = ?, "
-                    "  year = ?, "
-                    "  path = ?, "
-                    "  filename = ?, "
-                    "  bitrate = ?, "
-                    "  bpmAnalyzed = ?, "
-                    "  trackType = ?, "
-                    "  isExternalTrack = ?, "
-                    "  uuidOfExternalDatabase = ?, "
-                    "  idTrackInExternalDatabase = ?, "
-                    "  idAlbumArt = ? "
-                    "WHERE id = ?"
-                 << pimpl_->track_row_.play_order << pimpl_->track_row_.length
-                 << pimpl_->track_row_.length_calculated
-                 << pimpl_->track_row_.bpm << pimpl_->track_row_.year
-                 << pimpl_->track_row_.path << pimpl_->track_row_.filename
-                 << pimpl_->track_row_.bitrate
-                 << pimpl_->track_row_.bpm_analysed
-                 << pimpl_->track_row_.track_type
-                 << pimpl_->track_row_.is_external_track
-                 << pimpl_->track_row_.uuid_of_external_database
-                 << pimpl_->track_row_.id_track_in_external_database
-                 << pimpl_->track_row_.id_album_art << pimpl_->id_;
-        }
+        pimpl_->set_cell("isExternalTrack", 0);
+        pimpl_->set_cell("uuidOfExternalDatabase", nullptr);
+        pimpl_->set_cell("idTrackInExternalDatabase", nullptr);
     }
-
-    // Insert/update the Metadata table
-    for (auto &str_metadata : pimpl_->str_metadata_vec_)
-    {
-        if (str_metadata.persist_nulls || str_metadata.text)
-        {
-            str_metadata.id = pimpl_->id_;
-            m_db << "INSERT OR REPLACE INTO MetaData (id, type, text) "
-                    "VALUES (?, ?, ?)"
-                 << str_metadata.id << str_metadata.type << str_metadata.text;
-        }
-    }
-
-    // Insert/update the MetadataInteger table
-    // TODO - integer metadata should actually be recorded in the order
-    // 4,5,1,2,3,6,8,7,9,10,11 to be consistent with real hardware players!
-    for (auto &int_metadata : pimpl_->int_metadata_vec_)
-    {
-        if (int_metadata.persist_nulls || int_metadata.value)
-        {
-            int_metadata.id = pimpl_->id_;
-            m_db << "INSERT OR REPLACE INTO MetaDataInteger (id, type, value) "
-                    "VALUES (?, ?, ?)"
-                 << int_metadata.id << int_metadata.type << int_metadata.value;
-        }
-    }
-
-    m_db << "COMMIT";
-    pimpl_->load_db_uuid_ = database.uuid();
 }
 
-/**
- * \brief Get a list of all track ids in a given database
- */
-std::vector<int> all_track_ids(const database &database)
+void track::set_import_info(const track_import_info& import_info) const
 {
-    sqlite::database m_db{database.music_db_path()};
-
-    std::vector<int> ids;
-    m_db << "SELECT id FROM Track ORDER BY id" >>
-        [&ids](int id) { ids.push_back(id); };
-
-    return ids;
+    pimpl_->set_cell("isExternalTrack", 1);
+    pimpl_->set_cell("uuidOfExternalDatabase", import_info.external_db_uuid());
+    pimpl_->set_cell(
+        "idTrackInExternalDatabase", import_info.external_track_id());
 }
 
-/**
- * \brief Get a list of all track ids that refer to a specific file path
- */
-std::vector<int> find_track_ids_by_path(
-    const database &database, const std::string &path)
+bool track::is_valid() const
 {
-    sqlite::database m_db{database.music_db_path()};
+    bool valid = false;
+    db().pimpl_->music_db_ << "SELECT COUNT(*) FROM Track WHERE id = ?"
+                           << id() >>
+        [&](int count) {
+            if (count == 1)
+            {
+                valid = true;
+            }
+            else if (count > 1)
+            {
+                throw track_database_inconsistency{
+                    "More than one track with the same ID", id()};
+            }
+        };
+    return valid;
+}
 
-    std::vector<int> ids;
-    m_db << "SELECT id FROM Track "
-            "WHERE path = ?"
-            "ORDER BY id"
-         << path >>
-        [&ids](int id) { ids.push_back(id); };
+boost::optional<musical_key> track::key() const
+{
+    boost::optional<musical_key> result;
+    auto key_num = pimpl_->get_metadata_int(metadata_int_type::musical_key);
+    if (key_num)
+    {
+        result = static_cast<musical_key>(*key_num);
+    }
+    return result;
+}
 
-    return ids;
+void track::set_key(boost::optional<musical_key> key) const
+{
+    boost::optional<int64_t> key_num;
+    if (key)
+    {
+        key_num = static_cast<int64_t>(*key);
+    }
+
+    db().pimpl_->perfdata_db_ << "BEGIN";
+    auto track_d = pimpl_->get_track_data();
+    track_d.key = key;
+    pimpl_->set_track_data(track_d);
+    db().pimpl_->perfdata_db_ << "COMMIT";
+
+    // TODO (haslersn): atomic?
+    pimpl_->set_metadata_int(metadata_int_type::musical_key, key_num);
+}
+
+void track::set_key(musical_key key) const
+{
+    set_key(boost::make_optional(key));
+}
+
+boost::optional<system_clock::time_point> track::last_accessed_at() const
+{
+    // TODO (haslersn): Is there a difference between
+    // `track::last_accessed_at()` and `track::last_played_at()`, except for the
+    // ceiling of the timestamp?
+    return to_time_point(
+        pimpl_->get_metadata_int(metadata_int_type::last_accessed_ts));
+}
+
+void track::set_last_accessed_at(
+    boost::optional<system_clock::time_point> accessed_at) const
+{
+    if (accessed_at)
+    {
+        // Field is always ceiled to the midnight at the end of the day the
+        // track is played, it seems.
+        // TODO (haslersn): ^ Why "played" and not "accessed"?
+        // TODO (haslersn): Shouldn't we just set the unceiled time? This would
+        // leave the decision whether to ceil it to the library user. Also, it
+        // would make `track::last_accessed_at()` consistent with the value that
+        // has been set using this method.
+        auto timestamp = *to_timestamp(accessed_at);
+        auto secs_per_day = 86400;
+        timestamp += secs_per_day - 1;
+        timestamp -= timestamp % secs_per_day;
+        pimpl_->set_metadata_int(
+            metadata_int_type::last_accessed_ts, timestamp);
+    }
+    else
+    {
+        pimpl_->set_metadata_int(
+            metadata_int_type::last_accessed_ts, boost::none);
+    }
+}
+
+void track::set_last_accessed_at(system_clock::time_point accessed_at) const
+{
+    set_last_accessed_at(boost::make_optional(accessed_at));
+}
+
+boost::optional<system_clock::time_point> track::last_modified_at() const
+{
+    return to_time_point(
+        pimpl_->get_metadata_int(metadata_int_type::last_modified_ts));
+}
+
+void track::set_last_modified_at(
+    boost::optional<system_clock::time_point> modified_at) const
+{
+    pimpl_->set_metadata_int(
+        metadata_int_type::last_modified_ts, to_timestamp(modified_at));
+}
+
+void track::set_last_modified_at(system_clock::time_point modified_at) const
+{
+    set_last_modified_at(boost::make_optional(modified_at));
+}
+
+boost::optional<system_clock::time_point> track::last_played_at() const
+{
+    return to_time_point(
+        pimpl_->get_metadata_int(metadata_int_type::last_played_ts));
+}
+
+void track::set_last_played_at(
+    boost::optional<system_clock::time_point> played_at) const
+{
+    static boost::optional<boost::string_view> zero{"0"};
+    static boost::optional<boost::string_view> one{"1"};
+    pimpl_->set_metadata_str(
+        metadata_str_type::ever_played, played_at ? one : zero);
+    pimpl_->set_metadata_int(
+        metadata_int_type::last_played_ts, to_timestamp(played_at));
+    if (played_at)
+    {
+        // TODO (haslersn): Add entry to HistorylistTrackList
+    }
+    else
+    {
+        // TODO (haslersn): Should HistorylistTrackList now be cleared of this
+        // track?
+    }
+}
+
+void track::set_last_played_at(system_clock::time_point played_at) const
+{
+    set_last_played_at(boost::make_optional(played_at));
+}
+
+boost::optional<loop> track::loop_at(int32_t index) const
+{
+    auto loops_d = pimpl_->get_loops_data();
+    return std::move(loops_d.loops[index]);
+}
+
+void track::set_loop_at(int32_t index, boost::optional<loop> l) const
+{
+    db().pimpl_->perfdata_db_ << "BEGIN";
+    auto loops_d = pimpl_->get_loops_data();
+    loops_d.loops[index] = std::move(l);
+    pimpl_->set_loops_data(std::move(loops_d));
+    db().pimpl_->perfdata_db_ << "END";
+}
+
+void track::set_loop_at(int32_t index, loop l) const
+{
+    set_loop_at(index, boost::make_optional(l));
+}
+
+std::array<boost::optional<loop>, 8> track::loops() const
+{
+    auto loops_d = pimpl_->get_loops_data();
+    return std::move(loops_d.loops);
+}
+
+void track::set_loops(std::array<boost::optional<loop>, 8> cues) const
+{
+    db().pimpl_->perfdata_db_ << "BEGIN";
+    loops_data loops_d;
+    loops_d.loops = std::move(cues);
+    pimpl_->set_loops_data(std::move(loops_d));
+    db().pimpl_->perfdata_db_ << "END";
+}
+
+std::vector<waveform_entry> track::overview_waveform() const
+{
+    auto overview_waveform_d = pimpl_->get_overview_waveform_data();
+    return std::move(overview_waveform_d.waveform);
+}
+
+boost::optional<std::string> track::publisher() const
+{
+    return pimpl_->get_metadata_str(metadata_str_type::publisher);
+}
+
+void track::set_publisher(boost::optional<boost::string_view> publisher) const
+{
+    pimpl_->set_metadata_str(metadata_str_type::publisher, publisher);
+}
+
+void track::set_publisher(boost::string_view publisher) const
+{
+    set_publisher(boost::make_optional(publisher));
+}
+
+int64_t track::recommended_waveform_size() const
+{
+    auto smp = sampling();
+    if (!smp)
+    {
+        return 0;
+    }
+    if (smp->sample_count <= 0)
+    {
+        throw track_database_inconsistency{
+            "Track has non-positive sample count", id()};
+    }
+    if (smp->sample_rate <= 0)
+    {
+        throw track_database_inconsistency{"Track has non-positive sample rate",
+                                           id()};
+    }
+    return static_cast<int64_t>(smp->sample_count * 105 / smp->sample_rate);
+}
+
+std::string track::relative_path() const
+{
+    return pimpl_->get_cell<std::string>("path");
+}
+
+void track::set_relative_path(boost::string_view relative_path) const
+{
+    // TODO (haslersn): Should we check the path?
+    pimpl_->set_cell("path", std::string{relative_path});
+    auto filename = get_filename(relative_path);
+    pimpl_->set_cell("filename", std::string{filename});
+    auto extension = get_file_extension(filename);
+    pimpl_->set_metadata_str(metadata_str_type::file_extension, extension);
+}
+
+boost::optional<sampling_info> track::sampling() const
+{
+    return pimpl_->get_track_data().sampling;
+}
+
+void track::set_sampling(boost::optional<sampling_info> sampling) const
+{
+    // TODO (haslersn): atomic?
+
+    boost::optional<int64_t> secs;
+    if (sampling)
+    {
+        secs = static_cast<int64_t>(
+            sampling->sample_count / sampling->sample_rate);
+
+        // Set metadata duration_mm_ss as "MM:SS"
+        std::ostringstream oss;
+        oss << std::setw(2) << std::setfill('0');
+        oss << (*secs / 60);
+        oss << ":";
+        oss << (*secs % 60);
+        auto str = oss.str();
+        pimpl_->set_metadata_str(
+            metadata_str_type::duration_mm_ss, boost::string_view{str});
+    }
+    else
+    {
+        pimpl_->set_metadata_str(
+            metadata_str_type::duration_mm_ss, boost::none);
+    }
+    pimpl_->set_cell("length", secs);
+    pimpl_->set_cell("lengthCalculated", secs);
+
+    db().pimpl_->perfdata_db_ << "BEGIN";
+
+    // read old data
+    auto track_d = pimpl_->get_track_data();
+    auto beat_d = pimpl_->get_beat_data();
+    auto high_res_waveform_d = pimpl_->get_high_res_waveform_data();
+    auto overview_waveform_d = pimpl_->get_overview_waveform_data();
+
+    track_d.sampling = sampling;
+    beat_d.sampling = sampling;
+    pimpl_->set_beat_data(std::move(beat_d));
+    pimpl_->set_track_data(std::move(track_d));
+
+    int64_t sample_count = sampling ? sampling->sample_count : 0;
+
+    if (!high_res_waveform_d.waveform.empty())
+    {
+        high_res_waveform_d.samples_per_entry =
+            sample_count / high_res_waveform_d.waveform.size();
+        pimpl_->set_high_res_waveform_data(std::move(high_res_waveform_d));
+    }
+
+    if (!overview_waveform_d.waveform.empty())
+    {
+        overview_waveform_d.samples_per_entry =
+            sample_count / overview_waveform_d.waveform.size();
+        pimpl_->set_overview_waveform_data(std::move(overview_waveform_d));
+    }
+
+    db().pimpl_->perfdata_db_ << "COMMIT";
+}
+
+void track::set_sampling(sampling_info sampling) const
+{
+    set_sampling(boost::make_optional(sampling));
+}
+
+boost::optional<std::string> track::title() const
+{
+    return pimpl_->get_metadata_str(metadata_str_type::title);
+}
+
+void track::set_title(boost::optional<boost::string_view> title) const
+{
+    pimpl_->set_metadata_str(metadata_str_type::title, title);
+}
+
+void track::set_title(boost::string_view title) const
+{
+    set_title(boost::make_optional(title));
+}
+
+boost::optional<int32_t> track::track_number() const
+{
+    return pimpl_->get_cell<boost::optional<int32_t>>("playOrder");
+}
+
+void track::set_track_number(boost::optional<int32_t> track_number) const
+{
+    pimpl_->set_cell("playOrder", track_number);
+}
+
+void track::set_track_number(int32_t track_number) const
+{
+    set_track_number(boost::make_optional(track_number));
+}
+
+std::vector<waveform_entry> track::waveform() const
+{
+    auto high_res_waveform_d = pimpl_->get_high_res_waveform_data();
+    return std::move(high_res_waveform_d.waveform);
+}
+
+void track::set_waveform(std::vector<waveform_entry> waveform) const
+{
+    overview_waveform_data overview_waveform_d;
+    high_res_waveform_data high_res_waveform_d;
+
+    if (!waveform.empty())
+    {
+        // TODO (haslersn): atomic?
+        auto smp = sampling();
+        int64_t sample_count = smp ? smp->sample_count : 0;
+        overview_waveform_d.samples_per_entry = sample_count / 1024;
+        overview_waveform_d.waveform.reserve(1024);
+        for (int32_t i = 0; i < 1024; ++i)
+        {
+            auto entry = waveform[waveform.size() * (2 * i + 1) / 2048];
+            overview_waveform_d.waveform.push_back(entry);
+        }
+        high_res_waveform_d.samples_per_entry = sample_count / waveform.size();
+        high_res_waveform_d.waveform = std::move(waveform);
+    }
+
+    db().pimpl_->perfdata_db_ << "BEGIN";
+    pimpl_->set_overview_waveform_data(std::move(overview_waveform_d));
+    pimpl_->set_high_res_waveform_data(std::move(high_res_waveform_d));
+    db().pimpl_->perfdata_db_ << "END";
+}
+
+boost::optional<int32_t> track::year() const
+{
+    return pimpl_->get_cell<boost::optional<int32_t>>("year");
+}
+
+void track::set_year(boost::optional<int32_t> year) const
+{
+    pimpl_->set_cell("year", year);
+}
+
+void track::set_year(int32_t year) const
+{
+    set_year(boost::make_optional(year));
+}
+
+track::track(database database, int64_t id)
+    : pimpl_{std::make_shared<impl>(database, id)}
+{
 }
 
 }  // namespace enginelibrary

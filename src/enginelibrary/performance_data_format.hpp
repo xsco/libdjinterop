@@ -24,145 +24,87 @@
 
 #include <cstdint>
 #include <vector>
-#include "djinterop/enginelibrary/performance_data.hpp"
+
+#include <boost/optional.hpp>
+
+#include <djinterop/enginelibrary/performance_data.hpp>
 
 namespace djinterop
 {
 namespace enginelibrary
 {
-struct track_data_blob
+struct beat_data
 {
-    track_data_blob()
-        : sample_rate{0}, total_samples{0}, average_loudness{0.5}, key{0}
-    {
-    }
+    beat_data() noexcept = default;
 
-    track_data_blob(
-        double sample_rate, int64_t total_samples, double average_loudness,
-        int32_t key)
-        : sample_rate{sample_rate},
-          total_samples{total_samples},
-          average_loudness{average_loudness},
-          key{key}
-    {
-    }
+    boost::optional<sampling_info> sampling;
+    std::vector<beatgrid_marker> default_beatgrid;
+    std::vector<beatgrid_marker> adjusted_beatgrid;
 
-    double sample_rate;
-    int64_t total_samples;
-    double average_loudness;
-    int32_t key;
+    std::vector<char> encode() const;
+    static beat_data decode(const std::vector<char>& compressed_data);
 };
 
-struct beat_data_marker_blob
+struct high_res_waveform_data
 {
-    double sample_offset;
-    int64_t beat_index;
-    int32_t beats_until_next_marker;
-    int32_t unknown_field_1;
-};
+    high_res_waveform_data() noexcept = default;
 
-struct beat_data_blob
-{
-    beat_data_blob() : sample_rate{0}, total_samples{0}, is_beat_data_set{0} {}
-
-    beat_data_blob(
-        double sample_rate, int64_t total_samples, uint8_t is_beat_data_set)
-        : sample_rate{sample_rate},
-          total_samples{total_samples},
-          is_beat_data_set{is_beat_data_set}
-    {
-    }
-
-    double sample_rate;
-    int64_t total_samples;
-    uint8_t is_beat_data_set;
-    std::vector<beat_data_marker_blob> default_markers;
-    std::vector<beat_data_marker_blob> adjusted_markers;
-};
-
-struct quick_cues_blob
-{
-    quick_cues_blob()
-        : adjusted_main_cue_sample_offset{0},
-          is_main_cue_adjusted_from_default{false},
-          default_main_cue_sample_offset{0}
-    {
-        hot_cues.resize(8);
-    }
-
-    std::vector<track_hot_cue_point> hot_cues;
-    double adjusted_main_cue_sample_offset;
-    bool is_main_cue_adjusted_from_default;
-    double default_main_cue_sample_offset;
-};
-
-struct loops_blob
-{
-    loops_blob() { loops.resize(8); }
-
-    std::vector<track_loop> loops;
-};
-
-struct overview_waveform_blob
-{
-    overview_waveform_blob() : num_entries{0}, samples_per_entry{0} {}
-
-    int64_t num_entries;
     double samples_per_entry;
-    std::vector<overview_waveform_entry> entry_data;
+    std::vector<waveform_entry> waveform;
+
+    std::vector<char> encode() const;
+    static high_res_waveform_data decode(
+        const std::vector<char>& compressed_data);
 };
 
-struct high_res_waveform_blob
+struct loops_data
 {
-    high_res_waveform_blob() : num_entries{0}, samples_per_entry{0} {}
+    loops_data() = default;
 
-    int64_t num_entries;
-    double samples_per_entry;
-    std::vector<high_res_waveform_entry> entry_data;
+    std::array<boost::optional<loop>, 8> loops;  // Don't use curly braces here!
+
+    std::vector<char> encode() const;
+    static loops_data decode(
+        const std::vector<char>& raw_data);  // not compressed
 };
 
-// Extract track data from a byte array
-track_data_blob decode_track_data(
-    int track_id, const std::vector<char> &compressed_track_data);
+struct overview_waveform_data
+{
+    overview_waveform_data() noexcept = default;
 
-// Extract beat data from a byte array
-beat_data_blob decode_beat_data(
-    int track_id, const std::vector<char> &compressed_beat_data);
+    double samples_per_entry;
+    std::vector<waveform_entry> waveform;
 
-// Extract quick cues data from a byte array
-quick_cues_blob decode_quick_cues(
-    int track_id, const std::vector<char> &compressed_quick_cues_data);
+    std::vector<char> encode() const;
+    static overview_waveform_data decode(
+        const std::vector<char>& compressed_data);
+};
 
-// Extract loops from a byte array
-loops_blob decode_loops(int track_id, const std::vector<char> &loops_data);
+struct quick_cues_data
+{
+    quick_cues_data() = default;
 
-// Extract overview waveform from a byte array
-overview_waveform_blob decode_overview_waveform_data(
-    int track_id, const std::vector<char> &waveform_data);
+    std::array<boost::optional<hot_cue>, 8> hot_cues;
+    double adjusted_main_cue = 0;
+    double default_main_cue = 0;
 
-// Extract high-resolution waveform from a byte array
-high_res_waveform_blob decode_high_res_waveform_data(
-    int track_id, const std::vector<char> &waveform_data);
+    std::vector<char> encode() const;
 
-// Encode track data into a byte array
-std::vector<char> encode_track_data(const track_data_blob &track_data);
+    static quick_cues_data decode(const std::vector<char>& compressed_data);
+};
 
-// Encode beat data into a byte array
-std::vector<char> encode_beat_data(const beat_data_blob &beat_data);
+struct track_data
+{
+    track_data() noexcept = default;
 
-// Encode quick cues data into a byte array
-std::vector<char> encode_quick_cues(const quick_cues_blob &quick_cues);
+    boost::optional<sampling_info> sampling;
+    boost::optional<double> average_loudness;  // range (0, 1]
+    boost::optional<musical_key> key;
 
-// Encode loops into a byte array
-std::vector<char> encode_loops(const loops_blob &loops);
+    std::vector<char> encode() const;
 
-// Encode overview waveform data into a byte array
-std::vector<char> encode_overview_waveform_data(
-    const overview_waveform_blob &waveform_data);
-
-// Encode high-resolution waveform data into a byte array
-std::vector<char> encode_high_res_waveform_data(
-    const high_res_waveform_blob &waveform_data);
+    static track_data decode(const std::vector<char>& compressed_data);
+};
 
 }  // namespace enginelibrary
 }  // namespace djinterop

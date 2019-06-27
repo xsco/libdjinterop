@@ -15,40 +15,41 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "encode_decode_utils.hpp"
-
 #include <zlib.h>
 #include <algorithm>
 #include <stdexcept>
 #include <system_error>
 #include <vector>
 
+#include "enginelibrary/encode_decode_utils.hpp"
+
 namespace djinterop
 {
 namespace enginelibrary
 {
 // Uncompress a zlib'ed BLOB
-void zlib_uncompress(
-    const std::vector<char> &compressed, std::vector<char> &uncompressed)
+std::vector<char> zlib_uncompress(
+    const std::vector<char>& compressed, std::vector<char> uncompressed)
 {
-    if (compressed.size() == 0)
-        // No data, which is a valid situation
-        return;
-
-    if (compressed.size() < 4)
+    if (compressed.size() > 0 && compressed.size() < 4)
         throw std::length_error(
             "Compressed data is less than the minimum size of 4 bytes");
 
-    auto apparent_size = decode_int32_be(compressed.data());
-    if (apparent_size == 0)
-        // No data (explicitly so!), which is a valid situation
-        return;
-
     uncompressed.clear();
+
+    auto apparent_size =
+        compressed.size() == 0 ? 0 : decode_int32_be(compressed.data()).first;
+
+    if (apparent_size == 0)
+    {
+        // No data, which is a valid situation
+        return uncompressed;  // Named RVO
+    }
+
     uncompressed.reserve(apparent_size);
 
-    const char *ptr = &compressed[4];
-    const char *end = ptr + compressed.size();
+    const char* ptr = &compressed[4];
+    const char* end = ptr + compressed.size();
     const int chunk_size = 16384;
     int ret;
     unsigned int have;
@@ -69,7 +70,7 @@ void zlib_uncompress(
     // Take chunks from the input vector
     do
     {
-        strm.next_in = (Bytef *)ptr;
+        strm.next_in = (Bytef*)ptr;
         strm.avail_in = (ptr + chunk_size) < end ? chunk_size : end - ptr;
         ptr += strm.avail_in;
 
@@ -104,20 +105,21 @@ void zlib_uncompress(
         throw std::system_error{Z_DATA_ERROR, std::system_category(),
                                 "Error at end of inflation"};
     }
+
+    return uncompressed;  // Named RVO
 }
 
 // Compress a byte array using zlib
-std::vector<char> zlib_compress(const std::vector<char> &uncompressed)
+std::vector<char> zlib_compress(
+    const std::vector<char>& uncompressed, std::vector<char> compressed)
 {
-    std::vector<char> compressed;
-
     // Put a placeholder four bytes to hold the uncompressed buffer size
     compressed.resize(4);
     encode_int32_be(uncompressed.size(), compressed.data());
 
     // Compress
-    const char *ptr = &uncompressed[0];
-    const char *end = ptr + uncompressed.size();
+    const char* ptr = &uncompressed[0];
+    const char* end = ptr + uncompressed.size();
     const int chunk_size = 16384;
     int ret, flush;
     unsigned int have;
@@ -136,7 +138,7 @@ std::vector<char> zlib_compress(const std::vector<char> &uncompressed)
     // Compress until end of input
     do
     {
-        strm.next_in = (Bytef *)ptr;
+        strm.next_in = (Bytef*)ptr;
         if (ptr + chunk_size < end)
         {
             strm.avail_in = chunk_size;

@@ -15,12 +15,12 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <djinterop/enginelibrary/crate.hpp>
+#include <djinterop/enginelibrary.hpp>
 
-#include <boost/optional.hpp>
 #include <string>
 #include <vector>
-#include "sqlite_modern_cpp.h"
+
+#include "database_impl.hpp"
 
 namespace djinterop
 {
@@ -31,334 +31,236 @@ struct crate_row
     std::string title;
 };
 
-// Select a row from the Crate table
-static crate_row select_crate_row(const database &db, int id)
-{
-    sqlite::database m_db{db.music_db_path()};
-    crate_row row;
-    int rows_found = 0;
-    m_db << "SELECT title FROM Crate WHERE id = :1" << id >>
-        [&](std::string title) {
-            row = crate_row{title};
-            ++rows_found;
-        };
-
-    if (rows_found == 0)
-        throw nonexistent_crate{id};
-
-    return row;
-}
-
-// Select a crate's parent id from the DB, if it has one
-static int select_crate_parent_id(const database &db, int id)
-{
-    // The information about a crate hierarchy is stored in two different places
-    // in the DB, so we will check both and ensure they are consistent
-    sqlite::database m_db{db.music_db_path()};
-
-    int parent_list_rows_found = 0;
-    int parent_list_parent_id;
-    m_db << "SELECT crateParentId FROM CrateParentList WHERE crateOriginId = :1"
-         << id >>
-        [&](int parent_id) {
-            parent_list_parent_id = parent_id;
-            ++parent_list_rows_found;
-        };
-
-    int hierarchy_rows_found = 0;
-    int hierarchy_parent_id;
-    m_db << "SELECT crateId FROM CrateHierarchy WHERE crateIdChild = :1"
-         << id >>
-        [&](int parent_id) {
-            hierarchy_parent_id = parent_id;
-            ++hierarchy_rows_found;
-        };
-
-    // There should always be entries in CrateParentList, and if a crate is at
-    // the root level then it will be entered in this table with its parent id
-    // equal to itself: clearly the Engine Library devs were not a fan of DRY!
-    if (parent_list_rows_found == 0)
-        throw crate_database_inconsistency{"No entry in CrateParentList", id};
-    else if (parent_list_parent_id == id && hierarchy_rows_found > 0)
-        throw crate_database_inconsistency{
-            "Entry in CrateHierarchy for root Crate", id};
-    else if (parent_list_parent_id != id && hierarchy_rows_found == 0)
-        throw crate_database_inconsistency{"No entry in CrateHierarchy", id};
-    else if (
-        parent_list_parent_id != id &&
-        parent_list_parent_id != hierarchy_parent_id)
-        throw crate_database_inconsistency{
-            "CrateParentList/CrateHierarchy specify different crate parents",
-            id};
-
-    // Internally we will use parent_id = 0 to signify a root-level crate
-    return parent_list_parent_id != id ? parent_list_parent_id : 0;
-}
-
-static std::vector<int> select_child_crate_ids(const database &db, int id)
-{
-    // The information about a crate hierarchy is stored in two different places
-    // in the DB, but we will only consider CrateHierarchy for this function
-    sqlite::database m_db{db.music_db_path()};
-    std::vector<int> child_crate_ids;
-    m_db << "SELECT crateIdChild FROM CrateHierarchy WHERE crateId = :1"
-         << id >>
-        [&](int child_crate_id) { child_crate_ids.push_back(child_crate_id); };
-
-    return child_crate_ids;
-}
-
-static std::unordered_set<int> select_track_ids(const database &db, int id)
-{
-    sqlite::database m_db{db.music_db_path()};
-    std::unordered_set<int> track_ids;
-    m_db << "SELECT trackId FROM CrateTrackList WHERE crateId = :1" << id >>
-        [&](int track_id) { track_ids.insert(track_id); };
-
-    return track_ids;
-}
-
 struct crate::impl
 {
-    impl(const database &db, int id)
-        : id_{id},
-          load_db_uuid_{db.uuid()},
-          crate_row_{select_crate_row(db, id)},
-          parent_id_{select_crate_parent_id(db, id)},
-          child_crate_ids_{select_child_crate_ids(db, id)},
-          track_ids_{select_track_ids(db, id)}
+    impl(database db, int64_t id) : db_{std::move(db)}, id_{id} {}
+
+    void update_path(
+        sqlite::database& music_db, crate cr, const std::string& parent_path)
     {
+        // update path
+        std::string path = parent_path + cr.name() + ';';
+        music_db << "UPDATE Crate SET path = ? WHERE id = ?" << path << cr.id();
+
+        // recursive call in order to update the path of indirect descendants
+        for (crate cr2 : cr.children())
+        {
+            update_path(music_db, cr2, path);
+        }
     }
 
-    impl(const crate::impl &other)
-        : id_{0},
-          load_db_uuid_{},  // Copy doesn't belong to a database (yet)
-          crate_row_{other.crate_row_},
-          parent_id_{other.parent_id_},
-          child_crate_ids_{},  // Can't be the parent of anything else
-          track_ids_{other.track_ids_}
-    {
-    }
-
-    impl() : id_{0}, parent_id_{0} {}
-
-    int id_;
-    std::string load_db_uuid_;
-    crate_row crate_row_;
-    int parent_id_;
-    std::vector<int> child_crate_ids_;
-    std::unordered_set<int> track_ids_;
+    database db_;
+    int64_t id_;
 };
 
-crate::crate(const database &database, int id) : pimpl_{new impl{database, id}}
-{
-}
-
-crate::crate(const crate &other) : pimpl_{new impl{*other.pimpl_}} {}
-
-crate::crate() : pimpl_{new impl{}} {}
+crate::crate(const crate& other) noexcept = default;
 
 crate::~crate() = default;
 
-crate &crate::operator=(const crate &other)
+crate& crate::operator=(const crate& other) noexcept = default;
+
+void crate::add_track(track tr) const
 {
-    if (this != &other)
-        pimpl_.reset(new impl{*other.pimpl_});
-    return *this;
+    db().pimpl_->music_db_ << "BEGIN";
+
+    db().pimpl_->music_db_
+        << "DELETE FROM CrateTrackList WHERE crateId = ? AND trackId = ?"
+        << id() << tr.id();
+
+    db().pimpl_->music_db_
+        << "INSERT INTO CrateTrackList (crateId, trackId) VALUES (?, ?)" << id()
+        << tr.id();
+
+    db().pimpl_->music_db_ << "COMMIT";
 }
 
-int crate::id() const
+std::vector<crate> crate::children() const
+{
+    std::vector<crate> results;
+    db().pimpl_->music_db_
+            << "SELECT crateIdChild FROM CrateHierarchy WHERE crateId = ?"
+            << id() >>
+        [&](int64_t crate_id_child) {
+            results.push_back(crate{db(), crate_id_child});
+        };
+    return results;
+}
+
+void crate::clear_tracks() const
+{
+    db().pimpl_->music_db_ << "DELETE FROM CrateTrackList WHERE crateId = ?"
+                           << id();
+}
+
+std::vector<crate> crate::descendants() const
+{
+    std::vector<crate> results;
+    db().pimpl_->music_db_
+            << "SELECT crateOriginId FROM CrateParentList WHERE crateParentId "
+               "= ? AND crateOriginId <> crateParentId"
+            << id() >>
+        [&](int64_t descendant_id) {
+            results.push_back(crate{db(), descendant_id});
+        };
+    return results;
+}
+
+database crate::db() const
+{
+    return pimpl_->db_;
+}
+
+int64_t crate::id() const
 {
     return pimpl_->id_;
 }
 
+bool crate::is_valid() const
+{
+    bool valid = false;
+    db().pimpl_->music_db_ << "SELECT COUNT(*) FROM Crate WHERE id = ?"
+                           << id() >>
+        [&](int count) {
+            if (count == 1)
+            {
+                valid = true;
+            }
+            else if (count > 1)
+            {
+                throw crate_database_inconsistency{
+                    "More than one crate with the same ID", id()};
+            }
+        };
+    return valid;
+}
+
 std::string crate::name() const
 {
-    return pimpl_->crate_row_.title;
+    boost::optional<std::string> name;
+    db().pimpl_->music_db_ << "SELECT title FROM Crate WHERE id = ?" << id() >>
+        [&](std::string title) {
+            if (!name)
+            {
+                name = std::move(title);
+            }
+            else
+            {
+                throw crate_database_inconsistency{
+                    "More than one crate with the same ID", id()};
+            }
+        };
+    if (!name)
+    {
+        throw crate_deleted{id()};
+    }
+    return *name;
 }
 
-bool crate::has_parent() const
+boost::optional<crate> crate::parent() const
 {
-    return pimpl_->parent_id_ != 0;
+    boost::optional<crate> parent;
+    db().pimpl_->music_db_
+            << "SELECT crateParentId FROM CrateParentList WHERE crateOriginId "
+               "= ? AND crateParentId <> crateOriginId"
+            << id() >>
+        [&](int64_t parent_id) {
+            if (!parent)
+            {
+                parent = crate{db(), parent_id};
+            }
+            else
+            {
+                throw crate_database_inconsistency{
+                    "More than one parent crate for the same crate", id()};
+            }
+        };
+    return parent;
 }
 
-int crate::parent_id() const
+void crate::remove_track(track tr) const
 {
-    return pimpl_->parent_id_;
+    db().pimpl_->music_db_
+        << "DELETE FROM CrateTrackList WHERE crateId = ? AND trackId = ?"
+        << id() << tr.id();
 }
 
-crate::crate_id_iterator crate::child_crates_begin() const
+void crate::set_name(const std::string& name) const
 {
-    return std::begin(pimpl_->child_crate_ids_);
-}
+    db().pimpl_->music_db_ << "BEGIN";
 
-crate::crate_id_iterator crate::child_crates_end() const
-{
-    return std::end(pimpl_->child_crate_ids_);
-}
-
-crate::track_id_iterator crate::tracks_begin() const
-{
-    return std::begin(pimpl_->track_ids_);
-}
-
-crate::track_id_iterator crate::tracks_end() const
-{
-    return std::end(pimpl_->track_ids_);
-}
-
-void crate::set_name(const std::string &name)
-{
-    pimpl_->crate_row_.title = name;
-}
-
-void crate::set_parent_id(int parent_crate_id)
-{
-    pimpl_->parent_id_ = parent_crate_id;
-}
-
-void crate::set_no_parent()
-{
-    pimpl_->parent_id_ = 0;
-}
-
-void crate::add_tracks(track_id_iterator begin, track_id_iterator end)
-{
-    pimpl_->track_ids_.insert(begin, end);
-}
-
-void crate::add_track(int track_id)
-{
-    pimpl_->track_ids_.insert(track_id);
-}
-
-void crate::set_tracks(track_id_iterator begin, track_id_iterator end)
-{
-    pimpl_->track_ids_.clear();
-    pimpl_->track_ids_.insert(begin, end);
-}
-
-void crate::clear_tracks()
-{
-    pimpl_->track_ids_.clear();
-}
-
-void crate::save(const database &database)
-{
-    // Check mandatory fields
-    if (pimpl_->crate_row_.title == "")
-        throw std::invalid_argument{"Name must be populated"};
-
-    // Work out if we are creating a new entry or not
-    auto new_entry = id() == 0 || pimpl_->load_db_uuid_ != database.uuid();
-
-    // Do all DB writing in a transaction
-    sqlite::database m_db{database.music_db_path()};
-    m_db << "BEGIN";
-
-    // Calculate path for this crate by appending this crate's name to that of
-    // its parent
+    // obtain parent's `path`
     std::string parent_path;
-    if (pimpl_->parent_id_ != 0)
-    {
-        m_db << "SELECT path FROM Crate WHERE id = ?" << pimpl_->parent_id_ >>
-            parent_path;
-    }
-    std::string path{parent_path + pimpl_->crate_row_.title + ";"};
+    db().pimpl_->music_db_
+            << "SELECT path FROM Crate c JOIN CrateParentList cpl ON c.id = "
+               "cpl.crateParentId WHERE cpl.crateOriginId = ? AND "
+               "cpl.crateOriginId <> cpl.crateParentId"
+            << id() >>
+        [&](std::string path) {
+            if (parent_path.empty())
+            {
+                parent_path = std::move(path);
+            }
+            else
+            {
+                throw crate_database_inconsistency{
+                    "More than one parent crate for the same crate", id()};
+            }
+        };
 
-    // Insert/update the Crate table
-    if (new_entry)
-    {
-        // Insert a new entry in the Crate table
-        m_db << "INSERT INTO Crate (title, path) VALUES (?, ?)"
-             << pimpl_->crate_row_.title << path;
-        pimpl_->id_ = m_db.last_insert_rowid();
-    }
-    else
-    {
-        // Update existing entry
-        m_db << "UPDATE Crate SET title = ?, path = ? WHERE id = ?"
-             << pimpl_->crate_row_.title << path << pimpl_->id_;
-    }
+    // update name and path
+    std::string path = std::move(parent_path) + name + ';';
+    db().pimpl_->music_db_
+        << "UPDATE Crate SET title = ?, path = ? WHERE id = ?" << name << path
+        << id();
 
-    // Write hierarchy to parent list
-    if (pimpl_->parent_id_ == 0)
+    // call the lambda in order to update the path of direct children
+    for (crate cr : children())
     {
-        // Write to CrateParentList
-        m_db << "INSERT OR REPLACE INTO CrateParentList ("
-                "  crateOriginId, crateParentId) "
-                "VALUES (?, ?)"
-             << pimpl_->id_ << pimpl_->id_;
-        // Remove anything existing from CrateHierarchy
-        m_db << "DELETE FROM CrateHierarchy WHERE crateIdChild = ?"
-             << pimpl_->id_;
-    }
-    else
-    {
-        // Write to both CrateParentList and CrateHierarchy
-        m_db << "INSERT OR REPLACE INTO CrateParentList ("
-                "  crateOriginId, crateParentId) "
-                "VALUES (?, ?)"
-             << pimpl_->id_ << pimpl_->parent_id_;
-        m_db << "INSERT OR REPLACE INTO CrateHierarchy ("
-                "  crateId, crateIdChild) "
-                "VALUES (?, ?)"
-             << pimpl_->parent_id_ << pimpl_->id_;
+        pimpl_->update_path(db().pimpl_->music_db_, cr, path);
     }
 
-    // Clear track list first, then add
-    m_db << "DELETE FROM CrateTrackList WHERE crateId = ?" << pimpl_->id_;
-    for (auto &track_id : pimpl_->track_ids_)
-    {
-        m_db << "INSERT INTO CrateTrackList (crateId, trackId) VALUES (?, ?)"
-             << pimpl_->id_ << track_id;
-    }
-
-    m_db << "COMMIT";
-    pimpl_->load_db_uuid_ = database.uuid();
+    db().pimpl_->music_db_ << "COMMIT";
 }
 
-std::vector<int> all_crate_ids(const database &database)
+void crate::set_parent(boost::optional<crate> parent) const
 {
-    sqlite::database m_db{database.music_db_path()};
-    std::vector<int> ids;
-    m_db << "SELECT id FROM Crate ORDER BY id" >>
-        [&ids](int id) { ids.push_back(id); };
+    db().pimpl_->music_db_ << "BEGIN";
 
-    return ids;
+    db().pimpl_->music_db_
+        << "DELETE FROM CrateParentList WHERE crateOriginId = ?" << id();
+
+    db().pimpl_->music_db_ << "INSERT INTO CrateParentList (crateOriginId, "
+                              "crateParentId) VALUES (?, ?)"
+                           << id() << (parent ? parent->id() : id());
+
+    db().pimpl_->music_db_
+        << "DELETE FROM CrateHierarchy WHERE crateIdChild = ?" << id();
+
+    if (parent)
+    {
+        db().pimpl_->music_db_
+            << "INSERT INTO CrateHierarchy (crateId, crateIdChild) SELECT "
+               "crateId, ? FROM CrateHierarchy WHERE crateIdChild = ? UNION "
+               "SELECT ? AS crateId, ? AS crateIdChild"
+            << id() << parent->id() << parent->id() << id();
+    }
+
+    db().pimpl_->music_db_ << "COMMIT";
 }
 
-std::vector<int> all_root_crate_ids(const database &database)
+std::vector<track> crate::tracks() const
 {
-    sqlite::database m_db{database.music_db_path()};
-    std::vector<int> ids;
-    m_db << "SELECT id "
-            "FROM Crate c "
-            "INNER JOIN CrateParentList cpl ON (cpl.crateOriginId = c.id) "
-            "WHERE cpl.crateParentId = cpl.crateOriginId "
-            "ORDER BY c.id" >>
-        [&ids](int id) { ids.push_back(id); };
-
-    return ids;
+    std::vector<track> results;
+    db().pimpl_->music_db_
+            << "SELECT trackId FROM CrateTrackList WHERE crateId = ?" << id() >>
+        [&](int64_t track_id) {
+            results.emplace_back(track{db(), track_id});
+        };
+    return results;
 }
 
-/**
- * \brief Try to find a crate by its (unique) name
- *
- * If the crate is found, its id will be written to the provided reference
- * variable.
- */
-bool find_crate_by_name(
-    const database &database, const std::string &name, int &crate_id)
+crate::crate(database db, int64_t id) : pimpl_{std::make_shared<impl>(db, id)}
 {
-    sqlite::database m_db{database.music_db_path()};
-    bool found = false;
-    m_db << "SELECT id FROM Crate WHERE title = ?" << name >> [&](int id) {
-        crate_id = id;
-        found = true;
-    };
-
-    return found;
 }
 
 }  // namespace enginelibrary

@@ -44,14 +44,32 @@ static constexpr schema_version version_latest = version_1_7_1;
  * database does not match the expectations suggested by its reported version
  * number.
  */
-class database_inconsistency : public std::logic_error
+class database_inconsistency : public std::runtime_error
 {
 public:
     explicit database_inconsistency(const std::string &what_arg) noexcept
-        : logic_error{what_arg}
+        : runtime_error{what_arg}
     {
     }
-    virtual ~database_inconsistency() = default;
+};
+
+/// The `track_database_inconsistency` exception is thrown when a database
+/// inconsistency is found that correlates to a track.
+class track_database_inconsistency : public database_inconsistency
+{
+public:
+    /// Construct the exception for a given track ID
+    explicit track_database_inconsistency(
+        const std::string &what_arg, int64_t id) noexcept
+        : database_inconsistency{what_arg}, id_{id}
+    {
+    }
+
+    /// Get the track ID that is the subject of this exception
+    int64_t id() const noexcept { return id_; }
+
+private:
+    int64_t id_;
 };
 
 /**
@@ -66,12 +84,13 @@ public:
         : runtime_error{"Unsupported database version"}, version_{version}
     {
     }
+
     explicit unsupported_database_version(
         const std::string &what_arg, const schema_version version) noexcept
         : runtime_error{what_arg}, version_{version}
     {
     }
-    virtual ~unsupported_database_version() = default;
+
     const schema_version version() const { return version_; }
 
 private:

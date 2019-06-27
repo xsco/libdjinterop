@@ -23,12 +23,15 @@
 #define DJINTEROP_ENGINELIBRARY_DATABASE_HPP
 
 #include <memory>
-#include <ostream>
 #include <stdexcept>
 #include <string>
-#include "sqlite_modern_cpp.h"
+#include <vector>
 
-#include "schema_version.hpp"
+#include <boost/optional.hpp>
+
+#include <djinterop/enginelibrary/crate.hpp>
+#include <djinterop/enginelibrary/schema_version.hpp>
+#include <djinterop/enginelibrary/track.hpp>
 
 namespace sqlite
 {
@@ -39,91 +42,118 @@ namespace djinterop
 {
 namespace enginelibrary
 {
+class database_impl;
+
 class database_not_found : public std::runtime_error
 {
 public:
-    explicit database_not_found(const std::string &what_arg) noexcept
+    explicit database_not_found(const std::string& what_arg) noexcept
         : runtime_error{what_arg}
     {
     }
-    virtual ~database_not_found() = default;
 };
 
 class database
 {
 public:
-    /**
-     * \brief Construct an Engine Prime database, specifying the path to the
-     *        Engine library directory
-     */
-    explicit database(const std::string &dir_path);
+    /// Constructs an Engine Prime database, given the path to the Engine
+    /// library directory
+    explicit database(const std::string& directory);
 
-    /**
-     * \brief Copying is disallowed
-     */
-    database(const database &db);
+    /// Copy constructor
+    database(const database& db);
 
-    /**
-     * \brief Destructor
-     */
+    /// Destructor
     ~database();
 
-    /**
-     * \brief Copy assignment is disallowed
-     */
-    database &operator=(const database &db);
+    /// Copy assignment operator
+    database& operator=(const database& db);
 
-    /**
-     * \brief Returns a `bool` indicating whether the database version is
-     *        supported by this version of libdjinterop or not
-     */
+    /// Returns the crate with the given ID
+    ///
+    /// If no such crate exists in the database, then boost::none is returned.
+    boost::optional<crate> crate_by_id(int64_t id) const;
+
+    /// Returns all crates contained in the database
+    std::vector<crate> crates() const;
+
+    /// Returns all crates with the given name
+    std::vector<crate> crates_by_name(const std::string& name) const;
+
+    /// Creates a new crate with the given name
+    ///
+    /// The created crate has no parent.
+    crate create_crate(const std::string& name) const;
+
+    /// Creates a new track associated to a given music file
+    ///
+    /// The music file is given by its relative path from the Engine library
+    /// directory. The created track is not contained in any crates.
+    track create_track(const std::string& relative_path) const;
+
+    /// Returns the path to the Engine library directory of the database
+    std::string directory() const;
+
+    /// Returns true iff the database version is supported by this version of
+    /// `libdjinterop` or not
     bool is_supported() const;
 
-    /**
-     * \brief Verify the schema of an Engine Prime database, throwing an
-     *        exception if there is any kind of inconsistency
-     */
-    void verify() const;
-
-    /**
-     * \brief Get the directory path on which this database is based
-     */
-    std::string directory_path() const;
-
-    /**
-     * \brief Get the path to the music database, i.e. m.db
-     */
+    /// Returns the path to the music database, i.e. m.db
     std::string music_db_path() const;
 
-    /**
-     * \brief Get the path to the performance data database, i.e. p.db
-     */
-    std::string performance_db_path() const;
+    /// Returns the path to the performance data database, i.e. p.db
+    std::string perfdata_db_path() const;
 
-    /**
-     * \brief Get the UUID of this database
-     */
+    /// Returns the UUID of the database
     std::string uuid() const;
 
-    /**
-     * \brief Get the schema version of this database
-     */
+    /// Verifies the schema of an Engine Prime database and throws an exception
+    /// if there is any kind of inconsistency
+    void verify() const;
+
+    /// Returns the schema version of the database
     schema_version version() const;
 
-private:
-    sqlite::database &music_db();
-    sqlite::database &performance_db();
+    /// Removes a crate from the database
+    ///
+    /// All handles to that crate become invalid.
+    void remove_crate(crate cr) const;
 
-    struct impl;
-    std::shared_ptr<impl> pimpl_;
+    /// Removes a track from the database
+    ///
+    /// All handles to that track become invalid.
+    void remove_track(track tr) const;
+
+    /// Returns all root crates contained in the database
+    ///
+    /// A root crate is a crate that has no parent.
+    std::vector<crate> root_crates() const;
+
+    /// Returns the track with the given id
+    ///
+    /// If no such track exists in the database, then boost::none is returned.
+    boost::optional<track> track_by_id(int64_t id) const;
+
+    /// Returns all tracks whose `relative_path` attribute in the database
+    /// matches the given string
+    std::vector<track> tracks_by_relative_path(
+        const std::string& relative_path) const;
+
+    /// Returns all tracks contained in the database
+    std::vector<track> tracks() const;
+
+private:
+    std::shared_ptr<database_impl> pimpl_;
+
+    friend class crate;
+    friend class track;
 };
 
-/**
- * \brief Create a new, empty database in a given directory and at a specified
- *        schema version
- */
-database create_database(
-    const std::string &dir_path, const schema_version &version);
+/// Creates a new, empty database in a given directory and using a specified
+/// schema version
+database make_database(
+    const std::string& dir_path,
+    const schema_version& default_version = version_latest);
 
 }  // namespace enginelibrary
 }  // namespace djinterop

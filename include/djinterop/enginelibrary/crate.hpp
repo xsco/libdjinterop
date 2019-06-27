@@ -22,232 +22,150 @@
 #ifndef DJINTEROP_ENGINELIBRARY_CRATE_HPP
 #define DJINTEROP_ENGINELIBRARY_CRATE_HPP
 
-#include <chrono>
-#include <cstdint>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
 #include <vector>
-#include "djinterop/enginelibrary/database.hpp"
+
+#include <boost/optional.hpp>
+
+#include <djinterop/enginelibrary/schema_version.hpp>
 
 namespace djinterop
 {
 namespace enginelibrary
 {
-/**
- * The `nonexistent_crate` exception is thrown when a request is made for
- * a crate using an identifier that does not exist in a given database
- */
-class nonexistent_crate : public std::invalid_argument
+class database;
+class track;
+
+/// The `crate_deleted` exception is thrown when an invalid `crate` object is
+/// used, i.e. one that does not exist in the database anymore.
+class crate_deleted : public std::runtime_error
 {
 public:
-    /**
-     * \brief Construct the exception for a given crate id
-     */
-    explicit nonexistent_crate(int id) noexcept
-        : invalid_argument{"Crate does not exist in database"}, id_{id}
+    /// Constructs the exception for a given crate ID
+    explicit crate_deleted(int64_t id) noexcept
+        : runtime_error{"Crate does not exist in database anymore"}, id_{id}
     {
     }
 
-    /**
-     * \brief Destructor
-     */
-    virtual ~nonexistent_crate() = default;
-
-    /**
-     * \brief Get the crate id that was deemed non-existent
-     */
-    int id() const noexcept { return id_; }
+    /// Returns the crate ID that was deemed non-existent
+    int64_t id() const noexcept { return id_; }
 
 private:
-    int id_;
+    int64_t id_;
 };
 
-/**
- * The `crate_database_inconsistency` exception is thrown when there is an
- * internal database inconsistency with regard to how a crate is stored
- */
-class crate_database_inconsistency : public std::logic_error
+/// The `crate_database_inconsistency` exception is thrown when a database
+/// inconsistency is found that correlates to a crate.
+class crate_database_inconsistency : public database_inconsistency
 {
 public:
-    /**
-     * \brief Construct the exception for a given crate id and custom message
-     */
+    /// Construct the exception for a given crate ID
     explicit crate_database_inconsistency(
-        const std::string &what_arg, int id) noexcept
-        : logic_error{what_arg.c_str()}, id_{id}
+        const std::string& what_arg, int64_t id) noexcept
+        : database_inconsistency{what_arg.c_str()}, id_{id}
     {
     }
 
-    /**
-     * \brief Construct the exception for a given crate id
-     */
-    explicit crate_database_inconsistency(int id) noexcept
-        : logic_error{"Crate has internal database inconsistency"}, id_{id}
-    {
-    }
-
-    /**
-     * \brief Destructor
-     */
-    virtual ~crate_database_inconsistency() = default;
-
-    /**
-     * \brief Get the crate id that was deemed inconsistent
-     */
-    int id() const noexcept { return id_; }
+    /// Get the crate ID that was deemed inconsistent
+    int64_t id() const noexcept { return id_; }
 
 private:
-    int id_;
+    int64_t id_;
 };
 
-/**
- * The `crate` class represents a record of a given crate of tracks (or indeed
- * other crates) in the database
- */
+/// A `crate` object is a handle to a crate stored in a database. As long as it
+/// lives, the corresponding database connection is kept open.
+///
+/// `crate` objects can be copied and assigned cheaply, resulting in multiple
+/// handles to the same actual crate.
+///
+/// The read/write operations provided by this class directly access the
+/// database.
+///
+/// A `crate` object becomes invalid if the crate gets deleted by
+/// `database::remove_crate()`. After that, you must not call any methods on the
+/// `crate` object, except for destructing it, or assigning to it.
 class crate
 {
 public:
-    typedef std::vector<int>::const_iterator crate_id_iterator;
-    typedef std::unordered_set<int>::const_iterator track_id_iterator;
+    /// Copy constructor
+    crate(const crate& other) noexcept;
 
-    /**
-     * \brief Construct a new crate, not yet saved in any database
-     */
-    crate();
-
-    /**
-     * \brief Copy a crate from another
-     *
-     * Note that the new copied crate will not be considered to belong in any
-     * database, and hence will have its `id` set to zero.
-     */
-    crate(const crate &other);
-
-    /**
-     * \brief Construct a crate, loaded from a given database by its id
-     */
-    crate(const database &database, int id);
-
-    /**
-     * \brief Destructor
-     */
+    /// Destructor
     ~crate();
 
-    /**
-     * \brief Copy from another crate into this crate
-     *
-     * Note that this crate will not be considered to belong in any database
-     * after copy assignment, and hence will have its `id` set to zero.
-     */
-    crate &operator=(const crate &other);
+    /// Copy assignment operator
+    crate& operator=(const crate& other) noexcept;
 
-    /**
-     * \brief Get the id of this crate, as stored in the database.
-     *
-     * If the crate is not yet stored in any database, the id will be zero.
-     */
-    int id() const;
+    /// Adds a track to the crate
+    ///
+    /// A track can be contained in arbitrarily many (including zero) crates.
+    void add_track(track tr) const;
 
-    /**
-     * \brief Get the crate's name
-     */
+    /// Returns the (direct) children of this crate
+    std::vector<crate> children() const;
+
+    /// Removes all tracks from the crate
+    ///
+    /// Note that the tracks stay in the database even if they're contained in
+    /// zero crates.
+    void clear_tracks() const;
+
+    /// Returns the database containing the crate
+    database db() const;
+
+    /// Returns the descendants of this crate
+    ///
+    /// A descendant is a direct or indirect child of this crate.
+    std::vector<crate> descendants() const;
+
+    /// Returns the ID of this crate
+    ///
+    /// The ID is used internally in the database and is unique for crates
+    /// contained in the same database.
+    int64_t id() const;
+
+    /// Returns `true` iff `*this` is valid as described in the class comment
+    bool is_valid() const;
+
+    /// Returns the crate's name
     std::string name() const;
 
-    /**
-     * \brief Get a `bool` indicating if this crate has a parent crate
-     */
-    bool has_parent() const;
+    /// Returns the parent crate, if this crate has one
+    ///
+    /// If the crate doesn't have a parent, then an `boost::none` is returned.
+    boost::optional<crate> parent() const;
 
-    /**
-     * \brief Get the parent crate id for this crate, if it has one
-     *
-     * If the crate does not have a parent, the return value of this method is
-     * undefined.
-     */
-    int parent_id() const;
+    /// Removes a track from the crate
+    ///
+    /// Note that the track stays in the database even if it's contained in zero
+    /// crates.
+    void remove_track(track tr) const;
 
-    /**
-     * \brief Get iterator to the start of a list of child crates of this one
-     *
-     * Note that if child crates are simultaneously modified in the background,
-     * this list may no longer reflect the current reality in the database.
-     */
-    crate_id_iterator child_crates_begin() const;
+    /// Sets the crate's name
+    void set_name(const std::string& name) const;
 
-    /**
-     * \brief Get iterator beyond the last element of a list of child crates of
-     * this one
-     *
-     * Note that if child crates are simultaneously modified in the background,
-     * this list may no longer reflect the current reality in the database.
-     */
-    crate_id_iterator child_crates_end() const;
+    /// Sets this crate's parent
+    ///
+    /// If an empty `boost::optional` is given, then this crate will have no
+    /// parent. That is, it becomes a root crate.
+    void set_parent(boost::optional<crate> parent) const;
 
-    /**
-     * \brief Get iterator to the beginning of a list of track ids that are part
-     * of this crate
-     */
-    track_id_iterator tracks_begin() const;
-
-    /**
-     * \brief Get iterator beyond the last element of a list of track ids that
-     * are part of this crate
-     */
-    track_id_iterator tracks_end() const;
-
-    void set_name(const std::string &name);
-    void set_parent_id(int parent_crate_id);
-    void set_no_parent();
-    void add_tracks(track_id_iterator begin, track_id_iterator end);
-    void add_track(int track_id);
-    void set_tracks(track_id_iterator begin, track_id_iterator end);
-    void clear_tracks();
-
-    /**
-     * \brief Save a crate to a given database
-     *
-     * If the crate came from the supplied database originally, it is updated
-     * in-place.  If the crate does not already exist in the supplied database,
-     * then it will be saved as a new track there, and the `id()` method will
-     * return a new value after a new track is saved.
-     *
-     * If you are moving a crate to a new database, you may wish to double-check
-     * the validity of the parent crate id, if one has been set.  If a parent
-     * crate id is taken from a previous database and accidentally left on a
-     * crate that is to be saved in a different database, the id may be invalid
-     * in the context of the new database!
-     *
-     * The same argument applies for the list of tracks in the crate: a crate
-     * may only contain tracks from the same database in which the crate lives.
-     */
-    void save(const database &database);
+    /// Returns the crate's contained tracks
+    std::vector<track> tracks() const;
 
 private:
+    crate(database db, int64_t id);
+
     struct impl;
-    std::unique_ptr<impl> pimpl_;
+    std::shared_ptr<impl> pimpl_;
+
+    friend class database;
+    friend class track;
 };
-
-/**
- * \brief Get a list of all crate ids in a given database
- */
-std::vector<int> all_crate_ids(const database &database);
-
-/**
- * \brief Get a list of all "root" crate ids in a given database, i.e. those
- * that are not a sub-crate of another
- */
-std::vector<int> all_root_crate_ids(const database &database);
-
-/**
- * \brief Try to find a crate by its (unique) name
- *
- * If the crate is found, its id will be written to the provided reference
- * variable.
- */
-bool find_crate_by_name(
-    const database &database, const std::string &name, int &crate_id);
 
 }  // namespace enginelibrary
 }  // namespace djinterop

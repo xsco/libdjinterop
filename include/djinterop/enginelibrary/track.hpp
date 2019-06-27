@@ -23,396 +23,322 @@
 #define DJINTEROP_ENGINELIBRARY_TRACK_HPP
 
 #include <chrono>
-#include <cstdint>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-#include "database.hpp"
-#include "musical_key.hpp"
+#include <boost/optional.hpp>
+#include <boost/utility/string_view.hpp>
+
+#include <djinterop/enginelibrary/musical_key.hpp>
+#include <djinterop/enginelibrary/performance_data.hpp>
+#include <djinterop/enginelibrary/schema_version.hpp>
 
 namespace djinterop
 {
 namespace enginelibrary
 {
-/**
- * The `nonexistent_track` exception is thrown when a request is made for
- * a track using an identifier that does not exist in a given database
- */
-class nonexistent_track : public std::invalid_argument
+class database;
+class crate;
+
+/// The `track_deleted` exception is thrown when an invalid `track` object is
+/// used, i.e. one that does not exist in the database anymore.
+class track_deleted : public std::invalid_argument
 {
 public:
-    /**
-     * \brief Construct the exception for a given track id
-     */
-    explicit nonexistent_track(int id) noexcept
+    /// Constructs the exception for a given track ID
+    explicit track_deleted(int64_t id) noexcept
         : invalid_argument{"Track does not exist in database"}, id_{id}
     {
     }
 
-    /**
-     * \brief Destructor
-     */
-    virtual ~nonexistent_track() = default;
-
-    /**
-     * \brief Get the track id that was deemed non-existent
-     */
-    int id() const noexcept { return id_; }
+    /// Returns the track ID that was found to be non-existent
+    int64_t id() const noexcept { return id_; }
 
 private:
-    int id_;
+    int64_t id_;
 };
 
-/**
- * The `track_database_inconsistency` exception is thrown when a track cannot
- * be loaded from a database, due to an internal inconsistency in how the track
- * data has been stored in the database
- */
-class track_database_inconsistency : public database_inconsistency
+class track_import_info
 {
 public:
-    /**
-     * \brief Construct the exception for a given track id
-     */
-    explicit track_database_inconsistency(
-        const std::string &what_arg, int id) noexcept
-        : database_inconsistency{what_arg}, id_{id}
-    {
-    }
-
-    /**
-     * \brief Destructor
-     */
-    virtual ~track_database_inconsistency() = default;
-
-    /**
-     * \brief Get the track id that is the subject of this exception
-     */
-    int id() const noexcept { return id_; }
+    track_import_info() noexcept;
+    track_import_info(
+        std::string external_db_uuid, int64_t externl_track_id) noexcept;
+    std::string& external_db_uuid();
+    const std::string& external_db_uuid() const;
+    int64_t& external_track_id();
+    const int64_t& external_track_id() const;
 
 private:
-    int id_;
+    std::string external_db_uuid_;
+    int64_t external_track_id_;
 };
 
-/**
- * The `track` class represents a record of a given track in the database
- */
+/// A `track` object is a handle to a track stored in a database. As long as it
+/// lives, the corresponding database connection is kept open.
+///
+/// `track` objects can be copied and assigned cheaply, resulting in multiple
+/// handles to the same actual track.
+///
+/// The read/write operations provided by this class directly access the
+/// database.
+///
+/// A `track` object becomes invalid if the track gets deleted by
+/// `database::remove_track()`. After that, you must not call any methods on the
+/// `track` object, except for destructing it, or assigning to it.
 class track
 {
 public:
-    /**
-     * \brief Construct a new track, not yet saved in any database
-     */
-    track();
+    /// Copy constructor
+    track(const track& other) noexcept;
 
-    /**
-     * \brief Copy constructor
-     */
-    track(const track &other);
-
-    /**
-     * \brief Move constructor
-     */
-    track(track &&other) noexcept;
-
-    /**
-     * \brief Construct a track, loaded from a given database by its id
-     */
-    track(const database &database, int id);
-
-    /**
-     * \brief Destructor
-     */
+    /// Destructor
     ~track();
 
-    /**
-     * \brief Copy assignment
-     */
-    track &operator=(const track &other);
+    /// Copy assignment operator
+    track& operator=(const track& other) noexcept;
 
-    /**
-     * \brief Move assignment
-     */
-    track &operator=(track &&other) noexcept;
+    std::vector<beatgrid_marker> adjusted_beatgrid() const;
 
-    /**
-     * \brief Get the id of this track, as stored in the database.
-     *
-     * If the track is not yet stored in any database, the id will be zero.
-     */
-    int id() const;
+    void set_adjusted_beatgrid(std::vector<beatgrid_marker> beatgrid) const;
 
-    /**
-     * \brief Get the track number
-     */
-    int track_number() const;
+    double adjusted_main_cue() const;
 
-    /**
-     * \brief Get the duration of this track
-     *
-     * Note that this field is just metadata, and does not strictly have to be
-     * the track's actual duration.
-     */
-    std::chrono::seconds duration() const;
+    void set_adjusted_main_cue(double sample_offset) const;
 
-    /**
-     * \brief Get the BPM of this track, rounded to the nearest integer
-     *
-     * Note that this field is just metadata, and does not strictly have to be
-     * the track's actual tempo.
-     */
-    int bpm() const;
+    /// Returns the album name (metadata) of the track
+    boost::optional<std::string> album() const;
 
-    /**
-     * \brief Get the year that this track was recorded
-     */
-    int year() const;
+    /// Sets the album name (metadata) of the track
+    void set_album(boost::optional<boost::string_view> album) const;
+    void set_album(boost::string_view album) const;
 
-    /**
-     * \brief Get the title of this track
-     */
-    std::string title() const;
+    /// Returns the ID of the `album_art` associated to the track
+    ///
+    /// If the track doesn't have an associated `album_art`, then `boost::none`
+    /// is returned.
+    /// TODO (haslersn): Return an `album_art` object instead.
+    boost::optional<int64_t> album_art_id() const;
 
-    /**
-     * \brief Get the artist of this track
-     */
-    std::string artist() const;
+    /// Sets the ID of the `album_art` associated to the track
+    ///
+    /// If the track doesn't have an associated `album_art`, then `boost::none`
+    /// is returned.
+    /// TODO (haslersn): Return an `album_art` object instead.
+    void set_album_art_id(boost::optional<int64_t> album_art_id) const;
+    void set_album_art_id(int64_t album_art_id) const;
 
-    /**
-     * \brief Get the name of the album of this track
-     */
-    std::string album() const;
+    /// Returns the artist (metadata) of the track
+    boost::optional<std::string> artist() const;
 
-    /**
-     * \brief Get the genre of this track
-     */
-    std::string genre() const;
+    /// Returns the artist (metadata) of the track
+    void set_artist(boost::optional<boost::string_view> artist) const;
+    void set_artist(boost::string_view artist) const;
 
-    /**
-     * \brief Get the comment associated with this track
-     */
-    std::string comment() const;
+    boost::optional<double> average_loudness() const;
 
-    /**
-     * \brief Get the publisher associated with this track
-     */
-    std::string publisher() const;
+    void set_average_loudness(boost::optional<double> average_loudness) const;
+    void set_average_loudness(double average_loudness) const;
 
-    /**
-     * \brief Get the composer of this track
-     */
-    std::string composer() const;
+    /// Returns the bitrate (metadata) of the track
+    boost::optional<int64_t> bitrate() const;
 
-    /**
-     * \brief Get the key of this track
-     *
-     * Note that this is just tag metadata, and does not have to match the
-     * track's actual musical key as identified by track analysis.
-     */
-    musical_key key() const;
+    /// Sets the bitrate (metadata) of the track
+    void set_bitrate(boost::optional<int64_t> bitrate) const;
+    void set_bitrate(int64_t bitrate) const;
 
-    /**
-     * \brief Get the path to this track's file on disk, relative to the music
-     *        database.
-     */
-    std::string path() const;
+    /// Returns the BPM (metadata) of the track, rounded to the nearest integer
+    boost::optional<double> bpm() const;
 
-    /**
-     * \brief Get the filename of this track's file
-     */
-    std::string filename() const;
+    /// Sets the BPM (metadata) of the track, rounded to the nearest integer
+    void set_bpm(boost::optional<double> bpm) const;
+    void set_bpm(double bpm) const;
 
-    /**
-     * \brief Get the file extension of this track's file
-     *
-     * The extension will not contain any leading dot.
-     */
+    /// Returns the comment associated to the track (metadata)
+    boost::optional<std::string> comment() const;
+
+    /// Sets the comment associated to the track (metadata)
+    void set_comment(boost::optional<boost::string_view> comment) const;
+    void set_comment(boost::string_view comment) const;
+
+    /// Returns the composer (metadata) of the track
+    boost::optional<std::string> composer() const;
+
+    /// Sets the composer (metadata) of the track
+    void set_composer(boost::optional<boost::string_view> composer) const;
+    void set_composer(boost::string_view composer) const;
+
+    /// Returns the crates containing the track
+    std::vector<crate> containing_crates() const;
+
+    /// Returns the database containing the track
+    database db() const;
+
+    std::vector<beatgrid_marker> default_beatgrid() const;
+
+    void set_default_beatgrid(std::vector<beatgrid_marker> beatgrid) const;
+
+    double default_main_cue() const;
+
+    void set_default_main_cue(double sample_offset) const;
+
+    /// Returns the duration (metadata) of the track
+    boost::optional<std::chrono::milliseconds> duration() const;
+
+    /// Returns the file extension part of `track::relative_path()`
+    ///
+    /// An empty string is returned if the file doesn't have an extension.
     std::string file_extension() const;
 
-    /**
-     * \brief Get the time of last attribute modification of this track's file
-     *
-     * Note that this is the attribute modification time, not the data
-     * modification time, i.e. ctime not mtime.
-     */
-    std::chrono::system_clock::time_point last_modified_at() const;
+    /// Returns the filename part of `track::relative_path()` (including the
+    /// file extension)
+    std::string filename() const;
 
-    /**
-     * \brief Get the bitrate of this track
-     */
-    int bitrate() const;
+    /// Returns the genre (metadata) of the track
+    boost::optional<std::string> genre() const;
 
-    /**
-     * \brief Return a `bool` indicating whether this track has ever been played
-     */
-    bool ever_played() const;
+    /// Sets the genre (metadata) of the track
+    void set_genre(boost::optional<boost::string_view> genre) const;
+    void set_genre(boost::string_view genre) const;
 
-    /**
-     * \brief Get the time at which this track was last played
-     */
-    std::chrono::system_clock::time_point last_played_at() const;
+    boost::optional<hot_cue> hot_cue_at(int32_t index) const;
 
-    /**
-     * \brief Get the time at which this track was last accessed
-     *
-     * Note that on VFAT filesystems, the access time is truncated to just a
-     * date, and loses any time precision.
-     */
-    std::chrono::system_clock::time_point last_accessed_at() const;
+    void set_hot_cue_at(int32_t index, boost::optional<hot_cue> cue) const;
+    void set_hot_cue_at(int32_t index, hot_cue cue) const;
 
-    /**
-     * \brief Get a `bool` indicating whether this track was imported into the
-     *        current database from another Engine Prime library
-     */
-    bool imported() const;
+    std::array<boost::optional<hot_cue>, 8> hot_cues() const;
 
-    /**
-     * \brief Get the UUID of the external database from this track was
-     *        imported, if it was imported
-     */
-    std::string external_database_uuid() const;
+    void set_hot_cues(std::array<boost::optional<hot_cue>, 8> cues) const;
 
-    /**
-     * \brief Get the ID of this track in the external database from which it
-     *        was imported, if it was imported
-     */
-    int track_id_in_external_database() const;
+    /// Returns the ID of this track
+    ///
+    /// The ID is used internally in the database and is unique for tracks
+    /// contained in the same database.
+    int64_t id() const;
 
-    /**
-     * \brief Get the id of the album art for this track
-     */
-    int album_art_id() const;
+    /// TODO (haslersn): Document this method.
+    boost::optional<track_import_info> import_info() const;
 
-    /**
-     * \brief Get a `bool` indicating if a title has been set for this track
-     */
-    bool has_title() const;
+    /// TODO (haslersn): Document these methods.
+    void set_import_info(
+        const boost::optional<track_import_info>& import_info) const;
+    void set_import_info(const track_import_info& import_info) const;
 
-    /**
-     * \brief Get a `bool` indicating if an artist has been set this track
-     */
-    bool has_artist() const;
+    /// Returns `true` iff `*this` is valid as described in the class comment
+    bool is_valid() const;
 
-    /**
-     * \brief Get a `bool` indicating if an album has been set for this track
-     */
-    bool has_album() const;
+    /// Returns the key (metadata) of the track
+    boost::optional<musical_key> key() const;
 
-    /**
-     * \brief Get a `bool` indicating if a genre has been set for this track
-     */
-    bool has_genre() const;
+    /// Sets the key (metadata) of the track
+    void set_key(boost::optional<musical_key> key) const;
+    void set_key(musical_key key) const;
 
-    /**
-     * \brief Get a `bool` indicating if a comment has been set for this track
-     */
-    bool has_comment() const;
+    /// Get the time at which this track was last accessed
+    ///
+    /// Note that on VFAT filesystems, the access time is ceiled to just a date,
+    /// and loses any time precision.
+    boost::optional<std::chrono::system_clock::time_point> last_accessed_at()
+        const;
 
-    /**
-     * \brief Get a `bool` indicating if a publisher has been set for this track
-     */
-    bool has_publisher() const;
-
-    /**
-     * \brief Get a `bool` indicating if a composer has been set for this track
-     */
-    bool has_composer() const;
-
-    /**
-     * \brief Get a `bool` indicating if a key has been set for this track
-     */
-    bool has_key() const;
-
-    /**
-     * \brief Return a `bool` indicating whether this track has album art set
-     */
-    bool has_album_art() const { return album_art_id() != 1; }
-
-    void set_track_number(int track_number);
-    void set_duration(std::chrono::seconds duration);
-    void set_bpm(int bpm);
-    void set_year(int year);
-    void set_title(const std::string &title);
-    void set_artist(const std::string &artist);
-    void set_album(const std::string &album);
-    void set_genre(const std::string &genre);
-    void set_comment(const std::string &comment);
-    void set_publisher(const std::string &publisher);
-    void set_composer(const std::string &composer);
-    void set_key(musical_key key);
-    void set_path(const std::string &path);
-    void set_filename(const std::string &filename);
-    void set_file_extension(const std::string &file_extension);
-
-    /**
-     * \brief Set the last attribute modification time
-     *
-     * Note that this is the attribute modification time, not the data
-     * modification time, i.e. ctime not mtime.
-     */
-    void set_last_modified_at(
-        std::chrono::system_clock::time_point last_modified_at);
-    void set_bitrate(int bitrate);
-    void set_ever_played(bool ever_played);
-    void set_last_played_at(
-        std::chrono::system_clock::time_point last_played_at);
+    /// TODO (haslersn): Document these methods.
     void set_last_accessed_at(
-        std::chrono::system_clock::time_point last_accessed_at);
+        boost::optional<std::chrono::system_clock::time_point> last_accessed_at)
+        const;
+    void set_last_accessed_at(
+        std::chrono::system_clock::time_point last_accessed_at) const;
 
-    /**
-     * \brief Set whether this track was imported from another Engine Prime
-     *        library
-     *
-     * If the value of `imported` is set to `false`, then the external database
-     * UUID and track id in external database fields will be reset.
-     */
-    void set_imported(bool imported);
+    /// Get the time of last attribute modification of this track's file
+    ///
+    /// Note that this is the attribute modification time, not the data
+    /// modification time, i.e. ctime not mtime.
+    boost::optional<std::chrono::system_clock::time_point> last_modified_at()
+        const;
 
-    void set_imported(
-        bool imported, const std::string &external_database_uuid,
-        int track_id_in_external_database);
-    void set_album_art_id(int album_art_id);
+    /// TODO (haslersn): Document these methods.
+    void set_last_modified_at(
+        boost::optional<std::chrono::system_clock::time_point> last_modified_at)
+        const;
+    void set_last_modified_at(
+        std::chrono::system_clock::time_point last_modified_at) const;
 
-    /**
-     * \brief Removes any album art from this track
-     */
-    void set_no_album_art();
+    /// Returns the time at which the track was last played
+    boost::optional<std::chrono::system_clock::time_point> last_played_at()
+        const;
 
-    /**
-     * \brief Clone the contents of this track to a new, unsaved track
-     *
-     * Note that the new copied track will not be considered to belong in any
-     * database, and hence will have its `id` set to zero.
-     */
-    track clone_unsaved() const;
+    /// Sets the time at which the track was last played
+    void set_last_played_at(
+        boost::optional<std::chrono::system_clock::time_point> time) const;
+    void set_last_played_at(std::chrono::system_clock::time_point time) const;
 
-    /**
-     * \brief Save a track to a given database
-     *
-     * If the track came from the supplied database originally, it is updated
-     * in-place.  If the track does not already exist in the supplied database,
-     * then it will be saved as a new track there, and the `id()` method will
-     * return a new value after a new track is saved.
-     */
-    void save(const database &database);
+    boost::optional<loop> loop_at(int32_t index) const;
+
+    void set_loop_at(int32_t index, boost::optional<loop> l) const;
+    void set_loop_at(int32_t index, loop l) const;
+
+    std::array<boost::optional<loop>, 8> loops() const;
+
+    void set_loops(std::array<boost::optional<loop>, 8> loops) const;
+
+    std::vector<waveform_entry> overview_waveform() const;
+
+    /// Returns the publisher (metadata) of the track
+    boost::optional<std::string> publisher() const;
+
+    /// Sets the publisher (metadata) of the track
+    void set_publisher(boost::optional<boost::string_view> publisher) const;
+    void set_publisher(boost::string_view publisher) const;
+
+    int64_t recommended_waveform_size() const;
+
+    /// Get the path to this track's file on disk, relative to the music
+    /// database.
+    std::string relative_path() const;
+
+    /// TODO (haslersn): Document this method.
+    void set_relative_path(boost::string_view relative_path) const;
+
+    boost::optional<sampling_info> sampling() const;
+
+    void set_sampling(boost::optional<sampling_info> sample_rate) const;
+    void set_sampling(sampling_info sample_rate) const;
+
+    /// Returns the title (metadata) of the track
+    boost::optional<std::string> title() const;
+
+    /// Sets the title (metadata) of the track
+    void set_title(boost::optional<boost::string_view> title) const;
+    void set_title(boost::string_view title) const;
+
+    /// Returns the track number (metadata) of the track
+    boost::optional<int32_t> track_number() const;
+
+    /// Sets the track number (metadata) of the track
+    void set_track_number(boost::optional<int32_t> track_number) const;
+    void set_track_number(int32_t track_number) const;
+
+    std::vector<waveform_entry> waveform() const;
+
+    void set_waveform(std::vector<waveform_entry> waveform) const;
+
+    /// Returns the recording year (metadata) of the track
+    boost::optional<int32_t> year() const;
+
+    /// Sets the recording year (metadata) of the track
+    void set_year(boost::optional<int32_t> year) const;
+    void set_year(int32_t year) const;
 
 private:
+    track(database database, int64_t id);
+
     struct impl;
-    std::unique_ptr<impl> pimpl_;
+    std::shared_ptr<impl> pimpl_;
+
+    friend class crate;
+    friend class database;
 };
-
-/**
- * \brief Get a list of all track ids in a given database
- */
-std::vector<int> all_track_ids(const database &database);
-
-/**
- * \brief Get a list of all track ids that refer to a specific file path
- */
-std::vector<int> find_track_ids_by_path(
-    const database &database, const std::string &path);
 
 }  // namespace enginelibrary
 }  // namespace djinterop

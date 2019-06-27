@@ -15,14 +15,21 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if __cplusplus < 201103L && _MSVC_LANG < 201103L
-#error This library needs at least a C++11 compliant compiler
-#endif
+#include "enginelibrary/database_impl.hpp"
 
-#ifndef DJINTEROP_ENGINELIBRARY_HPP
-#define DJINTEROP_ENGINELIBRARY_HPP
+namespace djinterop
+{
+namespace enginelibrary
+{
+database_impl::database_impl(const std::string& directory)
+    : directory_{directory},
+      music_db_path_{directory_ + "/m.db"},
+      perfdata_db_path_{directory_ + "/p.db"},
+      music_db_{music_db_path_},
+      perfdata_db_{perfdata_db_path_}
+{
+    // TODO (haslersn): Should we check that directory is an absolute path?
+}
 
-#include <djinterop/enginelibrary/database.hpp>
-#include <djinterop/enginelibrary/performance_data.hpp>
-
-#endif  // DJINTEROP_ENGINELIBRARY_HPP
+}  // namespace enginelibrary
+}  // namespace djinterop

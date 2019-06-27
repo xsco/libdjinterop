@@ -6,7 +6,7 @@ el_public_header_files = [
     'djinterop/enginelibrary/crate.hpp',
     'djinterop/enginelibrary/database.hpp',
     'djinterop/enginelibrary/musical_key.hpp',
-    'djinterop/enginelibrary/pad_colour.hpp',
+    'djinterop/enginelibrary/pad_color.hpp',
     'djinterop/enginelibrary/performance_data.hpp',
     'djinterop/enginelibrary/schema_version.hpp',
     'djinterop/enginelibrary/track.hpp'

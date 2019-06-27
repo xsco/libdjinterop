@@ -1,6 +1,7 @@
 sources = [
     'enginelibrary/crate.cpp',
     'enginelibrary/database.cpp',
+    'enginelibrary/database_impl.cpp',
     'enginelibrary/encode_decode_utils.cpp',
     'enginelibrary/performance_data_format.cpp',
     'enginelibrary/performance_data.cpp',
@@ -8,6 +9,7 @@ sources = [
     'enginelibrary/schema_1_7_1.cpp',
     'enginelibrary/schema.cpp',
     'enginelibrary/track.cpp',
+    'enginelibrary/util.cpp',
     'sqlite3.c'
 ]
 

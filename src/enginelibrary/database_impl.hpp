@@ -15,14 +15,33 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if __cplusplus < 201103L && _MSVC_LANG < 201103L
-#error This library needs at least a C++11 compliant compiler
+#if __cplusplus < 201402L && _MSVC_LANG < 201402L
+#error This library needs at least a C++14 compliant compiler
 #endif
 
-#ifndef DJINTEROP_ENGINELIBRARY_HPP
-#define DJINTEROP_ENGINELIBRARY_HPP
+#ifndef DJINTEROP_ENGINELIBRARY_DATABASE_IMPL_HPP
+#define DJINTEROP_ENGINELIBRARY_DATABASE_IMPL_HPP
 
-#include <djinterop/enginelibrary/database.hpp>
-#include <djinterop/enginelibrary/performance_data.hpp>
+#include "schema.hpp"
+#include "sqlite_modern_cpp.h"
 
-#endif  // DJINTEROP_ENGINELIBRARY_HPP
+namespace djinterop
+{
+namespace enginelibrary
+{
+class database_impl
+{
+public:
+    database_impl(const std::string& directory);
+
+    std::string directory_;
+    std::string music_db_path_;
+    std::string perfdata_db_path_;
+    sqlite::database music_db_;
+    sqlite::database perfdata_db_;
+};
+
+}  // namespace enginelibrary
+}  // namespace djinterop
+
+#endif  // DJINTEROP_ENGINELIBRARY_DATABASE_IMPL_HPP

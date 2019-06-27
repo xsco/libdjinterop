@@ -38,121 +38,65 @@ How Do I Use It?
 The library is not ready for prime-time yet, but if you are willing to read the source code, you can get an example application up and running using code similar to the following:
 
 ```c++
-#include <chrono>
-#include <iostream>
 #include <djinterop/enginelibrary.hpp>
 
-namespace c = std::chrono;
 namespace el = djinterop::enginelibrary;
 
 int main(int argc, char **argv)
 {
-    auto db_dir = "Engine Library";
-    auto db = el::create_database(db_dir, el::version_1_7_1);
+    auto db = el::make_database("Engine Library");
 
-    // Set track data
-    el::track t;
-    t.set_track_number(1);
-    t.set_duration(std::chrono::seconds{366});
-    t.set_bpm(120);
-    t.set_year(1970);
-    t.set_title("Some Song");
-    t.set_artist("Some Artist");
-    t.set_key(el::musical_key::a_minor);
-    t.set_path("../01 - Some Artist - Some Song.mp3");
-    t.set_filename("01 - Some Artist - Some Song.mp3");
-    t.set_file_extension("mp3");
-    t.set_bitrate(320);
-    t.save(db);
+    auto tr = db.create_track("../01 - Some Artist - Some Song.mp3");
 
-    // Set core performance data
-    el::performance_data p{t.id()};
-    p.set_sample_rate(44100);
-    p.set_total_samples(16140600);
-    p.set_key(el::musical_key::a_minor);
-    p.set_average_loudness(0.5);
+    tr.set_track_number(1);
+    tr.set_bpm(120);
+    tr.set_year(1970);
+    tr.set_title("Some Song");
+    tr.set_artist("Some Artist");
+    tr.set_publisher(boost::none);  // boost::none indicates missing metadata
+    tr.set_key(el::musical_key::a_minor);
+    tr.set_bitrate(320);
+    tr.set_average_loudness(0.5);  // loudness range (0, 1]
+    tr.set_sampling({44100,        // sample rate
+                     16140600});   // sample count
+    std::vector<el::beatgrid_marker> beatgrid{
+        {-4, -83316.78},                 // 1st marker
+        {812, 17470734.439}};            // 2nd marker
+    tr.set_default_beatgrid(beatgrid);   // as analyzed
+    tr.set_adjusted_beatgrid(beatgrid);  // manually adjusted
 
-    // Set beat grid
-    p.set_default_beat_grid(el::track_beat_grid{
-            -4,
-            -83316.78,
-            812,
-            17470734.439});
+    // The main cue concerns the cue button
+    tr.set_default_main_cue(2732);   // as analyzed
+    tr.set_adjusted_main_cue(2732);  // manually adjusted
 
-    // Set cues
-    std::vector<el::track_hot_cue_point> cues;
-    cues.emplace_back(true, "Cue 1", 1377924.5, el::standard_pad_colours::pad_1);
-    cues.emplace_back();
-    cues.emplace_back(true, "Cue 3", 5508265.964, el::standard_pad_colours::pad_3);
-    p.set_hot_cues(std::begin(cues), std::end(cues));
-    p.set_adjusted_main_cue_sample_offset(2732);
-    p.set_default_main_cue_sample_offset(2732);
+    // There are always 8 hot cues, whereby each can optionally be set
+    std::array<boost::optional<el::hot_cue>, 8> cues;
+    cues[0] = el::hot_cue{"Cue 1", 1377924.5,  // position in number of samples
+                          el::standard_pad_colors::pad_1};
+    tr.set_hot_cues(cues);
 
-    // Set loops
-    std::vector<el::track_loop> loops;
-    loops.emplace_back(
-            true, true, "Loop 1",
-            1144.012, 345339.134, el::standard_pad_colours::pad_1);
-    p.set_loops(std::begin(loops), std::end(loops));
+    // Setting a single hot cue can also be done like this
+    tr.set_hot_cue_at(3, {"Cue 4", 5508265.96, el::standard_pad_colors::pad_4});
 
-    // Set overview waveform
-    std::vector<el::overview_waveform_entry> ov_waveform_entries;
-    uint_least64_t ov_adjusted_total_samples;
-    uint_least64_t ov_num_entries;
-    double ov_samples_per_entry;
-    el::calculate_overview_waveform_details(
-            p.total_samples(),
-            p.sample_rate(),
-            ov_adjusted_total_samples,
-            ov_num_entries,
-            ov_samples_per_entry);
-    for (auto i = 0; i < ov_num_entries; ++i)
-    {
-        ov_waveform_entries.emplace_back(
-                i * 255 / ov_num_entries,
-                i * 127 / ov_num_entries,
-                i * 63  / ov_num_entries);
-    }
-    p.set_overview_waveform_entries(
-            ov_num_entries,
-            ov_samples_per_entry,
-            std::begin(ov_waveform_entries),
-            std::end(ov_waveform_entries));
+    // The loop API works like the hot cue API
+    tr.set_loop_at(
+        0, {"Loop 1", 1144.012, 345339.134, el::standard_pad_colors::pad_1});
 
     // Set high-resolution waveform
-    std::vector<el::high_res_waveform_entry> hr_waveform_entries;
-    uint_least64_t hr_adjusted_total_samples;
-    uint_least64_t hr_num_entries;
-    double hr_samples_per_entry;
-    el::calculate_high_res_waveform_details(
-            p.total_samples(),
-            p.sample_rate(),
-            hr_adjusted_total_samples,
-            hr_num_entries,
-            hr_samples_per_entry);
-    for (auto i = 0; i < hr_num_entries; ++i)
+    int64_t waveform_size = tr.recommended_waveform_size();
+    std::vector<el::waveform_entry> waveform;
+    waveform.reserve(waveform_size);
+    for (int64_t i = 0; i < waveform_size; ++i)
     {
-        hr_waveform_entries.emplace_back(
-                255,
-                (i * 127 / hr_num_entries) + 128,
-                i * 255 / hr_num_entries,
-                i * 255 / hr_num_entries,
-                i * 255 / hr_num_entries,
-                i * 255 / hr_num_entries);
+        waveform.push_back(  // VALUE and OPACITY for each band (low/mid/high)
+            {{0, 255},       // low
+             {42, 255},      // mid
+             {255, 255}});   // high
     }
-    p.set_high_res_waveform_entries(
-            hr_num_entries,
-            hr_samples_per_entry,
-            std::begin(hr_waveform_entries),
-            std::end(hr_waveform_entries));
-    p.save(db);
-    
-    el::crate cr;
-    cr.set_name("My Example Crate");
-    cr.add_track(t.id());
-    cr.save(db);
+    tr.set_waveform(std::move(waveform));
 
-    return 0;
+    auto cr = db.create_crate("My Example Crate");
+    cr.add_track(tr);
 }
 ```
 

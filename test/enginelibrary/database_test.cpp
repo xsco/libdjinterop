@@ -14,15 +14,19 @@
     You should have received a copy of the GNU Lesser General Public License
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <djinterop/enginelibrary/database.hpp>
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE database_test
 
-#include <boost/test/unit_test.hpp>
-#include <boost/filesystem.hpp>
 #include <ostream>
 #include <string>
+
+#include <boost/filesystem.hpp>
+#include <boost/test/unit_test.hpp>
+
+#include <djinterop/enginelibrary/database.hpp>
+
+#include "sqlite_modern_cpp.h"
 
 #define STRINGIFY(x) STRINGIFY_(x)
 #define STRINGIFY_(x) #x
@@ -87,47 +91,47 @@ BOOST_AUTO_TEST_CASE (information__valid_db__expected)
     el::database db{sample_path};
     
     // Assert
-    BOOST_CHECK_EQUAL(db.directory_path(), sample_path);
+    BOOST_CHECK_EQUAL(db.directory(), sample_path);
     BOOST_CHECK_EQUAL(db.music_db_path(), sample_path + "/m.db");
-    BOOST_CHECK_EQUAL(db.performance_db_path(), sample_path + "/p.db");
-    
-	BOOST_CHECK_EQUAL(db.uuid(), "e535b170-26ef-4f30-8cb2-5b9fa4c2a27f");
-	BOOST_CHECK_EQUAL(db.version(), el::version_1_6_0);
+    BOOST_CHECK_EQUAL(db.perfdata_db_path(), sample_path + "/p.db");
+
+    BOOST_CHECK_EQUAL(db.uuid(), "e535b170-26ef-4f30-8cb2-5b9fa4c2a27f");
+    BOOST_CHECK_EQUAL(db.version(), el::version_1_6_0);
 }
 
-BOOST_AUTO_TEST_CASE (create_database__version_1_6_0__creates_verified)
+BOOST_AUTO_TEST_CASE(make_database__version_1_6_0__creates_verified)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
 
     // Act
-    auto db = el::create_database(temp_dir.string(), el::version_1_6_0);
+    auto db = el::make_database(temp_dir.string(), el::version_1_6_0);
 
     // Assert
     BOOST_CHECK_NO_THROW(db.verify());
     BOOST_CHECK_EQUAL(db.is_supported(), true);
-    BOOST_CHECK_EQUAL(db.directory_path(), temp_dir.string());
+    BOOST_CHECK_EQUAL(db.directory(), temp_dir.string());
     BOOST_CHECK_EQUAL(db.music_db_path(), (temp_dir / "m.db").string());
-    BOOST_CHECK_EQUAL(db.performance_db_path(), (temp_dir / "p.db").string());
+    BOOST_CHECK_EQUAL(db.perfdata_db_path(), (temp_dir / "p.db").string());
     BOOST_CHECK_EQUAL(db.version(), el::version_1_6_0);
     db.verify();
     fs::remove_all(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE (create_database__version_1_7_1__creates_verified)
+BOOST_AUTO_TEST_CASE(make_database__version_1_7_1__creates_verified)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
 
     // Act
-    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
+    auto db = el::make_database(temp_dir.string(), el::version_1_7_1);
 
     // Assert
     BOOST_CHECK_NO_THROW(db.verify());
     BOOST_CHECK_EQUAL(db.is_supported(), true);
-    BOOST_CHECK_EQUAL(db.directory_path(), temp_dir.string());
+    BOOST_CHECK_EQUAL(db.directory(), temp_dir.string());
     BOOST_CHECK_EQUAL(db.music_db_path(), (temp_dir / "m.db").string());
-    BOOST_CHECK_EQUAL(db.performance_db_path(), (temp_dir / "p.db").string());
+    BOOST_CHECK_EQUAL(db.perfdata_db_path(), (temp_dir / "p.db").string());
     BOOST_CHECK_EQUAL(db.version(), el::version_1_7_1);
     db.verify();
     fs::remove_all(temp_dir);
