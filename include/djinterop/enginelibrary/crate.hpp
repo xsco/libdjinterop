@@ -16,7 +16,7 @@
  */
 
 #if __cplusplus < 201103L && _MSVC_LANG < 201103L
-  #error This library needs at least a C++11 compliant compiler
+#error This library needs at least a C++11 compliant compiler
 #endif
 
 #ifndef DJINTEROP_ENGINELIBRARY_CRATE_HPP
@@ -31,9 +31,10 @@
 #include <vector>
 #include "djinterop/enginelibrary/database.hpp"
 
-namespace djinterop {
-namespace enginelibrary {
-
+namespace djinterop
+{
+namespace enginelibrary
+{
 /**
  * The `nonexistent_crate` exception is thrown when a request is made for
  * a crate using an identifier that does not exist in a given database
@@ -44,22 +45,23 @@ public:
     /**
      * \brief Construct the exception for a given crate id
      */
-	explicit nonexistent_crate(int id) noexcept :
-		invalid_argument{"Crate does not exist in database"},
-		id_{id}
-	{}
+    explicit nonexistent_crate(int id) noexcept
+        : invalid_argument{"Crate does not exist in database"}, id_{id}
+    {
+    }
 
     /**
      * \brief Destructor
      */
-	virtual ~nonexistent_crate() = default;
+    virtual ~nonexistent_crate() = default;
 
     /**
      * \brief Get the crate id that was deemed non-existent
      */
-	int id() const noexcept { return id_; }
+    int id() const noexcept { return id_; }
+
 private:
-	int id_;
+    int id_;
 };
 
 /**
@@ -72,31 +74,32 @@ public:
     /**
      * \brief Construct the exception for a given crate id and custom message
      */
-	explicit crate_database_inconsistency(
-            const std::string &what_arg, int id) noexcept :
-		logic_error{what_arg.c_str()},
-		id_{id}
-	{}
+    explicit crate_database_inconsistency(
+        const std::string &what_arg, int id) noexcept
+        : logic_error{what_arg.c_str()}, id_{id}
+    {
+    }
 
     /**
      * \brief Construct the exception for a given crate id
      */
-	explicit crate_database_inconsistency(int id) noexcept :
-		logic_error{"Crate has internal database inconsistency"},
-		id_{id}
-	{}
+    explicit crate_database_inconsistency(int id) noexcept
+        : logic_error{"Crate has internal database inconsistency"}, id_{id}
+    {
+    }
 
     /**
      * \brief Destructor
      */
-	virtual ~crate_database_inconsistency() = default;
+    virtual ~crate_database_inconsistency() = default;
 
     /**
      * \brief Get the crate id that was deemed inconsistent
      */
-	int id() const noexcept { return id_; }
+    int id() const noexcept { return id_; }
+
 private:
-	int id_;
+    int id_;
 };
 
 /**
@@ -138,7 +141,7 @@ public:
      * Note that this crate will not be considered to belong in any database
      * after copy assignment, and hence will have its `id` set to zero.
      */
-    crate &operator =(const crate &other);
+    crate &operator=(const crate &other);
 
     /**
      * \brief Get the id of this crate, as stored in the database.
@@ -244,11 +247,9 @@ std::vector<int> all_root_crate_ids(const database &database);
  * variable.
  */
 bool find_crate_by_name(
-        const database &database,
-        const std::string &name,
-        int &crate_id);
+    const database &database, const std::string &name, int &crate_id);
 
-} // enginelibrary
-} // djinterop
+}  // namespace enginelibrary
+}  // namespace djinterop
 
-#endif // DJINTEROP_ENGINELIBRARY_CRATE_HPP
+#endif  // DJINTEROP_ENGINELIBRARY_CRATE_HPP

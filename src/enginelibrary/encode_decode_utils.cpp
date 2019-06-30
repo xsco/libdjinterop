@@ -17,19 +17,19 @@
 
 #include "encode_decode_utils.hpp"
 
+#include <zlib.h>
 #include <algorithm>
 #include <stdexcept>
 #include <system_error>
 #include <vector>
-#include <zlib.h>
 
-namespace djinterop {
-namespace enginelibrary {
-
+namespace djinterop
+{
+namespace enginelibrary
+{
 // Uncompress a zlib'ed BLOB
 void zlib_uncompress(
-        const std::vector<char> &compressed,
-        std::vector<char> &uncompressed)
+    const std::vector<char> &compressed, std::vector<char> &uncompressed)
 {
     if (compressed.size() == 0)
         // No data, which is a valid situation
@@ -37,7 +37,7 @@ void zlib_uncompress(
 
     if (compressed.size() < 4)
         throw std::length_error(
-                "Compressed data is less than the minimum size of 4 bytes");
+            "Compressed data is less than the minimum size of 4 bytes");
 
     auto apparent_size = decode_int32_be(compressed.data());
     if (apparent_size == 0)
@@ -63,34 +63,31 @@ void zlib_uncompress(
 
     ret = inflateInit(&strm);
     if (ret != Z_OK)
-        throw std::system_error{
-            ret, std::system_category(), "Error calling inflateInit from zlib"};
+        throw std::system_error{ret, std::system_category(),
+                                "Error calling inflateInit from zlib"};
 
     // Take chunks from the input vector
     do
     {
         strm.next_in = (Bytef *)ptr;
-        strm.avail_in = (ptr + chunk_size) < end
-            ? chunk_size
-            : end - ptr;
+        strm.avail_in = (ptr + chunk_size) < end ? chunk_size : end - ptr;
         ptr += strm.avail_in;
 
         // Run inflate() on until we are no longer filling the output buffer
-        do {
+        do
+        {
             strm.next_out = out;
             strm.avail_out = chunk_size;
 
             ret = inflate(&strm, Z_NO_FLUSH);
             switch (ret)
             {
-                case Z_NEED_DICT:
-                    ret = Z_DATA_ERROR; // Fall through
+                case Z_NEED_DICT: ret = Z_DATA_ERROR;  // Fall through
                 case Z_DATA_ERROR:
                 case Z_MEM_ERROR:
                     inflateEnd(&strm);
-                    throw std::system_error{
-                        ret, std::system_category(),
-                        "Error calling inflate from zlib"};
+                    throw std::system_error{ret, std::system_category(),
+                                            "Error calling inflate from zlib"};
             }
 
             have = chunk_size - strm.avail_out;
@@ -104,9 +101,8 @@ void zlib_uncompress(
     inflateEnd(&strm);
     if (ret != Z_STREAM_END)
     {
-        throw std::system_error{
-            Z_DATA_ERROR, std::system_category(),
-            "Error at end of inflation"};
+        throw std::system_error{Z_DATA_ERROR, std::system_category(),
+                                "Error at end of inflation"};
     }
 }
 
@@ -134,11 +130,12 @@ std::vector<char> zlib_compress(const std::vector<char> &uncompressed)
     strm.opaque = Z_NULL;
     ret = deflateInit(&strm, Z_DEFAULT_COMPRESSION);
     if (ret != Z_OK)
-        throw std::system_error{
-            ret, std::system_category(), "Error calling deflateInit from zlib"};
+        throw std::system_error{ret, std::system_category(),
+                                "Error calling deflateInit from zlib"};
 
     // Compress until end of input
-    do {
+    do
+    {
         strm.next_in = (Bytef *)ptr;
         if (ptr + chunk_size < end)
         {
@@ -154,11 +151,12 @@ std::vector<char> zlib_compress(const std::vector<char> &uncompressed)
 
         // Run deflate() on input until output buffer not full, finish
         // compression if all of source has been read in
-        do {
+        do
+        {
             strm.next_out = out;
             strm.avail_out = chunk_size;
 
-            ret = deflate(&strm, flush);    /* no bad return value */
+            ret = deflate(&strm, flush); /* no bad return value */
 
             have = chunk_size - strm.avail_out;
             compressed.insert(compressed.end(), out, out + have);
@@ -172,5 +170,5 @@ std::vector<char> zlib_compress(const std::vector<char> &uncompressed)
     return compressed;
 }
 
-} // enginelibrary
-} // djinterop
+}  // namespace enginelibrary
+}  // namespace djinterop

@@ -27,13 +27,13 @@
 
 typedef std::vector<char>::size_type data_size_t;
 
-namespace djinterop {
-namespace enginelibrary {
-
+namespace djinterop
+{
+namespace enginelibrary
+{
 // Extract track data from a byte array
 track_data_blob decode_track_data(
-        int track_id,
-        const std::vector<char> &compressed_track_data)
+    int track_id, const std::vector<char> &compressed_track_data)
 {
     // Uncompress
     std::vector<char> raw_data;
@@ -52,17 +52,14 @@ track_data_blob decode_track_data(
             track_id, "Track data is not expected length of 28 bytes"};
 
     // Extract values from raw data
-    return track_data_blob{
-        decode_double_be(ptr     ),
-        decode_int64_be (ptr + 8 ),
-        decode_double_be(ptr + 16),
-        decode_int32_be (ptr + 24)};
+    return track_data_blob{decode_double_be(ptr), decode_int64_be(ptr + 8),
+                           decode_double_be(ptr + 16),
+                           decode_int32_be(ptr + 24)};
 }
 
 // Extract beat data from a byte array
 beat_data_blob decode_beat_data(
-        int track_id,
-        const std::vector<char> &compressed_beat_data)
+    int track_id, const std::vector<char> &compressed_beat_data)
 {
     // Uncompress
     std::vector<char> raw_data;
@@ -82,10 +79,8 @@ beat_data_blob decode_beat_data(
             "Beat data is less than minimum expected length of 129 bytes"};
 
     // Extract fixed-location values from raw data
-    beat_data_blob beat_data{
-        decode_double_be(ptr     ),
-        decode_int64_be (ptr + 8 ),
-        decode_uint8    (ptr + 16)};
+    beat_data_blob beat_data{decode_double_be(ptr), decode_int64_be(ptr + 8),
+                             decode_uint8(ptr + 16)};
 
     // Default beat grid
     auto default_num_beatgrid_markers = decode_int64_be(ptr + 17);
@@ -100,10 +95,10 @@ beat_data_blob decode_beat_data(
     {
         if (static_cast<data_size_t>(marker_ptr - ptr) > raw_data.size())
             throw corrupt_performance_data{track_id};
-        marker.sample_offset           = decode_double_le(marker_ptr     );
-        marker.beat_index              = decode_int64_le (marker_ptr + 8 );
-        marker.beats_until_next_marker = decode_int32_le (marker_ptr + 16);
-        marker.unknown_field_1         = decode_int32_le (marker_ptr + 20);
+        marker.sample_offset = decode_double_le(marker_ptr);
+        marker.beat_index = decode_int64_le(marker_ptr + 8);
+        marker.beats_until_next_marker = decode_int32_le(marker_ptr + 16);
+        marker.unknown_field_1 = decode_int32_le(marker_ptr + 20);
         marker_ptr += 24;
     }
 
@@ -120,10 +115,10 @@ beat_data_blob decode_beat_data(
     {
         if (static_cast<data_size_t>(marker_ptr - ptr) > raw_data.size())
             throw corrupt_performance_data{track_id};
-        marker.sample_offset           = decode_double_le(marker_ptr     );
-        marker.beat_index              = decode_int64_le (marker_ptr + 8 );
-        marker.beats_until_next_marker = decode_int32_le (marker_ptr + 16);
-        marker.unknown_field_1         = decode_int32_le (marker_ptr + 20);
+        marker.sample_offset = decode_double_le(marker_ptr);
+        marker.beat_index = decode_int64_le(marker_ptr + 8);
+        marker.beats_until_next_marker = decode_int32_le(marker_ptr + 16);
+        marker.unknown_field_1 = decode_int32_le(marker_ptr + 20);
         marker_ptr += 24;
     }
 
@@ -132,8 +127,7 @@ beat_data_blob decode_beat_data(
 
 // Extract quick cues data from a byte array
 quick_cues_blob decode_quick_cues(
-        int track_id,
-        const std::vector<char> &compressed_quick_cues_data)
+    int track_id, const std::vector<char> &compressed_quick_cues_data)
 {
     // Uncompress
     std::vector<char> raw_data;
@@ -169,7 +163,7 @@ quick_cues_blob decode_quick_cues(
         // Get label length, and check minimum data length
         auto label_length = decode_uint8(cue_ptr);
         if (raw_data.size() <
-                static_cast<data_size_t>(cue_ptr - ptr + label_length) + 13)
+            static_cast<data_size_t>(cue_ptr - ptr + label_length) + 13)
             throw corrupt_performance_data{track_id};
         if (label_length < 0)
             throw corrupt_performance_data{track_id};
@@ -205,9 +199,7 @@ quick_cues_blob decode_quick_cues(
 }
 
 // Extract loops from a byte array
-loops_blob decode_loops(
-        int track_id,
-        const std::vector<char> &loops_data)
+loops_blob decode_loops(int track_id, const std::vector<char> &loops_data)
 {
     // Note that loops are not compressed, unlike all the other fields
     auto &raw_data = loops_data;
@@ -242,7 +234,7 @@ loops_blob decode_loops(
         // Get label length, and check minimum data length
         auto label_length = decode_uint8(loop_ptr);
         if (raw_data.size() <
-                static_cast<data_size_t>(loop_ptr - ptr + label_length) + 23)
+            static_cast<data_size_t>(loop_ptr - ptr + label_length) + 23)
             throw corrupt_performance_data{track_id};
         if (label_length < 0)
             throw corrupt_performance_data{track_id};
@@ -255,13 +247,13 @@ loops_blob decode_loops(
             loop_ptr += label_length;
         }
         loops.loops[i].start_sample_offset = decode_double_le(loop_ptr + 0);
-        loops.loops[i].end_sample_offset   = decode_double_le(loop_ptr + 8);
-        loops.loops[i].is_start_set        = decode_uint8(loop_ptr      + 16);
-        loops.loops[i].is_end_set          = decode_uint8(loop_ptr      + 17);
-        loops.loops[i].colour.a            = decode_uint8(loop_ptr      + 18);
-        loops.loops[i].colour.r            = decode_uint8(loop_ptr      + 19);
-        loops.loops[i].colour.g            = decode_uint8(loop_ptr      + 20);
-        loops.loops[i].colour.b            = decode_uint8(loop_ptr      + 21);
+        loops.loops[i].end_sample_offset = decode_double_le(loop_ptr + 8);
+        loops.loops[i].is_start_set = decode_uint8(loop_ptr + 16);
+        loops.loops[i].is_end_set = decode_uint8(loop_ptr + 17);
+        loops.loops[i].colour.a = decode_uint8(loop_ptr + 18);
+        loops.loops[i].colour.r = decode_uint8(loop_ptr + 19);
+        loops.loops[i].colour.g = decode_uint8(loop_ptr + 20);
+        loops.loops[i].colour.b = decode_uint8(loop_ptr + 21);
         loop_ptr += 22;
     }
 
@@ -270,8 +262,7 @@ loops_blob decode_loops(
 
 // Extract overview waveform from a byte array
 overview_waveform_blob decode_overview_waveform_data(
-        int track_id,
-        const std::vector<char> &waveform_data)
+    int track_id, const std::vector<char> &waveform_data)
 {
     // Uncompress
     std::vector<char> raw_data;
@@ -299,7 +290,7 @@ overview_waveform_blob decode_overview_waveform_data(
 
     // There are three data points per entry, and an additional entry at the end
     if (raw_data.size() <
-            24 + (static_cast<data_size_t>(waveform.num_entries + 1) * 3))
+        24 + (static_cast<data_size_t>(waveform.num_entries + 1) * 3))
     {
         throw corrupt_performance_data{
             track_id,
@@ -312,9 +303,8 @@ overview_waveform_blob decode_overview_waveform_data(
     for (auto i = 0; i < waveform.num_entries; ++i, ptr += 3)
     {
         waveform.entry_data.emplace_back(
-                decode_uint8(ptr + 0),
-                decode_uint8(ptr + 1),
-                decode_uint8(ptr + 2));
+            decode_uint8(ptr + 0), decode_uint8(ptr + 1),
+            decode_uint8(ptr + 2));
     }
 
     // Ignore additional entry at the end
@@ -323,8 +313,7 @@ overview_waveform_blob decode_overview_waveform_data(
 
 // Extract high-resolution waveform from a byte array
 high_res_waveform_blob decode_high_res_waveform_data(
-        int track_id,
-        const std::vector<char> &waveform_data)
+    int track_id, const std::vector<char> &waveform_data)
 {
     // Uncompress
     std::vector<char> raw_data;
@@ -353,7 +342,7 @@ high_res_waveform_blob decode_high_res_waveform_data(
 
     // There are six data points per entry, and an additional entry at the end
     if (raw_data.size() <
-            24 + (static_cast<data_size_t>(waveform.num_entries + 1) * 6))
+        24 + (static_cast<data_size_t>(waveform.num_entries + 1) * 6))
     {
         throw corrupt_performance_data{
             track_id,
@@ -366,12 +355,9 @@ high_res_waveform_blob decode_high_res_waveform_data(
     for (auto i = 0; i < waveform.num_entries; ++i, ptr += 6)
     {
         waveform.entry_data.emplace_back(
-                decode_uint8(ptr + 0),
-                decode_uint8(ptr + 1),
-                decode_uint8(ptr + 2),
-                decode_uint8(ptr + 3),
-                decode_uint8(ptr + 4),
-                decode_uint8(ptr + 5));
+            decode_uint8(ptr + 0), decode_uint8(ptr + 1), decode_uint8(ptr + 2),
+            decode_uint8(ptr + 3), decode_uint8(ptr + 4),
+            decode_uint8(ptr + 5));
     }
 
     // Ignore additional entry at the end
@@ -390,10 +376,10 @@ std::vector<char> encode_track_data(const track_data_blob &track_data)
     uncompressed.resize(28);
     auto ptr = uncompressed.data();
 
-    encode_double_be(track_data.sample_rate,      ptr + 0);
-    encode_int64_be (track_data.total_samples,    ptr + 8);
+    encode_double_be(track_data.sample_rate, ptr + 0);
+    encode_int64_be(track_data.total_samples, ptr + 8);
     encode_double_be(track_data.average_loudness, ptr + 16);
-    encode_int32_be ((int32_t)track_data.key,     ptr + 24);
+    encode_int32_be((int32_t)track_data.key, ptr + 24);
 
     return zlib_compress(uncompressed);
 }
@@ -407,36 +393,34 @@ std::vector<char> encode_beat_data(const beat_data_blob &beat_data)
 
     std::vector<char> uncompressed{};
     uncompressed.resize(
-            33 +
-            24 * (
-                beat_data.default_markers.size() +
-                beat_data.adjusted_markers.size()));
+        33 + 24 * (beat_data.default_markers.size() +
+                   beat_data.adjusted_markers.size()));
     auto ptr = uncompressed.data();
 
-    encode_double_be(beat_data.sample_rate,   ptr + 0);
+    encode_double_be(beat_data.sample_rate, ptr + 0);
     encode_double_be(beat_data.total_samples, ptr + 8);
-    encode_uint8     (1,                       ptr + 16);
+    encode_uint8(1, ptr + 16);
     ptr += 17;
 
-    encode_int64_be (beat_data.default_markers.size(), ptr + 0);
+    encode_int64_be(beat_data.default_markers.size(), ptr + 0);
     ptr += 8;
     for (auto &marker : beat_data.default_markers)
     {
-        encode_double_le(marker.sample_offset,           ptr + 0);
-        encode_int64_le (marker.beat_index,              ptr + 8);
-        encode_int32_le (marker.beats_until_next_marker, ptr + 16);
-        encode_int32_le (marker.unknown_field_1,         ptr + 20);
+        encode_double_le(marker.sample_offset, ptr + 0);
+        encode_int64_le(marker.beat_index, ptr + 8);
+        encode_int32_le(marker.beats_until_next_marker, ptr + 16);
+        encode_int32_le(marker.unknown_field_1, ptr + 20);
         ptr += 24;
     }
 
-    encode_int64_be (beat_data.adjusted_markers.size(), ptr + 0);
+    encode_int64_be(beat_data.adjusted_markers.size(), ptr + 0);
     ptr += 8;
     for (auto &marker : beat_data.adjusted_markers)
     {
-        encode_double_le(marker.sample_offset,           ptr + 0);
-        encode_int64_le (marker.beat_index,              ptr + 8);
-        encode_int32_le (marker.beats_until_next_marker, ptr + 16);
-        encode_int32_le (marker.unknown_field_1,         ptr + 20);
+        encode_double_le(marker.sample_offset, ptr + 0);
+        encode_int64_le(marker.beat_index, ptr + 8);
+        encode_int32_le(marker.beats_until_next_marker, ptr + 16);
+        encode_int32_le(marker.unknown_field_1, ptr + 20);
         ptr += 24;
     }
 
@@ -457,9 +441,7 @@ std::vector<char> encode_quick_cues(const quick_cues_blob &quick_cues)
             total_label_length += hot_cue.label.length();
     std::vector<char> uncompressed{};
     uncompressed.resize(
-            25 +
-            (quick_cues.hot_cues.size() * 13) +
-            total_label_length);
+        25 + (quick_cues.hot_cues.size() * 13) + total_label_length);
     auto ptr = uncompressed.data();
 
     encode_int64_be(quick_cues.hot_cues.size(), ptr);
@@ -479,16 +461,16 @@ std::vector<char> encode_quick_cues(const quick_cues_blob &quick_cues)
         }
 
         encode_double_be(hot_cue.sample_offset, ptr + 0);
-        encode_uint8    (hot_cue.colour.a,      ptr + 8);
-        encode_uint8    (hot_cue.colour.r,      ptr + 9);
-        encode_uint8    (hot_cue.colour.g,      ptr + 10);
-        encode_uint8    (hot_cue.colour.b,      ptr + 11);
+        encode_uint8(hot_cue.colour.a, ptr + 8);
+        encode_uint8(hot_cue.colour.r, ptr + 9);
+        encode_uint8(hot_cue.colour.g, ptr + 10);
+        encode_uint8(hot_cue.colour.b, ptr + 11);
         ptr += 12;
     }
 
-    encode_double_be(quick_cues.adjusted_main_cue_sample_offset,   ptr + 0);
-    encode_uint8    (quick_cues.is_main_cue_adjusted_from_default, ptr + 8);
-    encode_double_be(quick_cues.default_main_cue_sample_offset,   ptr + 9);
+    encode_double_be(quick_cues.adjusted_main_cue_sample_offset, ptr + 0);
+    encode_uint8(quick_cues.is_main_cue_adjusted_from_default, ptr + 8);
+    encode_double_be(quick_cues.default_main_cue_sample_offset, ptr + 9);
 
     return zlib_compress(uncompressed);
 }
@@ -506,10 +488,7 @@ std::vector<char> encode_loops(const loops_blob &loops)
         if (loop.is_set())
             total_label_length += loop.label.length();
     std::vector<char> uncompressed{};
-    uncompressed.resize(
-            8 +
-            (loops.loops.size() * 23) +
-            total_label_length);
+    uncompressed.resize(8 + (loops.loops.size() * 23) + total_label_length);
     auto ptr = uncompressed.data();
 
     encode_int64_le(loops.loops.size(), ptr);
@@ -529,13 +508,13 @@ std::vector<char> encode_loops(const loops_blob &loops)
         }
 
         encode_double_le(loop.start_sample_offset, ptr + 0);
-        encode_double_le(loop.end_sample_offset,   ptr + 8);
-        encode_uint8    (loop.is_start_set,        ptr + 16);
-        encode_uint8    (loop.is_end_set,          ptr + 17);
-        encode_uint8    (loop.colour.a,            ptr + 18);
-        encode_uint8    (loop.colour.r,            ptr + 19);
-        encode_uint8    (loop.colour.g,            ptr + 20);
-        encode_uint8    (loop.colour.b,            ptr + 21);
+        encode_double_le(loop.end_sample_offset, ptr + 8);
+        encode_uint8(loop.is_start_set, ptr + 16);
+        encode_uint8(loop.is_end_set, ptr + 17);
+        encode_uint8(loop.colour.a, ptr + 18);
+        encode_uint8(loop.colour.r, ptr + 19);
+        encode_uint8(loop.colour.g, ptr + 20);
+        encode_uint8(loop.colour.b, ptr + 21);
         ptr += 22;
     }
 
@@ -545,7 +524,7 @@ std::vector<char> encode_loops(const loops_blob &loops)
 
 // Encode overview waveform data into a byte array
 std::vector<char> encode_overview_waveform_data(
-        const overview_waveform_blob &waveform_data)
+    const overview_waveform_blob &waveform_data)
 {
     // Work out total length of all data
     auto total_length = 24 + 3 * (waveform_data.entry_data.size() + 1);
@@ -571,15 +550,15 @@ std::vector<char> encode_overview_waveform_data(
         if (entry.high_frequency_point > max_high)
             max_high = entry.high_frequency_point;
 
-        encode_uint8(entry.low_frequency_point,  ptr + 0);
-        encode_uint8(entry.mid_frequency_point,  ptr + 1);
+        encode_uint8(entry.low_frequency_point, ptr + 0);
+        encode_uint8(entry.mid_frequency_point, ptr + 1);
         encode_uint8(entry.high_frequency_point, ptr + 2);
         ptr += 3;
     }
 
     // Encode the maximum values across all entries
-    encode_uint8(max_low,  ptr + 0);
-    encode_uint8(max_mid,  ptr + 1);
+    encode_uint8(max_low, ptr + 0);
+    encode_uint8(max_mid, ptr + 1);
     encode_uint8(max_high, ptr + 2);
 
     return zlib_compress(uncompressed);
@@ -587,7 +566,7 @@ std::vector<char> encode_overview_waveform_data(
 
 // Encode high-resolution waveform data into a byte array
 std::vector<char> encode_high_res_waveform_data(
-        const high_res_waveform_blob &waveform_data)
+    const high_res_waveform_blob &waveform_data)
 {
     // Work out total length of all data
     auto total_length = 24 + 6 * (waveform_data.entry_data.size() + 1);
@@ -622,25 +601,25 @@ std::vector<char> encode_high_res_waveform_data(
         if (entry.high_frequency_opacity > max_high_opc)
             max_high_opc = entry.high_frequency_opacity;
 
-        encode_uint8(entry.low_frequency_point,  ptr + 0);
-        encode_uint8(entry.mid_frequency_point,  ptr + 1);
+        encode_uint8(entry.low_frequency_point, ptr + 0);
+        encode_uint8(entry.mid_frequency_point, ptr + 1);
         encode_uint8(entry.high_frequency_point, ptr + 2);
-        encode_uint8(entry.low_frequency_opacity,  ptr + 3);
-        encode_uint8(entry.mid_frequency_opacity,  ptr + 4);
+        encode_uint8(entry.low_frequency_opacity, ptr + 3);
+        encode_uint8(entry.mid_frequency_opacity, ptr + 4);
         encode_uint8(entry.high_frequency_opacity, ptr + 5);
         ptr += 6;
     }
 
     // Encode the maximum values across all entries
-    encode_uint8(max_low,  ptr + 0);
-    encode_uint8(max_mid,  ptr + 1);
+    encode_uint8(max_low, ptr + 0);
+    encode_uint8(max_mid, ptr + 1);
     encode_uint8(max_high, ptr + 2);
-    encode_uint8(max_low_opc,  ptr + 3);
-    encode_uint8(max_mid_opc,  ptr + 4);
+    encode_uint8(max_low_opc, ptr + 3);
+    encode_uint8(max_mid_opc, ptr + 4);
     encode_uint8(max_high_opc, ptr + 5);
 
     return zlib_compress(uncompressed);
 }
 
-} // enginelibrary
-} // djinterop
+}  // namespace enginelibrary
+}  // namespace djinterop

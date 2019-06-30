@@ -16,7 +16,7 @@
  */
 
 #if __cplusplus < 201103L && _MSVC_LANG < 201103L
-  #error This library needs at least a C++11 compliant compiler
+#error This library needs at least a C++11 compliant compiler
 #endif
 
 #ifndef DJINTEROP_ENGINELIBRARY_PERFORMANCE_DATA_HPP
@@ -33,9 +33,10 @@
 #include "musical_key.hpp"
 #include "pad_colour.hpp"
 
-namespace djinterop {
-namespace enginelibrary {
-
+namespace djinterop
+{
+namespace enginelibrary
+{
 /**
  * The `nonexistent_performance_data` exception is thrown when a request is
  * made to look up performance data for a given track id in a given database,
@@ -44,14 +45,16 @@ namespace enginelibrary {
 class nonexistent_performance_data : public std::invalid_argument
 {
 public:
-	explicit nonexistent_performance_data(int track_id) noexcept :
-		invalid_argument{"PerformanceData does not exist in database"},
-		track_id_{track_id}
-	{}
-	virtual ~nonexistent_performance_data() = default;
-	int track_id() const noexcept { return track_id_; }
+    explicit nonexistent_performance_data(int track_id) noexcept
+        : invalid_argument{"PerformanceData does not exist in database"},
+          track_id_{track_id}
+    {
+    }
+    virtual ~nonexistent_performance_data() = default;
+    int track_id() const noexcept { return track_id_; }
+
 private:
-	int track_id_;
+    int track_id_;
 };
 
 /**
@@ -61,18 +64,20 @@ private:
 class corrupt_performance_data : public std::logic_error
 {
 public:
-    explicit corrupt_performance_data(int track_id) noexcept :
-        logic_error{"PerformanceData is corrupted or of unknown format"},
-        track_id_{track_id}
-    {}
-    explicit corrupt_performance_data(int track_id, const char *msg) noexcept :
-        logic_error{msg},
-        track_id_{track_id}
-    {}
-	virtual ~corrupt_performance_data() = default;
-	int track_id() const noexcept { return track_id_; }
+    explicit corrupt_performance_data(int track_id) noexcept
+        : logic_error{"PerformanceData is corrupted or of unknown format"},
+          track_id_{track_id}
+    {
+    }
+    explicit corrupt_performance_data(int track_id, const char *msg) noexcept
+        : logic_error{msg}, track_id_{track_id}
+    {
+    }
+    virtual ~corrupt_performance_data() = default;
+    int track_id() const noexcept { return track_id_; }
+
 private:
-	int track_id_;
+    int track_id_;
 };
 
 /**
@@ -99,28 +104,30 @@ struct track_beat_grid
     /**
      * \brief Default constructor
      */
-    track_beat_grid() :
-        first_beat_index{0},
-        first_beat_sample_offset{0},
-        last_beat_index{0},
-        last_beat_sample_offset{0}
-    {}
+    track_beat_grid()
+        : first_beat_index{0},
+          first_beat_sample_offset{0},
+          last_beat_index{0},
+          last_beat_sample_offset{0}
+    {
+    }
 
     /**
      * \brief Construct a `track_beat_grid` from explicit values
      */
     track_beat_grid(
-            int first_beat_index, double first_beat_sample_offset,
-            int last_beat_index, double last_beat_sample_offset) :
-        first_beat_index{first_beat_index},
-        first_beat_sample_offset{first_beat_sample_offset},
-        last_beat_index{last_beat_index},
-        last_beat_sample_offset{last_beat_sample_offset}
-    {}
+        int first_beat_index, double first_beat_sample_offset,
+        int last_beat_index, double last_beat_sample_offset)
+        : first_beat_index{first_beat_index},
+          first_beat_sample_offset{first_beat_sample_offset},
+          last_beat_index{last_beat_index},
+          last_beat_sample_offset{last_beat_sample_offset}
+    {
+    }
 
-	int first_beat_index;
+    int first_beat_index;
     double first_beat_sample_offset;
-	int last_beat_index;
+    int last_beat_index;
     double last_beat_sample_offset;
 };
 
@@ -132,24 +139,22 @@ struct track_hot_cue_point
     /**
      * \brief Default constructor
      */
-    track_hot_cue_point() :
-        is_set{false},
-        label{},
-        sample_offset{-1},
-        colour{}
-    {}
+    track_hot_cue_point() : is_set{false}, label{}, sample_offset{-1}, colour{}
+    {
+    }
 
     /**
      * \brief Construct a `track_hot_cue_point` from explicit field values
      */
     track_hot_cue_point(
-            bool is_set, const std::string &label,
-            double sample_offset, const pad_colour &colour) :
-        is_set{is_set},
-        label{label},
-        sample_offset{sample_offset},
-        colour{colour}
-    {}
+        bool is_set, const std::string &label, double sample_offset,
+        const pad_colour &colour)
+        : is_set{is_set},
+          label{label},
+          sample_offset{sample_offset},
+          colour{colour}
+    {
+    }
 
     bool is_set;
     std::string label;
@@ -165,29 +170,31 @@ struct track_loop
     /**
      * \brief Default constructor
      */
-    track_loop() :
-        is_start_set{false},
-        is_end_set{false},
-        label{},
-        start_sample_offset{-1},
-        end_sample_offset{-1},
-        colour{}
-    {}
+    track_loop()
+        : is_start_set{false},
+          is_end_set{false},
+          label{},
+          start_sample_offset{-1},
+          end_sample_offset{-1},
+          colour{}
+    {
+    }
 
     /**
      * \brief Construct a `track loop` from explicit field values
      */
     track_loop(
-            bool is_start_set, bool is_end_set, const std::string &label,
-            double start_sample_offset, double end_sample_offset,
-            const pad_colour &colour) :
-        is_start_set{is_start_set},
-        is_end_set{is_end_set},
-        label{label},
-        start_sample_offset{start_sample_offset},
-        end_sample_offset{end_sample_offset},
-        colour{colour}
-    {}
+        bool is_start_set, bool is_end_set, const std::string &label,
+        double start_sample_offset, double end_sample_offset,
+        const pad_colour &colour)
+        : is_start_set{is_start_set},
+          is_end_set{is_end_set},
+          label{label},
+          start_sample_offset{start_sample_offset},
+          end_sample_offset{end_sample_offset},
+          colour{colour}
+    {
+    }
 
     bool is_start_set;
     bool is_end_set;
@@ -207,17 +214,16 @@ typedef std::vector<track_loop>::const_iterator track_loop_const_iterator;
  */
 struct overview_waveform_entry
 {
-    overview_waveform_entry()
-    {}
+    overview_waveform_entry() {}
 
     overview_waveform_entry(
-            uint_least8_t low_frequency_point,
-            uint_least8_t mid_frequency_point,
-            uint_least8_t high_frequency_point) :
-        low_frequency_point{low_frequency_point},
-        mid_frequency_point{mid_frequency_point},
-        high_frequency_point{high_frequency_point}
-    {}
+        uint_least8_t low_frequency_point, uint_least8_t mid_frequency_point,
+        uint_least8_t high_frequency_point)
+        : low_frequency_point{low_frequency_point},
+          mid_frequency_point{mid_frequency_point},
+          high_frequency_point{high_frequency_point}
+    {
+    }
 
     uint_least8_t low_frequency_point;
     uint_least8_t mid_frequency_point;
@@ -242,23 +248,21 @@ typedef std::vector<overview_waveform_entry>::const_iterator
  */
 struct high_res_waveform_entry
 {
-    high_res_waveform_entry()
-    {}
+    high_res_waveform_entry() {}
 
     high_res_waveform_entry(
-            uint_least8_t low_frequency_point,
-            uint_least8_t mid_frequency_point,
-            uint_least8_t high_frequency_point,
-            uint_least8_t low_frequency_opacity,
-            uint_least8_t mid_frequency_opacity,
-            uint_least8_t high_frequency_opacity) :
-        low_frequency_point{low_frequency_point},
-        mid_frequency_point{mid_frequency_point},
-        high_frequency_point{high_frequency_point},
-        low_frequency_opacity{low_frequency_opacity},
-        mid_frequency_opacity{mid_frequency_opacity},
-        high_frequency_opacity{high_frequency_opacity}
-    {}
+        uint_least8_t low_frequency_point, uint_least8_t mid_frequency_point,
+        uint_least8_t high_frequency_point, uint_least8_t low_frequency_opacity,
+        uint_least8_t mid_frequency_opacity,
+        uint_least8_t high_frequency_opacity)
+        : low_frequency_point{low_frequency_point},
+          mid_frequency_point{mid_frequency_point},
+          high_frequency_point{high_frequency_point},
+          low_frequency_opacity{low_frequency_opacity},
+          mid_frequency_opacity{mid_frequency_opacity},
+          high_frequency_opacity{high_frequency_opacity}
+    {
+    }
 
     uint_least8_t low_frequency_point;
     uint_least8_t mid_frequency_point;
@@ -280,7 +284,7 @@ public:
     /**
      * \brief Construct performance data, loading from a database
      */
-	performance_data(const database &db, int track_id);
+    performance_data(const database &db, int track_id);
 
     /**
      * \brief Construct an empty performance data record for a given track,
@@ -301,17 +305,17 @@ public:
     /**
      * \brief Destructor
      */
-	~performance_data();
+    ~performance_data();
 
     /**
      * \brief Copy assignment
      */
-    performance_data &operator =(const performance_data &other);
+    performance_data &operator=(const performance_data &other);
 
     /**
      * \brief Move assignment
      */
-    performance_data &operator =(performance_data &&other) noexcept;
+    performance_data &operator=(performance_data &&other) noexcept;
 
     /**
      * \brief Tests whether performance data already exists for a given track
@@ -321,7 +325,7 @@ public:
     /**
      * \brief Gets the id of the track that this performance data relates to
      */
-	int track_id() const;
+    int track_id() const;
 
     /**
      * \brief Gets the sample rate of the track
@@ -365,14 +369,16 @@ public:
     /**
      * \brief Gets an iterator pointing to the first hot cue slot
      *
-     * Note that there are always 8 hot cues per track in an Engine Prime library
+     * Note that there are always 8 hot cues per track in an Engine Prime
+     * library
      */
     hot_cue_const_iterator hot_cues_begin() const;
 
     /**
      * \brief Gets an iterator pointing beyond the last hot cue slot
      *
-     * Note that there are always 8 hot cues per track in an Engine Prime library
+     * Note that there are always 8 hot cues per track in an Engine Prime
+     * library
      */
     hot_cue_const_iterator hot_cues_end() const;
 
@@ -390,7 +396,7 @@ public:
      * equal to the default main cue point.
      */
     double adjusted_main_cue_sample_offset() const;
-    
+
     /**
      * \brief Gets an iterator pointing to the first loop
      *
@@ -459,8 +465,8 @@ public:
     std::chrono::milliseconds duration() const
     {
         auto ms = sample_rate() != 0
-            ? 1000 * total_samples() / (int_least64_t)sample_rate()
-            : 0;
+                      ? 1000 * total_samples() / (int_least64_t)sample_rate()
+                      : 0;
         return std::chrono::milliseconds{ms};
     }
 
@@ -470,19 +476,19 @@ public:
      * This is calculated from the adjusted beat grid associated with the track
      * (which is measured in samples), and the sample rate of the track.
      */
-	double bpm() const
-	{
-        if (
-                adjusted_beat_grid().last_beat_index -
-                adjusted_beat_grid().first_beat_index == 0)
+    double bpm() const
+    {
+        if (adjusted_beat_grid().last_beat_index -
+                adjusted_beat_grid().first_beat_index ==
+            0)
             return 0;
 
-		return sample_rate() * 60 *
+        return sample_rate() * 60 *
 			(double)(adjusted_beat_grid().last_beat_index -
 			 adjusted_beat_grid().first_beat_index) /
 			(adjusted_beat_grid().last_beat_sample_offset -
 			 adjusted_beat_grid().first_beat_sample_offset);
-	}
+    }
 
     void set_sample_rate(double sample_rate);
 
@@ -512,9 +518,7 @@ public:
      * Note that the SC5000 Prime allows a maximum of 8 hot cues.  If more than
      * 8 are supplied, only the first 8 will be considered.
      */
-    void set_hot_cues(
-            hot_cue_const_iterator begin,
-            hot_cue_const_iterator end);
+    void set_hot_cues(hot_cue_const_iterator begin, hot_cue_const_iterator end);
 
     void set_default_main_cue_sample_offset(double sample_offset);
 
@@ -527,8 +531,7 @@ public:
      * 8 are supplied, only the first 8 will be considered.
      */
     void set_loops(
-            track_loop_const_iterator begin,
-            track_loop_const_iterator end);
+        track_loop_const_iterator begin, track_loop_const_iterator end);
 
     /**
      * \brief Set overview waveform data
@@ -537,10 +540,9 @@ public:
      * calculated via the `calculate_overview_waveform_details` function.
      */
     void set_overview_waveform_entries(
-            uint_least64_t num_entries,
-            double samples_per_entry,
-            overview_waveform_entry_const_iterator begin,
-            overview_waveform_entry_const_iterator end);
+        uint_least64_t num_entries, double samples_per_entry,
+        overview_waveform_entry_const_iterator begin,
+        overview_waveform_entry_const_iterator end);
 
     /**
      * \brief Set high-resolution waveform data
@@ -549,10 +551,9 @@ public:
      * calculated via the `calculate_high_res_waveform_details` function.
      */
     void set_high_res_waveform_entries(
-            uint_least64_t num_entries,
-            double samples_per_entry,
-            high_res_waveform_entry_const_iterator begin,
-            high_res_waveform_entry_const_iterator end);
+        uint_least64_t num_entries, double samples_per_entry,
+        high_res_waveform_entry_const_iterator begin,
+        high_res_waveform_entry_const_iterator end);
 
     /**
      * \brief Save track performance data to a given database
@@ -560,8 +561,8 @@ public:
     void save(const database &database);
 
 private:
-	struct impl;
-	std::unique_ptr<impl> pimpl_;
+    struct impl;
+    std::unique_ptr<impl> pimpl_;
 };
 
 /**
@@ -581,11 +582,9 @@ void normalise_beat_grid(track_beat_grid &beat_grid, double last_sample);
  *        number of samples and sample rate
  */
 void calculate_overview_waveform_details(
-        uint_least64_t total_samples,
-        double sample_rate,
-        uint_least64_t &adjusted_total_samples,
-        uint_least64_t &num_entries,
-        double &samples_per_entry);
+    uint_least64_t total_samples, double sample_rate,
+    uint_least64_t &adjusted_total_samples, uint_least64_t &num_entries,
+    double &samples_per_entry);
 
 /**
  * \brief Calculate details for an high-resolution waveform, given a track's
@@ -596,13 +595,11 @@ void calculate_overview_waveform_details(
  * be padded with zeroes to make up the extra space.
  */
 void calculate_high_res_waveform_details(
-        uint_least64_t total_samples,
-        double sample_rate,
-        uint_least64_t &adjusted_total_samples,
-        uint_least64_t &num_entries,
-        double &samples_per_entry);
+    uint_least64_t total_samples, double sample_rate,
+    uint_least64_t &adjusted_total_samples, uint_least64_t &num_entries,
+    double &samples_per_entry);
 
-} // enginelibrary
-} // djinterop
+}  // namespace enginelibrary
+}  // namespace djinterop
 
-#endif // DJINTEROP_ENGINELIBRARY_PERFORMANCE_DATA_HPP
+#endif  // DJINTEROP_ENGINELIBRARY_PERFORMANCE_DATA_HPP

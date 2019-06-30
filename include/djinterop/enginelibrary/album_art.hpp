@@ -16,7 +16,7 @@
  */
 
 #if __cplusplus < 201103L && _MSVC_LANG < 201103L
-  #error This library needs at least a C++11 compliant compiler
+#error This library needs at least a C++11 compliant compiler
 #endif
 
 #ifndef DJINTEROP_ENGINELIBRARY_ALBUM_ART_HPP
@@ -31,9 +31,10 @@
 
 #include "database.hpp"
 
-namespace djinterop {
-namespace enginelibrary {
-
+namespace djinterop
+{
+namespace enginelibrary
+{
 // Artwork for tracks
 struct album_art
 {
@@ -45,7 +46,7 @@ struct album_art
     // TODO - implement rest of album_art class
 };
 
-} // enginelibrary
-} // djinterop
+}  // namespace enginelibrary
+}  // namespace djinterop
 
-#endif // DJINTEROP_ENGINELIBRARY_ALBUM_ART_HPP
+#endif  // DJINTEROP_ENGINELIBRARY_ALBUM_ART_HPP

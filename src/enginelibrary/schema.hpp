@@ -16,7 +16,7 @@
  */
 
 #if __cplusplus < 201402L && _MSVC_LANG < 201402L
-  #error This library needs at least a C++14 compliant compiler
+#error This library needs at least a C++14 compliant compiler
 #endif
 
 #ifndef DJINTEROP_ENGINELIBRARY_SCHEMA_HPP
@@ -28,22 +28,22 @@
 
 #include "djinterop/enginelibrary/schema_version.hpp"
 
-namespace djinterop {
-namespace enginelibrary {
-
+namespace djinterop
+{
+namespace enginelibrary
+{
 bool is_supported(const schema_version &version);
 
 schema_version verify_music_schema(sqlite::database &db);
 
 schema_version verify_performance_schema(sqlite::database &db);
 
-void create_music_schema(
-        sqlite::database &db, const schema_version &version);
+void create_music_schema(sqlite::database &db, const schema_version &version);
 
 void create_performance_schema(
-        sqlite::database &db, const schema_version &version);
+    sqlite::database &db, const schema_version &version);
 
-} // enginelibrary
-} // djinterop
+}  // namespace enginelibrary
+}  // namespace djinterop
 
-#endif // DJINTEROP_ENGINELIBRARY_SCHEMA_HPP
+#endif  // DJINTEROP_ENGINELIBRARY_SCHEMA_HPP

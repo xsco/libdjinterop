@@ -16,7 +16,7 @@
  */
 
 #if __cplusplus < 201103L && _MSVC_LANG < 201103L
-  #error This library needs at least a C++11 compliant compiler
+#error This library needs at least a C++11 compliant compiler
 #endif
 
 #ifndef DJINTEROP_ENGINELIBRARY_TRACK_HPP
@@ -32,9 +32,10 @@
 #include "database.hpp"
 #include "musical_key.hpp"
 
-namespace djinterop {
-namespace enginelibrary {
-
+namespace djinterop
+{
+namespace enginelibrary
+{
 /**
  * The `nonexistent_track` exception is thrown when a request is made for
  * a track using an identifier that does not exist in a given database
@@ -45,22 +46,23 @@ public:
     /**
      * \brief Construct the exception for a given track id
      */
-	explicit nonexistent_track(int id) noexcept :
-		invalid_argument{"Track does not exist in database"},
-		id_{id}
-	{}
+    explicit nonexistent_track(int id) noexcept
+        : invalid_argument{"Track does not exist in database"}, id_{id}
+    {
+    }
 
     /**
      * \brief Destructor
      */
-	virtual ~nonexistent_track() = default;
+    virtual ~nonexistent_track() = default;
 
     /**
      * \brief Get the track id that was deemed non-existent
      */
-	int id() const noexcept { return id_; }
+    int id() const noexcept { return id_; }
+
 private:
-	int id_;
+    int id_;
 };
 
 /**
@@ -74,23 +76,24 @@ public:
     /**
      * \brief Construct the exception for a given track id
      */
-	explicit track_database_inconsistency(const std::string &what_arg, int id)
-		noexcept :
-		database_inconsistency{what_arg},
-		id_{id}
-	{}
+    explicit track_database_inconsistency(
+        const std::string &what_arg, int id) noexcept
+        : database_inconsistency{what_arg}, id_{id}
+    {
+    }
 
     /**
      * \brief Destructor
      */
-	virtual ~track_database_inconsistency() = default;
+    virtual ~track_database_inconsistency() = default;
 
     /**
      * \brief Get the track id that is the subject of this exception
      */
-	int id() const noexcept { return id_; }
+    int id() const noexcept { return id_; }
+
 private:
-	int id_;
+    int id_;
 };
 
 /**
@@ -127,12 +130,12 @@ public:
     /**
      * \brief Copy assignment
      */
-    track &operator =(const track &other);
+    track &operator=(const track &other);
 
     /**
      * \brief Move assignment
      */
-    track &operator =(track &&other) noexcept;
+    track &operator=(track &&other) noexcept;
 
     /**
      * \brief Get the id of this track, as stored in the database.
@@ -196,7 +199,7 @@ public:
      * \brief Get the publisher associated with this track
      */
     std::string publisher() const;
-    
+
     /**
      * \brief Get the composer of this track
      */
@@ -214,19 +217,19 @@ public:
      * \brief Get the path to this track's file on disk, relative to the music
      *        database.
      */
-	std::string path() const;
+    std::string path() const;
 
     /**
      * \brief Get the filename of this track's file
      */
-	std::string filename() const;
+    std::string filename() const;
 
     /**
      * \brief Get the file extension of this track's file
      *
      * The extension will not contain any leading dot.
      */
-	std::string file_extension() const;
+    std::string file_extension() const;
 
     /**
      * \brief Get the time of last attribute modification of this track's file
@@ -239,17 +242,17 @@ public:
     /**
      * \brief Get the bitrate of this track
      */
-	int bitrate() const;
+    int bitrate() const;
 
     /**
      * \brief Return a `bool` indicating whether this track has ever been played
      */
-	bool ever_played() const;
+    bool ever_played() const;
 
     /**
      * \brief Get the time at which this track was last played
      */
-	std::chrono::system_clock::time_point last_played_at() const;
+    std::chrono::system_clock::time_point last_played_at() const;
 
     /**
      * \brief Get the time at which this track was last accessed
@@ -257,30 +260,30 @@ public:
      * Note that on VFAT filesystems, the access time is truncated to just a
      * date, and loses any time precision.
      */
-	std::chrono::system_clock::time_point last_accessed_at() const;
+    std::chrono::system_clock::time_point last_accessed_at() const;
 
     /**
      * \brief Get a `bool` indicating whether this track was imported into the
      *        current database from another Engine Prime library
      */
-	bool imported() const;
+    bool imported() const;
 
     /**
      * \brief Get the UUID of the external database from this track was
      *        imported, if it was imported
      */
-	std::string external_database_uuid() const;
+    std::string external_database_uuid() const;
 
     /**
      * \brief Get the ID of this track in the external database from which it
      *        was imported, if it was imported
      */
-	int track_id_in_external_database() const;
+    int track_id_in_external_database() const;
 
     /**
      * \brief Get the id of the album art for this track
      */
-	int album_art_id() const;
+    int album_art_id() const;
 
     /**
      * \brief Get a `bool` indicating if a title has been set for this track
@@ -311,7 +314,7 @@ public:
      * \brief Get a `bool` indicating if a publisher has been set for this track
      */
     bool has_publisher() const;
-    
+
     /**
      * \brief Get a `bool` indicating if a composer has been set for this track
      */
@@ -325,7 +328,7 @@ public:
     /**
      * \brief Return a `bool` indicating whether this track has album art set
      */
-	bool has_album_art() const { return album_art_id() != 1; }
+    bool has_album_art() const { return album_art_id() != 1; }
 
     void set_track_number(int track_number);
     void set_duration(std::chrono::seconds duration);
@@ -349,25 +352,27 @@ public:
      * Note that this is the attribute modification time, not the data
      * modification time, i.e. ctime not mtime.
      */
-    void set_last_modified_at(std::chrono::system_clock::time_point last_modified_at);
+    void set_last_modified_at(
+        std::chrono::system_clock::time_point last_modified_at);
     void set_bitrate(int bitrate);
     void set_ever_played(bool ever_played);
-    void set_last_played_at(std::chrono::system_clock::time_point last_played_at);
-    void set_last_accessed_at(std::chrono::system_clock::time_point last_accessed_at);
+    void set_last_played_at(
+        std::chrono::system_clock::time_point last_played_at);
+    void set_last_accessed_at(
+        std::chrono::system_clock::time_point last_accessed_at);
 
     /**
      * \brief Set whether this track was imported from another Engine Prime
      *        library
-     * 
+     *
      * If the value of `imported` is set to `false`, then the external database
      * UUID and track id in external database fields will be reset.
      */
     void set_imported(bool imported);
 
     void set_imported(
-            bool imported,
-            const std::string &external_database_uuid,
-            int track_id_in_external_database);
+        bool imported, const std::string &external_database_uuid,
+        int track_id_in_external_database);
     void set_album_art_id(int album_art_id);
 
     /**
@@ -407,9 +412,9 @@ std::vector<int> all_track_ids(const database &database);
  * \brief Get a list of all track ids that refer to a specific file path
  */
 std::vector<int> find_track_ids_by_path(
-        const database &database, const std::string &path);
+    const database &database, const std::string &path);
 
-} // enginelibrary
-} // djinterop
+}  // namespace enginelibrary
+}  // namespace djinterop
 
-#endif // DJINTEROP_ENGINELIBRARY_TRACK_HPP
+#endif  // DJINTEROP_ENGINELIBRARY_TRACK_HPP

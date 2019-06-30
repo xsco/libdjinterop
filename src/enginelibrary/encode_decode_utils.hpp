@@ -16,21 +16,22 @@
  */
 
 #if __cplusplus < 201402L && _MSVC_LANG < 201402L
-  #error This library needs at least a C++14 compliant compiler
+#error This library needs at least a C++14 compliant compiler
 #endif
 
 #ifndef DJINTEROP_ENGINELIBRARY_ENCODE_DECODE_UTILS_HPP
 #define DJINTEROP_ENGINELIBRARY_ENCODE_DECODE_UTILS_HPP
 
-#include <vector>
 #include <cstdint>
+#include <vector>
 
-namespace djinterop {
-namespace enginelibrary {
-
+namespace djinterop
+{
+namespace enginelibrary
+{
 // Uncompress a zlib'ed BLOB
 void zlib_uncompress(
-        const std::vector<char> &compressed, std::vector<char> &uncompressed);
+    const std::vector<char> &compressed, std::vector<char> &uncompressed);
 
 // Compress a byte array using zlib
 std::vector<char> zlib_compress(const std::vector<char> &uncompressed);
@@ -167,7 +168,7 @@ inline void encode_double_be(double value, char *ptr)
     encode_int64_be(*reinterpret_cast<int64_t *>(&value), ptr);
 }
 
-} // enginelibrary
-} // djinterop
+}  // namespace enginelibrary
+}  // namespace djinterop
 
-#endif // DJINTEROP_ENGINELIBRARY_ENCODE_DECODE_UTILS_HPP
+#endif  // DJINTEROP_ENGINELIBRARY_ENCODE_DECODE_UTILS_HPP

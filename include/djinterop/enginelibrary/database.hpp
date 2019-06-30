@@ -16,7 +16,7 @@
  */
 
 #if __cplusplus < 201103L && _MSVC_LANG < 201103L
-  #error This library needs at least a C++11 compliant compiler
+#error This library needs at least a C++11 compliant compiler
 #endif
 
 #ifndef DJINTEROP_ENGINELIBRARY_DATABASE_HPP
@@ -29,58 +29,59 @@
 
 #include "schema_version.hpp"
 
-namespace djinterop {
-namespace enginelibrary {
-
+namespace djinterop
+{
+namespace enginelibrary
+{
 class database_not_found : public std::runtime_error
 {
 public:
-    explicit database_not_found(const std::string &what_arg) noexcept :
-        runtime_error{what_arg}
-    {}
+    explicit database_not_found(const std::string &what_arg) noexcept
+        : runtime_error{what_arg}
+    {
+    }
     virtual ~database_not_found() = default;
 };
 
 class database
 {
 public:
-
     /**
      * \brief Construct an Engine Prime database, specifying the path to the
      *        Engine library directory
      */
     explicit database(const std::string &dir_path);
 
-	/**
-	 * \brief Copying is disallowed
-	 */
-	database(const database &db) = delete;
+    /**
+     * \brief Copying is disallowed
+     */
+    database(const database &db) = delete;
 
     /**
      * \brief Move constructor
      */
-	database(database &&db) noexcept;
+    database(database &&db) noexcept;
 
     /**
      * \brief Destructor
      */
     ~database();
 
-	/**
-	 * \brief Copy assignment is disallowed
-	 */
-	database &operator =(const database &db) = delete;
+    /**
+     * \brief Copy assignment is disallowed
+     */
+    database &operator=(const database &db) = delete;
 
-	/**
-	 * \brief Move assignment
-	 */
-	database &operator =(database &&db) noexcept;
+    /**
+     * \brief Move assignment
+     */
+    database &operator=(database &&db) noexcept;
 
     /**
      * \brief Returns a `bool` indicating whether the database files exist on
      *        disk or not
      */
-	bool exists() const;
+    bool exists() const;
 
     /**
      * \brief Returns a `bool` indicating whether the database version is
@@ -117,7 +118,7 @@ public:
     /**
      * \brief Get the schema version of this database
      */
-	schema_version version() const;
+    schema_version version() const;
 
 private:
     struct impl;
@@ -129,9 +130,9 @@ private:
  *        schema version
  */
 database create_database(
-        const std::string &dir_path, const schema_version &version);
+    const std::string &dir_path, const schema_version &version);
 
-} // enginelibrary
-} // djinterop
+}  // namespace enginelibrary
+}  // namespace djinterop
 
-#endif // DJINTEROP_ENGINELIBRARY_DATABASE_HPP
+#endif  // DJINTEROP_ENGINELIBRARY_DATABASE_HPP

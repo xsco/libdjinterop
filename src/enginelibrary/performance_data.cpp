@@ -17,23 +17,23 @@
 
 #include <djinterop/enginelibrary/performance_data.hpp>
 
+#include <boost/optional.hpp>
 #include <chrono>
 #include <cstdint>
 #include <iomanip>
 #include <iterator>
 #include <string>
 #include <vector>
-#include <boost/optional.hpp>
-#include "sqlite_modern_cpp.h"
 #include "performance_data_format.hpp"
+#include "sqlite_modern_cpp.h"
 
-namespace djinterop {
-namespace enginelibrary {
-
+namespace djinterop
+{
+namespace enginelibrary
+{
 struct performance_data_row
 {
-    performance_data_row(int track_id) : track_id{track_id}
-    {}
+    performance_data_row(int track_id) : track_id{track_id} {}
 
     int track_id;
     double is_analyzed = 1.0;
@@ -50,96 +50,82 @@ struct performance_data_row
 
 // Select out a row from the PerformanceData table
 static performance_data_row extract_performance_data(
-        const database &db, int track_id)
+    const database &db, int track_id)
 {
-	sqlite::database m_db{db.performance_db_path()};
-	performance_data_row row{track_id};
-	int rows_found = 0;
+    sqlite::database m_db{db.performance_db_path()};
+    performance_data_row row{track_id};
+    int rows_found = 0;
     if (db.version() >= version_1_7_1)
     {
-    	m_db
-    		<< "SELECT id, isAnalyzed, isRendered, "
-               "trackData, "
-               "highResolutionWaveFormData, overviewWaveFormData, "
-               "beatData, quickCues, loops, "
-               "hasSeratoValues, hasRekordboxValues "
-    		   "FROM PerformanceData WHERE id = :1"
-    		<< track_id
-    		>> [&](
-                    int id,
-                    double is_analyzed,
-                    double is_rendered,
-                    std::vector<char> track_data,
-                    std::vector<char> high_resolution_wave_form_data,
-                    std::vector<char> overview_wave_form_data,
-                    std::vector<char> beat_data,
-                    std::vector<char> quick_cues,
-                    std::vector<char> loops,
-                    double has_serato_values,
-                    double has_rekordbox_values)
-    		{
-    			row.is_analyzed = is_analyzed;
+        m_db << "SELECT id, isAnalyzed, isRendered, "
+                "trackData, "
+                "highResolutionWaveFormData, overviewWaveFormData, "
+                "beatData, quickCues, loops, "
+                "hasSeratoValues, hasRekordboxValues "
+                "FROM PerformanceData WHERE id = :1"
+             << track_id >>
+            [&](int id, double is_analyzed, double is_rendered,
+                std::vector<char> track_data,
+                std::vector<char> high_resolution_wave_form_data,
+                std::vector<char> overview_wave_form_data,
+                std::vector<char> beat_data, std::vector<char> quick_cues,
+                std::vector<char> loops, double has_serato_values,
+                double has_rekordbox_values) {
+                row.is_analyzed = is_analyzed;
                 row.is_rendered = is_rendered;
                 row.track_data = decode_track_data(id, track_data);
                 row.beat_data = decode_beat_data(id, beat_data);
                 row.quick_cues = decode_quick_cues(id, quick_cues);
                 row.loops = decode_loops(id, loops);
                 row.high_res_waveform_data = decode_high_res_waveform_data(
-                        id, high_resolution_wave_form_data);
-                row.overview_waveform_data = decode_overview_waveform_data(
-                        id, overview_wave_form_data);
+                    id, high_resolution_wave_form_data);
+                row.overview_waveform_data =
+                    decode_overview_waveform_data(id, overview_wave_form_data);
                 row.has_serato_values = has_serato_values;
                 row.has_rekordbox_values = has_rekordbox_values;
-    			++rows_found;
-    		};
+                ++rows_found;
+            };
     }
     else
     {
         // No `hasRekordboxValues` column in this schema version
-    	m_db
-    		<< "SELECT id, isAnalyzed, isRendered, "
-               "trackData, "
-               "highResolutionWaveFormData, overviewWaveFormData, "
-               "beatData, quickCues, loops, "
-               "hasSeratoValues "
-    		   "FROM PerformanceData WHERE id = :1"
-    		<< track_id
-    		>> [&](
-                    int id,
-                    double is_analyzed,
-                    double is_rendered,
-                    std::vector<char> track_data,
-                    std::vector<char> high_resolution_wave_form_data,
-                    std::vector<char> overview_wave_form_data,
-                    std::vector<char> beat_data,
-                    std::vector<char> quick_cues,
-                    std::vector<char> loops,
-                    double has_serato_values)
-    		{
-    			row.is_analyzed = is_analyzed;
+        m_db << "SELECT id, isAnalyzed, isRendered, "
+                "trackData, "
+                "highResolutionWaveFormData, overviewWaveFormData, "
+                "beatData, quickCues, loops, "
+                "hasSeratoValues "
+                "FROM PerformanceData WHERE id = :1"
+             << track_id >>
+            [&](int id, double is_analyzed, double is_rendered,
+                std::vector<char> track_data,
+                std::vector<char> high_resolution_wave_form_data,
+                std::vector<char> overview_wave_form_data,
+                std::vector<char> beat_data, std::vector<char> quick_cues,
+                std::vector<char> loops, double has_serato_values) {
+                row.is_analyzed = is_analyzed;
                 row.is_rendered = is_rendered;
                 row.track_data = decode_track_data(id, track_data);
                 row.beat_data = decode_beat_data(id, beat_data);
                 row.quick_cues = decode_quick_cues(id, quick_cues);
                 row.loops = decode_loops(id, loops);
                 row.high_res_waveform_data = decode_high_res_waveform_data(
-                        id, high_resolution_wave_form_data);
-                row.overview_waveform_data = decode_overview_waveform_data(
-                        id, overview_wave_form_data);
+                    id, high_resolution_wave_form_data);
+                row.overview_waveform_data =
+                    decode_overview_waveform_data(id, overview_wave_form_data);
                 row.has_serato_values = has_serato_values;
                 row.has_rekordbox_values = 0.0;
-    			++rows_found;
-    		};
+                ++rows_found;
+            };
     }
 
-	if (rows_found == 0)
-		throw nonexistent_performance_data{track_id};
+    if (rows_found == 0)
+        throw nonexistent_performance_data{track_id};
 
-	return row;
+    return row;
 }
 
 static track_beat_grid beat_markers_to_beat_grid(
-        const std::vector<beat_data_marker_blob> beat_markers)
+    const std::vector<beat_data_marker_blob> beat_markers)
 {
     if (beat_markers.size() == 0)
         return track_beat_grid{};
@@ -149,14 +135,12 @@ static track_beat_grid beat_markers_to_beat_grid(
     auto &first = beat_markers.front();
     auto &last = beat_markers.back();
     return track_beat_grid{
-        static_cast<int>(first.beat_index),
-        first.sample_offset,
-        static_cast<int>(last.beat_index),
-        last.sample_offset};
+        static_cast<int>(first.beat_index), first.sample_offset,
+        static_cast<int>(last.beat_index), last.sample_offset};
 }
 
 static std::vector<beat_data_marker_blob> beat_grid_to_beat_markers(
-        const track_beat_grid &beat_grid)
+    const track_beat_grid &beat_grid)
 {
     // The beat markers have an int32_t field, the meaning of which is currently
     // unknown.  Some default hex values, that have been observed in the wild,
@@ -164,60 +148,54 @@ static std::vector<beat_data_marker_blob> beat_grid_to_beat_markers(
     // can be identified.
     std::vector<beat_data_marker_blob> markers;
     markers.push_back(beat_data_marker_blob{
-            beat_grid.first_beat_sample_offset,
-            beat_grid.first_beat_index,
-            beat_grid.last_beat_index - beat_grid.first_beat_index,
-            0x7fc9});
-    markers.push_back(beat_data_marker_blob{
-            beat_grid.last_beat_sample_offset,
-            beat_grid.last_beat_index,
-            0,
-            0x7fff});
+        beat_grid.first_beat_sample_offset, beat_grid.first_beat_index,
+        beat_grid.last_beat_index - beat_grid.first_beat_index, 0x7fc9});
+    markers.push_back(beat_data_marker_blob{beat_grid.last_beat_sample_offset,
+                                            beat_grid.last_beat_index, 0,
+                                            0x7fff});
     return markers;
 }
 
 struct performance_data::impl
 {
-    impl(const database &db, int track_id) :
-        load_db_uuid_{db.uuid()},
-        pd_{extract_performance_data(db, track_id)},
-        default_beat_grid_{
-            beat_markers_to_beat_grid(pd_.beat_data.default_markers)},
-        adjusted_beat_grid_{
-            beat_markers_to_beat_grid(pd_.beat_data.adjusted_markers)}
-    {}
+    impl(const database &db, int track_id)
+        : load_db_uuid_{db.uuid()},
+          pd_{extract_performance_data(db, track_id)},
+          default_beat_grid_{
+              beat_markers_to_beat_grid(pd_.beat_data.default_markers)},
+          adjusted_beat_grid_{
+              beat_markers_to_beat_grid(pd_.beat_data.adjusted_markers)}
+    {
+    }
 
-    impl(int track_id) :
-        load_db_uuid_{},
-        pd_{track_id}
+    impl(int track_id) : load_db_uuid_{}, pd_{track_id}
     {
         pd_.track_data.sample_rate = 0;
         pd_.track_data.total_samples = 0;
         pd_.track_data.key = 0;
         pd_.track_data.average_loudness = 0.5;
     }
-    
+
     std::string load_db_uuid_;
     performance_data_row pd_;
     track_beat_grid default_beat_grid_;
     track_beat_grid adjusted_beat_grid_;
 };
 
+performance_data::performance_data(const database &database, int track_id)
+    : pimpl_{new impl{database, track_id}}
+{
+}
 
-performance_data::performance_data(
-        const database &database, int track_id) :
-    pimpl_{new impl{database, track_id}}
-{}
-
-performance_data::performance_data(int track_id) : pimpl_{new impl{track_id}}
-{}
+performance_data::performance_data(int track_id) : pimpl_{new impl{track_id}} {}
 
 /**
  * \brief Copy constructor
  */
 performance_data::performance_data(const performance_data &other)
     : pimpl_{new impl{*other.pimpl_}}
-{}
+{
+}
 
 /**
  * \brief Move constructor
@@ -232,7 +210,7 @@ performance_data::~performance_data() = default;
 /**
  * \brief Copy assignment
  */
-performance_data &performance_data::operator =(const performance_data &other)
+performance_data &performance_data::operator=(const performance_data &other)
 {
     if (this != &other)
         pimpl_.reset(new impl{*other.pimpl_});
@@ -242,8 +220,8 @@ performance_data &performance_data::operator =(const performance_data &other)
 /**
  * \brief Move assignment
  */
-performance_data &performance_data::operator =(
-        performance_data &&other) noexcept = default;
+performance_data &performance_data::operator=(
+    performance_data &&other) noexcept = default;
 
 /**
  * \brief Tests whether performance data already exists for a given track
@@ -252,10 +230,8 @@ bool performance_data::exists(const database &db, int track_id)
 {
     sqlite::database p_db{db.performance_db_path()};
     int found = 0;
-    p_db
-        << "SELECT COUNT(*) FROM PerformanceData WHERE id = ?"
-        << track_id
-        >> found;
+    p_db << "SELECT COUNT(*) FROM PerformanceData WHERE id = ?" << track_id >>
+        found;
     return found > 0;
 }
 
@@ -346,7 +322,8 @@ double performance_data::samples_per_overview_waveform_entry() const
 /**
  * \brief Gets an iterator pointing to the first overview waveform entry
  */
-overview_waveform_entry_const_iterator performance_data::overview_waveform_begin() const
+overview_waveform_entry_const_iterator
+performance_data::overview_waveform_begin() const
 {
     return pimpl_->pd_.overview_waveform_data.entry_data.begin();
 }
@@ -354,7 +331,8 @@ overview_waveform_entry_const_iterator performance_data::overview_waveform_begin
 /**
  * \brief Gets an iterator pointing beyond the last overview waveform entry
  */
-overview_waveform_entry_const_iterator performance_data::overview_waveform_end() const
+overview_waveform_entry_const_iterator performance_data::overview_waveform_end()
+    const
 {
     return pimpl_->pd_.overview_waveform_data.entry_data.end();
 }
@@ -380,7 +358,8 @@ double performance_data::samples_per_high_res_waveform_entry() const
 /**
  * \brief Gets an iterator pointing to the first high-res waveform entry
  */
-high_res_waveform_entry_const_iterator performance_data::high_res_waveform_begin() const
+high_res_waveform_entry_const_iterator
+performance_data::high_res_waveform_begin() const
 {
     return pimpl_->pd_.high_res_waveform_data.entry_data.begin();
 }
@@ -388,7 +367,8 @@ high_res_waveform_entry_const_iterator performance_data::high_res_waveform_begin
 /**
  * \brief Gets an iterator pointing beyond the last high-res waveform entry
  */
-high_res_waveform_entry_const_iterator performance_data::high_res_waveform_end() const
+high_res_waveform_entry_const_iterator performance_data::high_res_waveform_end()
+    const
 {
     return pimpl_->pd_.high_res_waveform_data.entry_data.end();
 }
@@ -455,22 +435,19 @@ void performance_data::set_adjusted_beat_grid(track_beat_grid &&beat_grid)
 }
 
 void performance_data::set_hot_cues(
-        hot_cue_const_iterator begin,
-        hot_cue_const_iterator end)
+    hot_cue_const_iterator begin, hot_cue_const_iterator end)
 {
     pimpl_->pd_.quick_cues.hot_cues.clear();
     int count = 8;
     std::copy_if(
-            begin, end,
-            std::back_inserter(pimpl_->pd_.quick_cues.hot_cues),
-            [&count](hot_cue_const_iterator::reference)
-            {
-                if (count-- > 0)
-                    return true;
-                return false;
-            });
+        begin, end, std::back_inserter(pimpl_->pd_.quick_cues.hot_cues),
+        [&count](hot_cue_const_iterator::reference) {
+            if (count-- > 0)
+                return true;
+            return false;
+        });
 
-    auto cur_size = pimpl_->pd_.quick_cues.hot_cues.size(); 
+    auto cur_size = pimpl_->pd_.quick_cues.hot_cues.size();
     if (cur_size < 8)
         pimpl_->pd_.quick_cues.hot_cues.resize(8);
 }
@@ -486,20 +463,17 @@ void performance_data::set_adjusted_main_cue_sample_offset(double sample_offset)
 }
 
 void performance_data::set_loops(
-        track_loop_const_iterator begin,
-        track_loop_const_iterator end)
+    track_loop_const_iterator begin, track_loop_const_iterator end)
 {
     pimpl_->pd_.loops.loops.clear();
     int count = 8;
     std::copy_if(
-            begin, end,
-            std::back_inserter(pimpl_->pd_.loops.loops),
-            [&count](track_loop_const_iterator::reference)
-            {
-                if (count-- > 0)
-                    return true;
-                return false;
-            });
+        begin, end, std::back_inserter(pimpl_->pd_.loops.loops),
+        [&count](track_loop_const_iterator::reference) {
+            if (count-- > 0)
+                return true;
+            return false;
+        });
 
     auto cur_size = pimpl_->pd_.loops.loops.size();
     if (cur_size < 8)
@@ -513,17 +487,16 @@ void performance_data::set_loops(
  * calculated via the `calculate_overview_waveform_details` function.
  */
 void performance_data::set_overview_waveform_entries(
-        uint_least64_t num_entries,
-        double samples_per_entry,
-        overview_waveform_entry_const_iterator begin,
-        overview_waveform_entry_const_iterator end)
+    uint_least64_t num_entries, double samples_per_entry,
+    overview_waveform_entry_const_iterator begin,
+    overview_waveform_entry_const_iterator end)
 {
     pimpl_->pd_.overview_waveform_data.num_entries = num_entries;
     pimpl_->pd_.overview_waveform_data.samples_per_entry = samples_per_entry;
     pimpl_->pd_.overview_waveform_data.entry_data.clear();
     std::copy(
-            begin, end,
-            std::back_inserter(pimpl_->pd_.overview_waveform_data.entry_data));
+        begin, end,
+        std::back_inserter(pimpl_->pd_.overview_waveform_data.entry_data));
 }
 
 /**
@@ -533,64 +506,59 @@ void performance_data::set_overview_waveform_entries(
  * calculated via the `calculate_high_res_waveform_details` function.
  */
 void performance_data::set_high_res_waveform_entries(
-        uint_least64_t num_entries,
-        double samples_per_entry,
-        high_res_waveform_entry_const_iterator begin,
-        high_res_waveform_entry_const_iterator end)
+    uint_least64_t num_entries, double samples_per_entry,
+    high_res_waveform_entry_const_iterator begin,
+    high_res_waveform_entry_const_iterator end)
 {
     pimpl_->pd_.high_res_waveform_data.num_entries = num_entries;
     pimpl_->pd_.high_res_waveform_data.samples_per_entry = samples_per_entry;
     pimpl_->pd_.high_res_waveform_data.entry_data.clear();
     std::copy(
-            begin, end,
-            std::back_inserter(pimpl_->pd_.high_res_waveform_data.entry_data));
+        begin, end,
+        std::back_inserter(pimpl_->pd_.high_res_waveform_data.entry_data));
 }
 
 void performance_data::save(const database &database)
 {
-	sqlite::database m_db{database.performance_db_path()};
+    sqlite::database m_db{database.performance_db_path()};
     if (database.version() >= version_1_7_1)
     {
-        m_db <<
-            "INSERT OR REPLACE INTO PerformanceData ("
-            "  id, isAnalyzed, isRendered, trackData, "
-            "  highResolutionWaveFormData, overviewWaveFormData, "
-            "  beatData, quickCues, loops, "
-            "  hasSeratoValues, hasRekordboxValues)"
-            "VALUES ("
-            "  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-            << pimpl_->pd_.track_id
-            << pimpl_->pd_.is_analyzed
+        m_db
+            << "INSERT OR REPLACE INTO PerformanceData ("
+               "  id, isAnalyzed, isRendered, trackData, "
+               "  highResolutionWaveFormData, overviewWaveFormData, "
+               "  beatData, quickCues, loops, "
+               "  hasSeratoValues, hasRekordboxValues)"
+               "VALUES ("
+               "  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            << pimpl_->pd_.track_id << pimpl_->pd_.is_analyzed
             << pimpl_->pd_.is_rendered
             << encode_track_data(pimpl_->pd_.track_data)
             << encode_high_res_waveform_data(pimpl_->pd_.high_res_waveform_data)
             << encode_overview_waveform_data(pimpl_->pd_.overview_waveform_data)
             << encode_beat_data(pimpl_->pd_.beat_data)
             << encode_quick_cues(pimpl_->pd_.quick_cues)
-            << encode_loops(pimpl_->pd_.loops)
-            << pimpl_->pd_.has_serato_values
+            << encode_loops(pimpl_->pd_.loops) << pimpl_->pd_.has_serato_values
             << pimpl_->pd_.has_rekordbox_values;
     }
     else
     {
-        m_db <<
-            "INSERT OR REPLACE INTO PerformanceData ("
-            "  id, isAnalyzed, isRendered, trackData, "
-            "  highResolutionWaveFormData, overviewWaveFormData, "
-            "  beatData, quickCues, loops, "
-            "  hasSeratoValues)"
-            "VALUES ("
-            "  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-            << pimpl_->pd_.track_id
-            << pimpl_->pd_.is_analyzed
+        m_db
+            << "INSERT OR REPLACE INTO PerformanceData ("
+               "  id, isAnalyzed, isRendered, trackData, "
+               "  highResolutionWaveFormData, overviewWaveFormData, "
+               "  beatData, quickCues, loops, "
+               "  hasSeratoValues)"
+               "VALUES ("
+               "  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            << pimpl_->pd_.track_id << pimpl_->pd_.is_analyzed
             << pimpl_->pd_.is_rendered
             << encode_track_data(pimpl_->pd_.track_data)
             << encode_high_res_waveform_data(pimpl_->pd_.high_res_waveform_data)
             << encode_overview_waveform_data(pimpl_->pd_.overview_waveform_data)
             << encode_beat_data(pimpl_->pd_.beat_data)
             << encode_quick_cues(pimpl_->pd_.quick_cues)
-            << encode_loops(pimpl_->pd_.loops)
-            << pimpl_->pd_.has_serato_values;
+            << encode_loops(pimpl_->pd_.loops) << pimpl_->pd_.has_serato_values;
     }
 
     pimpl_->load_db_uuid_ = database.uuid();
@@ -599,12 +567,9 @@ void performance_data::save(const database &database)
 void normalise_beat_grid(track_beat_grid &beat_grid, double last_sample)
 {
     double samples_per_beat =
-        (
-            beat_grid.last_beat_sample_offset -
-            beat_grid.first_beat_sample_offset) /
-        (
-            beat_grid.last_beat_index -
-            beat_grid.first_beat_index);
+        (beat_grid.last_beat_sample_offset -
+         beat_grid.first_beat_sample_offset) /
+        (beat_grid.last_beat_index - beat_grid.first_beat_index);
 
     // Adjust first beat sample offset to be aligned to beat -4
     double first_adjust_offset =
@@ -614,7 +579,7 @@ void normalise_beat_grid(track_beat_grid &beat_grid, double last_sample)
 
     // Work out what beat number is just beyond the last sample
     int last_beats_adjust =
-        1 + 
+        1 +
         ((last_sample - beat_grid.last_beat_sample_offset) / samples_per_beat);
     // Adjust last beat sample offset
     double last_adjust_offset = last_beats_adjust * samples_per_beat;
@@ -627,11 +592,9 @@ void normalise_beat_grid(track_beat_grid &beat_grid, double last_sample)
  *        number of samples and sample rate
  */
 void calculate_overview_waveform_details(
-        uint_least64_t total_samples,
-        double sample_rate,
-        uint_least64_t &adjusted_total_samples,
-        uint_least64_t &num_entries,
-        double &samples_per_entry)
+    uint_least64_t total_samples, double sample_rate,
+    uint_least64_t &adjusted_total_samples, uint_least64_t &num_entries,
+    double &samples_per_entry)
 {
     int quantNum = 2 * (int)(sample_rate / 210);
 
@@ -652,11 +615,9 @@ void calculate_overview_waveform_details(
  * be padded with zeroes to make up the extra space.
  */
 void calculate_high_res_waveform_details(
-        uint_least64_t total_samples,
-        double sample_rate,
-        uint_least64_t &adjusted_total_samples,
-        uint_least64_t &num_entries,
-        double &samples_per_entry)
+    uint_least64_t total_samples, double sample_rate,
+    uint_least64_t &adjusted_total_samples, uint_least64_t &num_entries,
+    double &samples_per_entry)
 {
     int quantNum = 2 * (int)(sample_rate / 210);
 
@@ -665,10 +626,10 @@ void calculate_high_res_waveform_details(
 
     // The adjusted total number of samples has an extra quantNum on the end,
     // as compared to the overview waveform
-    adjusted_total_samples = total_samples - (total_samples % quantNum) + quantNum;
+    adjusted_total_samples =
+        total_samples - (total_samples % quantNum) + quantNum;
     num_entries = adjusted_total_samples / samples_per_entry;
 }
 
-} // enginelibrary
-} // djinterop
-
+}  // namespace enginelibrary
+}  // namespace djinterop

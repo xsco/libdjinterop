@@ -16,7 +16,7 @@
  */
 
 #if __cplusplus < 201402L && _MSVC_LANG < 201402L
-  #error This library needs at least a C++14 compliant compiler
+#error This library needs at least a C++14 compliant compiler
 #endif
 
 #ifndef DJINTEROP_ENGINELIBRARY_SCHEMA_1_6_0_HPP
@@ -24,9 +24,10 @@
 
 #include "sqlite_modern_cpp.h"
 
-namespace djinterop {
-namespace enginelibrary {
-
+namespace djinterop
+{
+namespace enginelibrary
+{
 void verify_music_schema_1_6_0(sqlite::database &db);
 
 void verify_performance_schema_1_6_0(sqlite::database &db);
@@ -35,7 +36,7 @@ void create_music_schema_1_6_0(sqlite::database &db);
 
 void create_performance_schema_1_6_0(sqlite::database &db);
 
-} // enginelibrary
-} // djinterop
+}  // namespace enginelibrary
+}  // namespace djinterop
 
-#endif // DJINTEROP_ENGINELIBRARY_SCHEMA_1_6_0_HPP
+#endif  // DJINTEROP_ENGINELIBRARY_SCHEMA_1_6_0_HPP

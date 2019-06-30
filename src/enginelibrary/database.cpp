@@ -17,34 +17,34 @@
 
 #include <djinterop/enginelibrary/database.hpp>
 
-#include <string>
 #include <sys/stat.h>
+#include <string>
 #if defined(_WIN32)
-  #include <direct.h>
+#include <direct.h>
 #endif
 #include <tuple>
 #include "sqlite_modern_cpp.h"
 
 #include "schema.hpp"
 
-namespace djinterop {
-namespace enginelibrary {
-
+namespace djinterop
+{
+namespace enginelibrary
+{
 struct database::impl
 {
-    impl(const std::string &dir_path) :
-        dir_path_{dir_path},
-        db_m_path_{dir_path_ + "/m.db"},
-        db_p_path_{dir_path_ + "/p.db"}
+    impl(const std::string &dir_path)
+        : dir_path_{dir_path},
+          db_m_path_{dir_path_ + "/m.db"},
+          db_p_path_{dir_path_ + "/p.db"}
     {
         if (exists())
         {
             sqlite::database m_db{db_m_path_};
-            m_db
-                << "SELECT uuid, schemaVersionMajor, schemaVersionMinor, "
-                   "schemaVersionPatch "
-                   "FROM Information"
-                >> std::tie(uuid_, version_.maj, version_.min, version_.pat);
+            m_db << "SELECT uuid, schemaVersionMajor, schemaVersionMinor, "
+                    "schemaVersionPatch "
+                    "FROM Information" >>
+                std::tie(uuid_, version_.maj, version_.min, version_.pat);
         }
     }
 
@@ -85,7 +85,7 @@ struct database::impl
         sqlite::database p_db{db_p_path_};
         verify_performance_schema(p_db);
     }
-    
+
     std::string dir_path_;
     std::string db_m_path_;
     std::string db_p_path_;
@@ -93,18 +93,13 @@ struct database::impl
     schema_version version_;
 };
 
+database::database(const std::string &dir_path) : pimpl_{new impl{dir_path}} {}
 
-database::database(const std::string &dir_path) :
-    pimpl_{new impl{dir_path}}
-{}
-
-database::database(database &&db) noexcept :
-    pimpl_{std::move(db.pimpl_)}
-{}
+database::database(database &&db) noexcept : pimpl_{std::move(db.pimpl_)} {}
 
 database::~database() = default;
 
-database &database::operator =(database &&db) noexcept = default;
+database &database::operator=(database &&db) noexcept = default;
 
 bool database::exists() const
 {
@@ -141,13 +136,13 @@ schema_version database::version() const
     return pimpl_->version_;
 }
 
-database create_database(const std::string &dir_path,
-        const schema_version &version)
+database create_database(
+    const std::string &dir_path, const schema_version &version)
 {
     if (!is_supported(version))
     {
-        throw unsupported_database_version{
-            "Unsupported database version", version};
+        throw unsupported_database_version{"Unsupported database version",
+                                           version};
     }
 
     // Ensure the target directory exists
@@ -188,6 +183,5 @@ database create_database(const std::string &dir_path,
     return db;
 }
 
-} // enginelibrary
-} // djinterop
-
+}  // namespace enginelibrary
+}  // namespace djinterop

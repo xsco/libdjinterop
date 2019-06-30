@@ -16,15 +16,15 @@
  */
 
 #if __cplusplus < 201103L && _MSVC_LANG < 201103L
-  #error This library needs at least a C++11 compliant compiler
+#error This library needs at least a C++11 compliant compiler
 #endif
 
 #ifndef DJINTEROP_ENGINELIBRARY_HPP
 #define DJINTEROP_ENGINELIBRARY_HPP
 
-#include <djinterop/enginelibrary/database.hpp>
-#include <djinterop/enginelibrary/track.hpp>
 #include <djinterop/enginelibrary/crate.hpp>
+#include <djinterop/enginelibrary/database.hpp>
 #include <djinterop/enginelibrary/performance_data.hpp>
+#include <djinterop/enginelibrary/track.hpp>
 
-#endif // DJINTEROP_ENGINELIBRARY_HPP
+#endif  // DJINTEROP_ENGINELIBRARY_HPP

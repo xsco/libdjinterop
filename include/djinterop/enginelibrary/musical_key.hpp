@@ -16,15 +16,16 @@
  */
 
 #if __cplusplus < 201103L && _MSVC_LANG < 201103L
-  #error This library needs at least a C++11 compliant compiler
+#error This library needs at least a C++11 compliant compiler
 #endif
 
 #ifndef DJINTEROP_ENGINELIBRARY_MUSICAL_KEY_HPP
 #define DJINTEROP_ENGINELIBRARY_MUSICAL_KEY_HPP
 
-namespace djinterop {
-namespace enginelibrary {
-
+namespace djinterop
+{
+namespace enginelibrary
+{
 /**
  * The `musical_key` enumeration contains a list all known musical keys that a
  * track may be detected to initially follow.
@@ -57,7 +58,7 @@ enum class musical_key
     c_major
 };
 
-} // enginelibrary
-} // djinterop
+}  // namespace enginelibrary
+}  // namespace djinterop
 
-#endif // DJINTEROP_ENGINELIBRARY_MUSICAL_KEY_HPP
+#endif  // DJINTEROP_ENGINELIBRARY_MUSICAL_KEY_HPP

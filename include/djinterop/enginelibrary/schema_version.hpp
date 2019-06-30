@@ -16,7 +16,7 @@
  */
 
 #if __cplusplus < 201103L && _MSVC_LANG < 201103L
-  #error This library needs at least a C++11 compliant compiler
+#error This library needs at least a C++11 compliant compiler
 #endif
 
 #ifndef DJINTEROP_ENGINELIBRARY_SCHEMA_VERSION_HPP
@@ -24,9 +24,10 @@
 
 #include <ostream>
 
-namespace djinterop {
-namespace enginelibrary {
-
+namespace djinterop
+{
+namespace enginelibrary
+{
 struct schema_version
 {
     int maj;
@@ -34,8 +35,8 @@ struct schema_version
     int pat;
 };
 
-static constexpr schema_version version_1_6_0 { 1, 6, 0 };
-static constexpr schema_version version_1_7_1 { 1, 7, 1 };
+static constexpr schema_version version_1_6_0{1, 6, 0};
+static constexpr schema_version version_1_7_1{1, 7, 1};
 static constexpr schema_version version_latest = version_1_7_1;
 
 /**
@@ -46,9 +47,10 @@ static constexpr schema_version version_latest = version_1_7_1;
 class database_inconsistency : public std::logic_error
 {
 public:
-    explicit database_inconsistency(const std::string &what_arg) noexcept :
-        logic_error{what_arg}
-    {}
+    explicit database_inconsistency(const std::string &what_arg) noexcept
+        : logic_error{what_arg}
+    {
+    }
     virtual ~database_inconsistency() = default;
 };
 
@@ -60,39 +62,38 @@ public:
 class unsupported_database_version : public std::runtime_error
 {
 public:
+    explicit unsupported_database_version(const schema_version version) noexcept
+        : runtime_error{"Unsupported database version"}, version_{version}
+    {
+    }
     explicit unsupported_database_version(
-            const schema_version version) noexcept :
-        runtime_error{"Unsupported database version"},
-        version_{version}
-    {}
-    explicit unsupported_database_version(
-            const std::string &what_arg,
-            const schema_version version) noexcept :
-        runtime_error{what_arg},
-        version_{version}
-    {}
+        const std::string &what_arg, const schema_version version) noexcept
+        : runtime_error{what_arg}, version_{version}
+    {
+    }
     virtual ~unsupported_database_version() = default;
     const schema_version version() const { return version_; }
+
 private:
     schema_version version_;
 };
 
-inline std::ostream &operator <<(std::ostream &os, const schema_version &version)
+inline std::ostream &operator<<(std::ostream &os, const schema_version &version)
 {
     return os << version.maj << "." << version.min << "." << version.pat;
 }
 
-inline bool operator ==(const schema_version &a, const schema_version &b)
+inline bool operator==(const schema_version &a, const schema_version &b)
 {
     return a.maj == b.maj && a.min == b.min && a.pat == b.pat;
 }
 
-inline bool operator !=(const schema_version &a, const schema_version &b)
+inline bool operator!=(const schema_version &a, const schema_version &b)
 {
     return !(a.maj == b.maj && a.min == b.min && a.pat == b.pat);
 }
 
-inline bool operator >=(const schema_version &a, const schema_version &b)
+inline bool operator>=(const schema_version &a, const schema_version &b)
 {
     if (a.maj != b.maj)
         return a.maj > b.maj;
@@ -101,7 +102,7 @@ inline bool operator >=(const schema_version &a, const schema_version &b)
     return a.pat >= b.pat;
 }
 
-inline bool operator >(const schema_version &a, const schema_version &b)
+inline bool operator>(const schema_version &a, const schema_version &b)
 {
     if (a.maj != b.maj)
         return a.maj > b.maj;
@@ -110,7 +111,7 @@ inline bool operator >(const schema_version &a, const schema_version &b)
     return a.pat > b.pat;
 }
 
-inline bool operator <=(const schema_version &a, const schema_version &b)
+inline bool operator<=(const schema_version &a, const schema_version &b)
 {
     if (a.maj != b.maj)
         return a.maj < b.maj;
@@ -119,7 +120,7 @@ inline bool operator <=(const schema_version &a, const schema_version &b)
     return a.pat <= b.pat;
 }
 
-inline bool operator <(const schema_version &a, const schema_version &b)
+inline bool operator<(const schema_version &a, const schema_version &b)
 {
     if (a.maj != b.maj)
         return a.maj < b.maj;
@@ -128,7 +129,7 @@ inline bool operator <(const schema_version &a, const schema_version &b)
     return a.pat < b.pat;
 }
 
-} // enginelibrary
-} // djinterop
+}  // namespace enginelibrary
+}  // namespace djinterop
 
-#endif // DJINTEROP_ENGINELIBRARY_DATABASE_HPP
+#endif  // DJINTEROP_ENGINELIBRARY_DATABASE_HPP
