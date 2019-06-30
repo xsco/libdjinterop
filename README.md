@@ -173,6 +173,25 @@ $ ninja -C build/ test                (optional, run unit tests)
 # ninja -C build/ install             (as a suitably-privileged user)
 ```
 
+## With Nix
+
+When [Nix](http://nixos.org/nix) is installed, then you don't need to manually install any
+dependencies.
+`libdjinterop` can then simply be built with:
+
+```
+$ nix build
+```
+
+In order to drop into a development environment with dependencies available, execute:
+
+```
+$ nix-shell
+```
+
+You can then build `libdjinterop` by using Meson as described above.
+This is advantageous when developing since it only recompiles sources that it needs to.
+
 Thanks To
 =========
 
