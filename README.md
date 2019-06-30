@@ -159,7 +159,7 @@ int main(int argc, char **argv)
 How Do I Build It?
 ============================
 
-`libdjinterop` requires headers to be installed for:
+`libdjinterop` requires the following compile-time dependencies:
 
 * [zlib](http://zlib.net)
 * [Boost](https://boost.org) (libraries required for unit tests; headers only for the main library)
@@ -169,7 +169,7 @@ How Do I Build It?
 ```
 $ meson build/
 $ ninja -C build/
-$ ninja -C build/ check               (optional, run unit tests)
+$ ninja -C build/ test                (optional, run unit tests)
 # ninja -C build/ install             (as a suitably-privileged user)
 ```
 
@@ -182,5 +182,6 @@ Thanks To
 * [SQLite](https://sqlite.org)
 * [SQLite Modern C++ Wrapper](https://github.com/SqliteModernCpp/sqlite_modern_cpp)
 * [zlib](http://zlib.net)
+* [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html)
 
 Interfacing with the Engine Library database format was made a lot easier with the help of MixMasterG from ATGR, who is the author of the [Denon Conversion Utility](https://sellfy.com/atgr_production_team).
