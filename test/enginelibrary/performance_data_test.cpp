@@ -18,6 +18,7 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE performance_data_test
 
+#include <chrono>
 #include <cstdio>
 #include <iostream>
 
@@ -25,7 +26,9 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <djinterop/enginelibrary/database.hpp>
+#include <djinterop/database.hpp>
+#include <djinterop/enginelibrary.hpp>
+#include <djinterop/track.hpp>
 
 #include "sqlite_modern_cpp.h"
 
@@ -56,11 +59,11 @@ static void remove_temp_dir(const fs::path& temp_dir)
     std::cout << "Removed temp dir at " << temp_dir.string() << std::endl;
 }
 
-static void populate_track_1(el::track& t)
+static void populate_track_1(djinterop::track& t)
 {
     // Track data fields
-    t.set_sampling(el::sampling_info{44100, 17452800});
-    t.set_key(el::musical_key::a_minor);
+    t.set_sampling(djinterop::sampling_info{44100, 17452800});
+    t.set_key(djinterop::musical_key::a_minor);
     t.set_average_loudness(0.520831584930419921875);
 
     // Beat data fields
@@ -69,25 +72,29 @@ static void populate_track_1(el::track& t)
 
     // Quick cue fields
     t.set_hot_cues({});
-    t.set_hot_cue_at(0, {"Cue 1", 1377924.5, el::standard_pad_colors::pad_1});
-    t.set_hot_cue_at(2, {"Cue 3", 5508265.964, el::standard_pad_colors::pad_3});
-    t.set_hot_cue_at(4, {"Cue 5", 8261826.939, el::standard_pad_colors::pad_5});
-    t.set_hot_cue_at(5, {"Cue 6", 9638607.427, el::standard_pad_colors::pad_6});
+    t.set_hot_cue_at(
+        0, {"Cue 1", 1377924.5, djinterop::standard_pad_colors::pad_1});
+    t.set_hot_cue_at(
+        2, {"Cue 3", 5508265.964, djinterop::standard_pad_colors::pad_3});
+    t.set_hot_cue_at(
+        4, {"Cue 5", 8261826.939, djinterop::standard_pad_colors::pad_5});
+    t.set_hot_cue_at(
+        5, {"Cue 6", 9638607.427, djinterop::standard_pad_colors::pad_6});
     t.set_adjusted_main_cue(1377924.5);
     t.set_default_main_cue(1144.012);
 
     // Loop fields
-    std::array<boost::optional<el::loop>, 8> loops;
-    loops[0] = el::loop{"Loop 1", 1144.012, 345339.134,
-                        el::standard_pad_colors::pad_1};
-    loops[1] = el::loop{"Loop 2", 2582607.427, 2754704.988,
-                        el::standard_pad_colors::pad_2};
-    loops[3] = el::loop{"Loop 4", 4131485.476, 4303583.037,
-                        el::standard_pad_colors::pad_4};
+    std::array<boost::optional<djinterop::loop>, 8> loops;
+    loops[0] = djinterop::loop{"Loop 1", 1144.012, 345339.134,
+                               djinterop::standard_pad_colors::pad_1};
+    loops[1] = djinterop::loop{"Loop 2", 2582607.427, 2754704.988,
+                               djinterop::standard_pad_colors::pad_2};
+    loops[3] = djinterop::loop{"Loop 4", 4131485.476, 4303583.037,
+                               djinterop::standard_pad_colors::pad_4};
     t.set_loops(std::move(loops));
 
     // High-resolution waveform data
-    std::vector<el::waveform_entry> waveform;
+    std::vector<djinterop::waveform_entry> waveform;
     int64_t waveform_size = t.recommended_waveform_size();
     waveform.reserve(waveform_size);
     for (int64_t i = 0; i < waveform_size; ++i)
@@ -99,11 +106,11 @@ static void populate_track_1(el::track& t)
     t.set_waveform(std::move(waveform));
 }
 
-static void check_track_1(const el::track& t)
+static void check_track_1(const djinterop::track& t)
 {
     // Track data fields
     BOOST_CHECK_CLOSE(t.sampling()->sample_rate, 44100.0, 0.001);
-    BOOST_CHECK(t.key() == el::musical_key::a_minor);
+    BOOST_CHECK(t.key() == djinterop::musical_key::a_minor);
     BOOST_CHECK_CLOSE(*t.average_loudness(), 0.520831584930419921875, 0.001);
     BOOST_CHECK(*t.duration() == c::milliseconds{395755});
 
@@ -127,26 +134,26 @@ static void check_track_1(const el::track& t)
     BOOST_CHECK(hot_cues[0]);
     BOOST_CHECK_EQUAL(hot_cues[0]->label, "Cue 1");
     BOOST_CHECK_CLOSE(hot_cues[0]->sample_offset, 1377924.5, 0.001);
-    BOOST_CHECK(hot_cues[0]->color == el::standard_pad_colors::pad_1);
+    BOOST_CHECK(hot_cues[0]->color == djinterop::standard_pad_colors::pad_1);
 
     BOOST_CHECK(!hot_cues[1]);
 
     BOOST_CHECK(hot_cues[2]);
     BOOST_CHECK_EQUAL(hot_cues[2]->label, "Cue 3");
     BOOST_CHECK_CLOSE(hot_cues[2]->sample_offset, 5508265.964, 0.001);
-    BOOST_CHECK(hot_cues[2]->color == el::standard_pad_colors::pad_3);
+    BOOST_CHECK(hot_cues[2]->color == djinterop::standard_pad_colors::pad_3);
 
     BOOST_CHECK(!hot_cues[3]);
 
     BOOST_CHECK(hot_cues[4]);
     BOOST_CHECK_EQUAL(hot_cues[4]->label, "Cue 5");
     BOOST_CHECK_CLOSE(hot_cues[4]->sample_offset, 8261826.939, 0.001);
-    BOOST_CHECK(hot_cues[4]->color == el::standard_pad_colors::pad_5);
+    BOOST_CHECK(hot_cues[4]->color == djinterop::standard_pad_colors::pad_5);
 
     BOOST_CHECK(hot_cues[5]);
     BOOST_CHECK_EQUAL(hot_cues[5]->label, "Cue 6");
     BOOST_CHECK_CLOSE(hot_cues[5]->sample_offset, 9638607.427, 0.001);
-    BOOST_CHECK(hot_cues[5]->color == el::standard_pad_colors::pad_6);
+    BOOST_CHECK(hot_cues[5]->color == djinterop::standard_pad_colors::pad_6);
 
     BOOST_CHECK(!hot_cues[6]);
     BOOST_CHECK(!hot_cues[7]);
@@ -161,13 +168,13 @@ static void check_track_1(const el::track& t)
     BOOST_CHECK_EQUAL(loops[0]->label, "Loop 1");
     BOOST_CHECK_CLOSE(loops[0]->start_sample_offset, 1144.012, 0.001);
     BOOST_CHECK_CLOSE(loops[0]->end_sample_offset, 345339.134, 0.001);
-    BOOST_CHECK(loops[0]->color == el::standard_pad_colors::pad_1);
+    BOOST_CHECK(loops[0]->color == djinterop::standard_pad_colors::pad_1);
 
     BOOST_CHECK(loops[1]);
     BOOST_CHECK_EQUAL(loops[1]->label, "Loop 2");
     BOOST_CHECK_CLOSE(loops[1]->start_sample_offset, 2582607.427, 0.001);
     BOOST_CHECK_CLOSE(loops[1]->end_sample_offset, 2754704.988, 0.001);
-    BOOST_CHECK(loops[1]->color == el::standard_pad_colors::pad_2);
+    BOOST_CHECK(loops[1]->color == djinterop::standard_pad_colors::pad_2);
 
     BOOST_CHECK(!loops[2]);
 
@@ -175,7 +182,7 @@ static void check_track_1(const el::track& t)
     BOOST_CHECK_EQUAL(loops[3]->label, "Loop 4");
     BOOST_CHECK_CLOSE(loops[3]->start_sample_offset, 4131485.476, 0.001);
     BOOST_CHECK_CLOSE(loops[3]->end_sample_offset, 4303583.037, 0.001);
-    BOOST_CHECK(loops[3]->color == el::standard_pad_colors::pad_4);
+    BOOST_CHECK(loops[3]->color == djinterop::standard_pad_colors::pad_4);
 
     BOOST_CHECK(!loops[4]);
     BOOST_CHECK(!loops[5]);
@@ -189,11 +196,11 @@ static void check_track_1(const el::track& t)
     BOOST_CHECK_EQUAL(t.waveform().size(), 41554);
 }
 
-static void populate_track_2(el::track& t)
+static void populate_track_2(djinterop::track& t)
 {
     // Track data fields
-    t.set_sampling(el::sampling_info{48000, 10795393});
-    t.set_key(el::musical_key::b_minor);
+    t.set_sampling(djinterop::sampling_info{48000, 10795393});
+    t.set_key(djinterop::musical_key::b_minor);
     t.set_average_loudness(0.5);
 
     // Beat data fields
@@ -201,8 +208,9 @@ static void populate_track_2(el::track& t)
     t.set_adjusted_beatgrid({{-4, -107595.55}, {402, 10820254.92}});
 
     // Quick cue fields
-    std::array<boost::optional<el::hot_cue>, 8> cues;
-    cues[1] = el::hot_cue{"Cue 2", 1234567.89, el::standard_pad_colors::pad_2};
+    std::array<boost::optional<djinterop::hot_cue>, 8> cues;
+    cues[1] = djinterop::hot_cue{"Cue 2", 1234567.89,
+                                 djinterop::standard_pad_colors::pad_2};
     t.set_hot_cues(std::move(cues));
     t.set_adjusted_main_cue(1234500.01);
     t.set_default_main_cue(12345.678);
@@ -210,11 +218,11 @@ static void populate_track_2(el::track& t)
     // Loop fields
     t.set_loops({});
     t.set_loop_at(
-        1, {"Loop 2", 2345600, 2345700, el::standard_pad_colors::pad_2});
+        1, {"Loop 2", 2345600, 2345700, djinterop::standard_pad_colors::pad_2});
 
     // High-resolution waveform data
     int64_t waveform_size = t.recommended_waveform_size();
-    std::vector<el::waveform_entry> waveform;
+    std::vector<djinterop::waveform_entry> waveform;
     waveform.reserve(waveform_size);
     for (int64_t i = 0; i < waveform_size; ++i)
     {
@@ -225,7 +233,7 @@ static void populate_track_2(el::track& t)
     t.set_waveform(std::move(waveform));
 }
 
-static void check_track_2(const el::track& t)
+static void check_track_2(const djinterop::track& t)
 {
     // Track data fields
     BOOST_CHECK_CLOSE(t.sampling()->sample_rate, 48000.0, 0.001);
@@ -254,7 +262,7 @@ static void check_track_2(const el::track& t)
     BOOST_CHECK(hot_cues[1]);
     BOOST_CHECK_EQUAL(hot_cues[1]->label, "Cue 2");
     BOOST_CHECK_CLOSE(hot_cues[1]->sample_offset, 1234567.89, 0.001);
-    BOOST_CHECK(hot_cues[1]->color == el::standard_pad_colors::pad_2);
+    BOOST_CHECK(hot_cues[1]->color == djinterop::standard_pad_colors::pad_2);
 
     BOOST_CHECK(!hot_cues[2]);
     BOOST_CHECK(!hot_cues[3]);
@@ -275,7 +283,7 @@ static void check_track_2(const el::track& t)
     BOOST_CHECK_EQUAL(loops[1]->label, "Loop 2");
     BOOST_CHECK_CLOSE(loops[1]->start_sample_offset, 2345600, 0.001);
     BOOST_CHECK_CLOSE(loops[1]->end_sample_offset, 2345700, 0.001);
-    BOOST_CHECK(loops[1]->color == el::standard_pad_colors::pad_2);
+    BOOST_CHECK(loops[1]->color == djinterop::standard_pad_colors::pad_2);
 
     BOOST_CHECK(!loops[2]);
     BOOST_CHECK(!loops[3]);
@@ -295,7 +303,7 @@ BOOST_AUTO_TEST_CASE(save__new_track_good_values__saves)
 {
     // Arrange/Act
     auto temp_dir = create_temp_dir();
-    auto db = make_database(temp_dir.string(), el::version_1_7_1);
+    auto db = el::make_database(temp_dir.string(), el::version_1_7_1);
     auto t = db.create_track("");
     populate_track_1(t);
 
@@ -311,7 +319,7 @@ BOOST_AUTO_TEST_CASE(save__existing_track__saves)
 {
     // Arrange/Act
     auto temp_dir = create_temp_dir();
-    auto db = make_database(temp_dir.string(), el::version_1_7_1);
+    auto db = el::make_database(temp_dir.string(), el::version_1_7_1);
     auto t = db.create_track("");
     populate_track_1(t);
     populate_track_2(t);

@@ -25,9 +25,10 @@
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <djinterop/enginelibrary/database.hpp>
-
-#include "sqlite_modern_cpp.h"
+#include <djinterop/crate.hpp>
+#include <djinterop/database.hpp>
+#include <djinterop/enginelibrary.hpp>
+#include <djinterop/track.hpp>
 
 #define STRINGIFY(x) STRINGIFY_(x)
 #define STRINGIFY_(x) #x
@@ -57,28 +58,28 @@ static void remove_temp_dir(const fs::path &temp_dir)
 
 static void copy_test_db_to_temp_dir(const fs::path &temp_dir)
 {
-    el::database db{sample_path};
+    auto db = el::load_database(sample_path);
     fs::path music_db_path{db.music_db_path()};
     fs::path perfdata_db_path{db.perfdata_db_path()};
     fs::copy_file(music_db_path, temp_dir / music_db_path.filename());
     fs::copy_file(perfdata_db_path, temp_dir / perfdata_db_path.filename());
 }
 
-static void populate_crate_1(el::crate &c)
+static void populate_crate_1(djinterop::crate &c)
 {
     c.set_name("Foo Crate");
     c.set_parent({});
     c.clear_tracks();
 }
 
-static void populate_crate_2(el::crate &c)
+static void populate_crate_2(djinterop::crate &c)
 {
     c.set_name("Bar Crate");
     c.set_parent({});
     c.clear_tracks();
 }
 
-static void check_crate_2(el::crate c)
+static void check_crate_2(djinterop::crate c)
 {
     BOOST_CHECK(c.is_valid());
     BOOST_CHECK_EQUAL(c.name(), "Bar Crate");
@@ -90,7 +91,7 @@ static void check_crate_2(el::crate c)
 
 /*
 // Not currently used in any test cases.
-static void populate_crate_3(el::crate &c)
+static void populate_crate_3(djinterop::crate &c)
 {
     c.set_name("Sub-Foo Crate");
     c.set_parent_id(1);
@@ -100,7 +101,7 @@ static void populate_crate_3(el::crate &c)
 }
 */
 
-static void check_crate_3(el::crate &c)
+static void check_crate_3(djinterop::crate &c)
 {
     BOOST_CHECK_EQUAL(c.name(), "Sub-Foo Crate");
     BOOST_CHECK(c.parent());
@@ -118,8 +119,8 @@ static void check_crate_3(el::crate &c)
 BOOST_AUTO_TEST_CASE(all_crates__sample_db__expected_ids)
 {
     // Arrange
-    el::database db{sample_path};
-    
+    auto db = el::load_database(sample_path);
+
     // Act
     auto results = db.crates();
 
@@ -134,8 +135,8 @@ BOOST_AUTO_TEST_CASE(all_crates__sample_db__expected_ids)
 BOOST_AUTO_TEST_CASE(all_root_crates__sample_db__expected_ids)
 {
     // Arrange
-    el::database db{sample_path};
-    
+    auto db = el::load_database(sample_path);
+
     // Act
     auto results = db.root_crates();
 
@@ -145,29 +146,29 @@ BOOST_AUTO_TEST_CASE(all_root_crates__sample_db__expected_ids)
     BOOST_CHECK_EQUAL(results[1].id(), 2);
 }
 
-BOOST_AUTO_TEST_CASE (ctor__crate3__correct_fields)
+BOOST_AUTO_TEST_CASE(ctor__crate3__correct_fields)
 {
-	// Arrange
-	el::database db{sample_path};
+    // Arrange
+    auto db = el::load_database(sample_path);
 
-	// Act
-        auto c = *db.crate_by_id(3);
+    // Act
+    auto c = *db.crate_by_id(3);
 
-        // Assert
-        BOOST_CHECK_EQUAL(c.id(), 3);
-        check_crate_3(c);
+    // Assert
+    BOOST_CHECK_EQUAL(c.id(), 3);
+    check_crate_3(c);
 }
 
 BOOST_AUTO_TEST_CASE(ctor__nonexistent_crate__none)
 {
     // Arrange
-    el::database db{sample_path};
+    auto db = el::load_database(sample_path);
 
     // Act / Assert
     BOOST_CHECK(!db.crate_by_id(123));
 }
 
-BOOST_AUTO_TEST_CASE (save__new_crate_good_values__saves)
+BOOST_AUTO_TEST_CASE(save__new_crate_good_values__saves)
 {
     // Arrange/Act
     auto temp_dir = create_temp_dir();
@@ -183,7 +184,7 @@ BOOST_AUTO_TEST_CASE (save__new_crate_good_values__saves)
     remove_temp_dir(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE (ctor_copy__saved_track__zero_id_and_copied_fields)
+BOOST_AUTO_TEST_CASE(ctor_copy__saved_track__zero_id_and_copied_fields)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
@@ -192,7 +193,7 @@ BOOST_AUTO_TEST_CASE (ctor_copy__saved_track__zero_id_and_copied_fields)
     populate_crate_2(c);
 
     // Act
-    el::crate copy{c};
+    djinterop::crate copy{c};
 
     // Assert
     BOOST_CHECK_EQUAL(copy.id(), c.id());
@@ -201,7 +202,7 @@ BOOST_AUTO_TEST_CASE (ctor_copy__saved_track__zero_id_and_copied_fields)
     remove_temp_dir(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE (save__existing_track_good_values__saves)
+BOOST_AUTO_TEST_CASE(save__existing_track_good_values__saves)
 {
     // Arrange/Act
     auto temp_dir = create_temp_dir();
@@ -219,7 +220,7 @@ BOOST_AUTO_TEST_CASE (save__existing_track_good_values__saves)
     remove_temp_dir(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE (save__change_hierarchy__saves)
+BOOST_AUTO_TEST_CASE(save__change_hierarchy__saves)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
@@ -246,12 +247,12 @@ BOOST_AUTO_TEST_CASE (save__change_hierarchy__saves)
     remove_temp_dir(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE (save__add_tracks__saves)
+BOOST_AUTO_TEST_CASE(save__add_tracks__saves)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
     copy_test_db_to_temp_dir(temp_dir);
-    el::database db{temp_dir.string()};
+    auto db = el::load_database(temp_dir.string());
     auto c = *db.crate_by_id(2);
 
     // Act
@@ -265,7 +266,7 @@ BOOST_AUTO_TEST_CASE (save__add_tracks__saves)
     remove_temp_dir(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE (op_copy_assign__saved_track__zero_id_and_copied_fields)
+BOOST_AUTO_TEST_CASE(op_copy_assign__saved_track__zero_id_and_copied_fields)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
@@ -285,7 +286,7 @@ BOOST_AUTO_TEST_CASE (op_copy_assign__saved_track__zero_id_and_copied_fields)
 BOOST_AUTO_TEST_CASE(crate_by_name__crate2__found)
 {
     // Arrange
-    el::database db{sample_path};
+    auto db = el::load_database(sample_path);
 
     // Act
     auto crates = db.crates_by_name("Bar Crate");
@@ -298,7 +299,7 @@ BOOST_AUTO_TEST_CASE(crate_by_name__crate2__found)
 BOOST_AUTO_TEST_CASE(crate_by_name__invalid_crate__not_found)
 {
     // Arrange
-    el::database db{sample_path};
+    auto db = el::load_database(sample_path);
 
     // Act
     auto crates = db.crates_by_name("Non-existent Crate");

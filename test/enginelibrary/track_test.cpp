@@ -18,6 +18,7 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE track_test
 
+#include <chrono>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -25,7 +26,10 @@
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <djinterop/enginelibrary/database.hpp>
+#include <djinterop/crate.hpp>
+#include <djinterop/database.hpp>
+#include <djinterop/enginelibrary.hpp>
+#include <djinterop/track.hpp>
 
 #define STRINGIFY(x) STRINGIFY_(x)
 #define STRINGIFY_(x) #x
@@ -54,31 +58,29 @@ static void remove_temp_dir(const fs::path &temp_dir)
     std::cout << "Removed temp dir at " << temp_dir.string() << std::endl;
 }
 
-static void populate_example_track_1(el::track &t)
+static void populate_example_track_1(djinterop::track &t)
 {
     t.set_track_number(1);
     t.set_bpm(123);
     t.set_year(2017);
     t.set_title("Mad (Original Mix)");
-	t.set_artist("Dennis Cruz");
-	t.set_album("Mad EP");
-	t.set_genre("Tech House");
-	t.set_comment("Purchased at Beatport.com");
-	t.set_publisher("Stereo Productions");
-        t.set_composer(boost::none);
-        t.set_key(el::musical_key::a_minor);
-        t.set_relative_path("../01 - Dennis Cruz - Mad (Original Mix).mp3");
-        t.set_last_modified_at(
-            c::system_clock::time_point{c::seconds{1509371790}});
-        t.set_bitrate(320);
-        t.set_last_played_at(boost::none);
-        t.set_last_accessed_at(
-            c::system_clock::time_point{c::seconds{1509321600}});
-        t.set_import_info(boost::none);
-        t.set_album_art_id(2);
+    t.set_artist("Dennis Cruz");
+    t.set_album("Mad EP");
+    t.set_genre("Tech House");
+    t.set_comment("Purchased at Beatport.com");
+    t.set_publisher("Stereo Productions");
+    t.set_composer(boost::none);
+    t.set_key(djinterop::musical_key::a_minor);
+    t.set_relative_path("../01 - Dennis Cruz - Mad (Original Mix).mp3");
+    t.set_last_modified_at(c::system_clock::time_point{c::seconds{1509371790}});
+    t.set_bitrate(320);
+    t.set_last_played_at(boost::none);
+    t.set_last_accessed_at(c::system_clock::time_point{c::seconds{1509321600}});
+    t.set_import_info(boost::none);
+    t.set_album_art_id(2);
 }
 
-static void check_track_1(el::track &t)
+static void check_track_1(djinterop::track &t)
 {
     BOOST_CHECK(t.is_valid());
     BOOST_CHECK_EQUAL(*t.track_number(), 1);
@@ -91,7 +93,7 @@ static void check_track_1(el::track &t)
     BOOST_CHECK_EQUAL(*t.comment(), "Purchased at Beatport.com");
     BOOST_CHECK_EQUAL(*t.publisher(), "Stereo Productions");
     BOOST_CHECK(!t.composer());
-    BOOST_CHECK(*t.key() == el::musical_key::a_minor);
+    BOOST_CHECK(*t.key() == djinterop::musical_key::a_minor);
     BOOST_CHECK_EQUAL(
         t.relative_path(), "../01 - Dennis Cruz - Mad (Original Mix).mp3");
     BOOST_CHECK_EQUAL(
@@ -111,19 +113,19 @@ static void check_track_1(el::track &t)
     BOOST_CHECK_EQUAL(*t.album_art_id(), 2);
 }
 
-static void populate_example_track_2(el::track &t)
+static void populate_example_track_2(djinterop::track &t)
 {
     t.set_track_number(3);
     t.set_bpm(128);
     t.set_year(2018);
     t.set_title("Made-up Track (Foo Bar Remix)");
-	t.set_artist("Not A Real Artist");
-	t.set_album("Fake Album");
-	t.set_genre("Progressive House");
-	t.set_comment("Comment goes here");
-	t.set_publisher("Here is the publisher text");
-	t.set_composer("And the composer text");
-    t.set_key(el::musical_key::c_major);
+    t.set_artist("Not A Real Artist");
+    t.set_album("Fake Album");
+    t.set_genre("Progressive House");
+    t.set_comment("Comment goes here");
+    t.set_publisher("Here is the publisher text");
+    t.set_composer("And the composer text");
+    t.set_key(djinterop::musical_key::c_major);
     t.set_relative_path(
         "../03 - Not A Real Artist - Made-up Track (Foo Bar Remix).flac");
     t.set_last_modified_at(c::system_clock::time_point{c::seconds{1517413933}});
@@ -134,7 +136,7 @@ static void populate_example_track_2(el::track &t)
     t.set_album_art_id(1);
 }
 
-static void check_track_2(el::track &t)
+static void check_track_2(djinterop::track &t)
 {
     BOOST_CHECK(t.is_valid());
     BOOST_CHECK_EQUAL(*t.track_number(), 3);
@@ -147,7 +149,7 @@ static void check_track_2(el::track &t)
     BOOST_CHECK_EQUAL(*t.comment(), "Comment goes here");
     BOOST_CHECK_EQUAL(*t.publisher(), "Here is the publisher text");
     BOOST_CHECK_EQUAL(*t.composer(), "And the composer text");
-    BOOST_CHECK(*t.key() == el::musical_key::c_major);
+    BOOST_CHECK(*t.key() == djinterop::musical_key::c_major);
     BOOST_CHECK_EQUAL(
         t.relative_path(),
         "../03 - Not A Real Artist - Made-up Track (Foo Bar Remix).flac");
@@ -175,11 +177,11 @@ static void check_track_2(el::track &t)
     BOOST_CHECK(!t.album_art_id());
 }
 
-BOOST_AUTO_TEST_CASE (all_track_ids__sample_db__expected_ids)
+BOOST_AUTO_TEST_CASE(all_track_ids__sample_db__expected_ids)
 {
     // Arrange
-    el::database db{sample_path};
-    
+    auto db = el::load_database(sample_path);
+
     // Act
     auto results = db.tracks();
 
@@ -191,8 +193,8 @@ BOOST_AUTO_TEST_CASE (all_track_ids__sample_db__expected_ids)
 BOOST_AUTO_TEST_CASE(tracks_by_relative_path__valid_path__expected_id)
 {
     // Arrange
-    el::database db{sample_path};
-    
+    auto db = el::load_database(sample_path);
+
     // Act
     auto results = db.tracks_by_relative_path(
         "../01 - Dennis Cruz - Mad (Original Mix).mp3");
@@ -205,8 +207,8 @@ BOOST_AUTO_TEST_CASE(tracks_by_relative_path__valid_path__expected_id)
 BOOST_AUTO_TEST_CASE(tracks_by_relative_path__invalid_path__no_ids)
 {
     // Arrange
-    el::database db{sample_path};
-    
+    auto db = el::load_database(sample_path);
+
     // Act
     auto results = db.tracks_by_relative_path("Does Not Exist.mp3");
 
@@ -214,29 +216,29 @@ BOOST_AUTO_TEST_CASE(tracks_by_relative_path__invalid_path__no_ids)
     BOOST_CHECK_EQUAL(results.size(), 0);
 }
 
-BOOST_AUTO_TEST_CASE (ctor__track1__correct_fields)
+BOOST_AUTO_TEST_CASE(ctor__track1__correct_fields)
 {
-	// Arrange
-	el::database db{sample_path};
+    // Arrange
+    auto db = el::load_database(sample_path);
 
-	// Act
-        auto t = *db.track_by_id(1);
+    // Act
+    auto t = *db.track_by_id(1);
 
-        // Assert
-        BOOST_CHECK_EQUAL(t.id(), 1);
-        check_track_1(t);
+    // Assert
+    BOOST_CHECK_EQUAL(t.id(), 1);
+    check_track_1(t);
 }
 
 BOOST_AUTO_TEST_CASE(ctor__track_deleted__throws)
 {
     // Arrange
-    el::database db{sample_path};
+    auto db = el::load_database(sample_path);
 
     // Act / Assert
     BOOST_CHECK(!db.track_by_id(123));
 }
 
-BOOST_AUTO_TEST_CASE (save__new_track_good_values__saves)
+BOOST_AUTO_TEST_CASE(save__new_track_good_values__saves)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
@@ -254,7 +256,7 @@ BOOST_AUTO_TEST_CASE (save__new_track_good_values__saves)
     remove_temp_dir(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE (ctor_copy__saved_track__copied_fields)
+BOOST_AUTO_TEST_CASE(ctor_copy__saved_track__copied_fields)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
@@ -272,7 +274,7 @@ BOOST_AUTO_TEST_CASE (ctor_copy__saved_track__copied_fields)
     remove_temp_dir(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE (save__existing_track_good_values__saves)
+BOOST_AUTO_TEST_CASE(save__existing_track_good_values__saves)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
@@ -292,7 +294,7 @@ BOOST_AUTO_TEST_CASE (save__existing_track_good_values__saves)
     remove_temp_dir(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE (op_copy_assign__saved_track__copied_fields)
+BOOST_AUTO_TEST_CASE(op_copy_assign__saved_track__copied_fields)
 {
     // Arrange
     auto temp_dir = create_temp_dir();

@@ -21,12 +21,12 @@
 #include <ostream>
 #include <string>
 
+#include <sqlite_modern_cpp.h>
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <djinterop/enginelibrary/database.hpp>
-
-#include "sqlite_modern_cpp.h"
+#include <djinterop/database.hpp>
+#include <djinterop/enginelibrary.hpp>
 
 #define STRINGIFY(x) STRINGIFY_(x)
 #define STRINGIFY_(x) #x
@@ -49,24 +49,25 @@ static fs::path create_temp_dir()
     return temp_dir;
 }
 
-BOOST_AUTO_TEST_CASE (ctor__sample_path__constructed)
+BOOST_AUTO_TEST_CASE(ctor__sample_path__constructed)
 {
     // Simply try to construct the database on the provided path
     // Arrange/Act/Assert
-    el::database{sample_path};
+    el::load_database(sample_path);
 }
 
 BOOST_AUTO_TEST_CASE(ctor__fake_path__throw)
 {
     // Check that a fake database is reported as not existing
     // Arrange/Act/Assert
-    BOOST_CHECK_THROW(el::database db{fake_path}, sqlite::errors::cantopen);
+    BOOST_CHECK_THROW(
+        auto db = el::load_database(fake_path), sqlite::errors::cantopen);
 }
 
 BOOST_AUTO_TEST_CASE(is_supported__valid_db__valid_version)
 {
     // Arrange
-    el::database db{sample_path};
+    auto db = el::load_database(sample_path);
 
     // Act
     auto supported = db.is_supported();
@@ -78,18 +79,18 @@ BOOST_AUTO_TEST_CASE(is_supported__valid_db__valid_version)
 BOOST_AUTO_TEST_CASE(verify__valid_db__no_throw)
 {
     // Arrange
-    el::database db{sample_path};
+    auto db = el::load_database(sample_path);
 
     // Act/Assert
     db.verify();
 }
 
-BOOST_AUTO_TEST_CASE (information__valid_db__expected)
+BOOST_AUTO_TEST_CASE(information__valid_db__expected)
 {
     // Assess correctness of values sourced from the 'Information' table
     // Arrange/Act
-    el::database db{sample_path};
-    
+    auto db = el::load_database(sample_path);
+
     // Assert
     BOOST_CHECK_EQUAL(db.directory(), sample_path);
     BOOST_CHECK_EQUAL(db.music_db_path(), sample_path + "/m.db");

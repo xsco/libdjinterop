@@ -1,28 +1,28 @@
-/*
-    This file is part of libdjinterop.
-
-    libdjinterop is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    libdjinterop is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
- */
+#pragma once
 
 #if __cplusplus < 201103L && _MSVC_LANG < 201103L
 #error This library needs at least a C++11 compliant compiler
 #endif
 
-#ifndef DJINTEROP_ENGINELIBRARY_HPP
-#define DJINTEROP_ENGINELIBRARY_HPP
+#include <djinterop/semantic_version.hpp>
 
-#include <djinterop/enginelibrary/database.hpp>
-#include <djinterop/enginelibrary/performance_data.hpp>
+namespace djinterop
+{
+class database;
 
-#endif  // DJINTEROP_ENGINELIBRARY_HPP
+namespace enginelibrary
+{
+static constexpr semantic_version version_1_6_0{1, 6, 0};
+static constexpr semantic_version version_1_7_1{1, 7, 1};
+static constexpr semantic_version version_latest = version_1_7_1;
+
+database load_database(std::string directory);
+
+/// Creates a new, empty database in a given directory and using a specified
+/// schema version
+database make_database(
+    std::string directory,
+    const semantic_version& default_version = version_latest);
+
+}  // namespace enginelibrary
+}  // namespace djinterop

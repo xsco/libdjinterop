@@ -15,17 +15,19 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "enginelibrary/schema.hpp"
-
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE schema_test 
+#define BOOST_TEST_MODULE schema_test
 
 #include <cstdio>
 #include <iostream>
-#include <boost/test/unit_test.hpp>
+
+#include <sqlite_modern_cpp.h>
 #include <boost/filesystem.hpp>
-#include "djinterop/enginelibrary/schema_version.hpp"
-#include "sqlite_modern_cpp.h"
+#include <boost/test/unit_test.hpp>
+
+#include <djinterop/enginelibrary.hpp>
+#include <djinterop/enginelibrary/schema.hpp>
+#include <djinterop/semantic_version.hpp>
 
 #define STRINGIFY(x) STRINGIFY_(x)
 #define STRINGIFY_(x) #x
@@ -54,41 +56,41 @@ static void remove_temp_dir(const fs::path &temp_dir)
     std::cout << "Removed temp dir at " << temp_dir.string() << std::endl;
 }
 
-BOOST_AUTO_TEST_CASE (operators_equality__various__expected)
+BOOST_AUTO_TEST_CASE(operators_equality__various__expected)
 {
     // Arrange/Act/Assert
-    BOOST_CHECK(  el::version_1_6_0 == el::version_1_6_0);
-    BOOST_CHECK(  el::version_1_7_1 == el::version_1_7_1);
+    BOOST_CHECK(el::version_1_6_0 == el::version_1_6_0);
+    BOOST_CHECK(el::version_1_7_1 == el::version_1_7_1);
     BOOST_CHECK(!(el::version_1_6_0 == el::version_1_7_1));
     BOOST_CHECK(!(el::version_1_7_1 == el::version_1_6_0));
-    BOOST_CHECK(  el::version_1_6_0 != el::version_1_7_1);
-    BOOST_CHECK(  el::version_1_7_1 != el::version_1_6_0);
+    BOOST_CHECK(el::version_1_6_0 != el::version_1_7_1);
+    BOOST_CHECK(el::version_1_7_1 != el::version_1_6_0);
     BOOST_CHECK(!(el::version_1_6_0 != el::version_1_6_0));
     BOOST_CHECK(!(el::version_1_7_1 != el::version_1_7_1));
 }
 
-BOOST_AUTO_TEST_CASE (operators_ordering__various__expected)
+BOOST_AUTO_TEST_CASE(operators_ordering__various__expected)
 {
     // Arrange/Act/Assert
-    BOOST_CHECK(  el::version_1_6_0 <= el::version_1_6_0);
-    BOOST_CHECK(  el::version_1_7_1 <= el::version_1_7_1);
-    BOOST_CHECK(  el::version_1_6_0 <= el::version_1_7_1);
+    BOOST_CHECK(el::version_1_6_0 <= el::version_1_6_0);
+    BOOST_CHECK(el::version_1_7_1 <= el::version_1_7_1);
+    BOOST_CHECK(el::version_1_6_0 <= el::version_1_7_1);
     BOOST_CHECK(!(el::version_1_7_1 <= el::version_1_6_0));
     BOOST_CHECK(!(el::version_1_6_0 < el::version_1_6_0));
     BOOST_CHECK(!(el::version_1_7_1 < el::version_1_7_1));
-    BOOST_CHECK(  el::version_1_6_0 < el::version_1_7_1);
+    BOOST_CHECK(el::version_1_6_0 < el::version_1_7_1);
     BOOST_CHECK(!(el::version_1_7_1 < el::version_1_6_0));
-    BOOST_CHECK(  el::version_1_6_0 >= el::version_1_6_0);
-    BOOST_CHECK(  el::version_1_7_1 >= el::version_1_7_1);
+    BOOST_CHECK(el::version_1_6_0 >= el::version_1_6_0);
+    BOOST_CHECK(el::version_1_7_1 >= el::version_1_7_1);
     BOOST_CHECK(!(el::version_1_6_0 >= el::version_1_7_1));
-    BOOST_CHECK(  el::version_1_7_1 >= el::version_1_6_0);
+    BOOST_CHECK(el::version_1_7_1 >= el::version_1_6_0);
     BOOST_CHECK(!(el::version_1_6_0 > el::version_1_6_0));
     BOOST_CHECK(!(el::version_1_7_1 > el::version_1_7_1));
     BOOST_CHECK(!(el::version_1_6_0 > el::version_1_7_1));
-    BOOST_CHECK(  el::version_1_7_1 > el::version_1_6_0);
+    BOOST_CHECK(el::version_1_7_1 > el::version_1_6_0);
 }
 
-BOOST_AUTO_TEST_CASE (verify_music_schema__db_at_1_0_0__verified)
+BOOST_AUTO_TEST_CASE(verify_music_schema__db_at_1_0_0__verified)
 {
     // Arrange
     sqlite::database db{sample_path + "/m.db"};
@@ -97,10 +99,10 @@ BOOST_AUTO_TEST_CASE (verify_music_schema__db_at_1_0_0__verified)
     auto version = el::verify_music_schema(db);
 
     // Assert
-	BOOST_CHECK_EQUAL(version, el::version_1_6_0);
+    BOOST_CHECK_EQUAL(version, el::version_1_6_0);
 }
 
-BOOST_AUTO_TEST_CASE (verify_performance_schema__db_at_1_0_0__verified)
+BOOST_AUTO_TEST_CASE(verify_performance_schema__db_at_1_0_0__verified)
 {
     // Arrange
     sqlite::database db{sample_path + "/p.db"};
@@ -109,10 +111,10 @@ BOOST_AUTO_TEST_CASE (verify_performance_schema__db_at_1_0_0__verified)
     auto version = el::verify_performance_schema(db);
 
     // Assert
-	BOOST_CHECK_EQUAL(version, el::version_1_6_0);
+    BOOST_CHECK_EQUAL(version, el::version_1_6_0);
 }
 
-BOOST_AUTO_TEST_CASE (create_music_schema__version_1_6_0__creates_verified)
+BOOST_AUTO_TEST_CASE(create_music_schema__version_1_6_0__creates_verified)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
@@ -127,7 +129,7 @@ BOOST_AUTO_TEST_CASE (create_music_schema__version_1_6_0__creates_verified)
     fs::remove_all(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE (create_performance_schema__version_1_6_0__creates_verified)
+BOOST_AUTO_TEST_CASE(create_performance_schema__version_1_6_0__creates_verified)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
@@ -142,7 +144,7 @@ BOOST_AUTO_TEST_CASE (create_performance_schema__version_1_6_0__creates_verified
     remove_temp_dir(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE (create_music_schema__version_1_7_1__creates_verified)
+BOOST_AUTO_TEST_CASE(create_music_schema__version_1_7_1__creates_verified)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
@@ -157,7 +159,7 @@ BOOST_AUTO_TEST_CASE (create_music_schema__version_1_7_1__creates_verified)
     fs::remove_all(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE (create_performance_schema__version_1_7_1__creates_verified)
+BOOST_AUTO_TEST_CASE(create_performance_schema__version_1_7_1__creates_verified)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
@@ -171,4 +173,3 @@ BOOST_AUTO_TEST_CASE (create_performance_schema__version_1_7_1__creates_verified
     el::verify_performance_schema(db);
     remove_temp_dir(temp_dir);
 }
-
