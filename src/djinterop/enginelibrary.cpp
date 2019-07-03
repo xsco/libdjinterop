@@ -1,4 +1,5 @@
 #include <sys/stat.h>
+#include <cmath>
 #include <string>
 #if defined(_WIN32)
 #include <direct.h>
@@ -18,7 +19,7 @@ database load_database(std::string directory)
 }
 
 database make_database(
-    std::string directory, const semantic_version& default_version)
+    std::string directory, const semantic_version &default_version)
 {
     if (!is_supported(default_version))
     {
@@ -67,6 +68,66 @@ database make_database(
     }
 
     return load_database(std::move(directory));
+}
+
+std::vector<beatgrid_marker> normalize_beatgrid(
+    std::vector<beatgrid_marker> beatgrid, int64_t sample_count)
+{
+    if (beatgrid.empty())
+    {
+        return beatgrid;  // Named RVO
+    }
+
+    {
+        auto last_marker_iter = std::find_if(
+            beatgrid.begin(), beatgrid.end(),
+            [sample_count](const beatgrid_marker &marker) {
+                return marker.sample_offset > sample_count;
+            });
+        if (last_marker_iter != beatgrid.end())
+        {
+            beatgrid.erase(last_marker_iter + 1, beatgrid.end());
+        }
+    }
+
+    {
+        auto after_first_marker_iter = std::find_if(
+            beatgrid.begin(), beatgrid.end(),
+            [](const beatgrid_marker &marker) {
+                return marker.sample_offset > 0;
+            });
+        if (after_first_marker_iter != beatgrid.begin())
+        {
+            beatgrid.erase(beatgrid.begin(), after_first_marker_iter - 1);
+        }
+    }
+
+    if (beatgrid.size() < 2)
+    {
+        throw std::invalid_argument{
+            "Attempted to normalize a misplaced beadgrid"};
+    }
+
+    {
+        double samples_per_beat =
+            (beatgrid[1].sample_offset - beatgrid[0].sample_offset) /
+            (beatgrid[1].index - beatgrid[0].index);
+        beatgrid[0].sample_offset -= (4 + beatgrid[0].index) * samples_per_beat;
+        beatgrid[0].index = -4;
+    }
+
+    {
+        int32_t last = static_cast<int32_t>(beatgrid.size() - 1);
+        double samples_per_beat =
+            (beatgrid[last].sample_offset - beatgrid[last - 1].sample_offset) /
+            (beatgrid[last].index - beatgrid[last - 1].index);
+        int32_t index_adjustment = static_cast<int32_t>(std::ceil(
+            (sample_count - beatgrid[last].sample_offset) / samples_per_beat));
+        beatgrid[last].sample_offset += index_adjustment * samples_per_beat;
+        beatgrid[last].index += index_adjustment;
+    }
+
+    return beatgrid;  // Named RVO
 }
 
 }  // namespace enginelibrary

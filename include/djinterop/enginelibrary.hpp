@@ -4,6 +4,7 @@
 #error This library needs at least a C++11 compliant compiler
 #endif
 
+#include <djinterop/performance_data.hpp>
 #include <djinterop/semantic_version.hpp>
 
 namespace djinterop
@@ -23,6 +24,17 @@ database load_database(std::string directory);
 database make_database(
     std::string directory,
     const semantic_version& default_version = version_latest);
+
+/// Normalizes a beat-grid, so that the beat indexes are in the form normally
+/// expected by Engine Prime.
+///
+/// By convention, the Engine Prime analyses tracks so that the first beat is
+/// at index -4 (yes, negative!) and the last beat is the first beat past the
+/// usable end of the track, which may not necessarily be aligned to the first
+/// beat of a 4-beat bar.  Therefore, the sample offsets typically recorded by
+/// Engine Prime do not lie within the actual track.
+std::vector<beatgrid_marker> normalize_beatgrid(
+    std::vector<beatgrid_marker> beatgrid, int64_t sample_count);
 
 }  // namespace enginelibrary
 }  // namespace djinterop

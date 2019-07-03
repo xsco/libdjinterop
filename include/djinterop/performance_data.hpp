@@ -87,23 +87,6 @@ struct waveform_entry
     waveform_point high;
 };
 
-namespace enginelibrary
-{
-/**
- * \brief Normalise a beat-grid, so that the beat indexes are in the form
- *        normally expected by Engine Prime.
- *
- * By convention, the Engine Prime analyses tracks so that the first beat is
- * at index -4 (yes, negative!) and the last beat is the first beat past the
- * usable end of the track, which may not necessarily be aligned to the first
- * beat of a 4-beat bar.  Therefore, the sample offsets typically recorded by
- * Engine Prime do not lie within the actual track.
- */
-std::vector<beatgrid_marker> normalize_beatgrid(
-    std::vector<beatgrid_marker> beatgrid, int64_t sample_count);
-
-}  // namespace enginelibrary
-
 }  // namespace djinterop
 
 #endif  // DJINTEROP_ENGINELIBRARY_PERFORMANCE_DATA_HPP
