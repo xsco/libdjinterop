@@ -38,7 +38,7 @@ How Do I Use It?
 The library is not ready for prime-time yet, but if you are willing to read the source code, you can get an example application up and running using code similar to the following:
 
 ```c++
-#include <djinterop/enginelibrary.hpp>
+#include <djinterop/djinterop.hpp>
 
 namespace el = djinterop::enginelibrary;
 
@@ -54,12 +54,12 @@ int main(int argc, char **argv)
     tr.set_title("Some Song");
     tr.set_artist("Some Artist");
     tr.set_publisher(boost::none);  // boost::none indicates missing metadata
-    tr.set_key(el::musical_key::a_minor);
+    tr.set_key(djinterop::musical_key::a_minor);
     tr.set_bitrate(320);
     tr.set_average_loudness(0.5);  // loudness range (0, 1]
     tr.set_sampling({44100,        // sample rate
                      16140600});   // sample count
-    std::vector<el::beatgrid_marker> beatgrid{
+    std::vector<djinterop::beatgrid_marker> beatgrid{
         {-4, -83316.78},                 // 1st marker
         {812, 17470734.439}};            // 2nd marker
     tr.set_default_beatgrid(beatgrid);   // as analyzed
@@ -70,21 +70,21 @@ int main(int argc, char **argv)
     tr.set_adjusted_main_cue(2732);  // manually adjusted
 
     // There are always 8 hot cues, whereby each can optionally be set
-    std::array<boost::optional<el::hot_cue>, 8> cues;
-    cues[0] = el::hot_cue{"Cue 1", 1377924.5,  // position in number of samples
-                          el::standard_pad_colors::pad_1};
+    std::array<boost::optional<djinterop::hot_cue>, 8> cues;
+    cues[0] = djinterop::hot_cue{"Cue 1", 1377924.5,  // position in number of samples
+                          djinterop::standard_pad_colors::pad_1};
     tr.set_hot_cues(cues);
 
     // Setting a single hot cue can also be done like this
-    tr.set_hot_cue_at(3, {"Cue 4", 5508265.96, el::standard_pad_colors::pad_4});
+    tr.set_hot_cue_at(3, {"Cue 4", 5508265.96, djinterop::standard_pad_colors::pad_4});
 
     // The loop API works like the hot cue API
     tr.set_loop_at(
-        0, {"Loop 1", 1144.012, 345339.134, el::standard_pad_colors::pad_1});
+        0, {"Loop 1", 1144.012, 345339.134, djinterop::standard_pad_colors::pad_1});
 
     // Set high-resolution waveform
     int64_t waveform_size = tr.recommended_waveform_size();
-    std::vector<el::waveform_entry> waveform;
+    std::vector<djinterop::waveform_entry> waveform;
     waveform.reserve(waveform_size);
     for (int64_t i = 0; i < waveform_size; ++i)
     {
