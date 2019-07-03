@@ -17,10 +17,12 @@ static constexpr semantic_version version_1_6_0{1, 6, 0};
 static constexpr semantic_version version_1_7_1{1, 7, 1};
 static constexpr semantic_version version_latest = version_1_7_1;
 
+/// Loads a database from a given directory.
 database load_database(std::string directory);
 
-/// Creates a new, empty database in a given directory and using a specified
-/// schema version
+/// Loads a database from a given directory. If it doesn't exist, creates a new,
+/// empty database in that directory. When a new database is created, then
+/// the schema version given as default_version is used.
 database make_database(
     std::string directory,
     const semantic_version& default_version = version_latest);
