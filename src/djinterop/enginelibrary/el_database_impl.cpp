@@ -16,6 +16,9 @@ using djinterop::track;
 el_database_impl::el_database_impl(std::string directory)
     : storage_{std::make_shared<el_storage>(std::move(directory))}
 {
+    // TODO (haslersn): On construction, should we check that the database
+    // version is supported? This would give more guarantees to a user that
+    // obtains a database object.
 }
 
 el_database_impl::el_database_impl(std::shared_ptr<el_storage> storage)
