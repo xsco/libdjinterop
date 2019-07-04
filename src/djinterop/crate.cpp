@@ -44,6 +44,11 @@ void crate::clear_tracks() const
     pimpl_->clear_tracks();
 }
 
+database crate::db() const
+{
+    return pimpl_->db();
+}
+
 std::vector<crate> crate::descendants() const
 {
     return pimpl_->descendants();
