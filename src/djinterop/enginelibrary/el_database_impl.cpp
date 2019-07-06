@@ -29,7 +29,7 @@ el_database_impl::el_database_impl(std::shared_ptr<el_storage> storage)
 boost::optional<crate> el_database_impl::crate_by_id(int64_t id)
 {
     boost::optional<crate> cr;
-    storage_->music_db << "SELECT COUNT(*) FROM Crate WHERE id = ?" << id >>
+    storage_->db << "SELECT COUNT(*) FROM Crate WHERE id = ?" << id >>
         [&](int64_t count) {
             if (count == 1)
             {
@@ -47,19 +47,17 @@ boost::optional<crate> el_database_impl::crate_by_id(int64_t id)
 std::vector<crate> el_database_impl::crates()
 {
     std::vector<crate> results;
-    storage_->music_db << "SELECT id FROM Crate ORDER BY id" >>
-        [&](int64_t id) {
-            results.push_back(
-                crate{std::make_shared<el_crate_impl>(storage_, id)});
-        };
+    storage_->db << "SELECT id FROM Crate ORDER BY id" >> [&](int64_t id) {
+        results.push_back(crate{std::make_shared<el_crate_impl>(storage_, id)});
+    };
     return results;
 }
 
 std::vector<crate> el_database_impl::crates_by_name(boost::string_view name)
 {
     std::vector<crate> results;
-    storage_->music_db << "SELECT id FROM Crate WHERE title = ? ORDER BY id"
-                       << name.data() >>
+    storage_->db << "SELECT id FROM Crate WHERE title = ? ORDER BY id"
+                 << name.data() >>
         [&](int64_t id) {
             results.push_back(
                 crate{std::make_shared<el_crate_impl>(storage_, id)});
@@ -69,18 +67,18 @@ std::vector<crate> el_database_impl::crates_by_name(boost::string_view name)
 
 crate el_database_impl::create_crate(boost::string_view name)
 {
-    storage_->music_db << "BEGIN";
+    storage_->db << "BEGIN";
 
-    storage_->music_db << "INSERT INTO Crate (title, path) VALUES (?, ?)"
-                       << name.data() << std::string{name} + ';';
+    storage_->db << "INSERT INTO Crate (title, path) VALUES (?, ?)"
+                 << name.data() << std::string{name} + ';';
 
-    int64_t id = storage_->music_db.last_insert_rowid();
+    int64_t id = storage_->db.last_insert_rowid();
 
-    storage_->music_db << "INSERT INTO CrateParentList (crateOriginId, "
-                          "crateParentId) VALUES (?, ?)"
-                       << id << id;
+    storage_->db << "INSERT INTO CrateParentList (crateOriginId, "
+                    "crateParentId) VALUES (?, ?)"
+                 << id << id;
 
-    storage_->music_db << "COMMIT";
+    storage_->db << "COMMIT";
 
     return crate{std::make_shared<el_crate_impl>(storage_, id)};
 }
@@ -92,29 +90,28 @@ track el_database_impl::create_track(boost::string_view relative_path)
 
     auto filename = get_filename(relative_path);
 
-    storage_->music_db << "BEGIN";
+    storage_->db << "BEGIN";
 
     // Insert a new entry in the track table
-    storage_->music_db << "INSERT INTO Track (path, filename, trackType, "
-                          "isExternalTrack, idAlbumArt) VALUES (?,?,?,?,?)"
-                       << relative_path.data()   //
-                       << std::string{filename}  //
-                       << 1                      // trackType
-                       << 0                      // isExternalTrack
-                       << 1;                     // idAlbumArt
+    storage_->db << "INSERT INTO Track (path, filename, trackType, "
+                    "isExternalTrack, idAlbumArt) VALUES (?,?,?,?,?)"
+                 << relative_path.data()   //
+                 << std::string{filename}  //
+                 << 1                      // trackType
+                 << 0                      // isExternalTrack
+                 << 1;                     // idAlbumArt
 
-    auto id = storage_->music_db.last_insert_rowid();
+    auto id = storage_->db.last_insert_rowid();
 
     if (version() >= version_1_7_1)
     {
-        storage_->music_db << "UPDATE Track SET pdbImportKey = 0 WHERE id = ?"
-                           << id;
+        storage_->db << "UPDATE Track SET pdbImportKey = 0 WHERE id = ?" << id;
     }
 
     {
         auto extension = get_file_extension(filename);
         auto metadata_str_inserter =
-            storage_->music_db
+            storage_->db
             << "REPLACE INTO MetaData (id, type, text) VALUES (?, ?, ?)";
         for (int64_t type : {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 15, 16})
         {
@@ -144,7 +141,7 @@ track el_database_impl::create_track(boost::string_view relative_path)
     }
 
     {
-        auto metadata_int_inserter = storage_->music_db
+        auto metadata_int_inserter = storage_->db
                                      << "REPLACE INTO MetaDataInteger (id, "
                                         "type, value) VALUES (?, ?, ?)";
         for (int64_t type = 1; type <= 11 /* 12 */; ++type)
@@ -163,7 +160,7 @@ track el_database_impl::create_track(boost::string_view relative_path)
         }
     }
 
-    storage_->music_db << "COMMIT";
+    storage_->db << "COMMIT";
 
     return track{std::make_shared<el_track_impl>(storage_, id)};
 }
@@ -181,20 +178,20 @@ bool el_database_impl::is_supported()
 void el_database_impl::verify()
 {
     // Verify music schema
-    verify_music_schema(storage_->music_db);
+    verify_music_schema(storage_->db);
 
     // Verify performance schema
-    verify_performance_schema(storage_->perfdata_db);
+    verify_performance_schema(storage_->db);
 }
 
 void el_database_impl::remove_crate(crate cr)
 {
-    storage_->music_db << "DELETE FROM Crate WHERE id = ?" << cr.id();
+    storage_->db << "DELETE FROM Crate WHERE id = ?" << cr.id();
 }
 
 void el_database_impl::remove_track(track tr)
 {
-    storage_->music_db << "DELETE FROM Track WHERE id = ?" << tr.id();
+    storage_->db << "DELETE FROM Track WHERE id = ?" << tr.id();
     // All other references to the track should automatically be cleared by
     // "ON DELETE CASCADE"
 }
@@ -202,7 +199,7 @@ void el_database_impl::remove_track(track tr)
 std::vector<crate> el_database_impl::root_crates()
 {
     std::vector<crate> results;
-    storage_->music_db
+    storage_->db
             << "SELECT crateOriginId FROM CrateParentList WHERE crateParentId "
                "= crateOriginId ORDER BY crateOriginId" >>
         [&](int64_t id) {
@@ -215,7 +212,7 @@ std::vector<crate> el_database_impl::root_crates()
 boost::optional<track> el_database_impl::track_by_id(int64_t id)
 {
     boost::optional<track> tr;
-    storage_->music_db << "SELECT COUNT(*) FROM Track WHERE id = ?" << id >>
+    storage_->db << "SELECT COUNT(*) FROM Track WHERE id = ?" << id >>
         [&](int64_t count) {
             if (count == 1)
             {
@@ -233,11 +230,9 @@ boost::optional<track> el_database_impl::track_by_id(int64_t id)
 std::vector<track> el_database_impl::tracks()
 {
     std::vector<track> results;
-    storage_->music_db << "SELECT id FROM Track ORDER BY id" >>
-        [&](int64_t id) {
-            results.push_back(
-                track{std::make_shared<el_track_impl>(storage_, id)});
-        };
+    storage_->db << "SELECT id FROM Track ORDER BY id" >> [&](int64_t id) {
+        results.push_back(track{std::make_shared<el_track_impl>(storage_, id)});
+    };
     return results;
 }
 
@@ -245,8 +240,8 @@ std::vector<track> el_database_impl::tracks_by_relative_path(
     boost::string_view relative_path)
 {
     std::vector<track> results;
-    storage_->music_db << "SELECT id FROM Track WHERE path = ? ORDER BY id"
-                       << relative_path.data() >>
+    storage_->db << "SELECT id FROM Track WHERE path = ? ORDER BY id"
+                 << relative_path.data() >>
         [&](int64_t id) {
             results.push_back(
                 track{std::make_shared<el_track_impl>(storage_, id)});
@@ -257,15 +252,15 @@ std::vector<track> el_database_impl::tracks_by_relative_path(
 std::string el_database_impl::uuid()
 {
     std::string uuid;
-    storage_->music_db << "SELECT uuid FROM Information" >> uuid;
+    storage_->db << "SELECT uuid FROM Information" >> uuid;
     return uuid;
 }
 
 semantic_version el_database_impl::version()
 {
     semantic_version version;
-    storage_->music_db << "SELECT schemaVersionMajor, schemaVersionMinor, "
-                          "schemaVersionPatch FROM Information" >>
+    storage_->db << "SELECT schemaVersionMajor, schemaVersionMinor, "
+                    "schemaVersionPatch FROM Information" >>
         std::tie(version.maj, version.min, version.pat);
     return version;
 }

@@ -119,7 +119,8 @@ BOOST_AUTO_TEST_CASE(create_music_schema__version_1_6_0__creates_verified)
     // Arrange
     auto temp_dir = create_temp_dir();
     auto db_path = temp_dir / "m.db";
-    sqlite::database db{db_path.string()};
+    sqlite::database db{":memory:"};
+    db << "ATTACH ? as 'music'" << db_path.c_str();
 
     // Act
     el::create_music_schema(db, el::version_1_6_0);
@@ -134,7 +135,8 @@ BOOST_AUTO_TEST_CASE(create_performance_schema__version_1_6_0__creates_verified)
     // Arrange
     auto temp_dir = create_temp_dir();
     auto db_path = temp_dir / "p.db";
-    sqlite::database db{db_path.string()};
+    sqlite::database db{":memory:"};
+    db << "ATTACH ? as 'perfdata'" << db_path.c_str();
 
     // Act
     el::create_performance_schema(db, el::version_1_6_0);
@@ -149,7 +151,8 @@ BOOST_AUTO_TEST_CASE(create_music_schema__version_1_7_1__creates_verified)
     // Arrange
     auto temp_dir = create_temp_dir();
     auto db_path = temp_dir / "m.db";
-    sqlite::database db{db_path.string()};
+    sqlite::database db{":memory:"};
+    db << "ATTACH ? as 'music'" << db_path.c_str();
 
     // Act
     el::create_music_schema(db, el::version_1_7_1);
@@ -164,7 +167,8 @@ BOOST_AUTO_TEST_CASE(create_performance_schema__version_1_7_1__creates_verified)
     // Arrange
     auto temp_dir = create_temp_dir();
     auto db_path = temp_dir / "p.db";
-    sqlite::database db{db_path.string()};
+    sqlite::database db{":memory:"};
+    db << "ATTACH ? as 'perfdata'" << db_path.c_str();
 
     // Act
     el::create_performance_schema(db, el::version_1_7_1);

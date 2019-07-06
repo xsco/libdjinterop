@@ -55,13 +55,13 @@ database make_database(
                         "Failed to create directory to hold new database"};
                 }
             }
-            sqlite::database m_db{music_db_path};
-            create_music_schema(m_db, default_version);
-            verify_music_schema(m_db);
-            sqlite::database p_db{perfdata_db_path};
-            create_performance_schema(p_db, default_version);
-            verify_performance_schema(p_db);
-            break;
+            auto storage = std::make_shared<el_storage>(std::move(directory));
+            create_music_schema(storage->db, default_version);
+            verify_music_schema(storage->db);
+            create_performance_schema(storage->db, default_version);
+            verify_performance_schema(storage->db);
+            return database{
+                std::make_shared<el_database_impl>(std::move(storage))};
         }
         default:  // both exist, so we do nothing
             break;

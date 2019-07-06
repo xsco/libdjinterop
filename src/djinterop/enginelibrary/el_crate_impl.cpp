@@ -38,25 +38,24 @@ el_crate_impl::el_crate_impl(std::shared_ptr<el_storage> storage, int64_t id)
 
 void el_crate_impl::add_track(track tr)
 {
-    storage_->music_db << "BEGIN";
+    storage_->db << "BEGIN";
 
-    storage_->music_db
+    storage_->db
         << "DELETE FROM CrateTrackList WHERE crateId = ? AND trackId = ?"
         << id() << tr.id();
 
-    storage_->music_db
+    storage_->db
         << "INSERT INTO CrateTrackList (crateId, trackId) VALUES (?, ?)" << id()
         << tr.id();
 
-    storage_->music_db << "COMMIT";
+    storage_->db << "COMMIT";
 }
 
 std::vector<crate> el_crate_impl::children()
 {
     std::vector<crate> results;
-    storage_->music_db
-            << "SELECT crateIdChild FROM CrateHierarchy WHERE crateId = ?"
-            << id() >>
+    storage_->db << "SELECT crateIdChild FROM CrateHierarchy WHERE crateId = ?"
+                 << id() >>
         [&](int64_t crate_id_child) {
             results.emplace_back(
                 std::make_shared<el_crate_impl>(storage_, crate_id_child));
@@ -66,8 +65,7 @@ std::vector<crate> el_crate_impl::children()
 
 void el_crate_impl::clear_tracks()
 {
-    storage_->music_db << "DELETE FROM CrateTrackList WHERE crateId = ?"
-                       << id();
+    storage_->db << "DELETE FROM CrateTrackList WHERE crateId = ?" << id();
 }
 
 database el_crate_impl::db()
@@ -78,7 +76,7 @@ database el_crate_impl::db()
 std::vector<crate> el_crate_impl::descendants()
 {
     std::vector<crate> results;
-    storage_->music_db
+    storage_->db
             << "SELECT crateOriginId FROM CrateParentList WHERE crateParentId "
                "= ? AND crateOriginId <> crateParentId"
             << id() >>
@@ -92,7 +90,7 @@ std::vector<crate> el_crate_impl::descendants()
 bool el_crate_impl::is_valid()
 {
     bool valid = false;
-    storage_->music_db << "SELECT COUNT(*) FROM Crate WHERE id = ?" << id() >>
+    storage_->db << "SELECT COUNT(*) FROM Crate WHERE id = ?" << id() >>
         [&](int count) {
             if (count == 1)
             {
@@ -110,7 +108,7 @@ bool el_crate_impl::is_valid()
 std::string el_crate_impl::name()
 {
     boost::optional<std::string> name;
-    storage_->music_db << "SELECT title FROM Crate WHERE id = ?" << id() >>
+    storage_->db << "SELECT title FROM Crate WHERE id = ?" << id() >>
         [&](std::string title) {
             if (!name)
             {
@@ -132,7 +130,7 @@ std::string el_crate_impl::name()
 boost::optional<crate> el_crate_impl::parent()
 {
     boost::optional<crate> parent;
-    storage_->music_db
+    storage_->db
             << "SELECT crateParentId FROM CrateParentList WHERE crateOriginId "
                "= ? AND crateParentId <> crateOriginId"
             << id() >>
@@ -153,18 +151,18 @@ boost::optional<crate> el_crate_impl::parent()
 
 void el_crate_impl::remove_track(track tr)
 {
-    storage_->music_db
+    storage_->db
         << "DELETE FROM CrateTrackList WHERE crateId = ? AND trackId = ?"
         << id() << tr.id();
 }
 
 void el_crate_impl::set_name(boost::string_view name)
 {
-    storage_->music_db << "BEGIN";
+    storage_->db << "BEGIN";
 
     // obtain parent's `path`
     std::string parent_path;
-    storage_->music_db
+    storage_->db
             << "SELECT path FROM Crate c JOIN CrateParentList cpl ON c.id = "
                "cpl.crateParentId WHERE cpl.crateOriginId = ? AND "
                "cpl.crateOriginId <> cpl.crateParentId"
@@ -183,49 +181,48 @@ void el_crate_impl::set_name(boost::string_view name)
 
     // update name and path
     std::string path = std::move(parent_path) + name.data() + ';';
-    storage_->music_db << "UPDATE Crate SET title = ?, path = ? WHERE id = ?"
-                       << name.data() << path << id();
+    storage_->db << "UPDATE Crate SET title = ?, path = ? WHERE id = ?"
+                 << name.data() << path << id();
 
     // call the lambda in order to update the path of direct children
     for (crate cr : children())
     {
-        update_path(storage_->music_db, cr, path);
+        update_path(storage_->db, cr, path);
     }
 
-    storage_->music_db << "COMMIT";
+    storage_->db << "COMMIT";
 }
 
 void el_crate_impl::set_parent(boost::optional<crate> parent)
 {
-    storage_->music_db << "BEGIN";
+    storage_->db << "BEGIN";
 
-    storage_->music_db << "DELETE FROM CrateParentList WHERE crateOriginId = ?"
-                       << id();
+    storage_->db << "DELETE FROM CrateParentList WHERE crateOriginId = ?"
+                 << id();
 
-    storage_->music_db << "INSERT INTO CrateParentList (crateOriginId, "
-                          "crateParentId) VALUES (?, ?)"
-                       << id() << (parent ? parent->id() : id());
+    storage_->db << "INSERT INTO CrateParentList (crateOriginId, "
+                    "crateParentId) VALUES (?, ?)"
+                 << id() << (parent ? parent->id() : id());
 
-    storage_->music_db << "DELETE FROM CrateHierarchy WHERE crateIdChild = ?"
-                       << id();
+    storage_->db << "DELETE FROM CrateHierarchy WHERE crateIdChild = ?" << id();
 
     if (parent)
     {
-        storage_->music_db
+        storage_->db
             << "INSERT INTO CrateHierarchy (crateId, crateIdChild) SELECT "
                "crateId, ? FROM CrateHierarchy WHERE crateIdChild = ? UNION "
                "SELECT ? AS crateId, ? AS crateIdChild"
             << id() << parent->id() << parent->id() << id();
     }
 
-    storage_->music_db << "COMMIT";
+    storage_->db << "COMMIT";
 }
 
 std::vector<track> el_crate_impl::tracks()
 {
     std::vector<track> results;
-    storage_->music_db << "SELECT trackId FROM CrateTrackList WHERE crateId = ?"
-                       << id() >>
+    storage_->db << "SELECT trackId FROM CrateTrackList WHERE crateId = ?"
+                 << id() >>
         [&](int64_t track_id) {
             results.emplace_back(
                 std::make_shared<el_track_impl>(storage_, track_id));

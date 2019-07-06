@@ -49,9 +49,9 @@ boost::optional<std::string> el_track_impl::get_metadata_str(
     metadata_str_type type)
 {
     boost::optional<std::string> result;
-    storage_->music_db << "SELECT text FROM MetaData WHERE id = ? AND "
-                          "type = ? AND text IS NOT NULL"
-                       << id() << static_cast<int64_t>(type) >>
+    storage_->db << "SELECT text FROM MetaData WHERE id = ? AND "
+                    "type = ? AND text IS NOT NULL"
+                 << id() << static_cast<int64_t>(type) >>
         [&](std::string text) {
             if (!result)
             {
@@ -77,7 +77,7 @@ void el_track_impl::set_metadata_str(
     }
     else
     {
-        storage_->music_db
+        storage_->db
             << "REPLACE INTO MetaData (id, type, text) VALUES (?, ?, ?)" << id()
             << static_cast<int64_t>(type) << nullptr;
     }
@@ -86,17 +86,16 @@ void el_track_impl::set_metadata_str(
 void el_track_impl::set_metadata_str(
     metadata_str_type type, const std::string& content)
 {
-    storage_->music_db
-        << "REPLACE INTO MetaData (id, type, text) VALUES (?, ?, ?)" << id()
-        << static_cast<int64_t>(type) << content;
+    storage_->db << "REPLACE INTO MetaData (id, type, text) VALUES (?, ?, ?)"
+                 << id() << static_cast<int64_t>(type) << content;
 }
 
 boost::optional<int64_t> el_track_impl::get_metadata_int(metadata_int_type type)
 {
     boost::optional<int64_t> result;
-    storage_->music_db << "SELECT value FROM MetaDataInteger WHERE id = "
-                          "? AND type = ? AND value IS NOT NULL"
-                       << id() << static_cast<int64_t>(type) >>
+    storage_->db << "SELECT value FROM MetaDataInteger WHERE id = "
+                    "? AND type = ? AND value IS NOT NULL"
+                 << id() << static_cast<int64_t>(type) >>
         [&](int64_t value) {
             if (!result)
             {
@@ -116,7 +115,7 @@ boost::optional<int64_t> el_track_impl::get_metadata_int(metadata_int_type type)
 void el_track_impl::set_metadata_int(
     metadata_int_type type, boost::optional<int64_t> content)
 {
-    storage_->music_db
+    storage_->db
         << "REPLACE INTO MetaDataInteger (id, type, value) VALUES (?, ?, ?)"
         << id() << static_cast<int64_t>(type) << content;
 }
@@ -189,11 +188,11 @@ std::vector<beatgrid_marker> el_track_impl::adjusted_beatgrid()
 
 void el_track_impl::set_adjusted_beatgrid(std::vector<beatgrid_marker> beatgrid)
 {
-    storage_->perfdata_db << "BEGIN";
+    storage_->db << "BEGIN";
     auto beat_d = get_beat_data();
     beat_d.adjusted_beatgrid = std::move(beatgrid);
     set_beat_data(std::move(beat_d));
-    storage_->perfdata_db << "COMMIT";
+    storage_->db << "COMMIT";
 }
 
 double el_track_impl::adjusted_main_cue()
@@ -203,11 +202,11 @@ double el_track_impl::adjusted_main_cue()
 
 void el_track_impl::set_adjusted_main_cue(double sample_offset)
 {
-    storage_->perfdata_db << "BEGIN";
+    storage_->db << "BEGIN";
     auto quick_cues_d = get_quick_cues_data();
     quick_cues_d.adjusted_main_cue = sample_offset;
     set_quick_cues_data(std::move(quick_cues_d));
-    storage_->perfdata_db << "COMMIT";
+    storage_->db << "COMMIT";
 }
 
 boost::optional<std::string> el_track_impl::album()
@@ -263,11 +262,11 @@ boost::optional<double> el_track_impl::average_loudness()
 void el_track_impl::set_average_loudness(
     boost::optional<double> average_loudness)
 {
-    storage_->perfdata_db << "BEGIN";
+    storage_->db << "BEGIN";
     auto track_d = get_track_data();
     track_d.average_loudness = average_loudness;
     set_track_data(track_d);
-    storage_->perfdata_db << "COMMIT";
+    storage_->db << "COMMIT";
 }
 
 boost::optional<int64_t> el_track_impl::bitrate()
@@ -324,8 +323,8 @@ database el_track_impl::db()
 std::vector<crate> el_track_impl::containing_crates()
 {
     std::vector<crate> results;
-    storage_->music_db << "SELECT crateId FROM CrateTrackList WHERE trackId = ?"
-                       << id() >>
+    storage_->db << "SELECT crateId FROM CrateTrackList WHERE trackId = ?"
+                 << id() >>
         [&](int64_t id) {
             results.push_back(
                 crate{std::make_shared<el_crate_impl>(storage_, id)});
@@ -341,11 +340,11 @@ std::vector<beatgrid_marker> el_track_impl::default_beatgrid()
 
 void el_track_impl::set_default_beatgrid(std::vector<beatgrid_marker> beatgrid)
 {
-    storage_->perfdata_db << "BEGIN";
+    storage_->db << "BEGIN";
     auto beat_d = get_beat_data();
     beat_d.default_beatgrid = std::move(beatgrid);
     set_beat_data(std::move(beat_d));
-    storage_->perfdata_db << "COMMIT";
+    storage_->db << "COMMIT";
 }
 
 double el_track_impl::default_main_cue()
@@ -355,11 +354,11 @@ double el_track_impl::default_main_cue()
 
 void el_track_impl::set_default_main_cue(double sample_offset)
 {
-    storage_->perfdata_db << "BEGIN";
+    storage_->db << "BEGIN";
     auto quick_cues_d = get_quick_cues_data();
     quick_cues_d.default_main_cue = sample_offset;
     set_quick_cues_data(std::move(quick_cues_d));
-    storage_->perfdata_db << "COMMIT";
+    storage_->db << "COMMIT";
 }
 
 boost::optional<milliseconds> el_track_impl::duration()
@@ -411,11 +410,11 @@ boost::optional<hot_cue> el_track_impl::hot_cue_at(int32_t index)
 
 void el_track_impl::set_hot_cue_at(int32_t index, boost::optional<hot_cue> cue)
 {
-    storage_->perfdata_db << "BEGIN";
+    storage_->db << "BEGIN";
     auto quick_cues_d = get_quick_cues_data();
     quick_cues_d.hot_cues[index] = std::move(cue);
     set_quick_cues_data(std::move(quick_cues_d));
-    storage_->perfdata_db << "END";
+    storage_->db << "END";
 }
 
 std::array<boost::optional<hot_cue>, 8> el_track_impl::hot_cues()
@@ -426,13 +425,13 @@ std::array<boost::optional<hot_cue>, 8> el_track_impl::hot_cues()
 
 void el_track_impl::set_hot_cues(std::array<boost::optional<hot_cue>, 8> cues)
 {
-    storage_->perfdata_db << "BEGIN";
+    storage_->db << "BEGIN";
     // TODO (haslersn): The following can be optimized because in this case we
     // overwrite all hot_cues
     auto quick_cues_d = get_quick_cues_data();
     quick_cues_d.hot_cues = std::move(cues);
     set_quick_cues_data(std::move(quick_cues_d));
-    storage_->perfdata_db << "END";
+    storage_->db << "END";
 }
 
 boost::optional<track_import_info> el_track_impl::import_info()
@@ -467,7 +466,7 @@ void el_track_impl::set_import_info(
 bool el_track_impl::is_valid()
 {
     bool valid = false;
-    storage_->music_db << "SELECT COUNT(*) FROM Track WHERE id = ?" << id() >>
+    storage_->db << "SELECT COUNT(*) FROM Track WHERE id = ?" << id() >>
         [&](int count) {
             if (count == 1)
             {
@@ -501,11 +500,11 @@ void el_track_impl::set_key(boost::optional<musical_key> key)
         key_num = static_cast<int64_t>(*key);
     }
 
-    storage_->perfdata_db << "BEGIN";
+    storage_->db << "BEGIN";
     auto track_d = get_track_data();
     track_d.key = key;
     set_track_data(track_d);
-    storage_->perfdata_db << "COMMIT";
+    storage_->db << "COMMIT";
 
     // TODO (haslersn): atomic?
     set_metadata_int(metadata_int_type::musical_key, key_num);
@@ -591,11 +590,11 @@ boost::optional<loop> el_track_impl::loop_at(int32_t index)
 
 void el_track_impl::set_loop_at(int32_t index, boost::optional<loop> l)
 {
-    storage_->perfdata_db << "BEGIN";
+    storage_->db << "BEGIN";
     auto loops_d = get_loops_data();
     loops_d.loops[index] = std::move(l);
     set_loops_data(std::move(loops_d));
-    storage_->perfdata_db << "END";
+    storage_->db << "END";
 }
 
 std::array<boost::optional<loop>, 8> el_track_impl::loops()
@@ -606,11 +605,11 @@ std::array<boost::optional<loop>, 8> el_track_impl::loops()
 
 void el_track_impl::set_loops(std::array<boost::optional<loop>, 8> cues)
 {
-    storage_->perfdata_db << "BEGIN";
+    storage_->db << "BEGIN";
     loops_data loops_d;
     loops_d.loops = std::move(cues);
     set_loops_data(std::move(loops_d));
-    storage_->perfdata_db << "END";
+    storage_->db << "END";
 }
 
 std::vector<waveform_entry> el_track_impl::overview_waveform()
@@ -696,7 +695,7 @@ void el_track_impl::set_sampling(boost::optional<sampling_info> sampling)
     set_cell("length", secs);
     set_cell("lengthCalculated", secs);
 
-    storage_->perfdata_db << "BEGIN";
+    storage_->db << "BEGIN";
 
     // read old data
     auto track_d = get_track_data();
@@ -725,7 +724,7 @@ void el_track_impl::set_sampling(boost::optional<sampling_info> sampling)
         set_overview_waveform_data(std::move(overview_waveform_d));
     }
 
-    storage_->perfdata_db << "COMMIT";
+    storage_->db << "COMMIT";
 }
 
 boost::optional<std::string> el_track_impl::title()
@@ -775,10 +774,10 @@ void el_track_impl::set_waveform(std::vector<waveform_entry> waveform)
         high_res_waveform_d.waveform = std::move(waveform);
     }
 
-    storage_->perfdata_db << "BEGIN";
+    storage_->db << "BEGIN";
     set_overview_waveform_data(std::move(overview_waveform_d));
     set_high_res_waveform_data(std::move(high_res_waveform_d));
-    storage_->perfdata_db << "END";
+    storage_->db << "END";
 }
 
 boost::optional<int32_t> el_track_impl::year()

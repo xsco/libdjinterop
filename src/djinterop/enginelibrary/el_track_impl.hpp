@@ -68,9 +68,9 @@ public:
     T get_cell(const char* column_name)
     {
         boost::optional<T> result;
-        storage_->music_db << (std::string{"SELECT "} + column_name +
-                               " FROM Track WHERE id = ?")
-                           << id() >>
+        storage_->db << (std::string{"SELECT "} + column_name +
+                         " FROM Track WHERE id = ?")
+                     << id() >>
             [&](T cell) {
                 if (!result)
                 {
@@ -92,18 +92,18 @@ public:
     template <typename T>
     void set_cell(const char* column_name, const T& content)
     {
-        storage_->music_db << (std::string{"UPDATE Track SET "} + column_name +
-                               " = ? WHERE id = ?")
-                           << content << id();
+        storage_->db << (std::string{"UPDATE Track SET "} + column_name +
+                         " = ? WHERE id = ?")
+                     << content << id();
     }
 
     template <typename T>
     T get_perfdata(const char* column_name)
     {
         boost::optional<T> result;
-        storage_->perfdata_db << (std::string{"SELECT "} + column_name +
-                                  " From PerformanceData WHERE id = ?")
-                              << id() >>
+        storage_->db << (std::string{"SELECT "} + column_name +
+                         " From PerformanceData WHERE id = ?")
+                     << id() >>
             [&](const std::vector<char>& encoded_data) {
                 if (!result)
                 {
@@ -125,9 +125,8 @@ public:
     void set_perfdata(const char* column_name, const T& content)
     {
         bool found = false;
-        storage_->perfdata_db
-                << "SELECT COUNT(*) FROM PerformanceData WHERE id = ?"
-                << id() >>
+        storage_->db << "SELECT COUNT(*) FROM PerformanceData WHERE id = ?"
+                     << id() >>
             [&](int32_t count) {
                 if (count == 1)
                 {
@@ -144,7 +143,7 @@ public:
 
         if (!found)
         {
-            storage_->perfdata_db
+            storage_->db
                 << "INSERT INTO PerformanceData (id, isAnalyzed, isRendered, "
                    "trackData, highResolutionWaveFormData, "
                    "overviewWaveFormData, beatData, quickCues, loops, "
@@ -163,16 +162,16 @@ public:
             // TODO (haslersn): Don't allocate during the version() call
             if (db().version() >= version_1_7_1)
             {
-                storage_->perfdata_db
+                storage_->db
                     << "UPDATE PerformanceData SET hasRekordboxValues = 0 "
                        "WHERE id = ?"
                     << id();
             }
         }
 
-        storage_->perfdata_db << (std::string{"UPDATE PerformanceData SET "} +
-                                  column_name + " = ? WHERE id = ?")
-                              << content.encode() << id();
+        storage_->db << (std::string{"UPDATE PerformanceData SET "} +
+                         column_name + " = ? WHERE id = ?")
+                     << content.encode() << id();
     }
 
     beat_data get_beat_data();
