@@ -27,6 +27,13 @@ database make_database(
     std::string directory,
     const semantic_version& default_version = version_latest);
 
+/// Given an enginelibrary database, returns the path to its m.db sqlite
+/// database file
+///
+/// If the given database is not an enginelibrary, then the behaviour of this
+/// function is undefined.
+std::string music_db_path(const database& db);
+
 /// Normalizes a beat-grid, so that the beat indexes are in the form normally
 /// expected by Engine Prime.
 ///
@@ -37,6 +44,13 @@ database make_database(
 /// Engine Prime do not lie within the actual track.
 std::vector<beatgrid_marker> normalize_beatgrid(
     std::vector<beatgrid_marker> beatgrid, int64_t sample_count);
+
+/// Given an enginelibrary database, returns the path to its p.db sqlite
+/// database file
+///
+/// If the given database is not an enginelibrary, then the behaviour of this
+/// function is undefined.
+std::string perfdata_db_path(const database& db);
 
 }  // namespace enginelibrary
 }  // namespace djinterop

@@ -187,16 +187,6 @@ void el_database_impl::verify()
     verify_performance_schema(storage_->perfdata_db);
 }
 
-std::string el_database_impl::music_db_path()
-{
-    return storage_->music_db_path;
-}
-
-std::string el_database_impl::perfdata_db_path()
-{
-    return storage_->perfdata_db_path;
-}
-
 void el_database_impl::remove_crate(crate cr)
 {
     storage_->music_db << "DELETE FROM Crate WHERE id = ?" << cr.id();

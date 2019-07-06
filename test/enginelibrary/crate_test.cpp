@@ -59,8 +59,8 @@ static void remove_temp_dir(const fs::path &temp_dir)
 static void copy_test_db_to_temp_dir(const fs::path &temp_dir)
 {
     auto db = el::load_database(sample_path);
-    fs::path music_db_path{db.music_db_path()};
-    fs::path perfdata_db_path{db.perfdata_db_path()};
+    fs::path music_db_path{el::music_db_path(db)};
+    fs::path perfdata_db_path{el::perfdata_db_path(db)};
     fs::copy_file(music_db_path, temp_dir / music_db_path.filename());
     fs::copy_file(perfdata_db_path, temp_dir / perfdata_db_path.filename());
 }

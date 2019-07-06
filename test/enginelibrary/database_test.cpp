@@ -93,8 +93,8 @@ BOOST_AUTO_TEST_CASE(information__valid_db__expected)
 
     // Assert
     BOOST_CHECK_EQUAL(db.directory(), sample_path);
-    BOOST_CHECK_EQUAL(db.music_db_path(), sample_path + "/m.db");
-    BOOST_CHECK_EQUAL(db.perfdata_db_path(), sample_path + "/p.db");
+    BOOST_CHECK_EQUAL(el::music_db_path(db), sample_path + "/m.db");
+    BOOST_CHECK_EQUAL(el::perfdata_db_path(db), sample_path + "/p.db");
 
     BOOST_CHECK_EQUAL(db.uuid(), "e535b170-26ef-4f30-8cb2-5b9fa4c2a27f");
     BOOST_CHECK_EQUAL(db.version(), el::version_1_6_0);
@@ -112,8 +112,8 @@ BOOST_AUTO_TEST_CASE(make_database__version_1_6_0__creates_verified)
     BOOST_CHECK_NO_THROW(db.verify());
     BOOST_CHECK_EQUAL(db.is_supported(), true);
     BOOST_CHECK_EQUAL(db.directory(), temp_dir.string());
-    BOOST_CHECK_EQUAL(db.music_db_path(), (temp_dir / "m.db").string());
-    BOOST_CHECK_EQUAL(db.perfdata_db_path(), (temp_dir / "p.db").string());
+    BOOST_CHECK_EQUAL(el::music_db_path(db), (temp_dir / "m.db").string());
+    BOOST_CHECK_EQUAL(el::perfdata_db_path(db), (temp_dir / "p.db").string());
     BOOST_CHECK_EQUAL(db.version(), el::version_1_6_0);
     db.verify();
     fs::remove_all(temp_dir);
@@ -131,8 +131,8 @@ BOOST_AUTO_TEST_CASE(make_database__version_1_7_1__creates_verified)
     BOOST_CHECK_NO_THROW(db.verify());
     BOOST_CHECK_EQUAL(db.is_supported(), true);
     BOOST_CHECK_EQUAL(db.directory(), temp_dir.string());
-    BOOST_CHECK_EQUAL(db.music_db_path(), (temp_dir / "m.db").string());
-    BOOST_CHECK_EQUAL(db.perfdata_db_path(), (temp_dir / "p.db").string());
+    BOOST_CHECK_EQUAL(el::music_db_path(db), (temp_dir / "m.db").string());
+    BOOST_CHECK_EQUAL(el::perfdata_db_path(db), (temp_dir / "p.db").string());
     BOOST_CHECK_EQUAL(db.version(), el::version_1_7_1);
     db.verify();
     fs::remove_all(temp_dir);

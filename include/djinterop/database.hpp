@@ -90,12 +90,6 @@ public:
     /// `libdjinterop` or not
     bool is_supported() const;
 
-    /// Returns the path to the music database, i.e. m.db
-    std::string music_db_path() const;
-
-    /// Returns the path to the performance data database, i.e. p.db
-    std::string perfdata_db_path() const;
-
     /// Returns the UUID of the database
     std::string uuid() const;
 

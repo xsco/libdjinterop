@@ -24,8 +24,6 @@ public:
     virtual std::string directory() = 0;
     virtual bool is_supported() = 0;
     virtual void verify() = 0;
-    virtual std::string music_db_path() = 0;
-    virtual std::string perfdata_db_path() = 0;
     virtual void remove_crate(crate cr) = 0;
     virtual void remove_track(track tr) = 0;
     virtual std::vector<crate> root_crates() = 0;

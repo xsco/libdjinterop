@@ -46,8 +46,6 @@ public:
     std::string directory() override;
     bool is_supported() override;
     void verify() override;
-    std::string music_db_path() override;
-    std::string perfdata_db_path() override;
     void remove_crate(djinterop::crate cr) override;
     void remove_track(djinterop::track tr) override;
     std::vector<djinterop::crate> root_crates() override;

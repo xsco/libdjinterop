@@ -71,16 +71,6 @@ void database::verify() const
     pimpl_->verify();
 }
 
-std::string database::music_db_path() const
-{
-    return pimpl_->music_db_path();
-}
-
-std::string database::perfdata_db_path() const
-{
-    return pimpl_->perfdata_db_path();
-}
-
 void database::remove_crate(crate cr) const
 {
     pimpl_->remove_crate(cr);

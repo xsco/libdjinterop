@@ -19,7 +19,7 @@ database load_database(std::string directory)
 }
 
 database make_database(
-    std::string directory, const semantic_version &default_version)
+    std::string directory, const semantic_version& default_version)
 {
     if (!is_supported(default_version))
     {
@@ -70,6 +70,11 @@ database make_database(
     return load_database(std::move(directory));
 }
 
+std::string music_db_path(const database& db)
+{
+    return db.directory() + "/m.db";
+}
+
 std::vector<beatgrid_marker> normalize_beatgrid(
     std::vector<beatgrid_marker> beatgrid, int64_t sample_count)
 {
@@ -81,7 +86,7 @@ std::vector<beatgrid_marker> normalize_beatgrid(
     {
         auto last_marker_iter = std::find_if(
             beatgrid.begin(), beatgrid.end(),
-            [sample_count](const beatgrid_marker &marker) {
+            [sample_count](const beatgrid_marker& marker) {
                 return marker.sample_offset > sample_count;
             });
         if (last_marker_iter != beatgrid.end())
@@ -93,7 +98,7 @@ std::vector<beatgrid_marker> normalize_beatgrid(
     {
         auto after_first_marker_iter = std::find_if(
             beatgrid.begin(), beatgrid.end(),
-            [](const beatgrid_marker &marker) {
+            [](const beatgrid_marker& marker) {
                 return marker.sample_offset > 0;
             });
         if (after_first_marker_iter != beatgrid.begin())
@@ -128,6 +133,11 @@ std::vector<beatgrid_marker> normalize_beatgrid(
     }
 
     return beatgrid;  // Named RVO
+}
+
+std::string perfdata_db_path(const database& db)
+{
+    return db.directory() + "/p.db";
 }
 
 }  // namespace enginelibrary
