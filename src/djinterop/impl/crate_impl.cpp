@@ -3,11 +3,13 @@
 
 namespace djinterop
 {
-int64_t crate_impl::id()
+crate_impl::crate_impl(int64_t id) noexcept : id_{id} {}
+
+crate_impl::~crate_impl() noexcept = default;
+
+int64_t crate_impl::id() noexcept
 {
     return id_;
 }
-
-crate_impl::crate_impl(int64_t id) : id_{id} {}
 
 }  // namespace djinterop

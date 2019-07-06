@@ -3,11 +3,13 @@
 
 namespace djinterop
 {
-int64_t track_impl::id()
+track_impl::track_impl(int64_t id) noexcept : id_{id} {}
+
+track_impl::~track_impl() noexcept = default;
+
+int64_t track_impl::id() noexcept
 {
     return id_;
 }
-
-track_impl::track_impl(int64_t id) : id_{id} {}
 
 }  // namespace djinterop

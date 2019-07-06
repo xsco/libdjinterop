@@ -17,7 +17,10 @@ class track;
 class crate_impl
 {
 public:
-    virtual ~crate_impl() = default;
+    crate_impl(int64_t id) noexcept;
+    virtual ~crate_impl() noexcept;
+
+    int64_t id() noexcept;
 
     virtual void add_track(track tr) = 0;
     virtual std::vector<crate> children() = 0;
@@ -31,11 +34,6 @@ public:
     virtual void set_name(boost::string_view name) = 0;
     virtual void set_parent(boost::optional<crate> parent) = 0;
     virtual std::vector<track> tracks() = 0;
-
-    int64_t id();
-
-protected:
-    crate_impl(int64_t id);
 
 private:
     int64_t id_;

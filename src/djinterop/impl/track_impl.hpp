@@ -17,7 +17,10 @@ class database_impl;
 class track_impl
 {
 public:
-    virtual ~track_impl() = default;
+    track_impl(int64_t id) noexcept;
+    virtual ~track_impl() noexcept;
+
+    int64_t id() noexcept;
 
     virtual std::vector<beatgrid_marker> adjusted_beatgrid() = 0;
     virtual void set_adjusted_beatgrid(
@@ -99,11 +102,6 @@ public:
     virtual void set_waveform(std::vector<waveform_entry> waveform) = 0;
     virtual boost::optional<int32_t> year() = 0;
     virtual void set_year(boost::optional<int32_t> year) = 0;
-
-    int64_t id();
-
-protected:
-    track_impl(int64_t id);
 
 private:
     int64_t id_;
