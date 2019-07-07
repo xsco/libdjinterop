@@ -15,12 +15,7 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if __cplusplus < 201402L && _MSVC_LANG < 201402L
-#error This library needs at least a C++14 compliant compiler
-#endif
-
-#ifndef DJINTEROP_ENGINELIBRARY_PERFORMANCE_DATA_FORMAT_HPP
-#define DJINTEROP_ENGINELIBRARY_PERFORMANCE_DATA_FORMAT_HPP
+#pragma once
 
 #include <cstdint>
 #include <vector>
@@ -108,5 +103,3 @@ struct track_data
 
 }  // namespace enginelibrary
 }  // namespace djinterop
-
-#endif  // DJINTEROP_ENGINELIBRARY_PERFORMANCE_DATA_FORMAT_HPP

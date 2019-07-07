@@ -15,12 +15,7 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if __cplusplus < 201402L && _MSVC_LANG < 201402L
-#error This library needs at least a C++14 compliant compiler
-#endif
-
-#ifndef DJINTEROP_ENGINELIBRARY_UTIL_HPP
-#define DJINTEROP_ENGINELIBRARY_UTIL_HPP
+#pragma once
 
 #include <boost/optional.hpp>
 #include <boost/utility/string_view.hpp>
@@ -32,5 +27,3 @@ boost::optional<boost::string_view> get_file_extension(
     boost::string_view file_path);
 
 }  // namespace djinterop
-
-#endif  // DJINTEROP_ENGINELIBRARY_UTIL_HPP

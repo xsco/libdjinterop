@@ -15,12 +15,7 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if __cplusplus < 201402L && _MSVC_LANG < 201402L
-#error This library needs at least a C++14 compliant compiler
-#endif
-
-#ifndef DJINTEROP_ENGINELIBRARY_ENCODE_DECODE_UTILS_HPP
-#define DJINTEROP_ENGINELIBRARY_ENCODE_DECODE_UTILS_HPP
+#pragma once
 
 #include <cstdint>
 #include <cstring>
@@ -168,5 +163,3 @@ inline char* encode_double_be(double value, char* ptr)
 
 }  // namespace enginelibrary
 }  // namespace djinterop
-
-#endif  // DJINTEROP_ENGINELIBRARY_ENCODE_DECODE_UTILS_HPP
