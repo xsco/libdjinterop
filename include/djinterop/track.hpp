@@ -105,17 +105,14 @@ public:
     boost::optional<int64_t> album_art_id() const;
 
     /// Sets the ID of the `album_art` associated to the track
-    ///
-    /// If the track doesn't have an associated `album_art`, then `boost::none`
-    /// is returned.
-    /// TODO (haslersn): Return an `album_art` object instead.
+    /// TODO (haslersn): Pass an `album_art` object instead.
     void set_album_art_id(boost::optional<int64_t> album_art_id) const;
     void set_album_art_id(int64_t album_art_id) const;
 
     /// Returns the artist (metadata) of the track
     boost::optional<std::string> artist() const;
 
-    /// Returns the artist (metadata) of the track
+    /// Sets the artist (metadata) of the track
     void set_artist(boost::optional<boost::string_view> artist) const;
     void set_artist(boost::string_view artist) const;
 
