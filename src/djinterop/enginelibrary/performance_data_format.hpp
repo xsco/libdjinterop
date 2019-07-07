@@ -26,6 +26,8 @@
 
 namespace djinterop
 {
+enum class musical_key;
+
 namespace enginelibrary
 {
 struct beat_data

@@ -23,6 +23,7 @@
 
 #include <djinterop/enginelibrary/encode_decode_utils.hpp>
 #include <djinterop/enginelibrary/performance_data_format.hpp>
+#include <djinterop/musical_key.hpp>
 
 typedef std::vector<char>::size_type data_size_t;
 

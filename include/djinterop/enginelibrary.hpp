@@ -23,12 +23,13 @@
 #error This library needs at least a C++11 compliant compiler
 #endif
 
-#include <djinterop/performance_data.hpp>
+#include <djinterop/pad_color.hpp>
 #include <djinterop/semantic_version.hpp>
 
 namespace djinterop
 {
 class database;
+struct beatgrid_marker;
 
 namespace enginelibrary
 {

@@ -26,10 +26,12 @@
 #include <boost/optional.hpp>
 #include <boost/optional/optional_io.hpp>
 
+#include <djinterop/crate.hpp>
 #include <djinterop/database.hpp>
 #include <djinterop/impl/database_impl.hpp>
 #include <djinterop/impl/track_impl.hpp>
 #include <djinterop/impl/util.hpp>
+#include <djinterop/track.hpp>
 
 using std::chrono::duration_cast;
 using std::chrono::milliseconds;

@@ -24,15 +24,11 @@
 #endif
 
 #include <memory>
-#include <stdexcept>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
 #include <boost/optional.hpp>
 #include <boost/utility/string_view.hpp>
-
-#include <djinterop/semantic_version.hpp>
 
 namespace djinterop
 {

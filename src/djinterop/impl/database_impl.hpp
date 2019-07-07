@@ -23,11 +23,12 @@
 #include <boost/optional.hpp>
 #include <boost/utility/string_view.hpp>
 
-#include <djinterop/crate.hpp>
-#include <djinterop/track.hpp>
-
 namespace djinterop
 {
+class crate;
+class semantic_version;
+class track;
+
 class database_impl
 {
 public:

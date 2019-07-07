@@ -17,19 +17,21 @@
 
 #pragma once
 
+#include <chrono>
 #include <string>
 #include <vector>
 
 #include <boost/optional.hpp>
 #include <boost/utility/string_view.hpp>
 
-#include <djinterop/impl/database_impl.hpp>
 #include <djinterop/performance_data.hpp>
 
 namespace djinterop
 {
 class database;
-class database_impl;
+class track;
+class track_import_info;
+enum class musical_key;
 
 class track_impl
 {

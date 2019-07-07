@@ -23,14 +23,8 @@
 #error This library needs at least a C++11 compliant compiler
 #endif
 
-#include <chrono>
-#include <cstdint>
-#include <memory>
-#include <stdexcept>
 #include <string>
 #include <vector>
-
-#include <djinterop/database.hpp>
 
 namespace djinterop
 {
