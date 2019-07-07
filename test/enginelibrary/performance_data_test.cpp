@@ -72,25 +72,21 @@ static void populate_track_1(djinterop::track& t)
 
     // Quick cue fields
     t.set_hot_cues({});
-    t.set_hot_cue_at(
-        0, {"Cue 1", 1377924.5, djinterop::standard_pad_colors::pad_1});
-    t.set_hot_cue_at(
-        2, {"Cue 3", 5508265.964, djinterop::standard_pad_colors::pad_3});
-    t.set_hot_cue_at(
-        4, {"Cue 5", 8261826.939, djinterop::standard_pad_colors::pad_5});
-    t.set_hot_cue_at(
-        5, {"Cue 6", 9638607.427, djinterop::standard_pad_colors::pad_6});
+    t.set_hot_cue_at(0, {"Cue 1", 1377924.5, el::standard_pad_colors::pad_1});
+    t.set_hot_cue_at(2, {"Cue 3", 5508265.964, el::standard_pad_colors::pad_3});
+    t.set_hot_cue_at(4, {"Cue 5", 8261826.939, el::standard_pad_colors::pad_5});
+    t.set_hot_cue_at(5, {"Cue 6", 9638607.427, el::standard_pad_colors::pad_6});
     t.set_adjusted_main_cue(1377924.5);
     t.set_default_main_cue(1144.012);
 
     // Loop fields
     std::array<boost::optional<djinterop::loop>, 8> loops;
     loops[0] = djinterop::loop{"Loop 1", 1144.012, 345339.134,
-                               djinterop::standard_pad_colors::pad_1};
+                               el::standard_pad_colors::pad_1};
     loops[1] = djinterop::loop{"Loop 2", 2582607.427, 2754704.988,
-                               djinterop::standard_pad_colors::pad_2};
+                               el::standard_pad_colors::pad_2};
     loops[3] = djinterop::loop{"Loop 4", 4131485.476, 4303583.037,
-                               djinterop::standard_pad_colors::pad_4};
+                               el::standard_pad_colors::pad_4};
     t.set_loops(std::move(loops));
 
     // High-resolution waveform data
@@ -134,26 +130,26 @@ static void check_track_1(const djinterop::track& t)
     BOOST_CHECK(hot_cues[0]);
     BOOST_CHECK_EQUAL(hot_cues[0]->label, "Cue 1");
     BOOST_CHECK_CLOSE(hot_cues[0]->sample_offset, 1377924.5, 0.001);
-    BOOST_CHECK(hot_cues[0]->color == djinterop::standard_pad_colors::pad_1);
+    BOOST_CHECK(hot_cues[0]->color == el::standard_pad_colors::pad_1);
 
     BOOST_CHECK(!hot_cues[1]);
 
     BOOST_CHECK(hot_cues[2]);
     BOOST_CHECK_EQUAL(hot_cues[2]->label, "Cue 3");
     BOOST_CHECK_CLOSE(hot_cues[2]->sample_offset, 5508265.964, 0.001);
-    BOOST_CHECK(hot_cues[2]->color == djinterop::standard_pad_colors::pad_3);
+    BOOST_CHECK(hot_cues[2]->color == el::standard_pad_colors::pad_3);
 
     BOOST_CHECK(!hot_cues[3]);
 
     BOOST_CHECK(hot_cues[4]);
     BOOST_CHECK_EQUAL(hot_cues[4]->label, "Cue 5");
     BOOST_CHECK_CLOSE(hot_cues[4]->sample_offset, 8261826.939, 0.001);
-    BOOST_CHECK(hot_cues[4]->color == djinterop::standard_pad_colors::pad_5);
+    BOOST_CHECK(hot_cues[4]->color == el::standard_pad_colors::pad_5);
 
     BOOST_CHECK(hot_cues[5]);
     BOOST_CHECK_EQUAL(hot_cues[5]->label, "Cue 6");
     BOOST_CHECK_CLOSE(hot_cues[5]->sample_offset, 9638607.427, 0.001);
-    BOOST_CHECK(hot_cues[5]->color == djinterop::standard_pad_colors::pad_6);
+    BOOST_CHECK(hot_cues[5]->color == el::standard_pad_colors::pad_6);
 
     BOOST_CHECK(!hot_cues[6]);
     BOOST_CHECK(!hot_cues[7]);
@@ -168,13 +164,13 @@ static void check_track_1(const djinterop::track& t)
     BOOST_CHECK_EQUAL(loops[0]->label, "Loop 1");
     BOOST_CHECK_CLOSE(loops[0]->start_sample_offset, 1144.012, 0.001);
     BOOST_CHECK_CLOSE(loops[0]->end_sample_offset, 345339.134, 0.001);
-    BOOST_CHECK(loops[0]->color == djinterop::standard_pad_colors::pad_1);
+    BOOST_CHECK(loops[0]->color == el::standard_pad_colors::pad_1);
 
     BOOST_CHECK(loops[1]);
     BOOST_CHECK_EQUAL(loops[1]->label, "Loop 2");
     BOOST_CHECK_CLOSE(loops[1]->start_sample_offset, 2582607.427, 0.001);
     BOOST_CHECK_CLOSE(loops[1]->end_sample_offset, 2754704.988, 0.001);
-    BOOST_CHECK(loops[1]->color == djinterop::standard_pad_colors::pad_2);
+    BOOST_CHECK(loops[1]->color == el::standard_pad_colors::pad_2);
 
     BOOST_CHECK(!loops[2]);
 
@@ -182,7 +178,7 @@ static void check_track_1(const djinterop::track& t)
     BOOST_CHECK_EQUAL(loops[3]->label, "Loop 4");
     BOOST_CHECK_CLOSE(loops[3]->start_sample_offset, 4131485.476, 0.001);
     BOOST_CHECK_CLOSE(loops[3]->end_sample_offset, 4303583.037, 0.001);
-    BOOST_CHECK(loops[3]->color == djinterop::standard_pad_colors::pad_4);
+    BOOST_CHECK(loops[3]->color == el::standard_pad_colors::pad_4);
 
     BOOST_CHECK(!loops[4]);
     BOOST_CHECK(!loops[5]);
@@ -209,8 +205,8 @@ static void populate_track_2(djinterop::track& t)
 
     // Quick cue fields
     std::array<boost::optional<djinterop::hot_cue>, 8> cues;
-    cues[1] = djinterop::hot_cue{"Cue 2", 1234567.89,
-                                 djinterop::standard_pad_colors::pad_2};
+    cues[1] =
+        djinterop::hot_cue{"Cue 2", 1234567.89, el::standard_pad_colors::pad_2};
     t.set_hot_cues(std::move(cues));
     t.set_adjusted_main_cue(1234500.01);
     t.set_default_main_cue(12345.678);
@@ -218,7 +214,7 @@ static void populate_track_2(djinterop::track& t)
     // Loop fields
     t.set_loops({});
     t.set_loop_at(
-        1, {"Loop 2", 2345600, 2345700, djinterop::standard_pad_colors::pad_2});
+        1, {"Loop 2", 2345600, 2345700, el::standard_pad_colors::pad_2});
 
     // High-resolution waveform data
     int64_t waveform_size = t.recommended_waveform_size();
@@ -262,7 +258,7 @@ static void check_track_2(const djinterop::track& t)
     BOOST_CHECK(hot_cues[1]);
     BOOST_CHECK_EQUAL(hot_cues[1]->label, "Cue 2");
     BOOST_CHECK_CLOSE(hot_cues[1]->sample_offset, 1234567.89, 0.001);
-    BOOST_CHECK(hot_cues[1]->color == djinterop::standard_pad_colors::pad_2);
+    BOOST_CHECK(hot_cues[1]->color == el::standard_pad_colors::pad_2);
 
     BOOST_CHECK(!hot_cues[2]);
     BOOST_CHECK(!hot_cues[3]);
@@ -283,7 +279,7 @@ static void check_track_2(const djinterop::track& t)
     BOOST_CHECK_EQUAL(loops[1]->label, "Loop 2");
     BOOST_CHECK_CLOSE(loops[1]->start_sample_offset, 2345600, 0.001);
     BOOST_CHECK_CLOSE(loops[1]->end_sample_offset, 2345700, 0.001);
-    BOOST_CHECK(loops[1]->color == djinterop::standard_pad_colors::pad_2);
+    BOOST_CHECK(loops[1]->color == el::standard_pad_colors::pad_2);
 
     BOOST_CHECK(!loops[2]);
     BOOST_CHECK(!loops[3]);

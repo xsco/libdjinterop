@@ -79,21 +79,6 @@ inline bool operator==(const pad_color &x, const pad_color &y)
     return x.r == y.r && x.g == y.g && x.b == y.b && x.a == y.a;
 }
 
-namespace standard_pad_colors
-{
-constexpr pad_color pad_1{0xEA, 0xC5, 0x32, 0xFF};
-constexpr pad_color pad_2{0xEA, 0x8F, 0x32, 0xFF};
-constexpr pad_color pad_3{0xB8, 0x55, 0xBF, 0xFF};
-constexpr pad_color pad_4{0xBA, 0x2A, 0x41, 0xFF};
-constexpr pad_color pad_5{0x86, 0xC6, 0x4B, 0xFF};
-constexpr pad_color pad_6{0x20, 0xC6, 0x7C, 0xFF};
-constexpr pad_color pad_7{0x00, 0xA8, 0xB1, 0xFF};
-constexpr pad_color pad_8{0x15, 0x8E, 0xE2, 0xFF};
-
-const pad_color pads[] = {pad_1, pad_2, pad_3, pad_4,
-                          pad_5, pad_6, pad_7, pad_8};
-}  // namespace standard_pad_colors
-
 }  // namespace djinterop
 
 #endif  // DJINTEROP_PAD_COLOR_HPP

@@ -71,16 +71,17 @@ int main(int argc, char **argv)
 
     // There are always 8 hot cues, whereby each can optionally be set
     std::array<boost::optional<djinterop::hot_cue>, 8> cues;
-    cues[0] = djinterop::hot_cue{"Cue 1", 1377924.5,  // position in number of samples
-                          djinterop::standard_pad_colors::pad_1};
+    cues[0] =
+        djinterop::hot_cue{"Cue 1", 1377924.5,  // position in number of samples
+                           el::standard_pad_colors::pad_1};
     tr.set_hot_cues(cues);
 
     // Setting a single hot cue can also be done like this
-    tr.set_hot_cue_at(3, {"Cue 4", 5508265.96, djinterop::standard_pad_colors::pad_4});
+    tr.set_hot_cue_at(3, {"Cue 4", 5508265.96, el::standard_pad_colors::pad_4});
 
     // The loop API works like the hot cue API
     tr.set_loop_at(
-        0, {"Loop 1", 1144.012, 345339.134, djinterop::standard_pad_colors::pad_1});
+        0, {"Loop 1", 1144.012, 345339.134, el::standard_pad_colors::pad_1});
 
     // Set high-resolution waveform
     int64_t waveform_size = tr.recommended_waveform_size();
