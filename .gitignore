@@ -9,3 +9,6 @@ compile_commands.json
 
 # direnv configuration file
 .envrc
+
+# IDE settings
+/.vscode/
