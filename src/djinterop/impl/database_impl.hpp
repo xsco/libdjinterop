@@ -28,12 +28,14 @@ namespace djinterop
 class crate;
 class semantic_version;
 class track;
+class transaction_guard;
 
 class database_impl
 {
 public:
     virtual ~database_impl();
 
+    virtual transaction_guard begin_transaction() = 0;
     virtual boost::optional<crate> crate_by_id(int64_t id) = 0;
     virtual std::vector<crate> crates() = 0;
     virtual std::vector<crate> crates_by_name(boost::string_view name) = 0;

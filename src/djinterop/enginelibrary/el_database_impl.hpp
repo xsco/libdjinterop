@@ -32,6 +32,7 @@ public:
     el_database_impl(std::string directory);
     el_database_impl(std::shared_ptr<el_storage> storage);
 
+    transaction_guard begin_transaction() override;
     boost::optional<djinterop::crate> crate_by_id(int64_t id) override;
     std::vector<djinterop::crate> crates() override;
     std::vector<djinterop::crate> crates_by_name(

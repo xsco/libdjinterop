@@ -9,7 +9,8 @@ public_header_files = [
     'djinterop/pad_color.hpp',
     'djinterop/performance_data.hpp',
     'djinterop/semantic_version.hpp',
-    'djinterop/track.hpp'
+    'djinterop/track.hpp',
+    'djinterop/transaction_guard.hpp'
 ]
 
 install_headers(public_header_files, subdir: 'djinterop')

@@ -16,24 +16,43 @@
  */
 
 #pragma once
+#ifndef DJINTEROP_TRANSACTION_GUARD_HPP
+#define DJINTEROP_TRANSACTION_GUARD_HPP
 
-#include <string>
+#if __cplusplus < 201103L && _MSVC_LANG < 201103L
+#error This library needs at least a C++11 compliant compiler
+#endif
 
-#include <sqlite_modern_cpp.h>
+#include <memory>
 
 namespace djinterop
 {
-namespace enginelibrary
-{
-class el_storage
+class transaction_guard_impl;
+
+class transaction_guard
 {
 public:
-    el_storage(std::string directory);
+    transaction_guard() noexcept;
 
-    sqlite::database db;
-    int64_t last_savepoint = 0;
-    std::string directory;
+    transaction_guard(transaction_guard&& other) noexcept;
+
+    transaction_guard& operator=(transaction_guard&& other) noexcept;
+
+    ~transaction_guard();
+
+    explicit operator bool() noexcept;
+
+    void commit();
+
+    void rollback();
+
+    // TODO (haslersn): non public?
+    transaction_guard(std::unique_ptr<transaction_guard_impl> pimpl) noexcept;
+
+private:
+    std::unique_ptr<transaction_guard_impl> pimpl_;
 };
 
-}  // namespace enginelibrary
 }  // namespace djinterop
+
+#endif

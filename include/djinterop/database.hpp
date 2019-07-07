@@ -40,6 +40,7 @@ class crate;
 class database_impl;
 class semantic_version;
 class track;
+class transaction_guard;
 
 class database_not_found : public std::runtime_error
 {
@@ -61,6 +62,8 @@ public:
 
     /// Copy assignment operator
     database& operator=(const database& db);
+
+    transaction_guard begin_transaction() const;
 
     /// Returns the crate with the given ID
     ///

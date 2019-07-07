@@ -17,23 +17,17 @@
 
 #pragma once
 
-#include <string>
-
-#include <sqlite_modern_cpp.h>
-
 namespace djinterop
 {
-namespace enginelibrary
-{
-class el_storage
+class transaction_guard_impl
 {
 public:
-    el_storage(std::string directory);
+    transaction_guard_impl() noexcept;
+    virtual ~transaction_guard_impl() noexcept;
 
-    sqlite::database db;
-    int64_t last_savepoint = 0;
-    std::string directory;
+    /// For the implementation, we guarantee that `commit()` is called at most
+    /// once per object. (See `djinterop/transaction_guard.cpp` to see why.)
+    virtual void commit() = 0;
 };
 
-}  // namespace enginelibrary
 }  // namespace djinterop

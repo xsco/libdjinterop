@@ -15,25 +15,12 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <string>
-
-#include <sqlite_modern_cpp.h>
+#include <djinterop/impl/transaction_guard_impl.hpp>
 
 namespace djinterop
 {
-namespace enginelibrary
-{
-class el_storage
-{
-public:
-    el_storage(std::string directory);
+transaction_guard_impl::transaction_guard_impl() noexcept = default;
 
-    sqlite::database db;
-    int64_t last_savepoint = 0;
-    std::string directory;
-};
+transaction_guard_impl::~transaction_guard_impl() noexcept = default;
 
-}  // namespace enginelibrary
 }  // namespace djinterop

@@ -20,8 +20,10 @@
 #include <djinterop/enginelibrary/el_database_impl.hpp>
 #include <djinterop/enginelibrary/el_storage.hpp>
 #include <djinterop/enginelibrary/el_track_impl.hpp>
+#include <djinterop/enginelibrary/el_transaction_guard_impl.hpp>
 #include <djinterop/enginelibrary/schema.hpp>
 #include <djinterop/impl/util.hpp>
+#include <djinterop/transaction_guard.hpp>
 
 namespace djinterop
 {
@@ -41,6 +43,12 @@ el_database_impl::el_database_impl(std::string directory)
 el_database_impl::el_database_impl(std::shared_ptr<el_storage> storage)
     : storage_{std::move(storage)}
 {
+}
+
+transaction_guard el_database_impl::begin_transaction()
+{
+    return transaction_guard{
+        std::make_unique<el_transaction_guard_impl>(storage_)};
 }
 
 boost::optional<crate> el_database_impl::crate_by_id(int64_t id)

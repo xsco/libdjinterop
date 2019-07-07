@@ -17,22 +17,27 @@
 
 #pragma once
 
-#include <string>
+#include <array>
+#include <memory>
 
-#include <sqlite_modern_cpp.h>
+#include <djinterop/impl/transaction_guard_impl.hpp>
 
 namespace djinterop
 {
 namespace enginelibrary
 {
-class el_storage
+class el_storage;
+
+class el_transaction_guard_impl : public transaction_guard_impl
 {
 public:
-    el_storage(std::string directory);
+    el_transaction_guard_impl(std::shared_ptr<el_storage> storage_);
+    ~el_transaction_guard_impl();
+    void commit() override;
 
-    sqlite::database db;
-    int64_t last_savepoint = 0;
-    std::string directory;
+private:
+    std::shared_ptr<el_storage> storage_;
+    int64_t savepoint_;
 };
 
 }  // namespace enginelibrary
