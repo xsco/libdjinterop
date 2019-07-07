@@ -314,9 +314,6 @@ public:
 
 private:
     std::shared_ptr<track_impl> pimpl_;
-
-    friend class crate;
-    friend class database;
 };
 
 }  // namespace djinterop
