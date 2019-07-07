@@ -27,47 +27,50 @@ database make_database(
                                            default_version};
     }
 
-    auto music_db_path = directory + "/m.db";
-    auto perfdata_db_path = directory + "/p.db";
-
+    // Ensure the target directory exists
     struct stat buf;
-    bool music_db_exists = stat(music_db_path.c_str(), &buf) == 0;
-    bool perfdata_db_exists = stat(perfdata_db_path.c_str(), &buf) == 0;
-
-    switch (music_db_exists + perfdata_db_exists)
+    if (stat(directory.c_str(), &buf) != 0)
     {
-        case 1:
-            throw std::runtime_error{"Only one of m.db and p.db exist"};
-            break;
-        case 0:
-        {
-            // Ensure the target directory exists
-            if (stat(directory.c_str(), &buf) != 0)
-            {
-                // Create the dir
 #if defined(_WIN32)
-                if (_mkdir(directory.c_str()) != 0)
+        if (_mkdir(directory.c_str()) != 0)
 #else
-                if (mkdir(directory.c_str(), 0755) != 0)
+        if (mkdir(directory.c_str(), 0755) != 0)
 #endif
-                {
-                    throw std::runtime_error{
-                        "Failed to create directory to hold new database"};
-                }
-            }
-            auto storage = std::make_shared<el_storage>(std::move(directory));
-            create_music_schema(storage->db, default_version);
-            verify_music_schema(storage->db);
-            create_performance_schema(storage->db, default_version);
-            verify_performance_schema(storage->db);
-            return database{
-                std::make_shared<el_database_impl>(std::move(storage))};
+        {
+            throw std::runtime_error{
+                "Failed to create directory to hold new database"};
         }
-        default:  // both exist, so we do nothing
-            break;
     }
 
-    return load_database(std::move(directory));
+    // We have to find out whether the engine library exists. Naively, we'd do
+    // this by checking if the m.db and p.db files exist. However, if a previous
+    // attempt to create the engine library failed after creating the files and
+    // before creating the schemata, then the files exist but the enginelibrary
+    // doesn't exist.
+    //
+    // Therefore, we create the two files (if not already present) and then
+    // check if they contain zero tables. If so, then we create the schemata.
+
+    auto storage = std::make_shared<el_storage>(std::move(directory));
+    storage->db << "BEGIN";
+    int32_t table_count;
+    storage->db << "SELECT SUM(rows) FROM ("
+                   "SELECT COUNT(*) AS rows FROM music.sqlite_master WHERE "
+                   "type = 'table' UNION ALL SELECT COUNT(*) AS rows FROM "
+                   "perfdata.sqlite_master WHERE type = 'table'"
+                   ")" >>
+        table_count;
+    if (table_count == 0)
+    {
+        // If they contain zero tables, then we create the schemata.
+        create_music_schema(storage->db, default_version);
+        verify_music_schema(storage->db);
+        create_performance_schema(storage->db, default_version);
+        verify_performance_schema(storage->db);
+    }
+    database db{std::make_shared<el_database_impl>(storage)};
+    storage->db << "COMMIT";
+    return db;
 }
 
 std::string music_db_path(const database& db)
