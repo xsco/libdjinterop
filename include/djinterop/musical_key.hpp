@@ -15,12 +15,13 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma once
+#ifndef DJINTEROP_MUSICAL_KEY_HPP
+#define DJINTEROP_MUSICAL_KEY_HPP
+
 #if __cplusplus < 201103L && _MSVC_LANG < 201103L
 #error This library needs at least a C++11 compliant compiler
 #endif
-
-#ifndef DJINTEROP_MUSICAL_KEY_HPP
-#define DJINTEROP_MUSICAL_KEY_HPP
 
 namespace djinterop
 {

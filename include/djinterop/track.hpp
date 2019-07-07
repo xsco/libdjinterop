@@ -15,12 +15,13 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma once
+#ifndef DJINTEROP_TRACK_HPP
+#define DJINTEROP_TRACK_HPP
+
 #if __cplusplus < 201103L && _MSVC_LANG < 201103L
 #error This library needs at least a C++11 compliant compiler
 #endif
-
-#ifndef DJINTEROP_ENGINELIBRARY_TRACK_HPP
-#define DJINTEROP_ENGINELIBRARY_TRACK_HPP
 
 #include <chrono>
 #include <memory>
@@ -323,4 +324,4 @@ private:
 
 }  // namespace djinterop
 
-#endif  // DJINTEROP_ENGINELIBRARY_TRACK_HPP
+#endif  // DJINTEROP_TRACK_HPP

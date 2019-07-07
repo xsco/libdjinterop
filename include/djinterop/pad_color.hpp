@@ -15,12 +15,13 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma once
+#ifndef DJINTEROP_PAD_COLOR_HPP
+#define DJINTEROP_PAD_COLOR_HPP
+
 #if __cplusplus < 201103L && _MSVC_LANG < 201103L
 #error This library needs at least a C++11 compliant compiler
 #endif
-
-#ifndef DJINTEROP_ENGINELIBRARY_PAD_COLOR_HPP
-#define DJINTEROP_ENGINELIBRARY_PAD_COLOR_HPP
 
 namespace djinterop
 {
@@ -95,4 +96,4 @@ const pad_color pads[] = {pad_1, pad_2, pad_3, pad_4,
 
 }  // namespace djinterop
 
-#endif  // DJINTEROP_ENGINELIBRARY_PAD_COLOR_HPP
+#endif  // DJINTEROP_PAD_COLOR_HPP
