@@ -11,7 +11,6 @@ sources = [
     'djinterop/crate.cpp',
     'djinterop/database.cpp',
     'djinterop/enginelibrary.cpp',
-    'djinterop/performance_data.cpp',
     'djinterop/track.cpp',
     'djinterop/impl/crate_impl.cpp',
     'djinterop/impl/database_impl.cpp',
