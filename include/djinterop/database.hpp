@@ -80,11 +80,14 @@ public:
 
     /// Creates a new track associated to a given music file
     ///
-    /// The music file is given by its relative path from the Engine library
-    /// directory. The created track is not contained in any crates.
+    /// The music file is given by its relative path from the directory passed
+    /// to the `database` constructor. The created track is not contained in any
+    /// crates.
     track create_track(boost::string_view relative_path) const;
 
-    /// Returns the path to the Engine library directory of the database
+    /// Returns the path directory of the database
+    ///
+    /// This is the same as the directory passed to the `database` constructor.
     std::string directory() const;
 
     /// Returns true iff the database version is supported by this version of
@@ -94,8 +97,10 @@ public:
     /// Returns the UUID of the database
     std::string uuid() const;
 
-    /// Verifies the schema of an Engine Prime database and throws an exception
-    /// if there is any kind of inconsistency
+    /// Verifies the consistence of the internal storage of the database.
+    ///
+    /// A `database_inconsistency` (or some exception derived from it) is thrown
+    /// if any kind of inconsistency is found.
     void verify() const;
 
     /// Returns the schema version of the database
