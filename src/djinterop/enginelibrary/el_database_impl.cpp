@@ -92,7 +92,7 @@ std::vector<crate> el_database_impl::crates_by_name(boost::string_view name)
 
 crate el_database_impl::create_crate(boost::string_view name)
 {
-    storage_->db << "BEGIN";
+    el_transaction_guard_impl trans{storage_};
 
     storage_->db << "INSERT INTO Crate (title, path) VALUES (?, ?)"
                  << name.data() << std::string{name} + ';';
@@ -103,9 +103,11 @@ crate el_database_impl::create_crate(boost::string_view name)
                     "crateParentId) VALUES (?, ?)"
                  << id << id;
 
-    storage_->db << "COMMIT";
+    crate cr{std::make_shared<el_crate_impl>(storage_, id)};
 
-    return crate{std::make_shared<el_crate_impl>(storage_, id)};
+    trans.commit();
+
+    return cr;
 }
 
 track el_database_impl::create_track(boost::string_view relative_path)
@@ -115,7 +117,7 @@ track el_database_impl::create_track(boost::string_view relative_path)
 
     auto filename = get_filename(relative_path);
 
-    storage_->db << "BEGIN";
+    el_transaction_guard_impl trans{storage_};
 
     // Insert a new entry in the track table
     storage_->db << "INSERT INTO Track (path, filename, trackType, "
@@ -185,9 +187,11 @@ track el_database_impl::create_track(boost::string_view relative_path)
         }
     }
 
-    storage_->db << "COMMIT";
+    track tr{std::make_shared<el_track_impl>(storage_, id)};
 
-    return track{std::make_shared<el_track_impl>(storage_, id)};
+    trans.commit();
+
+    return tr;
 }
 
 std::string el_database_impl::directory()

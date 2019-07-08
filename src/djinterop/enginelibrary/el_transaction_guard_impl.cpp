@@ -28,7 +28,7 @@ el_transaction_guard_impl::el_transaction_guard_impl(
 {
     // TODO (haslersn): Should el_storage::last_savepoint be atomic such that
     // this is thread-safe?
-    storage_->db << "SAVEPOINT ?" << savepoint_;
+    storage_->db << ("SAVEPOINT s" + std::to_string(savepoint_));
 }
 
 el_transaction_guard_impl::~el_transaction_guard_impl()
@@ -37,7 +37,7 @@ el_transaction_guard_impl::~el_transaction_guard_impl()
     {
         try
         {
-            storage_->db << "ROLLBACK TO ?" << savepoint_;
+            storage_->db << ("ROLLBACK TO s" + std::to_string(savepoint_));
         }
         catch (...)
         {
@@ -55,7 +55,7 @@ void el_transaction_guard_impl::commit()
 {
     auto savepoint = savepoint_;
     savepoint_ = 0;
-    storage_->db << "RELEASE ?" << savepoint;
+    storage_->db << ("RELEASE s" + std::to_string(savepoint));
 }
 
 }  // namespace enginelibrary

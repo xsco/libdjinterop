@@ -24,6 +24,7 @@
 
 #include <djinterop/djinterop.hpp>
 #include <djinterop/enginelibrary/el_database_impl.hpp>
+#include <djinterop/enginelibrary/el_transaction_guard_impl.hpp>
 #include <djinterop/enginelibrary/schema.hpp>
 
 namespace djinterop
@@ -69,7 +70,7 @@ database make_database(
     // check if they contain zero tables. If so, then we create the schemata.
 
     auto storage = std::make_shared<el_storage>(std::move(directory));
-    storage->db << "BEGIN";
+    el_transaction_guard_impl trans{storage};
     int32_t table_count;
     storage->db << "SELECT SUM(rows) FROM ("
                    "SELECT COUNT(*) AS rows FROM music.sqlite_master WHERE "
@@ -86,7 +87,7 @@ database make_database(
         verify_performance_schema(storage->db);
     }
     database db{std::make_shared<el_database_impl>(storage)};
-    storage->db << "COMMIT";
+    trans.commit();
     return db;
 }
 

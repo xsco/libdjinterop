@@ -133,7 +133,6 @@ public:
         return result.value_or(T{});
     }
 
-    // NOTE: No transaction
     template <typename T>
     void set_perfdata(const char* column_name, const T& content)
     {

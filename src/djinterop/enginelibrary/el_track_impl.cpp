@@ -21,6 +21,7 @@
 #include <djinterop/enginelibrary/el_crate_impl.hpp>
 #include <djinterop/enginelibrary/el_database_impl.hpp>
 #include <djinterop/enginelibrary/el_track_impl.hpp>
+#include <djinterop/enginelibrary/el_transaction_guard_impl.hpp>
 #include <djinterop/impl/util.hpp>
 
 namespace djinterop
@@ -205,11 +206,11 @@ std::vector<beatgrid_marker> el_track_impl::adjusted_beatgrid()
 
 void el_track_impl::set_adjusted_beatgrid(std::vector<beatgrid_marker> beatgrid)
 {
-    storage_->db << "BEGIN";
+    el_transaction_guard_impl trans{storage_};
     auto beat_d = get_beat_data();
     beat_d.adjusted_beatgrid = std::move(beatgrid);
     set_beat_data(std::move(beat_d));
-    storage_->db << "COMMIT";
+    trans.commit();
 }
 
 double el_track_impl::adjusted_main_cue()
@@ -219,11 +220,11 @@ double el_track_impl::adjusted_main_cue()
 
 void el_track_impl::set_adjusted_main_cue(double sample_offset)
 {
-    storage_->db << "BEGIN";
+    el_transaction_guard_impl trans{storage_};
     auto quick_cues_d = get_quick_cues_data();
     quick_cues_d.adjusted_main_cue = sample_offset;
     set_quick_cues_data(std::move(quick_cues_d));
-    storage_->db << "COMMIT";
+    trans.commit();
 }
 
 boost::optional<std::string> el_track_impl::album()
@@ -279,11 +280,11 @@ boost::optional<double> el_track_impl::average_loudness()
 void el_track_impl::set_average_loudness(
     boost::optional<double> average_loudness)
 {
-    storage_->db << "BEGIN";
+    el_transaction_guard_impl trans{storage_};
     auto track_d = get_track_data();
     track_d.average_loudness = average_loudness;
     set_track_data(track_d);
-    storage_->db << "COMMIT";
+    trans.commit();
 }
 
 boost::optional<int64_t> el_track_impl::bitrate()
@@ -357,11 +358,11 @@ std::vector<beatgrid_marker> el_track_impl::default_beatgrid()
 
 void el_track_impl::set_default_beatgrid(std::vector<beatgrid_marker> beatgrid)
 {
-    storage_->db << "BEGIN";
+    el_transaction_guard_impl trans{storage_};
     auto beat_d = get_beat_data();
     beat_d.default_beatgrid = std::move(beatgrid);
     set_beat_data(std::move(beat_d));
-    storage_->db << "COMMIT";
+    trans.commit();
 }
 
 double el_track_impl::default_main_cue()
@@ -371,11 +372,11 @@ double el_track_impl::default_main_cue()
 
 void el_track_impl::set_default_main_cue(double sample_offset)
 {
-    storage_->db << "BEGIN";
+    el_transaction_guard_impl trans{storage_};
     auto quick_cues_d = get_quick_cues_data();
     quick_cues_d.default_main_cue = sample_offset;
     set_quick_cues_data(std::move(quick_cues_d));
-    storage_->db << "COMMIT";
+    trans.commit();
 }
 
 boost::optional<milliseconds> el_track_impl::duration()
@@ -427,7 +428,7 @@ boost::optional<hot_cue> el_track_impl::hot_cue_at(int32_t index)
 
 void el_track_impl::set_hot_cue_at(int32_t index, boost::optional<hot_cue> cue)
 {
-    storage_->db << "BEGIN";
+    el_transaction_guard_impl trans{storage_};
     auto quick_cues_d = get_quick_cues_data();
     quick_cues_d.hot_cues[index] = std::move(cue);
     set_quick_cues_data(std::move(quick_cues_d));
@@ -442,7 +443,7 @@ std::array<boost::optional<hot_cue>, 8> el_track_impl::hot_cues()
 
 void el_track_impl::set_hot_cues(std::array<boost::optional<hot_cue>, 8> cues)
 {
-    storage_->db << "BEGIN";
+    el_transaction_guard_impl trans{storage_};
     // TODO (haslersn): The following can be optimized because in this case we
     // overwrite all hot_cues
     auto quick_cues_d = get_quick_cues_data();
@@ -517,14 +518,12 @@ void el_track_impl::set_key(boost::optional<musical_key> key)
         key_num = static_cast<int64_t>(*key);
     }
 
-    storage_->db << "BEGIN";
+    el_transaction_guard_impl trans{storage_};
     auto track_d = get_track_data();
     track_d.key = key;
     set_track_data(track_d);
-    storage_->db << "COMMIT";
-
-    // TODO (haslersn): atomic?
     set_metadata_int(metadata_int_type::musical_key, key_num);
+    trans.commit();
 }
 
 boost::optional<system_clock::time_point> el_track_impl::last_accessed_at()
@@ -607,7 +606,7 @@ boost::optional<loop> el_track_impl::loop_at(int32_t index)
 
 void el_track_impl::set_loop_at(int32_t index, boost::optional<loop> l)
 {
-    storage_->db << "BEGIN";
+    el_transaction_guard_impl trans{storage_};
     auto loops_d = get_loops_data();
     loops_d.loops[index] = std::move(l);
     set_loops_data(std::move(loops_d));
@@ -622,7 +621,7 @@ std::array<boost::optional<loop>, 8> el_track_impl::loops()
 
 void el_track_impl::set_loops(std::array<boost::optional<loop>, 8> cues)
 {
-    storage_->db << "BEGIN";
+    el_transaction_guard_impl trans{storage_};
     loops_data loops_d;
     loops_d.loops = std::move(cues);
     set_loops_data(std::move(loops_d));
@@ -687,7 +686,7 @@ boost::optional<sampling_info> el_track_impl::sampling()
 
 void el_track_impl::set_sampling(boost::optional<sampling_info> sampling)
 {
-    // TODO (haslersn): atomic?
+    el_transaction_guard_impl trans{storage_};
 
     boost::optional<int64_t> secs;
     if (sampling)
@@ -712,14 +711,13 @@ void el_track_impl::set_sampling(boost::optional<sampling_info> sampling)
     set_cell("length", secs);
     set_cell("lengthCalculated", secs);
 
-    storage_->db << "BEGIN";
-
     // read old data
     auto track_d = get_track_data();
     auto beat_d = get_beat_data();
     auto high_res_waveform_d = get_high_res_waveform_data();
     auto overview_waveform_d = get_overview_waveform_data();
 
+    // write new data
     track_d.sampling = sampling;
     beat_d.sampling = sampling;
     set_beat_data(std::move(beat_d));
@@ -741,7 +739,7 @@ void el_track_impl::set_sampling(boost::optional<sampling_info> sampling)
         set_overview_waveform_data(std::move(overview_waveform_d));
     }
 
-    storage_->db << "COMMIT";
+    trans.commit();
 }
 
 boost::optional<std::string> el_track_impl::title()
@@ -772,12 +770,13 @@ std::vector<waveform_entry> el_track_impl::waveform()
 
 void el_track_impl::set_waveform(std::vector<waveform_entry> waveform)
 {
+    el_transaction_guard_impl trans{storage_};
+
     overview_waveform_data overview_waveform_d;
     high_res_waveform_data high_res_waveform_d;
 
     if (!waveform.empty())
     {
-        // TODO (haslersn): atomic?
         auto smp = sampling();
         int64_t sample_count = smp ? smp->sample_count : 0;
         overview_waveform_d.samples_per_entry = sample_count / 1024;
@@ -791,10 +790,10 @@ void el_track_impl::set_waveform(std::vector<waveform_entry> waveform)
         high_res_waveform_d.waveform = std::move(waveform);
     }
 
-    storage_->db << "BEGIN";
     set_overview_waveform_data(std::move(overview_waveform_d));
     set_high_res_waveform_data(std::move(high_res_waveform_d));
-    storage_->db << "END";
+
+    trans.commit();
 }
 
 boost::optional<int32_t> el_track_impl::year()

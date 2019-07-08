@@ -22,6 +22,7 @@
 #include <djinterop/enginelibrary/el_database_impl.hpp>
 #include <djinterop/enginelibrary/el_storage.hpp>
 #include <djinterop/enginelibrary/el_track_impl.hpp>
+#include <djinterop/enginelibrary/el_transaction_guard_impl.hpp>
 
 namespace djinterop
 {
@@ -55,7 +56,7 @@ el_crate_impl::el_crate_impl(std::shared_ptr<el_storage> storage, int64_t id)
 
 void el_crate_impl::add_track(track tr)
 {
-    storage_->db << "BEGIN";
+    el_transaction_guard_impl trans{storage_};
 
     storage_->db
         << "DELETE FROM CrateTrackList WHERE crateId = ? AND trackId = ?"
@@ -65,7 +66,7 @@ void el_crate_impl::add_track(track tr)
         << "INSERT INTO CrateTrackList (crateId, trackId) VALUES (?, ?)" << id()
         << tr.id();
 
-    storage_->db << "COMMIT";
+    trans.commit();
 }
 
 std::vector<crate> el_crate_impl::children()
@@ -175,7 +176,7 @@ void el_crate_impl::remove_track(track tr)
 
 void el_crate_impl::set_name(boost::string_view name)
 {
-    storage_->db << "BEGIN";
+    el_transaction_guard_impl trans{storage_};
 
     // obtain parent's `path`
     std::string parent_path;
@@ -207,12 +208,12 @@ void el_crate_impl::set_name(boost::string_view name)
         update_path(storage_->db, cr, path);
     }
 
-    storage_->db << "COMMIT";
+    trans.commit();
 }
 
 void el_crate_impl::set_parent(boost::optional<crate> parent)
 {
-    storage_->db << "BEGIN";
+    el_transaction_guard_impl trans{storage_};
 
     storage_->db << "DELETE FROM CrateParentList WHERE crateOriginId = ?"
                  << id();
@@ -232,7 +233,7 @@ void el_crate_impl::set_parent(boost::optional<crate> parent)
             << id() << parent->id() << parent->id() << id();
     }
 
-    storage_->db << "COMMIT";
+    trans.commit();
 }
 
 std::vector<track> el_crate_impl::tracks()
