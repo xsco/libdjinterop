@@ -55,8 +55,9 @@ boost::optional<T> opt_static_cast(const boost::optional<U>& u)
 
 char* encode_beatgrid(const std::vector<beatgrid_marker>& beatgrid, char* ptr)
 {
+    typedef std::vector<beatgrid_marker>::size_type vec_size_t;
     ptr = encode_int64_be(beatgrid.size(), ptr);
-    for (int32_t i = 0; i < beatgrid.size(); ++i)
+    for (vec_size_t i = 0; i < beatgrid.size(); ++i)
     {
         ptr = encode_double_le(beatgrid[i].sample_offset, ptr);
         ptr = encode_int64_le(beatgrid[i].index, ptr);
@@ -96,7 +97,8 @@ std::pair<std::vector<beatgrid_marker>, const char*> decode_beatgrid(
     }
     std::vector<beatgrid_marker> result(count);
     int32_t beats_until_next_marker;
-    for (int32_t i = 0; i < result.size(); ++i)
+    typedef std::vector<beatgrid_marker>::size_type vec_size_t;
+    for (vec_size_t i = 0; i < result.size(); ++i)
     {
         std::tie(result[i].sample_offset, ptr) = decode_double_le(ptr);
         std::tie(result[i].index, ptr) = decode_int64_le(ptr);

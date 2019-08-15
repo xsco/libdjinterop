@@ -69,14 +69,14 @@ static void populate_example_track_1(djinterop::track &t)
     t.set_genre("Tech House");
     t.set_comment("Purchased at Beatport.com");
     t.set_publisher("Stereo Productions");
-    t.set_composer(boost::none);
+    t.set_composer(std::experimental::nullopt);
     t.set_key(djinterop::musical_key::a_minor);
     t.set_relative_path("../01 - Dennis Cruz - Mad (Original Mix).mp3");
     t.set_last_modified_at(c::system_clock::time_point{c::seconds{1509371790}});
     t.set_bitrate(320);
-    t.set_last_played_at(boost::none);
+    t.set_last_played_at(std::experimental::nullopt);
     t.set_last_accessed_at(c::system_clock::time_point{c::seconds{1509321600}});
-    t.set_import_info(boost::none);
+    t.set_import_info(std::experimental::nullopt);
     t.set_album_art_id(2);
 }
 
@@ -84,7 +84,7 @@ static void check_track_1(djinterop::track &t)
 {
     BOOST_CHECK(t.is_valid());
     BOOST_CHECK_EQUAL(*t.track_number(), 1);
-    BOOST_TEST(*t.bpm() == 123.0, boost::test_tools::tolerance(0.001));
+    BOOST_CHECK_CLOSE(*t.bpm(), 123.0, 0.001);
     BOOST_CHECK_EQUAL(*t.year(), 2017);
     BOOST_CHECK_EQUAL(*t.title(), "Mad (Original Mix)");
     BOOST_CHECK_EQUAL(*t.artist(), "Dennis Cruz");

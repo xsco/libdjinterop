@@ -20,8 +20,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/utility/string_view.hpp>
-
 #include <djinterop/crate.hpp>
 #include <djinterop/impl/database_impl.hpp>
 #include <djinterop/track.hpp>
@@ -48,7 +46,7 @@ public:
     virtual std::string name() = 0;
     virtual boost::optional<crate> parent() = 0;
     virtual void remove_track(track tr) = 0;
-    virtual void set_name(boost::string_view name) = 0;
+    virtual void set_name(std::string name) = 0;
     virtual void set_parent(boost::optional<crate> parent) = 0;
     virtual std::vector<track> tracks() = 0;
 

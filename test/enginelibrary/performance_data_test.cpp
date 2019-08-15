@@ -80,7 +80,7 @@ static void populate_track_1(djinterop::track& t)
     t.set_default_main_cue(1144.012);
 
     // Loop fields
-    std::array<boost::optional<djinterop::loop>, 8> loops;
+    std::array<std::experimental::optional<djinterop::loop>, 8> loops;
     loops[0] = djinterop::loop{"Loop 1", 1144.012, 345339.134,
                                el::standard_pad_colors::pad_1};
     loops[1] = djinterop::loop{"Loop 2", 2582607.427, 2754704.988,
@@ -95,9 +95,13 @@ static void populate_track_1(djinterop::track& t)
     waveform.reserve(waveform_size);
     for (int64_t i = 0; i < waveform_size; ++i)
     {
-        waveform.push_back({{i * 255 / waveform_size, i * 255 / waveform_size},
-                            {i * 127 / waveform_size, i * 127 / waveform_size},
-                            {i * 63 / waveform_size, i * 63 / waveform_size}});
+        waveform.push_back({
+                {(uint8_t)(i * 255 / waveform_size),
+                 (uint8_t)(i * 255 / waveform_size)},
+                {(uint8_t)(i * 127 / waveform_size),
+                 (uint8_t)(i * 127 / waveform_size)},
+                {(uint8_t)(i * 63 / waveform_size),
+                 (uint8_t)(i * 63 / waveform_size)}});
     }
     t.set_waveform(std::move(waveform));
 }
@@ -158,6 +162,7 @@ static void check_track_1(const djinterop::track& t)
     BOOST_CHECK_CLOSE(t.default_main_cue(), 1144.012, 0.001);
 
     // Loop fields
+    std::cout << "Checking loops..." << std::endl;
     auto loops = t.loops();
 
     BOOST_CHECK(loops[0]);
@@ -204,7 +209,7 @@ static void populate_track_2(djinterop::track& t)
     t.set_adjusted_beatgrid({{-4, -107595.55}, {402, 10820254.92}});
 
     // Quick cue fields
-    std::array<boost::optional<djinterop::hot_cue>, 8> cues;
+    std::array<std::experimental::optional<djinterop::hot_cue>, 8> cues;
     cues[1] =
         djinterop::hot_cue{"Cue 2", 1234567.89, el::standard_pad_colors::pad_2};
     t.set_hot_cues(std::move(cues));
@@ -222,9 +227,13 @@ static void populate_track_2(djinterop::track& t)
     waveform.reserve(waveform_size);
     for (int64_t i = 0; i < waveform_size; ++i)
     {
-        waveform.push_back({{i * 255 / waveform_size, i * 127 / waveform_size},
-                            {i * 63 / waveform_size, i * 255 / waveform_size},
-                            {i * 127 / waveform_size, i * 63 / waveform_size}});
+        waveform.push_back({
+                {(uint8_t)(i * 255 / waveform_size),
+                 (uint8_t)(i * 255 / waveform_size)},
+                {(uint8_t)(i * 127 / waveform_size),
+                 (uint8_t)(i * 127 / waveform_size)},
+                {(uint8_t)(i * 63 / waveform_size),
+                 (uint8_t)(i * 63 / waveform_size)}});
     }
     t.set_waveform(std::move(waveform));
 }

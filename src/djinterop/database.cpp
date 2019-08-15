@@ -37,9 +37,9 @@ transaction_guard database::begin_transaction() const
     return pimpl_->begin_transaction();
 }
 
-boost::optional<crate> database::crate_by_id(int64_t id) const
+std::experimental::optional<crate> database::crate_by_id(int64_t id) const
 {
-    return pimpl_->crate_by_id(id);
+    return from_boost_optional(pimpl_->crate_by_id(id));
 }
 
 std::vector<crate> database::crates() const
@@ -47,17 +47,17 @@ std::vector<crate> database::crates() const
     return pimpl_->crates();
 }
 
-std::vector<crate> database::crates_by_name(boost::string_view name) const
+std::vector<crate> database::crates_by_name(const std::string& name) const
 {
     return pimpl_->crates_by_name(name);
 }
 
-crate database::create_crate(boost::string_view name) const
+crate database::create_crate(std::string name) const
 {
     return pimpl_->create_crate(name);
 }
 
-track database::create_track(boost::string_view relative_path) const
+track database::create_track(std::string relative_path) const
 {
     return pimpl_->create_track(relative_path);
 }
@@ -92,9 +92,9 @@ std::vector<crate> database::root_crates() const
     return pimpl_->root_crates();
 }
 
-boost::optional<track> database::track_by_id(int64_t id) const
+std::experimental::optional<track> database::track_by_id(int64_t id) const
 {
-    return pimpl_->track_by_id(id);
+    return from_boost_optional(pimpl_->track_by_id(id));
 }
 
 std::vector<track> database::tracks() const
@@ -103,7 +103,7 @@ std::vector<track> database::tracks() const
 }
 
 std::vector<track> database::tracks_by_relative_path(
-    boost::string_view relative_path) const
+    const std::string& relative_path) const
 {
     return pimpl_->tracks_by_relative_path(relative_path);
 }

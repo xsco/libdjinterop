@@ -30,9 +30,9 @@ class el_storage
 public:
     el_storage(std::string directory);
 
+    std::string directory;
     sqlite::database db;
     int64_t last_savepoint = 0;
-    std::string directory;
 };
 
 }  // namespace enginelibrary

@@ -20,6 +20,7 @@
 
 #include <djinterop/djinterop.hpp>
 #include <djinterop/impl/crate_impl.hpp>
+#include <djinterop/impl/util.hpp>
 
 namespace djinterop
 {
@@ -69,9 +70,9 @@ std::string crate::name() const
     return pimpl_->name();
 }
 
-boost::optional<crate> crate::parent() const
+std::experimental::optional<crate> crate::parent() const
 {
-    return pimpl_->parent();
+    return from_boost_optional(pimpl_->parent());
 }
 
 void crate::remove_track(track tr) const
@@ -79,14 +80,14 @@ void crate::remove_track(track tr) const
     pimpl_->remove_track(tr);
 }
 
-void crate::set_name(boost::string_view name) const
+void crate::set_name(std::string name) const
 {
     pimpl_->set_name(name);
 }
 
-void crate::set_parent(boost::optional<crate> parent) const
+void crate::set_parent(std::experimental::optional<crate> parent) const
 {
-    pimpl_->set_parent(parent);
+    pimpl_->set_parent(to_boost_optional(parent));
 }
 
 std::vector<track> crate::tracks() const

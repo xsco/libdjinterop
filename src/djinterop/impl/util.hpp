@@ -18,12 +18,27 @@
 #pragma once
 
 #include <boost/optional.hpp>
-#include <boost/utility/string_view.hpp>
+#include <djinterop/optional/optional.hpp>
 
 namespace djinterop
 {
-boost::string_view get_filename(boost::string_view file_path);
-boost::optional<boost::string_view> get_file_extension(
-    boost::string_view file_path);
+std::string get_filename(const std::string& file_path);
+boost::optional<std::string> get_file_extension(const std::string& file_path);
+
+template <typename T>
+std::experimental::optional<T> from_boost_optional(boost::optional<T> opt)
+{
+    return opt
+        ? std::experimental::optional<T>{*opt}
+        : std::experimental::nullopt;
+}
+
+template <typename T>
+boost::optional<T> to_boost_optional(std::experimental::optional<T> opt)
+{
+    return opt
+        ? boost::optional<T>{*opt}
+        : boost::none;
+}
 
 }  // namespace djinterop

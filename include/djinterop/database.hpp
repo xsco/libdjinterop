@@ -26,8 +26,7 @@
 #include <memory>
 #include <vector>
 
-#include <boost/optional.hpp>
-#include <boost/utility/string_view.hpp>
+#include <djinterop/optional/optional.hpp>
 
 namespace sqlite
 {
@@ -67,26 +66,26 @@ public:
 
     /// Returns the crate with the given ID
     ///
-    /// If no such crate exists in the database, then boost::none is returned.
-    boost::optional<crate> crate_by_id(int64_t id) const;
+    /// If no such crate exists in the database, then `nullopt` is returned.
+    std::experimental::optional<crate> crate_by_id(int64_t id) const;
 
     /// Returns all crates contained in the database
     std::vector<crate> crates() const;
 
     /// Returns all crates with the given name
-    std::vector<crate> crates_by_name(boost::string_view name) const;
+    std::vector<crate> crates_by_name(const std::string& name) const;
 
     /// Creates a new crate with the given name
     ///
     /// The created crate has no parent.
-    crate create_crate(boost::string_view name) const;
+    crate create_crate(std::string name) const;
 
     /// Creates a new track associated to a given music file
     ///
     /// The music file is given by its relative path from the directory passed
     /// to the `database` constructor. The created track is not contained in any
     /// crates.
-    track create_track(boost::string_view relative_path) const;
+    track create_track(std::string relative_path) const;
 
     /// Returns the path directory of the database
     ///
@@ -126,13 +125,13 @@ public:
 
     /// Returns the track with the given id
     ///
-    /// If no such track exists in the database, then boost::none is returned.
-    boost::optional<track> track_by_id(int64_t id) const;
+    /// If no such track exists in the database, then `nullopt` is returned.
+    std::experimental::optional<track> track_by_id(int64_t id) const;
 
     /// Returns all tracks whose `relative_path` attribute in the database
     /// matches the given string
     std::vector<track> tracks_by_relative_path(
-        boost::string_view relative_path) const;
+        const std::string& relative_path) const;
 
     /// Returns all tracks contained in the database
     std::vector<track> tracks() const;

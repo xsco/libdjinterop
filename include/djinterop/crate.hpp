@@ -27,8 +27,7 @@
 #include <string>
 #include <vector>
 
-#include <boost/optional.hpp>
-#include <boost/utility/string_view.hpp>
+#include <djinterop/optional/optional.hpp>
 
 namespace djinterop
 {
@@ -96,8 +95,8 @@ public:
 
     /// Returns the parent crate, if this crate has one
     ///
-    /// If the crate doesn't have a parent, then an `boost::none` is returned.
-    boost::optional<crate> parent() const;
+    /// If the crate doesn't have a parent, then `nullopt_t` is returned.
+    std::experimental::optional<crate> parent() const;
 
     /// Removes a track from the crate
     ///
@@ -106,13 +105,13 @@ public:
     void remove_track(track tr) const;
 
     /// Sets the crate's name
-    void set_name(boost::string_view name) const;
+    void set_name(std::string name) const;
 
     /// Sets this crate's parent
     ///
-    /// If an empty `boost::optional` is given, then this crate will have no
-    /// parent. That is, it becomes a root crate.
-    void set_parent(boost::optional<crate> parent) const;
+    /// If `nullopt_t` is given, then this crate will have no parent.  That is,
+    /// it becomes a root crate.
+    void set_parent(std::experimental::optional<crate> parent) const;
 
     /// Returns the crate's contained tracks
     std::vector<track> tracks() const;

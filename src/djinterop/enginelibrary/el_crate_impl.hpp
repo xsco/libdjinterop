@@ -41,7 +41,7 @@ public:
     std::string name() override;
     boost::optional<crate> parent() override;
     void remove_track(track tr) override;
-    void set_name(boost::string_view name) override;
+    void set_name(std::string name) override;
     void set_parent(boost::optional<crate> parent) override;
     std::vector<track> tracks() override;
 

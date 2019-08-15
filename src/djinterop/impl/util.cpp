@@ -19,20 +19,19 @@
 
 namespace djinterop
 {
-boost::string_view get_filename(boost::string_view file_path)
+std::string get_filename(const std::string& file_path)
 {
     // TODO (haslersn): How to handle Windows path separator?
     auto slash_pos = file_path.rfind('/');  // returns -1 in case of no match
     return file_path.substr(slash_pos + 1);
 }
 
-boost::optional<boost::string_view> get_file_extension(
-    boost::string_view file_path)
+boost::optional<std::string> get_file_extension(const std::string& file_path)
 {
     auto filename = get_filename(file_path);
-    boost::optional<boost::string_view> file_extension;
+    boost::optional<std::string> file_extension;
     auto dot_pos = filename.rfind('.');
-    if (dot_pos != boost::string_view::npos)
+    if (dot_pos != std::string::npos)
     {
         file_extension = filename.substr(dot_pos + 1);
     }

@@ -78,7 +78,7 @@ std::vector<crate> el_database_impl::crates()
     return results;
 }
 
-std::vector<crate> el_database_impl::crates_by_name(boost::string_view name)
+std::vector<crate> el_database_impl::crates_by_name(const std::string& name)
 {
     std::vector<crate> results;
     storage_->db << "SELECT id FROM Crate WHERE title = ? ORDER BY id"
@@ -90,7 +90,7 @@ std::vector<crate> el_database_impl::crates_by_name(boost::string_view name)
     return results;
 }
 
-crate el_database_impl::create_crate(boost::string_view name)
+crate el_database_impl::create_crate(std::string name)
 {
     el_transaction_guard_impl trans{storage_};
 
@@ -110,7 +110,7 @@ crate el_database_impl::create_crate(boost::string_view name)
     return cr;
 }
 
-track el_database_impl::create_track(boost::string_view relative_path)
+track el_database_impl::create_track(std::string relative_path)
 {
     // TODO (haslersn): Should it be allowed to create two tracks with the same
     // `relative_path`?
@@ -153,7 +153,7 @@ track el_database_impl::create_track(boost::string_view relative_path)
                     // extension
                     if (extension)
                     {
-                        text = extension->to_string();
+                        text = extension;
                     }
                     break;
                 case 15:
@@ -266,7 +266,7 @@ std::vector<track> el_database_impl::tracks()
 }
 
 std::vector<track> el_database_impl::tracks_by_relative_path(
-    boost::string_view relative_path)
+    const std::string& relative_path)
 {
     std::vector<track> results;
     storage_->db << "SELECT id FROM Track WHERE path = ? ORDER BY id"

@@ -22,7 +22,6 @@
 #include <vector>
 
 #include <boost/optional.hpp>
-#include <boost/utility/string_view.hpp>
 
 #include <djinterop/performance_data.hpp>
 
@@ -47,11 +46,11 @@ public:
     virtual double adjusted_main_cue() = 0;
     virtual void set_adjusted_main_cue(double sample_offset) = 0;
     virtual boost::optional<std::string> album() = 0;
-    virtual void set_album(boost::optional<boost::string_view> album) = 0;
+    virtual void set_album(boost::optional<std::string> album) = 0;
     virtual boost::optional<int64_t> album_art_id() = 0;
     virtual void set_album_art_id(boost::optional<int64_t> album_art_id) = 0;
     virtual boost::optional<std::string> artist() = 0;
-    virtual void set_artist(boost::optional<boost::string_view> artist) = 0;
+    virtual void set_artist(boost::optional<std::string> artist) = 0;
     virtual boost::optional<double> average_loudness() = 0;
     virtual void set_average_loudness(
         boost::optional<double> average_loudness) = 0;
@@ -60,9 +59,9 @@ public:
     virtual boost::optional<double> bpm() = 0;
     virtual void set_bpm(boost::optional<double> bpm) = 0;
     virtual boost::optional<std::string> comment() = 0;
-    virtual void set_comment(boost::optional<boost::string_view> comment) = 0;
+    virtual void set_comment(boost::optional<std::string> comment) = 0;
     virtual boost::optional<std::string> composer() = 0;
-    virtual void set_composer(boost::optional<boost::string_view> composer) = 0;
+    virtual void set_composer(boost::optional<std::string> composer) = 0;
     virtual std::vector<crate> containing_crates() = 0;
     virtual database db() = 0;
     virtual std::vector<beatgrid_marker> default_beatgrid() = 0;
@@ -74,7 +73,7 @@ public:
     virtual std::string file_extension() = 0;
     virtual std::string filename() = 0;
     virtual boost::optional<std::string> genre() = 0;
-    virtual void set_genre(boost::optional<boost::string_view> genre) = 0;
+    virtual void set_genre(boost::optional<std::string> genre) = 0;
     virtual boost::optional<hot_cue> hot_cue_at(int32_t index) = 0;
     virtual void set_hot_cue_at(
         int32_t index, boost::optional<hot_cue> cue) = 0;
@@ -107,14 +106,14 @@ public:
     virtual std::vector<waveform_entry> overview_waveform() = 0;
     virtual boost::optional<std::string> publisher() = 0;
     virtual void set_publisher(
-        boost::optional<boost::string_view> publisher) = 0;
+        boost::optional<std::string> publisher) = 0;
     virtual int64_t recommended_waveform_size() = 0;
     virtual std::string relative_path() = 0;
-    virtual void set_relative_path(boost::string_view relative_path) = 0;
+    virtual void set_relative_path(std::string relative_path) = 0;
     virtual boost::optional<sampling_info> sampling() = 0;
     virtual void set_sampling(boost::optional<sampling_info> sample_rate) = 0;
     virtual boost::optional<std::string> title() = 0;
-    virtual void set_title(boost::optional<boost::string_view> title) = 0;
+    virtual void set_title(boost::optional<std::string> title) = 0;
     virtual boost::optional<int32_t> track_number() = 0;
     virtual void set_track_number(boost::optional<int32_t> track_number) = 0;
     virtual std::vector<waveform_entry> waveform() = 0;

@@ -10,7 +10,8 @@ public_header_files = [
     'djinterop/performance_data.hpp',
     'djinterop/semantic_version.hpp',
     'djinterop/track.hpp',
-    'djinterop/transaction_guard.hpp'
+    'djinterop/transaction_guard.hpp',
+    'djinterop/optional/optional.hpp'
 ]
 
 install_headers(public_header_files, subdir: 'djinterop')

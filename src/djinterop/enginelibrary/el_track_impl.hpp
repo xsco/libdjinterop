@@ -24,7 +24,6 @@
 #include <vector>
 
 #include <boost/optional.hpp>
-#include <boost/utility/string_view.hpp>
 
 #include <djinterop/enginelibrary.hpp>
 #include <djinterop/enginelibrary/el_storage.hpp>
@@ -71,7 +70,7 @@ public:
 
     boost::optional<std::string> get_metadata_str(metadata_str_type type);
     void set_metadata_str(
-        metadata_str_type type, boost::optional<boost::string_view> content);
+        metadata_str_type type, boost::optional<std::string> content);
     void set_metadata_str(metadata_str_type type, const std::string& content);
     boost::optional<int64_t> get_metadata_int(metadata_int_type type);
     void set_metadata_int(
@@ -204,11 +203,11 @@ public:
     double adjusted_main_cue() override;
     void set_adjusted_main_cue(double sample_offset) override;
     boost::optional<std::string> album() override;
-    void set_album(boost::optional<boost::string_view> album) override;
+    void set_album(boost::optional<std::string> album) override;
     boost::optional<int64_t> album_art_id() override;
     void set_album_art_id(boost::optional<int64_t> album_art_id) override;
     boost::optional<std::string> artist() override;
-    void set_artist(boost::optional<boost::string_view> artist) override;
+    void set_artist(boost::optional<std::string> artist) override;
     boost::optional<double> average_loudness() override;
     void set_average_loudness(
         boost::optional<double> average_loudness) override;
@@ -217,9 +216,9 @@ public:
     boost::optional<double> bpm() override;
     void set_bpm(boost::optional<double> bpm) override;
     boost::optional<std::string> comment() override;
-    void set_comment(boost::optional<boost::string_view> comment) override;
+    void set_comment(boost::optional<std::string> comment) override;
     boost::optional<std::string> composer() override;
-    void set_composer(boost::optional<boost::string_view> composer) override;
+    void set_composer(boost::optional<std::string> composer) override;
     std::vector<djinterop::crate> containing_crates() override;
     database db() override;
     std::vector<beatgrid_marker> default_beatgrid() override;
@@ -230,7 +229,7 @@ public:
     std::string file_extension() override;
     std::string filename() override;
     boost::optional<std::string> genre() override;
-    void set_genre(boost::optional<boost::string_view> genre) override;
+    void set_genre(boost::optional<std::string> genre) override;
     boost::optional<hot_cue> hot_cue_at(int32_t index) override;
     void set_hot_cue_at(int32_t index, boost::optional<hot_cue> cue) override;
     std::array<boost::optional<hot_cue>, 8> hot_cues() override;
@@ -262,14 +261,14 @@ public:
     void set_loops(std::array<boost::optional<loop>, 8> cues) override;
     std::vector<waveform_entry> overview_waveform() override;
     boost::optional<std::string> publisher() override;
-    void set_publisher(boost::optional<boost::string_view> publisher) override;
+    void set_publisher(boost::optional<std::string> publisher) override;
     int64_t recommended_waveform_size() override;
     std::string relative_path() override;
-    void set_relative_path(boost::string_view relative_path) override;
+    void set_relative_path(std::string relative_path) override;
     boost::optional<sampling_info> sampling() override;
     void set_sampling(boost::optional<sampling_info> sampling) override;
     boost::optional<std::string> title() override;
-    void set_title(boost::optional<boost::string_view> title) override;
+    void set_title(boost::optional<std::string> title) override;
     boost::optional<int32_t> track_number() override;
     void set_track_number(boost::optional<int32_t> track_number) override;
     std::vector<waveform_entry> waveform() override;

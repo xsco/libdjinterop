@@ -174,7 +174,7 @@ void el_crate_impl::remove_track(track tr)
         << id() << tr.id();
 }
 
-void el_crate_impl::set_name(boost::string_view name)
+void el_crate_impl::set_name(std::string name)
 {
     el_transaction_guard_impl trans{storage_};
 

@@ -87,7 +87,7 @@ boost::optional<std::string> el_track_impl::get_metadata_str(
 }
 
 void el_track_impl::set_metadata_str(
-    metadata_str_type type, boost::optional<boost::string_view> content)
+    metadata_str_type type, boost::optional<std::string> content)
 {
     if (content)
     {
@@ -232,7 +232,7 @@ boost::optional<std::string> el_track_impl::album()
     return get_metadata_str(metadata_str_type::album);
 }
 
-void el_track_impl::set_album(boost::optional<boost::string_view> album)
+void el_track_impl::set_album(boost::optional<std::string> album)
 {
     set_metadata_str(metadata_str_type::album, album);
 }
@@ -267,7 +267,7 @@ boost::optional<std::string> el_track_impl::artist()
     return get_metadata_str(metadata_str_type::artist);
 }
 
-void el_track_impl::set_artist(boost::optional<boost::string_view> artist)
+void el_track_impl::set_artist(boost::optional<std::string> artist)
 {
     set_metadata_str(metadata_str_type::artist, artist);
 }
@@ -318,7 +318,7 @@ boost::optional<std::string> el_track_impl::comment()
     return get_metadata_str(metadata_str_type::comment);
 }
 
-void el_track_impl::set_comment(boost::optional<boost::string_view> comment)
+void el_track_impl::set_comment(boost::optional<std::string> comment)
 {
     set_metadata_str(metadata_str_type::comment, comment);
 }
@@ -328,7 +328,7 @@ boost::optional<std::string> el_track_impl::composer()
     return get_metadata_str(metadata_str_type::composer);
 }
 
-void el_track_impl::set_composer(boost::optional<boost::string_view> composer)
+void el_track_impl::set_composer(boost::optional<std::string> composer)
 {
     set_metadata_str(metadata_str_type::composer, composer);
 }
@@ -400,14 +400,13 @@ std::string el_track_impl::file_extension()
 {
     auto rel_path = relative_path();
     return get_file_extension(rel_path)
-        .value_or(boost::string_view{})
-        .to_string();
+        .value_or(std::string{});
 }
 
 std::string el_track_impl::filename()
 {
     auto rel_path = relative_path();
-    return get_filename(rel_path).to_string();
+    return get_filename(rel_path);
 }
 
 boost::optional<std::string> el_track_impl::genre()
@@ -415,7 +414,7 @@ boost::optional<std::string> el_track_impl::genre()
     return get_metadata_str(metadata_str_type::genre);
 }
 
-void el_track_impl::set_genre(boost::optional<boost::string_view> genre)
+void el_track_impl::set_genre(boost::optional<std::string> genre)
 {
     set_metadata_str(metadata_str_type::genre, genre);
 }
@@ -582,8 +581,8 @@ boost::optional<system_clock::time_point> el_track_impl::last_played_at()
 void el_track_impl::set_last_played_at(
     boost::optional<system_clock::time_point> played_at)
 {
-    static boost::optional<boost::string_view> zero{"0"};
-    static boost::optional<boost::string_view> one{"1"};
+    static boost::optional<std::string> zero{"0"};
+    static boost::optional<std::string> one{"1"};
     set_metadata_str(metadata_str_type::ever_played, played_at ? one : zero);
     set_metadata_int(
         metadata_int_type::last_played_ts, to_timestamp(played_at));
@@ -639,7 +638,7 @@ boost::optional<std::string> el_track_impl::publisher()
     return get_metadata_str(metadata_str_type::publisher);
 }
 
-void el_track_impl::set_publisher(boost::optional<boost::string_view> publisher)
+void el_track_impl::set_publisher(boost::optional<std::string> publisher)
 {
     set_metadata_str(metadata_str_type::publisher, publisher);
 }
@@ -669,7 +668,7 @@ std::string el_track_impl::relative_path()
     return get_cell<std::string>("path");
 }
 
-void el_track_impl::set_relative_path(boost::string_view relative_path)
+void el_track_impl::set_relative_path(std::string relative_path)
 {
     // TODO (haslersn): Should we check the path?
     set_cell("path", std::string{relative_path});
@@ -702,7 +701,7 @@ void el_track_impl::set_sampling(boost::optional<sampling_info> sampling)
         oss << (*secs % 60);
         auto str = oss.str();
         set_metadata_str(
-            metadata_str_type::duration_mm_ss, boost::string_view{str});
+            metadata_str_type::duration_mm_ss, std::string{str});
     }
     else
     {
@@ -747,7 +746,7 @@ boost::optional<std::string> el_track_impl::title()
     return get_metadata_str(metadata_str_type::title);
 }
 
-void el_track_impl::set_title(boost::optional<boost::string_view> title)
+void el_track_impl::set_title(boost::optional<std::string> title)
 {
     set_metadata_str(metadata_str_type::title, title);
 }

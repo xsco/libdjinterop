@@ -13,7 +13,7 @@ dl_dep = cpp_compiler.find_library('dl', required: false)
 
 thread_dep = dependency('threads')
 zlib_dep = dependency('zlib', version: '>=1.2.8', fallback: ['zlib', 'zlib_dep'])
-boost_dep = dependency('boost') # Header-only libraries
+boost_dep = dependency('boost', version: '>=1.58') # Header-only libraries
 
 core_deps = [thread_dep, dl_dep, zlib_dep, boost_dep]
 

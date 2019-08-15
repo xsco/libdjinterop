@@ -36,9 +36,9 @@ public:
     boost::optional<djinterop::crate> crate_by_id(int64_t id) override;
     std::vector<djinterop::crate> crates() override;
     std::vector<djinterop::crate> crates_by_name(
-        boost::string_view name) override;
-    djinterop::crate create_crate(boost::string_view name) override;
-    track create_track(boost::string_view relative_path) override;
+        const std::string& name) override;
+    djinterop::crate create_crate(std::string name) override;
+    track create_track(std::string relative_path) override;
     std::string directory() override;
     bool is_supported() override;
     void verify() override;
@@ -48,7 +48,7 @@ public:
     boost::optional<djinterop::track> track_by_id(int64_t id) override;
     std::vector<djinterop::track> tracks() override;
     std::vector<djinterop::track> tracks_by_relative_path(
-        boost::string_view relative_path) override;
+        const std::string& relative_path) override;
     std::string uuid() override;
     semantic_version version() override;
 
