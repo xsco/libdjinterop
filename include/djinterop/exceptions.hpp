@@ -33,7 +33,7 @@ namespace djinterop
 class database_inconsistency : public std::runtime_error
 {
 public:
-    explicit database_inconsistency(const std::string &what_arg) noexcept
+    explicit database_inconsistency(const std::string& what_arg) noexcept
         : runtime_error{what_arg}
     {
     }
@@ -45,15 +45,16 @@ public:
 class unsupported_database_version : public std::runtime_error
 {
 public:
-    explicit unsupported_database_version(
-        const semantic_version version) noexcept
-        : runtime_error{"Unsupported database version"}, version_{version}
+    explicit unsupported_database_version(const semantic_version version)
+        noexcept : runtime_error{"Unsupported database version"},
+                   version_{version}
     {
     }
 
     explicit unsupported_database_version(
-        const std::string &what_arg, const semantic_version version) noexcept
-        : runtime_error{what_arg}, version_{version}
+        const std::string& what_arg, const semantic_version version) noexcept
+        : runtime_error{what_arg},
+          version_{version}
     {
     }
 
@@ -70,7 +71,8 @@ class crate_deleted : public std::runtime_error
 public:
     /// Constructs the exception for a given crate ID
     explicit crate_deleted(int64_t id) noexcept
-        : runtime_error{"Crate does not exist in database anymore"}, id_{id}
+        : runtime_error{"Crate does not exist in database anymore"},
+          id_{id}
     {
     }
 
@@ -88,8 +90,9 @@ class crate_database_inconsistency : public database_inconsistency
 public:
     /// Construct the exception for a given crate ID
     explicit crate_database_inconsistency(
-        const std::string &what_arg, int64_t id) noexcept
-        : database_inconsistency{what_arg.c_str()}, id_{id}
+        const std::string& what_arg, int64_t id) noexcept
+        : database_inconsistency{what_arg.c_str()},
+          id_{id}
     {
     }
 
@@ -107,7 +110,8 @@ class track_deleted : public std::invalid_argument
 public:
     /// Constructs the exception for a given track ID
     explicit track_deleted(int64_t id) noexcept
-        : invalid_argument{"Track does not exist in database"}, id_{id}
+        : invalid_argument{"Track does not exist in database"},
+          id_{id}
     {
     }
 
@@ -125,8 +129,9 @@ class track_database_inconsistency : public database_inconsistency
 public:
     /// Construct the exception for a given track ID
     explicit track_database_inconsistency(
-        const std::string &what_arg, int64_t id) noexcept
-        : database_inconsistency{what_arg}, id_{id}
+        const std::string& what_arg, int64_t id) noexcept
+        : database_inconsistency{what_arg},
+          id_{id}
     {
     }
 

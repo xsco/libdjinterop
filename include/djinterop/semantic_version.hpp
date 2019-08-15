@@ -34,23 +34,23 @@ struct semantic_version
     int pat;
 };
 
-inline std::ostream &operator<<(
-    std::ostream &os, const semantic_version &version)
+inline std::ostream& operator<<(
+    std::ostream& os, const semantic_version& version)
 {
     return os << version.maj << "." << version.min << "." << version.pat;
 }
 
-inline bool operator==(const semantic_version &a, const semantic_version &b)
+inline bool operator==(const semantic_version& a, const semantic_version& b)
 {
     return a.maj == b.maj && a.min == b.min && a.pat == b.pat;
 }
 
-inline bool operator!=(const semantic_version &a, const semantic_version &b)
+inline bool operator!=(const semantic_version& a, const semantic_version& b)
 {
     return !(a.maj == b.maj && a.min == b.min && a.pat == b.pat);
 }
 
-inline bool operator>=(const semantic_version &a, const semantic_version &b)
+inline bool operator>=(const semantic_version& a, const semantic_version& b)
 {
     if (a.maj != b.maj)
         return a.maj > b.maj;
@@ -59,7 +59,7 @@ inline bool operator>=(const semantic_version &a, const semantic_version &b)
     return a.pat >= b.pat;
 }
 
-inline bool operator>(const semantic_version &a, const semantic_version &b)
+inline bool operator>(const semantic_version& a, const semantic_version& b)
 {
     if (a.maj != b.maj)
         return a.maj > b.maj;
@@ -68,7 +68,7 @@ inline bool operator>(const semantic_version &a, const semantic_version &b)
     return a.pat > b.pat;
 }
 
-inline bool operator<=(const semantic_version &a, const semantic_version &b)
+inline bool operator<=(const semantic_version& a, const semantic_version& b)
 {
     if (a.maj != b.maj)
         return a.maj < b.maj;
@@ -77,7 +77,7 @@ inline bool operator<=(const semantic_version &a, const semantic_version &b)
     return a.pat <= b.pat;
 }
 
-inline bool operator<(const semantic_version &a, const semantic_version &b)
+inline bool operator<(const semantic_version& a, const semantic_version& b)
 {
     if (a.maj != b.maj)
         return a.maj < b.maj;

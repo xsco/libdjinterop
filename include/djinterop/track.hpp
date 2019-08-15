@@ -104,7 +104,8 @@ public:
 
     /// Sets the ID of the `album_art` associated to the track
     /// TODO (haslersn): Pass an `album_art` object instead.
-    void set_album_art_id(std::experimental::optional<int64_t> album_art_id) const;
+    void set_album_art_id(
+        std::experimental::optional<int64_t> album_art_id) const;
     void set_album_art_id(int64_t album_art_id) const;
 
     /// Returns the artist (metadata) of the track
@@ -116,7 +117,8 @@ public:
 
     std::experimental::optional<double> average_loudness() const;
 
-    void set_average_loudness(std::experimental::optional<double> average_loudness) const;
+    void set_average_loudness(
+        std::experimental::optional<double> average_loudness) const;
     void set_average_loudness(double average_loudness) const;
 
     /// Returns the bitrate (metadata) of the track
@@ -182,12 +184,14 @@ public:
 
     std::experimental::optional<hot_cue> hot_cue_at(int32_t index) const;
 
-    void set_hot_cue_at(int32_t index, std::experimental::optional<hot_cue> cue) const;
+    void set_hot_cue_at(
+        int32_t index, std::experimental::optional<hot_cue> cue) const;
     void set_hot_cue_at(int32_t index, hot_cue cue) const;
 
     std::array<std::experimental::optional<hot_cue>, 8> hot_cues() const;
 
-    void set_hot_cues(std::array<std::experimental::optional<hot_cue>, 8> cues) const;
+    void set_hot_cues(
+        std::array<std::experimental::optional<hot_cue>, 8> cues) const;
 
     /// Returns the ID of this track
     ///
@@ -199,8 +203,8 @@ public:
     std::experimental::optional<track_import_info> import_info() const;
 
     /// TODO (haslersn): Document these methods.
-    void set_import_info(
-        const std::experimental::optional<track_import_info>& import_info) const;
+    void set_import_info(const std::experimental::optional<track_import_info>&
+                             import_info) const;
     void set_import_info(const track_import_info& import_info) const;
 
     /// Returns `true` iff `*this` is valid as described in the class comment
@@ -217,13 +221,13 @@ public:
     ///
     /// Note that on VFAT filesystems, the access time is ceiled to just a date,
     /// and loses any time precision.
-    std::experimental::optional<std::chrono::system_clock::time_point> last_accessed_at()
-        const;
+    std::experimental::optional<std::chrono::system_clock::time_point>
+    last_accessed_at() const;
 
     /// TODO (haslersn): Document these methods.
     void set_last_accessed_at(
-        std::experimental::optional<std::chrono::system_clock::time_point> last_accessed_at)
-        const;
+        std::experimental::optional<std::chrono::system_clock::time_point>
+            last_accessed_at) const;
     void set_last_accessed_at(
         std::chrono::system_clock::time_point last_accessed_at) const;
 
@@ -231,23 +235,24 @@ public:
     ///
     /// Note that this is the attribute modification time, not the data
     /// modification time, i.e. ctime not mtime.
-    std::experimental::optional<std::chrono::system_clock::time_point> last_modified_at()
-        const;
+    std::experimental::optional<std::chrono::system_clock::time_point>
+    last_modified_at() const;
 
     /// TODO (haslersn): Document these methods.
     void set_last_modified_at(
-        std::experimental::optional<std::chrono::system_clock::time_point> last_modified_at)
-        const;
+        std::experimental::optional<std::chrono::system_clock::time_point>
+            last_modified_at) const;
     void set_last_modified_at(
         std::chrono::system_clock::time_point last_modified_at) const;
 
     /// Returns the time at which the track was last played
-    std::experimental::optional<std::chrono::system_clock::time_point> last_played_at()
-        const;
+    std::experimental::optional<std::chrono::system_clock::time_point>
+    last_played_at() const;
 
     /// Sets the time at which the track was last played
     void set_last_played_at(
-        std::experimental::optional<std::chrono::system_clock::time_point> time) const;
+        std::experimental::optional<std::chrono::system_clock::time_point> time)
+        const;
     void set_last_played_at(std::chrono::system_clock::time_point time) const;
 
     std::experimental::optional<loop> loop_at(int32_t index) const;
@@ -257,7 +262,8 @@ public:
 
     std::array<std::experimental::optional<loop>, 8> loops() const;
 
-    void set_loops(std::array<std::experimental::optional<loop>, 8> loops) const;
+    void set_loops(
+        std::array<std::experimental::optional<loop>, 8> loops) const;
 
     std::vector<waveform_entry> overview_waveform() const;
 
@@ -265,7 +271,8 @@ public:
     std::experimental::optional<std::string> publisher() const;
 
     /// Sets the publisher (metadata) of the track
-    void set_publisher(std::experimental::optional<std::string> publisher) const;
+    void set_publisher(
+        std::experimental::optional<std::string> publisher) const;
     void set_publisher(std::string publisher) const;
 
     int64_t recommended_waveform_size() const;
@@ -279,7 +286,8 @@ public:
 
     std::experimental::optional<sampling_info> sampling() const;
 
-    void set_sampling(std::experimental::optional<sampling_info> sample_rate) const;
+    void set_sampling(
+        std::experimental::optional<sampling_info> sample_rate) const;
     void set_sampling(sampling_info sample_rate) const;
 
     /// Returns the title (metadata) of the track
@@ -293,7 +301,8 @@ public:
     std::experimental::optional<int32_t> track_number() const;
 
     /// Sets the track number (metadata) of the track
-    void set_track_number(std::experimental::optional<int32_t> track_number) const;
+    void set_track_number(
+        std::experimental::optional<int32_t> track_number) const;
     void set_track_number(int32_t track_number) const;
 
     std::vector<waveform_entry> waveform() const;

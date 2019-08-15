@@ -46,8 +46,9 @@ struct pad_color
      * brightness).
      */
     constexpr pad_color(
-        uint_least8_t r, uint_least8_t g, uint_least8_t b, uint_least8_t a)
-        : r{r}, g{g}, b{b}, a{a}
+        uint_least8_t r, uint_least8_t g, uint_least8_t b, uint_least8_t a) :
+        r{r},
+        g{g}, b{b}, a{a}
     {
     }
 
@@ -74,7 +75,7 @@ struct pad_color
     uint_least8_t a;
 };
 
-inline bool operator==(const pad_color &x, const pad_color &y)
+inline bool operator==(const pad_color& x, const pad_color& y)
 {
     return x.r == y.r && x.g == y.g && x.b == y.b && x.a == y.a;
 }

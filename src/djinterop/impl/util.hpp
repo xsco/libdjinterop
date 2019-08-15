@@ -28,17 +28,14 @@ boost::optional<std::string> get_file_extension(const std::string& file_path);
 template <typename T>
 std::experimental::optional<T> from_boost_optional(boost::optional<T> opt)
 {
-    return opt
-        ? std::experimental::optional<T>{*opt}
-        : std::experimental::nullopt;
+    return opt ? std::experimental::optional<T>{*opt}
+               : std::experimental::nullopt;
 }
 
 template <typename T>
 boost::optional<T> to_boost_optional(std::experimental::optional<T> opt)
 {
-    return opt
-        ? boost::optional<T>{*opt}
-        : boost::none;
+    return opt ? boost::optional<T>{*opt} : boost::none;
 }
 
 }  // namespace djinterop

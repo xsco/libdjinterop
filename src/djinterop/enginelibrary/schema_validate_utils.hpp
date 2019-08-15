@@ -54,17 +54,17 @@ struct index_info_entry
     std::string col_name;
 };
 
-inline bool operator<(const table_info_entry &o1, const table_info_entry &o2)
+inline bool operator<(const table_info_entry& o1, const table_info_entry& o2)
 {
     return o1.col_name < o2.col_name;
 }
 
-inline bool operator<(const index_list_entry &o1, const index_list_entry &o2)
+inline bool operator<(const index_list_entry& o1, const index_list_entry& o2)
 {
     return o1.index_name < o2.index_name;
 }
 
-inline bool operator<(const index_info_entry &o1, const index_info_entry &o2)
+inline bool operator<(const index_info_entry& o1, const index_info_entry& o2)
 {
     return o1.col_index_id < o2.col_index_id;
 }
@@ -74,7 +74,7 @@ struct table_info
     typedef std::set<table_info_entry>::iterator iterator;
     typedef std::set<table_info_entry>::const_iterator const_iterator;
 
-    table_info(sqlite::database &db, const std::string &table_name)
+    table_info(sqlite::database& db, const std::string& table_name)
     {
         db << "PRAGMA TABLE_INFO('" + table_name + "')" >>
             [this](
@@ -101,7 +101,7 @@ struct index_list
     typedef std::set<index_list_entry>::iterator iterator;
     typedef std::set<index_list_entry>::const_iterator const_iterator;
 
-    index_list(sqlite::database &db, const std::string &table_name)
+    index_list(sqlite::database& db, const std::string& table_name)
     {
         db << "PRAGMA INDEX_LIST('" + table_name + "')" >>
             [this](
@@ -128,7 +128,7 @@ struct index_info
     typedef std::set<index_info_entry>::iterator iterator;
     typedef std::set<index_info_entry>::const_iterator const_iterator;
 
-    index_info(sqlite::database &db, const std::string &index_name)
+    index_info(sqlite::database& db, const std::string& index_name)
     {
         db << "PRAGMA INDEX_INFO('" + index_name + "')" >>
             [this](int col_index_id, int col_table_id, std::string col_name) {
@@ -149,8 +149,8 @@ private:
 
 inline void validate(
     table_info::const_iterator iter, table_info::const_iterator end,
-    const std::string &col_name, const std::string &col_type, int nullable,
-    const std::string &default_value, int part_of_pk)
+    const std::string& col_name, const std::string& col_type, int nullable,
+    const std::string& default_value, int part_of_pk)
 {
     if (iter == end)
         throw database_inconsistency{"Column " + col_name + " missing"};
@@ -176,8 +176,8 @@ inline void validate(
 
 inline void validate(
     index_list::const_iterator iter, index_list::const_iterator end,
-    const std::string &index_name, int unique,
-    const std::string &creation_method, int partial_index)
+    const std::string& index_name, int unique,
+    const std::string& creation_method, int partial_index)
 {
     if (iter == end)
         throw database_inconsistency{"Index " + index_name + " missing"};
@@ -200,7 +200,7 @@ inline void validate(
 
 inline void validate(
     index_info::const_iterator iter, index_info::const_iterator end,
-    int col_index_id, const std::string &col_name)
+    int col_index_id, const std::string& col_name)
 {
     if (iter == end)
         throw database_inconsistency{"Col " + col_name + " missing from index"};
@@ -215,8 +215,8 @@ inline void validate(
 
 template <typename Iterator>
 void validate_no_more(
-    const Iterator &iter, const Iterator &end,
-    const std::string &validation_type, const std::string &item)
+    const Iterator& iter, const Iterator& end,
+    const std::string& validation_type, const std::string& item)
 {
     if (iter != end)
         throw database_inconsistency{validation_type + " for " + item +

@@ -23,13 +23,13 @@ namespace djinterop
 {
 namespace enginelibrary
 {
-void verify_music_schema_1_6_0(sqlite::database &db);
+void verify_music_schema_1_6_0(sqlite::database& db);
 
-void verify_performance_schema_1_6_0(sqlite::database &db);
+void verify_performance_schema_1_6_0(sqlite::database& db);
 
-void create_music_schema_1_6_0(sqlite::database &db);
+void create_music_schema_1_6_0(sqlite::database& db);
 
-void create_performance_schema_1_6_0(sqlite::database &db);
+void create_performance_schema_1_6_0(sqlite::database& db);
 
 }  // namespace enginelibrary
 }  // namespace djinterop

@@ -28,16 +28,16 @@ namespace djinterop
 {
 namespace enginelibrary
 {
-bool is_supported(const semantic_version &version);
+bool is_supported(const semantic_version& version);
 
-semantic_version verify_music_schema(sqlite::database &db);
+semantic_version verify_music_schema(sqlite::database& db);
 
-semantic_version verify_performance_schema(sqlite::database &db);
+semantic_version verify_performance_schema(sqlite::database& db);
 
-void create_music_schema(sqlite::database &db, const semantic_version &version);
+void create_music_schema(sqlite::database& db, const semantic_version& version);
 
 void create_performance_schema(
-    sqlite::database &db, const semantic_version &version);
+    sqlite::database& db, const semantic_version& version);
 
 }  // namespace enginelibrary
 }  // namespace djinterop
