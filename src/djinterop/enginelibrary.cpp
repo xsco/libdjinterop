@@ -25,29 +25,22 @@
 #include <djinterop/djinterop.hpp>
 #include <djinterop/enginelibrary/el_database_impl.hpp>
 #include <djinterop/enginelibrary/el_transaction_guard_impl.hpp>
-#include <djinterop/enginelibrary/schema.hpp>
 
 namespace djinterop
 {
 namespace enginelibrary
 {
-database load_database(std::string directory)
+
+static bool dir_exists(const std::string& directory)
 {
-    return database{std::make_shared<el_database_impl>(std::move(directory))};
+    struct stat buf;
+    return stat(directory.c_str(), &buf) == 0;
 }
 
-database make_database(
-    std::string directory, const semantic_version& default_version)
+static void ensure_dir_exists(const std::string &directory, bool &created)
 {
-    if (!is_supported(default_version))
-    {
-        throw unsupported_database_version{"Unsupported database version",
-                                           default_version};
-    }
-
-    // Ensure the target directory exists
-    struct stat buf;
-    if (stat(directory.c_str(), &buf) != 0)
+    created = false;
+    if (!dir_exists(directory))
     {
 #if defined(_WIN32)
         if (_mkdir(directory.c_str()) != 0)
@@ -56,39 +49,70 @@ database make_database(
 #endif
         {
             throw std::runtime_error{
-                "Failed to create directory to hold new database"};
+                "Failed to create directory"};
         }
+
+        created = true;
+    }
+}
+
+database create_database(
+        std::string directory, const semantic_version& schema_version)
+{
+    if (!el_storage::schema_version_supported(schema_version))
+    {
+        throw unsupported_database_version{"Unsupported database version",
+                                           schema_version};
     }
 
+    // Ensure the target directory exists.
+    bool dir_created;
+    ensure_dir_exists(directory, dir_created);
+
+    // Create schema.
+    auto storage = std::make_shared<el_storage>(std::move(directory));
+    el_transaction_guard_impl trans{storage};
+    storage->create_and_validate_schema(schema_version);
+    database db{std::make_shared<el_database_impl>(storage)};
+    trans.commit();
+    return db;
+}
+
+database create_or_load_database(
+    std::string directory, const semantic_version& schema_version, bool &created)
+{
+    if (database_exists(directory))
+    {
+        created = false;
+        return load_database(directory);
+    }
+    else
+    {
+        created = true;
+        return create_database(directory, schema_version);
+    }
+}
+
+bool database_exists(const std::string& directory)
+{
     // We have to find out whether the engine library exists. Naively, we'd do
     // this by checking if the m.db and p.db files exist. However, if a previous
     // attempt to create the engine library failed after creating the files and
     // before creating the schemata, then the files exist but the enginelibrary
     // doesn't exist.
-    //
-    // Therefore, we create the two files (if not already present) and then
-    // check if they contain zero tables. If so, then we create the schemata.
-
-    auto storage = std::make_shared<el_storage>(std::move(directory));
-    el_transaction_guard_impl trans{storage};
-    int32_t table_count;
-    storage->db << "SELECT SUM(rows) FROM ("
-                   "SELECT COUNT(*) AS rows FROM music.sqlite_master WHERE "
-                   "type = 'table' UNION ALL SELECT COUNT(*) AS rows FROM "
-                   "perfdata.sqlite_master WHERE type = 'table'"
-                   ")" >>
-        table_count;
-    if (table_count == 0)
+    if (!dir_exists(directory))
     {
-        // If they contain zero tables, then we create the schemata.
-        create_music_schema(storage->db, default_version);
-        verify_music_schema(storage->db);
-        create_performance_schema(storage->db, default_version);
-        verify_performance_schema(storage->db);
+        // No EL DB directory.
+        return false;
     }
-    database db{std::make_shared<el_database_impl>(storage)};
-    trans.commit();
-    return db;
+
+    el_storage storage{std::move(directory)};
+    return storage.schema_created();
+}
+
+database load_database(std::string directory)
+{
+    return database{std::make_shared<el_database_impl>(std::move(directory))};
 }
 
 std::string music_db_path(const database& db)

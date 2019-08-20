@@ -16,6 +16,7 @@
  */
 
 #include <djinterop/enginelibrary/el_storage.hpp>
+#include <djinterop/enginelibrary/schema.hpp>
 
 namespace djinterop
 {
@@ -27,6 +28,36 @@ el_storage::el_storage(std::string directory)
     // TODO (haslersn): Should we check that directory is an absolute path?
     db << "ATTACH ? as 'music'" << (directory + "/m.db");
     db << "ATTACH ? as 'perfdata'" << (directory + "/p.db");
+}
+
+bool el_storage::schema_version_supported(semantic_version schema_version)
+{
+    return is_supported(schema_version);
+}
+
+void el_storage::create_and_validate_schema(semantic_version schema_version)
+{
+    create_music_schema(db, schema_version);
+    verify_music_schema(db);
+    create_performance_schema(db, schema_version);
+    verify_performance_schema(db);
+}
+
+bool el_storage::schema_created() const
+{
+    std::string sql =
+        "SELECT SUM(rows) FROM ("
+        "  SELECT COUNT(*) AS rows "
+        "  FROM music.sqlite_master WHERE "
+        "  type = 'table' "
+        "  UNION ALL "
+        "  SELECT COUNT(*) AS rows "
+        "  FROM perfdata.sqlite_master "
+        "  WHERE type = 'table'"
+        ")";
+    int32_t table_count;
+    db << sql >> table_count;
+    return table_count != 0;
 }
 
 }  // namespace enginelibrary

@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(make_database__version_1_6_0__creates_verified)
     auto temp_dir = create_temp_dir();
 
     // Act
-    auto db = el::make_database(temp_dir.string(), el::version_1_6_0);
+    auto db = el::create_database(temp_dir.string(), el::version_1_6_0);
 
     // Assert
     BOOST_CHECK_NO_THROW(db.verify());
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(make_database__version_1_7_1__creates_verified)
     auto temp_dir = create_temp_dir();
 
     // Act
-    auto db = el::make_database(temp_dir.string(), el::version_1_7_1);
+    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
 
     // Assert
     BOOST_CHECK_NO_THROW(db.verify());

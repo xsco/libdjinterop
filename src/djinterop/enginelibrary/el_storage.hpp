@@ -19,6 +19,7 @@
 
 #include <string>
 
+#include <djinterop/semantic_version.hpp>
 #include <sqlite_modern_cpp.h>
 
 namespace djinterop
@@ -28,10 +29,23 @@ namespace enginelibrary
 class el_storage
 {
 public:
+    /// Returns a boolean indicating whether a given schema version is
+    /// supported.
+    static bool schema_version_supported(semantic_version schema_version);
+
     el_storage(std::string directory);
 
+    /// Create and validate schema in an empty EL storage DB.
+    void create_and_validate_schema(semantic_version schema_version);
+
+    /// Returns a boolean indicating whether the EL DB has any schema.
+    bool schema_created() const;
+
     std::string directory;
-    sqlite::database db;
+
+    // TODO - don't expose mutable SQLite connection - allow txn guard to be
+    // obtained from el_storage by other EL classes.
+    mutable sqlite::database db;
     int64_t last_savepoint = 0;
 };
 

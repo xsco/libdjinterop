@@ -53,17 +53,35 @@ constexpr const std::array<pad_color, 8> pads{pad_1, pad_2, pad_3, pad_4,
 
 }  // namespace standard_pad_colors
 
-/// Loads a database from a given directory.
+/// Creates a new, empty database in a directory using the schema version
+/// provided.
+///
+/// By convention, the last part of the directory path is "Engine Library".  If
+/// a database already exists in the target directory, an exception will be
+/// thrown.
+database create_database(
+    std::string directory,
+    const semantic_version& schema_version = version_latest);
+
+/// Create or load an Engine Library database in a given directory.
+///
+/// If a database already exists in the directory, it will be loaded.  If not,
+/// it will be created at the specified schema version.  In both cases, the
+/// database is returned.  The boolean reference parameter `created` can be used
+/// to determine whether the database was created or merely loaded.
+database create_or_load_database(
+    std::string directory,
+    const semantic_version& schema_version,
+    bool &created);
+
+/// Returns a boolean indicating whether an Engine Library already exists in a
+/// given directory.
+bool database_exists(const std::string& directory);
+
+/// Loads an Engine Library database from a given directory.
 database load_database(std::string directory);
 
-/// Loads a database from a given directory. If it doesn't exist, creates a new,
-/// empty database in that directory. When a new database is created, then
-/// the schema version given as default_version is used.
-database make_database(
-    std::string directory,
-    const semantic_version& default_version = version_latest);
-
-/// Given an enginelibrary database, returns the path to its m.db sqlite
+/// Given an Engine Library database, returns the path to its m.db sqlite
 /// database file
 ///
 /// If the given database is not an enginelibrary, then the behaviour of this

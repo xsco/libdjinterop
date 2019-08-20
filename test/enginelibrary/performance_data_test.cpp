@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_CASE(save__new_track_good_values__saves)
 {
     // Arrange/Act
     auto temp_dir = create_temp_dir();
-    auto db = el::make_database(temp_dir.string(), el::version_1_7_1);
+    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
     auto t = db.create_track("");
     populate_track_1(t);
 
@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE(save__existing_track__saves)
 {
     // Arrange/Act
     auto temp_dir = create_temp_dir();
-    auto db = el::make_database(temp_dir.string(), el::version_1_7_1);
+    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
     auto t = db.create_track("");
     populate_track_1(t);
     populate_track_2(t);

@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(save__new_crate_good_values__saves)
 {
     // Arrange/Act
     auto temp_dir = create_temp_dir();
-    auto db = el::make_database(temp_dir.string(), el::version_1_7_1);
+    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
     auto c = db.create_crate("");
     populate_crate_2(c);
 
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(ctor_copy__saved_track__zero_id_and_copied_fields)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
-    auto db = el::make_database(temp_dir.string(), el::version_1_7_1);
+    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
     auto c = db.create_crate("");
     populate_crate_2(c);
 
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(save__existing_track_good_values__saves)
 {
     // Arrange/Act
     auto temp_dir = create_temp_dir();
-    auto db = el::make_database(temp_dir.string(), el::version_1_7_1);
+    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
     auto c = db.create_crate("");
     populate_crate_1(c);
     auto crate_id = c.id();
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(save__change_hierarchy__saves)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
-    auto db = el::make_database(temp_dir.string(), el::version_1_7_1);
+    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
     // Arrange a hierarchy of c1 (root) -> c2 -> c3
     auto c1 = db.create_crate("");
     auto c2 = db.create_crate("");
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(op_copy_assign__saved_track__zero_id_and_copied_fields)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
-    auto db = el::make_database(temp_dir.string(), el::version_1_7_1);
+    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
     auto c = db.create_crate("");
     populate_crate_2(c);
 
