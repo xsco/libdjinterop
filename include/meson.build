@@ -1,4 +1,4 @@
-public_header_files = [
+djinterop_header_files = [
     'djinterop/album_art.hpp',
     'djinterop/crate.hpp',
     'djinterop/database.hpp',
@@ -10,9 +10,12 @@ public_header_files = [
     'djinterop/performance_data.hpp',
     'djinterop/semantic_version.hpp',
     'djinterop/track.hpp',
-    'djinterop/transaction_guard.hpp',
+    'djinterop/transaction_guard.hpp'
+]
+djinterop_optional_header_files = [
     'djinterop/optional/optional.hpp'
 ]
 
-install_headers(public_header_files, subdir: 'djinterop')
+install_headers(djinterop_header_files, subdir: 'djinterop')
+install_headers(djinterop_optional_header_files, subdir: 'djinterop/optional')
 
