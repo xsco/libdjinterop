@@ -49,7 +49,7 @@ public:
     virtual boost::optional<crate> parent() = 0;
     virtual void remove_track(track tr) = 0;
     virtual boost::optional<crate> sub_crate_by_name(
-            const std::string& name) = 0;
+        const std::string& name) = 0;
     virtual void set_name(std::string name) = 0;
     virtual void set_parent(boost::optional<crate> parent) = 0;
     virtual std::vector<track> tracks() = 0;

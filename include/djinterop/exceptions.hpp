@@ -109,10 +109,9 @@ class crate_invalid_name : public std::runtime_error
 {
 public:
     /// Construct the exception for a given crate name
-    explicit crate_invalid_name(
-        const std::string& what_arg, std::string name) noexcept
-        : runtime_error{what_arg.c_str()},
-          name_{name}
+    explicit crate_invalid_name(const std::string& what_arg, std::string name)
+        noexcept : runtime_error{what_arg.c_str()},
+                   name_{name}
     {
     }
 

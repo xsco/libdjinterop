@@ -70,9 +70,8 @@ database create_database(
 /// database is returned.  The boolean reference parameter `created` can be used
 /// to determine whether the database was created or merely loaded.
 database create_or_load_database(
-    std::string directory,
-    const semantic_version& schema_version,
-    bool &created);
+    std::string directory, const semantic_version& schema_version,
+    bool& created);
 
 /// Returns a boolean indicating whether an Engine Library already exists in a
 /// given directory.

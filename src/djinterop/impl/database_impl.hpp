@@ -47,11 +47,11 @@ public:
     virtual void remove_track(track tr) = 0;
     virtual std::vector<crate> root_crates() = 0;
     virtual boost::optional<crate> root_crate_by_name(
-            const std::string& name) = 0;
+        const std::string& name) = 0;
     virtual boost::optional<track> track_by_id(int64_t id) = 0;
     virtual std::vector<track> tracks() = 0;
     virtual std::vector<track> tracks_by_relative_path(
-            const std::string& relative_path) = 0;
+        const std::string& relative_path) = 0;
     virtual std::string uuid() = 0;
     virtual semantic_version version() = 0;
 };

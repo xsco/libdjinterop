@@ -122,7 +122,7 @@ public:
     ///
     /// If no such crate exists, then `nullopt` is returned.
     std::experimental::optional<crate> root_crate_by_name(
-            const std::string& name) const;
+        const std::string& name) const;
 
     /// Returns all root crates contained in the database
     ///

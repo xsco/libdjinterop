@@ -19,8 +19,8 @@
 
 #include <string>
 
-#include <djinterop/semantic_version.hpp>
 #include <sqlite_modern_cpp.h>
+#include <djinterop/semantic_version.hpp>
 
 namespace djinterop
 {

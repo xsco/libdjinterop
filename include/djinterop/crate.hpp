@@ -131,7 +131,7 @@ public:
     ///
     /// If no such crate is found, then `nullopt` is returned.
     std::experimental::optional<crate> sub_crate_by_name(
-            const std::string& name) const;
+        const std::string& name) const;
 
     /// Returns the crate's contained tracks
     std::vector<track> tracks() const;
