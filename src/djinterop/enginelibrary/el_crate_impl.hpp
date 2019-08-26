@@ -32,9 +32,11 @@ class el_crate_impl : public djinterop::crate_impl
 public:
     el_crate_impl(std::shared_ptr<el_storage> storage, int64_t id);
 
+    void add_track(int64_t track_id) override;
     void add_track(track tr) override;
     std::vector<crate> children() override;
     void clear_tracks() override;
+    crate create_sub_crate(std::string name) override;
     database db() override;
     std::vector<crate> descendants() override;
     bool is_valid() override;
@@ -43,6 +45,7 @@ public:
     void remove_track(track tr) override;
     void set_name(std::string name) override;
     void set_parent(boost::optional<crate> parent) override;
+    boost::optional<crate> sub_crate_by_name(const std::string& name) override;
     std::vector<track> tracks() override;
 
 private:

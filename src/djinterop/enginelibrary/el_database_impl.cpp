@@ -32,6 +32,25 @@ namespace enginelibrary
 using djinterop::crate;
 using djinterop::track;
 
+namespace
+{
+void ensure_valid_crate_name(const std::string& name)
+{
+    if (name == "")
+    {
+        throw djinterop::crate_invalid_name{
+            "Crate names must be non-empty", name};
+    }
+    else if (name.find_first_of(';') != std::string::npos)
+    {
+        throw djinterop::crate_invalid_name{
+            "Crate names must not contain semicolons", name};
+    }
+}
+
+}  // namespace
+
+
 el_database_impl::el_database_impl(std::string directory)
     : storage_{std::make_shared<el_storage>(std::move(directory))}
 {
@@ -90,8 +109,9 @@ std::vector<crate> el_database_impl::crates_by_name(const std::string& name)
     return results;
 }
 
-crate el_database_impl::create_crate(std::string name)
+crate el_database_impl::create_root_crate(std::string name)
 {
+    ensure_valid_crate_name(name);
     el_transaction_guard_impl trans{storage_};
 
     storage_->db << "INSERT INTO Crate (title, path) VALUES (?, ?)"
@@ -236,6 +256,21 @@ std::vector<crate> el_database_impl::root_crates()
                 crate{std::make_shared<el_crate_impl>(storage_, id)});
         };
     return results;
+}
+
+boost::optional<crate> el_database_impl::root_crate_by_name(const std::string& name)
+{
+    boost::optional<crate> cr;
+    storage_->db << "SELECT cr.id FROM Crate cr "
+                    "JOIN CrateParentList cpl ON (cpl.crateOriginId = cr.id) "
+                    "WHERE cr.title = ? "
+                    "AND cpl.crateOriginId = cpl.crateParentId "
+                    "ORDER BY cr.id"
+                 << name.data() >>
+        [&](int64_t id) {
+            cr = crate{std::make_shared<el_crate_impl>(storage_, id)};
+        };
+    return cr;
 }
 
 boost::optional<track> el_database_impl::track_by_id(int64_t id)

@@ -431,7 +431,7 @@ void el_track_impl::set_hot_cue_at(int32_t index, boost::optional<hot_cue> cue)
     auto quick_cues_d = get_quick_cues_data();
     quick_cues_d.hot_cues[index] = std::move(cue);
     set_quick_cues_data(std::move(quick_cues_d));
-    storage_->db << "END";
+    trans.commit();
 }
 
 std::array<boost::optional<hot_cue>, 8> el_track_impl::hot_cues()
@@ -448,7 +448,7 @@ void el_track_impl::set_hot_cues(std::array<boost::optional<hot_cue>, 8> cues)
     auto quick_cues_d = get_quick_cues_data();
     quick_cues_d.hot_cues = std::move(cues);
     set_quick_cues_data(std::move(quick_cues_d));
-    storage_->db << "END";
+    trans.commit();
 }
 
 boost::optional<track_import_info> el_track_impl::import_info()
@@ -609,7 +609,7 @@ void el_track_impl::set_loop_at(int32_t index, boost::optional<loop> l)
     auto loops_d = get_loops_data();
     loops_d.loops[index] = std::move(l);
     set_loops_data(std::move(loops_d));
-    storage_->db << "END";
+    trans.commit();
 }
 
 std::array<boost::optional<loop>, 8> el_track_impl::loops()
@@ -624,7 +624,7 @@ void el_track_impl::set_loops(std::array<boost::optional<loop>, 8> cues)
     loops_data loops_d;
     loops_d.loops = std::move(cues);
     set_loops_data(std::move(loops_d));
-    storage_->db << "END";
+    trans.commit();
 }
 
 std::vector<waveform_entry> el_track_impl::overview_waveform()

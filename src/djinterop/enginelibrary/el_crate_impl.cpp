@@ -31,8 +31,30 @@ namespace enginelibrary
 using djinterop::crate;
 using djinterop::track;
 
+// Note that crates in the Engine Library format may exist either at top/root
+// level, or be sub-crates underneath another crate.  This information is
+// encoded redundantly in multiple places in the EL database schema:
+//
+// * Crate (id, title, path)
+//     The `path` field is a semicolon-delimited string of crate titles,
+//     representing the path from the root to the current crate.  Note that
+//     there is always an additional trailing semicolon in this field.  As such,
+//     semicolon is a prohibited character in crate names.
+//
+// * CrateParentList (crateOriginId, crateParentId)
+//     Every crate is specified as having precisely one immediate parent.  A
+//     top-level crate is said to have itself as parent.  The crate id is
+//     written to the `crateOriginId` field, and the parent (or itself) is
+//     written to the `crateParentId` field.
+//
+// * CrateHierarchy (crateId, crateIdChild)
+//     The denormalised/flattened inheritance hierarchy is written to this
+//     table, whereby the id of every descendant (not child) of a crate is
+//     written to the `crateIdChild` field.  Note that the reflexive
+//     relationship is not written to this table.
 namespace
 {
+
 void update_path(
     sqlite::database& music_db, crate cr, const std::string& parent_path)
 {
@@ -47,6 +69,20 @@ void update_path(
     }
 }
 
+void ensure_valid_name(const std::string& name)
+{
+    if (name == "")
+    {
+        throw djinterop::crate_invalid_name{
+            "Crate names must be non-empty", name};
+    }
+    else if (name.find_first_of(';') != std::string::npos)
+    {
+        throw djinterop::crate_invalid_name{
+            "Crate names must not contain semicolons", name};
+    }
+}
+
 }  // namespace
 
 el_crate_impl::el_crate_impl(std::shared_ptr<el_storage> storage, int64_t id)
@@ -54,19 +90,24 @@ el_crate_impl::el_crate_impl(std::shared_ptr<el_storage> storage, int64_t id)
 {
 }
 
-void el_crate_impl::add_track(track tr)
+void el_crate_impl::add_track(int64_t track_id)
 {
     el_transaction_guard_impl trans{storage_};
 
     storage_->db
         << "DELETE FROM CrateTrackList WHERE crateId = ? AND trackId = ?"
-        << id() << tr.id();
+        << id() << track_id;
 
     storage_->db
         << "INSERT INTO CrateTrackList (crateId, trackId) VALUES (?, ?)" << id()
-        << tr.id();
+        << track_id;
 
     trans.commit();
+}
+
+void el_crate_impl::add_track(track tr)
+{
+    add_track(tr.id());
 }
 
 std::vector<crate> el_crate_impl::children()
@@ -84,6 +125,51 @@ std::vector<crate> el_crate_impl::children()
 void el_crate_impl::clear_tracks()
 {
     storage_->db << "DELETE FROM CrateTrackList WHERE crateId = ?" << id();
+}
+
+crate el_crate_impl::create_sub_crate(std::string name)
+{
+    ensure_valid_name(name);
+    el_transaction_guard_impl trans{storage_};
+
+    std::string path;
+    storage_->db
+            << "SELECT path FROM Crate WHERE id = ?"
+            << id() >>
+        [&](std::string path_val) {
+            if (path.empty())
+            {
+                path = std::move(path_val);
+            }
+            else
+            {
+                throw crate_database_inconsistency{
+                    "More than one crate for the same id", id()};
+            }
+        };
+
+    storage_->db << "INSERT INTO Crate (title, path) VALUES (?, ?)"
+                 << name.data() << (path + name + ";");
+
+    int64_t sub_id = storage_->db.last_insert_rowid();
+
+    storage_->db << "INSERT INTO CrateParentList (crateOriginId, "
+                    "crateParentId) VALUES (?, ?)"
+                 << sub_id << id();
+
+    storage_->db
+        << "INSERT INTO CrateHierarchy (crateId, crateIdChild) "
+           "SELECT crateId, ? FROM CrateHierarchy "
+           "WHERE crateIdChild = ? "
+           "UNION "
+           "SELECT ? AS crateId, ? AS crateIdChild"
+        << sub_id << id() << id() << sub_id;
+
+    crate cr{std::make_shared<el_crate_impl>(storage_, sub_id)};
+
+    trans.commit();
+
+    return cr;
 }
 
 database el_crate_impl::db()
@@ -176,6 +262,7 @@ void el_crate_impl::remove_track(track tr)
 
 void el_crate_impl::set_name(std::string name)
 {
+    ensure_valid_name(name);
     el_transaction_guard_impl trans{storage_};
 
     // obtain parent's `path`
@@ -234,6 +321,21 @@ void el_crate_impl::set_parent(boost::optional<crate> parent)
     }
 
     trans.commit();
+}
+
+boost::optional<crate> el_crate_impl::sub_crate_by_name(const std::string& name)
+{
+    boost::optional<crate> cr;
+    storage_->db << "SELECT cr.id FROM Crate cr "
+                    "JOIN CrateParentList cpl ON (cpl.crateOriginId = cr.id) "
+                    "WHERE cr.title = ? "
+                    "AND cpl.crateParentId = ? "
+                    "ORDER BY cr.id"
+                 << name.data() << id() >>
+        [&](int64_t id) {
+            cr = crate{std::make_shared<el_crate_impl>(storage_, id)};
+        };
+    return cr;
 }
 
 std::vector<track> el_crate_impl::tracks()

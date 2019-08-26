@@ -311,3 +311,4 @@ BOOST_AUTO_TEST_CASE(op_copy_assign__saved_track__copied_fields)
     check_track_1(copy);
     remove_temp_dir(temp_dir);
 }
+

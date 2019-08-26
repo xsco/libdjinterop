@@ -52,9 +52,9 @@ std::vector<crate> database::crates_by_name(const std::string& name) const
     return pimpl_->crates_by_name(name);
 }
 
-crate database::create_crate(std::string name) const
+crate database::create_root_crate(std::string name) const
 {
-    return pimpl_->create_crate(name);
+    return pimpl_->create_root_crate(name);
 }
 
 track database::create_track(std::string relative_path) const
@@ -90,6 +90,12 @@ void database::remove_track(track tr) const
 std::vector<crate> database::root_crates() const
 {
     return pimpl_->root_crates();
+}
+
+std::experimental::optional<crate> database::root_crate_by_name(
+        const std::string& name) const
+{
+    return from_boost_optional(pimpl_->root_crate_by_name(name));
 }
 
 std::experimental::optional<track> database::track_by_id(int64_t id) const

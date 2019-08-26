@@ -103,6 +103,26 @@ private:
     int64_t id_;
 };
 
+/// The `crate_database_inconsistency` exception is thrown when a database
+/// inconsistency is found that correlates to a crate.
+class crate_invalid_name : public std::runtime_error
+{
+public:
+    /// Construct the exception for a given crate name
+    explicit crate_invalid_name(
+        const std::string& what_arg, std::string name) noexcept
+        : runtime_error{what_arg.c_str()},
+          name_{name}
+    {
+    }
+
+    /// Get the name that was deemed invalid
+    std::string name() const noexcept { return name_; }
+
+private:
+    std::string name_;
+};
+
 /// The `track_deleted` exception is thrown when an invalid `track` object is
 /// used, i.e. one that does not exist in the database anymore.
 class track_deleted : public std::invalid_argument

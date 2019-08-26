@@ -30,6 +30,11 @@ crate::~crate() = default;
 
 crate& crate::operator=(const crate& other) noexcept = default;
 
+void crate::add_track(int64_t track_id) const
+{
+    pimpl_->add_track(track_id);
+}
+
 void crate::add_track(track tr) const
 {
     pimpl_->add_track(tr);
@@ -43,6 +48,11 @@ std::vector<crate> crate::children() const
 void crate::clear_tracks() const
 {
     pimpl_->clear_tracks();
+}
+
+crate crate::create_sub_crate(std::string name)
+{
+    return pimpl_->create_sub_crate(name);
 }
 
 database crate::db() const
@@ -88,6 +98,12 @@ void crate::set_name(std::string name) const
 void crate::set_parent(std::experimental::optional<crate> parent) const
 {
     pimpl_->set_parent(to_boost_optional(parent));
+}
+
+std::experimental::optional<crate> crate::sub_crate_by_name(
+        const std::string& name) const
+{
+    return from_boost_optional(pimpl_->sub_crate_by_name(name));
 }
 
 std::vector<track> crate::tracks() const

@@ -75,10 +75,10 @@ public:
     /// Returns all crates with the given name
     std::vector<crate> crates_by_name(const std::string& name) const;
 
-    /// Creates a new crate with the given name
+    /// Creates a new root crate with the given name.
     ///
     /// The created crate has no parent.
-    crate create_crate(std::string name) const;
+    crate create_root_crate(std::string name) const;
 
     /// Creates a new track associated to a given music file
     ///
@@ -117,6 +117,12 @@ public:
     ///
     /// All handles to that track become invalid.
     void remove_track(track tr) const;
+
+    /// Returns the root-level crate with the given name.
+    ///
+    /// If no such crate exists, then `nullopt` is returned.
+    std::experimental::optional<crate> root_crate_by_name(
+            const std::string& name) const;
 
     /// Returns all root crates contained in the database
     ///

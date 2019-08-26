@@ -40,15 +40,28 @@ class database;
 class crate;
 class track_impl;
 
+/// The `track_import_info` struct holds information about a track in a
+/// different, external Engine Library database.  This can be associated with a
+/// track if it was imported into the current database from another one.
 class track_import_info
 {
 public:
     track_import_info() noexcept;
     track_import_info(
         std::string external_db_uuid, int64_t externl_track_id) noexcept;
+
+    /// Gets the UUID of the external Engine Library database.
     std::string& external_db_uuid();
+
+    /// Gets a reference to a field holding the UUID of the external Engine
+    /// Library database.
     const std::string& external_db_uuid() const;
+
+    /// Gets the id of the track in the external Engine Library database.
     int64_t& external_track_id();
+
+    /// Gets a reference to a field holding the id of the track in the external
+    /// Engine Library database.
     const int64_t& external_track_id() const;
 
 private:

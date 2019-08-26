@@ -37,7 +37,7 @@ public:
     std::vector<djinterop::crate> crates() override;
     std::vector<djinterop::crate> crates_by_name(
         const std::string& name) override;
-    djinterop::crate create_crate(std::string name) override;
+    djinterop::crate create_root_crate(std::string name) override;
     track create_track(std::string relative_path) override;
     std::string directory() override;
     bool is_supported() override;
@@ -45,6 +45,8 @@ public:
     void remove_crate(djinterop::crate cr) override;
     void remove_track(djinterop::track tr) override;
     std::vector<djinterop::crate> root_crates() override;
+    boost::optional<djinterop::crate> root_crate_by_name(
+            const std::string& name) override;
     boost::optional<djinterop::track> track_by_id(int64_t id) override;
     std::vector<djinterop::track> tracks() override;
     std::vector<djinterop::track> tracks_by_relative_path(

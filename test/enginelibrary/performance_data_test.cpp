@@ -61,6 +61,25 @@ static void remove_temp_dir(const fs::path& temp_dir)
 
 static void populate_track_1(djinterop::track& t)
 {
+    // Usual meta-data (not under test but for completeness).
+    t.set_track_number(1);
+    t.set_bpm(123);
+    t.set_year(2017);
+    t.set_title("Mad (Original Mix)");
+    t.set_artist("Dennis Cruz");
+    t.set_album("Mad EP");
+    t.set_genre("Tech House");
+    t.set_comment("Purchased at Beatport.com");
+    t.set_publisher("Stereo Productions");
+    t.set_composer(std::experimental::nullopt);
+    t.set_key(djinterop::musical_key::a_minor);
+    t.set_relative_path("../01 - Dennis Cruz - Mad (Original Mix).mp3");
+    t.set_last_modified_at(c::system_clock::time_point{c::seconds{1509371790}});
+    t.set_bitrate(320);
+    t.set_last_played_at(std::experimental::nullopt);
+    t.set_last_accessed_at(c::system_clock::time_point{c::seconds{1509321600}});
+    t.set_import_info(std::experimental::nullopt);
+
     // Track data fields
     t.set_sampling(djinterop::sampling_info{44100, 17452800});
     t.set_key(djinterop::musical_key::a_minor);
@@ -199,6 +218,26 @@ static void check_track_1(const djinterop::track& t)
 
 static void populate_track_2(djinterop::track& t)
 {
+    // Usual meta-data (not under test but for completeness).
+    t.set_track_number(3);
+    t.set_bpm(128);
+    t.set_year(2018);
+    t.set_title("Made-up Track (Foo Bar Remix)");
+    t.set_artist("Not A Real Artist");
+    t.set_album("Fake Album");
+    t.set_genre("Progressive House");
+    t.set_comment("Comment goes here");
+    t.set_publisher("Here is the publisher text");
+    t.set_composer("And the composer text");
+    t.set_key(djinterop::musical_key::c_major);
+    t.set_relative_path(
+        "../03 - Not A Real Artist - Made-up Track (Foo Bar Remix).flac");
+    t.set_last_modified_at(c::system_clock::time_point{c::seconds{1517413933}});
+    t.set_bitrate(1411);
+    t.set_last_played_at(c::system_clock::time_point{c::seconds{1518739200}});
+    t.set_last_accessed_at(c::system_clock::time_point{c::seconds{1518815683}});
+    t.set_import_info({"e535b170-26ef-4f30-8cb2-5b9fa4c2a27f", 123});
+    
     // Track data fields
     t.set_sampling(djinterop::sampling_info{48000, 10795393});
     t.set_key(djinterop::musical_key::b_minor);
@@ -336,3 +375,20 @@ BOOST_AUTO_TEST_CASE(save__existing_track__saves)
     check_track_2(t_reloaded);
     remove_temp_dir(temp_dir);
 }
+
+BOOST_AUTO_TEST_CASE(set_hot_cue_at__empty_track_valid_entries__succeeds)
+{
+    // Arrange
+    auto temp_dir = create_temp_dir();
+    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
+    auto t = db.create_track("");
+
+    // Act
+    djinterop::hot_cue hc{"My Cue", 12345.6789, el::standard_pad_colors::pad_3};
+    t.set_hot_cue_at(1, hc);
+
+    // Assert
+    auto hot_cues = t.hot_cues();
+    BOOST_CHECK(hot_cues[1]);
+}
+

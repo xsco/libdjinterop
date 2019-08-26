@@ -28,6 +28,7 @@
 #include <djinterop/crate.hpp>
 #include <djinterop/database.hpp>
 #include <djinterop/enginelibrary.hpp>
+#include <djinterop/exceptions.hpp>
 #include <djinterop/track.hpp>
 
 #define STRINGIFY(x) STRINGIFY_(x)
@@ -63,20 +64,6 @@ static void copy_test_db_to_temp_dir(const fs::path &temp_dir)
     fs::path perfdata_db_path{el::perfdata_db_path(db)};
     fs::copy_file(music_db_path, temp_dir / music_db_path.filename());
     fs::copy_file(perfdata_db_path, temp_dir / perfdata_db_path.filename());
-}
-
-static void populate_crate_1(djinterop::crate &c)
-{
-    c.set_name("Foo Crate");
-    c.set_parent({});
-    c.clear_tracks();
-}
-
-static void populate_crate_2(djinterop::crate &c)
-{
-    c.set_name("Bar Crate");
-    c.set_parent({});
-    c.clear_tracks();
 }
 
 static void check_crate_2(djinterop::crate c)
@@ -168,13 +155,12 @@ BOOST_AUTO_TEST_CASE(ctor__nonexistent_crate__none)
     BOOST_CHECK(!db.crate_by_id(123));
 }
 
-BOOST_AUTO_TEST_CASE(save__new_crate_good_values__saves)
+BOOST_AUTO_TEST_CASE(create_root_crate__good_values__succeeds)
 {
     // Arrange/Act
     auto temp_dir = create_temp_dir();
     auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
-    auto c = db.create_crate("");
-    populate_crate_2(c);
+    auto c = db.create_root_crate("Bar Crate");
 
     // Assert
     BOOST_CHECK_NE(c.id(), 0);
@@ -184,13 +170,12 @@ BOOST_AUTO_TEST_CASE(save__new_crate_good_values__saves)
     remove_temp_dir(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE(ctor_copy__saved_track__zero_id_and_copied_fields)
+BOOST_AUTO_TEST_CASE(ctor_copy__saved_track__copied_fields)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
     auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
-    auto c = db.create_crate("");
-    populate_crate_2(c);
+    auto c = db.create_root_crate("Bar Crate");
 
     // Act
     djinterop::crate copy{c};
@@ -202,15 +187,16 @@ BOOST_AUTO_TEST_CASE(ctor_copy__saved_track__zero_id_and_copied_fields)
     remove_temp_dir(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE(save__existing_track_good_values__saves)
+BOOST_AUTO_TEST_CASE(set_name__existing_track_good_values__saves)
 {
-    // Arrange/Act
+    // Arrange
     auto temp_dir = create_temp_dir();
     auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
-    auto c = db.create_crate("");
-    populate_crate_1(c);
+    auto c = db.create_root_crate("Foo Crate");
     auto crate_id = c.id();
-    populate_crate_2(c);
+
+    // Act
+    c.set_name("Bar Crate");
 
     // Assert
     BOOST_CHECK_EQUAL(c.id(), crate_id);
@@ -220,21 +206,18 @@ BOOST_AUTO_TEST_CASE(save__existing_track_good_values__saves)
     remove_temp_dir(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE(save__change_hierarchy__saves)
+BOOST_AUTO_TEST_CASE(set_parent__change_hierarchy__saves)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
     auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
     // Arrange a hierarchy of c1 (root) -> c2 -> c3
-    auto c1 = db.create_crate("");
-    auto c2 = db.create_crate("");
-    auto c3 = db.create_crate("");
+    auto c1 = db.create_root_crate("Grandfather");
+    auto c2 = db.create_root_crate("Father");
+    auto c3 = db.create_root_crate("Son");
 
     // Act
-    c1.set_name("Grandfather");
-    c2.set_name("Father");
     c2.set_parent(c1);
-    c3.set_name("Son");
     c3.set_parent(c2);
     // Change c2's parent
     c2.set_parent({});
@@ -247,7 +230,7 @@ BOOST_AUTO_TEST_CASE(save__change_hierarchy__saves)
     remove_temp_dir(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE(save__add_tracks__saves)
+BOOST_AUTO_TEST_CASE(add_track__valid_track__saves)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
@@ -266,13 +249,12 @@ BOOST_AUTO_TEST_CASE(save__add_tracks__saves)
     remove_temp_dir(temp_dir);
 }
 
-BOOST_AUTO_TEST_CASE(op_copy_assign__saved_track__zero_id_and_copied_fields)
+BOOST_AUTO_TEST_CASE(op_copy_assign__saved_track__copied_fields)
 {
     // Arrange
     auto temp_dir = create_temp_dir();
     auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
-    auto c = db.create_crate("");
-    populate_crate_2(c);
+    auto c = db.create_root_crate("Bar Crate");
 
     // Act
     auto copy = c;
@@ -307,3 +289,38 @@ BOOST_AUTO_TEST_CASE(crate_by_name__invalid_crate__not_found)
     // Assert
     BOOST_CHECK(crates.empty());
 }
+
+BOOST_AUTO_TEST_CASE(set_name__invalid_name__throws)
+{
+    // Arrange
+    auto temp_dir = create_temp_dir();
+    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
+    auto c = db.create_root_crate("Root");
+
+    // Act/Assert
+    BOOST_CHECK_THROW(
+        c.set_name(""), djinterop::crate_invalid_name);
+    BOOST_CHECK_THROW(
+        c.set_name("Contains ; semicolon"), djinterop::crate_invalid_name);
+}
+
+BOOST_AUTO_TEST_CASE(create_sub_crate__valid_name__succeeds)
+{
+    // Arrange
+    auto temp_dir = create_temp_dir();
+    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
+    auto c = db.create_root_crate("Root");
+
+    // Act
+    auto sc = c.create_sub_crate("Sub-Crate");
+
+    // Assert
+    auto parent = sc.parent();
+    BOOST_CHECK(parent.has_value());
+    BOOST_CHECK_EQUAL(parent.value().id(), c.id());
+    auto children = c.children();
+    BOOST_CHECK_EQUAL(children.size(), 1);
+    auto child = children[0];
+    BOOST_CHECK_EQUAL(child.id(), sc.id());
+}
+

@@ -59,10 +59,21 @@ public:
     /// Copy assignment operator
     crate& operator=(const crate& other) noexcept;
 
-    /// Adds a track to the crate
+    /// Adds a track to the crate.
+    void add_track(int64_t track_id) const;
+
+    /// Adds a track to the crate.
     ///
     /// A track can be contained in arbitrarily many (including zero) crates.
     void add_track(track tr) const;
+
+    /// Add a range of tracks to the crate.
+    template <typename InputIterator>
+    void add_tracks(InputIterator first, InputIterator last)
+    {
+        for (auto iter = first; iter != last; ++iter)
+            add_track(*iter);
+    }
 
     /// Returns the (direct) children of this crate
     std::vector<crate> children() const;
@@ -72,6 +83,9 @@ public:
     /// Note that the tracks stay in the database even if they're contained in
     /// zero crates.
     void clear_tracks() const;
+
+    /// Creates a new, empty crate as a child of this one, and returns it.
+    crate create_sub_crate(std::string name);
 
     /// Returns the database containing the crate
     database db() const;
@@ -95,7 +109,7 @@ public:
 
     /// Returns the parent crate, if this crate has one
     ///
-    /// If the crate doesn't have a parent, then `nullopt_t` is returned.
+    /// If the crate doesn't have a parent, then `nullopt` is returned.
     std::experimental::optional<crate> parent() const;
 
     /// Removes a track from the crate
@@ -109,9 +123,15 @@ public:
 
     /// Sets this crate's parent
     ///
-    /// If `nullopt_t` is given, then this crate will have no parent.  That is,
+    /// If `nullopt` is given, then this crate will have no parent.  That is,
     /// it becomes a root crate.
     void set_parent(std::experimental::optional<crate> parent) const;
+
+    /// Gets the sub-crate of this one with a given name.
+    ///
+    /// If no such crate is found, then `nullopt` is returned.
+    std::experimental::optional<crate> sub_crate_by_name(
+            const std::string& name) const;
 
     /// Returns the crate's contained tracks
     std::vector<track> tracks() const;
