@@ -53,6 +53,8 @@ constexpr const std::array<pad_color, 8> pads{pad_1, pad_2, pad_3, pad_4,
 
 }  // namespace standard_pad_colors
 
+constexpr const char* default_database_dir_name = "Engine Library";
+
 /// Creates a new, empty database in a directory using the schema version
 /// provided.
 ///
