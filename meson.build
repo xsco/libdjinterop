@@ -3,7 +3,7 @@ project(
     'cpp', 'c',
     version: '0.8.7',
     license: 'LGPL-3.0',
-    default_options: ['cpp_std=c++14', 'c_std=c11'])
+    default_options: ['cpp_std=c++17', 'c_std=c11'])
 
 add_global_arguments('-D_MODERN_SQLITE_BOOST_OPTIONAL_SUPPORT', language: 'cpp')
 

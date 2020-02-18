@@ -18,7 +18,7 @@
 #pragma once
 
 #include <boost/optional.hpp>
-#include <djinterop/optional/optional.hpp>
+#include <djinterop/optional.hpp>
 
 namespace djinterop
 {
@@ -26,14 +26,13 @@ std::string get_filename(const std::string& file_path);
 boost::optional<std::string> get_file_extension(const std::string& file_path);
 
 template <typename T>
-std::experimental::optional<T> from_boost_optional(boost::optional<T> opt)
+stdx::optional<T> from_boost_optional(boost::optional<T> opt)
 {
-    return opt ? std::experimental::optional<T>{*opt}
-               : std::experimental::nullopt;
+    return opt ? stdx::optional<T>{*opt} : stdx::nullopt;
 }
 
 template <typename T>
-boost::optional<T> to_boost_optional(std::experimental::optional<T> opt)
+boost::optional<T> to_boost_optional(stdx::optional<T> opt)
 {
     return opt ? boost::optional<T>{*opt} : boost::none;
 }
