@@ -132,35 +132,6 @@ std::pair<std::vector<beatgrid_marker>, const char*> decode_beatgrid(
     return {std::move(result), ptr};
 }
 
-char* encode_opt_sampling_info(
-    boost::optional<sampling_info> sampling, char* ptr)
-{
-    if (sampling)
-    {
-        ptr = encode_double_be(sampling->sample_rate, ptr);
-        ptr = encode_int64_be(sampling->sample_count, ptr);
-    }
-    else
-    {
-        ptr = encode_double_be(0, ptr);  // TODO (haslersn): is 0 ok?
-        ptr = encode_int64_be(0, ptr);
-    }
-    return ptr;
-}
-
-std::pair<boost::optional<sampling_info>, const char*> decode_opt_sampling_info(
-    const char* ptr)
-{
-    sampling_info sampling;
-    std::tie(sampling.sample_rate, ptr) = decode_double_be(ptr);
-    std::tie(sampling.sample_count, ptr) = decode_int64_be(ptr);
-    if (sampling.sample_rate == 0)
-    {
-        return {boost::none, ptr};
-    }
-    return {sampling, ptr};
-}
-
 }  // namespace
 
 // Encode beat data into a byte array
@@ -171,7 +142,16 @@ std::vector<char> beat_data::encode() const
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();
 
-    ptr = encode_opt_sampling_info(sampling, ptr);
+    if (sampling)
+    {
+        ptr = encode_double_be(sampling->sample_rate, ptr);
+        ptr = encode_double_be(sampling->sample_count, ptr);
+    }
+    else
+    {
+        ptr = encode_double_be(0, ptr);  // TODO (haslersn): is 0 ok?
+        ptr = encode_double_be(0, ptr);
+    }
     ptr = encode_uint8(1, ptr);
     ptr = encode_beatgrid(default_beatgrid, ptr);
     ptr = encode_beatgrid(adjusted_beatgrid, ptr);
@@ -200,7 +180,11 @@ beat_data beat_data::decode(const std::vector<char>& compressed_data)
 
     beat_data result;
 
-    std::tie(result.sampling, ptr) = decode_opt_sampling_info(ptr);
+    sampling_info sampling;
+    std::tie(sampling.sample_rate, ptr) = decode_double_be(ptr);
+    std::tie(sampling.sample_count, ptr) = decode_double_be(ptr);
+    result.sampling = sampling.sample_rate != 0
+        ? boost::make_optional(sampling) : boost::none;
 
     uint8_t is_beat_data_set;
     std::tie(is_beat_data_set, ptr) = decode_uint8(ptr);
@@ -705,7 +689,16 @@ std::vector<char> track_data::encode() const
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();
 
-    ptr = encode_opt_sampling_info(sampling, ptr);
+    if (sampling)
+    {
+        ptr = encode_double_be(sampling->sample_rate, ptr);
+        ptr = encode_int64_be(sampling->sample_count, ptr);
+    }
+    else
+    {
+        ptr = encode_double_be(0, ptr);  // TODO (haslersn): is 0 ok?
+        ptr = encode_int64_be(0, ptr);
+    }
     ptr = encode_double_be(average_loudness.value_or(0), ptr);
     ptr = encode_int32_be(key ? static_cast<int32_t>(*key) : 0, ptr);
 
@@ -733,7 +726,11 @@ track_data track_data::decode(const std::vector<char>& compressed_track_data)
 
     track_data result;
 
-    std::tie(result.sampling, ptr) = decode_opt_sampling_info(ptr);
+    sampling_info sampling;
+    std::tie(sampling.sample_rate, ptr) = decode_double_be(ptr);
+    std::tie(sampling.sample_count, ptr) = decode_int64_be(ptr);
+    result.sampling = sampling.sample_rate != 0
+        ? boost::make_optional(sampling) : boost::none;
 
     double raw_average_loudness;
     std::tie(raw_average_loudness, ptr) = decode_double_be(ptr);

@@ -56,6 +56,42 @@ boost::optional<int64_t> to_timestamp(
     }
     return result;
 }
+
+/// Calculate the quantisation number for waveforms, given a quantisation number.
+///
+/// A few numbers written to the waveform performance data are rounded
+/// to multiples of a particular "quantisation number", that is equal to
+/// the sample rate divided by 105, and then rounded to the nearest
+/// multiple of two.
+inline int64_t quantisation_number(int64_t sample_rate)
+{
+    return (sample_rate / 210) * 2;
+}
+
+/// Calculate the samples-per-entry in an overview waveform.
+///
+/// An overview waveform always has 1024 entries, and the number of samples
+/// that each one represents must be calculated from the true sample count by
+/// rounding the number of samples to the quantisation number first.
+inline int64_t calculate_overview_waveform_samples_per_entry(
+        int64_t sample_rate, int64_t sample_count)
+{
+    auto qn = quantisation_number(sample_rate);
+    return ((sample_count / qn) * qn) / 1024;
+}
+
+/// Calculate the recommended number of entries in the high-resolution waveform.
+///
+/// The recommended number of entries in any high-resolution end-point is
+/// expected to be the ceiling division of number of samples by quantisation
+/// number.
+inline int64_t calculate_high_resolution_waveform_num_entries(
+        int64_t sample_rate, int64_t sample_count)
+{
+    auto qn = quantisation_number(sample_rate);
+    return sample_count / qn + (sample_count % qn != 0);
+}
+
 }  // namespace
 
 el_track_impl::el_track_impl(std::shared_ptr<el_storage> storage, int64_t id)
@@ -660,7 +696,9 @@ int64_t el_track_impl::recommended_waveform_size()
         throw track_database_inconsistency{"Track has non-positive sample rate",
                                            id()};
     }
-    return static_cast<int64_t>(smp->sample_count * 105 / smp->sample_rate);
+
+    return calculate_high_resolution_waveform_num_entries(
+            smp->sample_rate, smp->sample_count);
 }
 
 std::string el_track_impl::relative_path()
@@ -722,6 +760,7 @@ void el_track_impl::set_sampling(boost::optional<sampling_info> sampling)
     set_beat_data(std::move(beat_d));
     set_track_data(std::move(track_d));
 
+    int64_t sample_rate = sampling ? sampling->sample_rate : 0;
     int64_t sample_count = sampling ? sampling->sample_count : 0;
 
     if (!high_res_waveform_d.waveform.empty())
@@ -734,7 +773,8 @@ void el_track_impl::set_sampling(boost::optional<sampling_info> sampling)
     if (!overview_waveform_d.waveform.empty())
     {
         overview_waveform_d.samples_per_entry =
-            sample_count / overview_waveform_d.waveform.size();
+            calculate_overview_waveform_samples_per_entry(
+                    sample_rate, sample_count);
         set_overview_waveform_data(std::move(overview_waveform_d));
     }
 
@@ -778,13 +818,22 @@ void el_track_impl::set_waveform(std::vector<waveform_entry> waveform)
     {
         auto smp = sampling();
         int64_t sample_count = smp ? smp->sample_count : 0;
-        overview_waveform_d.samples_per_entry = sample_count / 1024;
+        int64_t sample_rate = smp ? smp->sample_rate : 0;
+
+        // Calculate an overview waveform automatically.
+        // Note that the overview waveform always has 1024 entries in it.
+        overview_waveform_d.samples_per_entry =
+                calculate_overview_waveform_samples_per_entry(
+                        sample_rate, sample_count);
         overview_waveform_d.waveform.reserve(1024);
         for (int32_t i = 0; i < 1024; ++i)
         {
             auto entry = waveform[waveform.size() * (2 * i + 1) / 2048];
             overview_waveform_d.waveform.push_back(entry);
         }
+
+        // TODO (mr-smidge) resize waveform to be compatible with quantisation
+        // number, padding out with zeroes at end as necessary.
         high_res_waveform_d.samples_per_entry = sample_count / waveform.size();
         high_res_waveform_d.waveform = std::move(waveform);
     }

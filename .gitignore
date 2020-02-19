@@ -4,8 +4,9 @@
 # Sub-projects
 /subprojects/
 
-# Helper for bear (b-ear)
+# Compilation database
 compile_commands.json
+.clangd/
 
 # direnv configuration file
 .envrc

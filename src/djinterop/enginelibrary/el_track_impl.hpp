@@ -160,7 +160,7 @@ public:
                    "overviewWaveFormData, beatData, quickCues, loops, "
                    "hasSeratoValues) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 << id()                               //
-                << 0.0                                // isAnalyzed
+                << 1.0                                // isAnalyzed
                 << 0.0                                // isRendered
                 << track_data{}.encode()              //
                 << high_res_waveform_data{}.encode()  //
@@ -181,7 +181,7 @@ public:
         }
 
         storage_->db << (std::string{"UPDATE PerformanceData SET "} +
-                         column_name + " = ? WHERE id = ?")
+                         column_name + " = ?, isAnalyzed = 1 WHERE id = ?")
                      << content.encode() << id();
     }
 
@@ -193,6 +193,7 @@ public:
     void set_loops_data(loops_data data);
     overview_waveform_data get_overview_waveform_data();
     void set_overview_waveform_data(overview_waveform_data data);
+
     quick_cues_data get_quick_cues_data();
     void set_quick_cues_data(quick_cues_data data);
     track_data get_track_data();

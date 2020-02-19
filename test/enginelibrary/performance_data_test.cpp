@@ -213,7 +213,7 @@ static void check_track_1(const djinterop::track& t)
     BOOST_CHECK_EQUAL(t.overview_waveform().size(), 1024);
 
     // High-res waveform data
-    BOOST_CHECK_EQUAL(t.waveform().size(), 41554);
+    BOOST_CHECK_EQUAL(t.waveform().size(), 41555);
 }
 
 static void populate_track_2(djinterop::track& t)
@@ -340,7 +340,7 @@ static void check_track_2(const djinterop::track& t)
     BOOST_CHECK_EQUAL(t.overview_waveform().size(), 1024);
 
     // High-res waveform data
-    BOOST_CHECK_EQUAL(t.waveform().size(), 23614);
+    BOOST_CHECK_EQUAL(t.waveform().size(), 23675);
 }
 
 BOOST_AUTO_TEST_CASE(save__new_track_good_values__saves)
