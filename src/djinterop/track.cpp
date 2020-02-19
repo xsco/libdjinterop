@@ -465,9 +465,9 @@ void track::set_publisher(std::string publisher) const
     set_publisher(stdx::make_optional(publisher));
 }
 
-int64_t track::recommended_waveform_size() const
+int64_t track::required_waveform_samples_per_entry() const
 {
-    return pimpl_->recommended_waveform_size();
+    return pimpl_->required_waveform_samples_per_entry();
 }
 
 std::string track::relative_path() const

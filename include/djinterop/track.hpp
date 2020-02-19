@@ -281,7 +281,14 @@ public:
     void set_publisher(stdx::optional<std::string> publisher) const;
     void set_publisher(std::string publisher) const;
 
-    int64_t recommended_waveform_size() const;
+    /// Get the required number of samples per waveform entry.
+    ///
+    /// The waveform for a track is provided merely as a set of waveform points,
+    /// and so the scale of it is only meaningful when a relationship between
+    /// the waveform and the samples it represents is known.  This method
+    /// provides the required number of samples per waveform entry that should
+    /// be understood when constructing or reading waveforms.
+    int64_t required_waveform_samples_per_entry() const;
 
     /// Get the path to this track's file on disk, relative to the music
     /// database.

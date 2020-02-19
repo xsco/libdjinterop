@@ -80,18 +80,6 @@ inline int64_t calculate_overview_waveform_samples_per_entry(
     return ((sample_count / qn) * qn) / 1024;
 }
 
-/// Calculate the recommended number of entries in the high-resolution waveform.
-///
-/// The recommended number of entries in any high-resolution end-point is
-/// expected to be the ceiling division of number of samples by quantisation
-/// number.
-inline int64_t calculate_high_resolution_waveform_num_entries(
-        int64_t sample_rate, int64_t sample_count)
-{
-    auto qn = quantisation_number(sample_rate);
-    return sample_count / qn + (sample_count % qn != 0);
-}
-
 }  // namespace
 
 el_track_impl::el_track_impl(std::shared_ptr<el_storage> storage, int64_t id)
@@ -679,17 +667,12 @@ void el_track_impl::set_publisher(boost::optional<std::string> publisher)
     set_metadata_str(metadata_str_type::publisher, publisher);
 }
 
-int64_t el_track_impl::recommended_waveform_size()
+int64_t el_track_impl::required_waveform_samples_per_entry()
 {
     auto smp = sampling();
     if (!smp)
     {
         return 0;
-    }
-    if (smp->sample_count <= 0)
-    {
-        throw track_database_inconsistency{
-            "Track has non-positive sample count", id()};
     }
     if (smp->sample_rate <= 0)
     {
@@ -697,8 +680,9 @@ int64_t el_track_impl::recommended_waveform_size()
                                            id()};
     }
 
-    return calculate_high_resolution_waveform_num_entries(
-            smp->sample_rate, smp->sample_count);
+    // In high-resolution waveforms, the samples-per-entry is the same as
+    // the quantisation number.
+    return quantisation_number(smp->sample_rate);
 }
 
 std::string el_track_impl::relative_path()
@@ -765,13 +749,18 @@ void el_track_impl::set_sampling(boost::optional<sampling_info> sampling)
 
     if (!high_res_waveform_d.waveform.empty())
     {
-        high_res_waveform_d.samples_per_entry =
-            sample_count / high_res_waveform_d.waveform.size();
+        // The high-resolution waveform has a required number of samples per
+        // entry that is dependent on the sample rate.  If the sample rate is
+        // genuinely changed using this method, note that the waveform is likely
+        // to need to be updated as well afterwards.
+        high_res_waveform_d.samples_per_entry = quantisation_number(sample_rate);
         set_high_res_waveform_data(std::move(high_res_waveform_d));
     }
 
     if (!overview_waveform_d.waveform.empty())
     {
+        // The overview waveform has a varying number of samples per entry, as
+        // the number of entries is always fixed.
         overview_waveform_d.samples_per_entry =
             calculate_overview_waveform_samples_per_entry(
                     sample_rate, sample_count);
@@ -832,9 +821,9 @@ void el_track_impl::set_waveform(std::vector<waveform_entry> waveform)
             overview_waveform_d.waveform.push_back(entry);
         }
 
-        // TODO (mr-smidge) resize waveform to be compatible with quantisation
-        // number, padding out with zeroes at end as necessary.
-        high_res_waveform_d.samples_per_entry = sample_count / waveform.size();
+        // Make the assumption that the client has respected the required number
+        // of samples per entry when constructing the waveform.
+        high_res_waveform_d.samples_per_entry = quantisation_number(sample_rate);
         high_res_waveform_d.waveform = std::move(waveform);
     }
 

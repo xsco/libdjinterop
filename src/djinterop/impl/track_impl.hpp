@@ -106,7 +106,7 @@ public:
     virtual std::vector<waveform_entry> overview_waveform() = 0;
     virtual boost::optional<std::string> publisher() = 0;
     virtual void set_publisher(boost::optional<std::string> publisher) = 0;
-    virtual int64_t recommended_waveform_size() = 0;
+    virtual int64_t required_waveform_samples_per_entry() = 0;
     virtual std::string relative_path() = 0;
     virtual void set_relative_path(std::string relative_path) = 0;
     virtual boost::optional<sampling_info> sampling() = 0;
