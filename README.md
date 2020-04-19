@@ -51,8 +51,8 @@ int main(int argc, char **argv)
     tr.set_track_number(1);
     tr.set_bpm(120);
     tr.set_year(1970);
-    tr.set_title("Some Song");
-    tr.set_artist("Some Artist");
+    tr.set_title("Some Song"s);
+    tr.set_artist("Some Artist"s);
     tr.set_publisher(std::nullopt);  // std::nullopt indicates missing metadata
     tr.set_key(djinterop::musical_key::a_minor);
     tr.set_bitrate(320);

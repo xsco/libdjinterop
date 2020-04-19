@@ -15,12 +15,12 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE performance_data_test
 
 #include <chrono>
 #include <cstdio>
 #include <iostream>
+#include <string>
 
 #include <boost/filesystem.hpp>
 #include <boost/test/floating_point_comparison.hpp>
@@ -38,6 +38,8 @@
 namespace el = djinterop::enginelibrary;
 namespace fs = boost::filesystem;
 namespace c = std::chrono;
+
+using namespace std::string_literals;
 
 const std::string sample_path{STRINGIFY(TESTDATA_DIR) "/el3"};
 
@@ -65,12 +67,12 @@ static void populate_track_1(djinterop::track& t)
     t.set_track_number(1);
     t.set_bpm(123);
     t.set_year(2017);
-    t.set_title("Mad (Original Mix)");
-    t.set_artist("Dennis Cruz");
-    t.set_album("Mad EP");
-    t.set_genre("Tech House");
-    t.set_comment("Purchased at Beatport.com");
-    t.set_publisher("Stereo Productions");
+    t.set_title("Mad (Original Mix)"s);
+    t.set_artist("Dennis Cruz"s);
+    t.set_album("Mad EP"s);
+    t.set_genre("Tech House"s);
+    t.set_comment("Purchased at Beatport.com"s);
+    t.set_publisher("Stereo Productions"s);
     t.set_composer(djinterop::stdx::nullopt);
     t.set_key(djinterop::musical_key::a_minor);
     t.set_relative_path("../01 - Dennis Cruz - Mad (Original Mix).mp3");
@@ -223,13 +225,13 @@ static void populate_track_2(djinterop::track& t)
     t.set_track_number(3);
     t.set_bpm(128);
     t.set_year(2018);
-    t.set_title("Made-up Track (Foo Bar Remix)");
-    t.set_artist("Not A Real Artist");
-    t.set_album("Fake Album");
-    t.set_genre("Progressive House");
-    t.set_comment("Comment goes here");
-    t.set_publisher("Here is the publisher text");
-    t.set_composer("And the composer text");
+    t.set_title("Made-up Track (Foo Bar Remix)"s);
+    t.set_artist("Not A Real Artist"s);
+    t.set_album("Fake Album"s);
+    t.set_genre("Progressive House"s);
+    t.set_comment("Comment goes here"s);
+    t.set_publisher("Here is the publisher text"s);
+    t.set_composer("And the composer text"s);
     t.set_key(djinterop::musical_key::c_major);
     t.set_relative_path(
         "../03 - Not A Real Artist - Made-up Track (Foo Bar Remix).flac");
