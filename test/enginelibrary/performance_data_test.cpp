@@ -73,14 +73,14 @@ static void populate_track_1(djinterop::track& t)
     t.set_genre("Tech House"s);
     t.set_comment("Purchased at Beatport.com"s);
     t.set_publisher("Stereo Productions"s);
-    t.set_composer(djinterop::stdx::nullopt);
+    t.set_composer(std::nullopt);
     t.set_key(djinterop::musical_key::a_minor);
     t.set_relative_path("../01 - Dennis Cruz - Mad (Original Mix).mp3");
     t.set_last_modified_at(c::system_clock::time_point{c::seconds{1509371790}});
     t.set_bitrate(320);
-    t.set_last_played_at(djinterop::stdx::nullopt);
+    t.set_last_played_at(std::nullopt);
     t.set_last_accessed_at(c::system_clock::time_point{c::seconds{1509321600}});
-    t.set_import_info(djinterop::stdx::nullopt);
+    t.set_import_info(std::nullopt);
 
     // Track data fields
     t.set_sampling(djinterop::sampling_info{44100, 17452800});
@@ -101,7 +101,7 @@ static void populate_track_1(djinterop::track& t)
     t.set_default_main_cue(1144.012);
 
     // Loop fields
-    std::array<djinterop::stdx::optional<djinterop::loop>, 8> loops;
+    std::array<std::optional<djinterop::loop>, 8> loops;
     loops[0] = djinterop::loop{"Loop 1", 1144.012, 345339.134,
                                el::standard_pad_colors::pad_1};
     loops[1] = djinterop::loop{"Loop 2", 2582607.427, 2754704.988,
@@ -251,7 +251,7 @@ static void populate_track_2(djinterop::track& t)
     t.set_adjusted_beatgrid({{-4, -107595.55}, {402, 10820254.92}});
 
     // Quick cue fields
-    std::array<djinterop::stdx::optional<djinterop::hot_cue>, 8> cues;
+    std::array<std::optional<djinterop::hot_cue>, 8> cues;
     cues[1] =
         djinterop::hot_cue{"Cue 2", 1234567.89, el::standard_pad_colors::pad_2};
     t.set_hot_cues(std::move(cues));

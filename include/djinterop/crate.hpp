@@ -17,15 +17,15 @@ Lesser General Public License for more details.
 #ifndef DJINTEROP_CRATE_HPP
 #define DJINTEROP_CRATE_HPP
 
-#if __cplusplus < 201103L && _MSVC_LANG < 201103L
-#error This library needs at least a C++11 compliant compiler
+#if __cplusplus < 201703L
+#error This library needs at least a C++17 compliant compiler
 #endif
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
-#include <djinterop/optional.hpp>
 
 namespace djinterop
 {
@@ -109,7 +109,7 @@ public:
     ///
     /// If the crate doesn't have a parent, then `djinterop::nullopt` is
     /// returned.
-    stdx::optional<crate> parent() const;
+    std::optional<crate> parent() const;
 
     /// Removes a track from the crate
     ///
@@ -124,12 +124,12 @@ public:
     ///
     /// If `djinterop::nullopt` is given, then this crate will have no parent.
     /// That is, it becomes a root crate.
-    void set_parent(stdx::optional<crate> parent) const;
+    void set_parent(std::optional<crate> parent) const;
 
     /// Gets the sub-crate of this one with a given name.
     ///
     /// If no such crate is found, then `djinterop::nullopt` is returned.
-    stdx::optional<crate> sub_crate_by_name(const std::string& name) const;
+    std::optional<crate> sub_crate_by_name(const std::string& name) const;
 
     /// Returns the crate's contained tracks
     std::vector<track> tracks() const;

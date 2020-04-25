@@ -80,7 +80,7 @@ std::string crate::name() const
     return pimpl_->name();
 }
 
-stdx::optional<crate> crate::parent() const
+std::optional<crate> crate::parent() const
 {
     return from_boost_optional(pimpl_->parent());
 }
@@ -95,12 +95,12 @@ void crate::set_name(std::string name) const
     pimpl_->set_name(name);
 }
 
-void crate::set_parent(stdx::optional<crate> parent) const
+void crate::set_parent(std::optional<crate> parent) const
 {
     pimpl_->set_parent(to_boost_optional(parent));
 }
 
-stdx::optional<crate> crate::sub_crate_by_name(
+std::optional<crate> crate::sub_crate_by_name(
     const std::string& name) const
 {
     return from_boost_optional(pimpl_->sub_crate_by_name(name));

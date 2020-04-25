@@ -19,12 +19,13 @@
 #ifndef DJINTEROP_ENGINELIBRARY_HPP
 #define DJINTEROP_ENGINELIBRARY_HPP
 
-#if __cplusplus < 201103L && _MSVC_LANG < 201103L
-#error This library needs at least a C++11 compliant compiler
+#if __cplusplus < 201703L
+#error This library needs at least a C++17 compliant compiler
 #endif
 
 #include <djinterop/pad_color.hpp>
 #include <djinterop/semantic_version.hpp>
+
 
 namespace djinterop
 {

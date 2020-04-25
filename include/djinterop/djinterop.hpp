@@ -19,8 +19,8 @@
 #ifndef DJINTEROP_DJINTEROP_HPP
 #define DJINTEROP_DJINTEROP_HPP
 
-#if __cplusplus < 201103L && _MSVC_LANG < 201103L
-#error This library needs at least a C++11 compliant compiler
+#if __cplusplus < 201703L
+#error This library needs at least a C++17 compliant compiler
 #endif
 
 #include <djinterop/album_art.hpp>

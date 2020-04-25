@@ -70,14 +70,14 @@ static void populate_example_track_1(djinterop::track &t)
     t.set_genre("Tech House"s);
     t.set_comment("Purchased at Beatport.com"s);
     t.set_publisher("Stereo Productions"s);
-    t.set_composer(djinterop::stdx::nullopt);
+    t.set_composer(std::nullopt);
     t.set_key(djinterop::musical_key::a_minor);
     t.set_relative_path("../01 - Dennis Cruz - Mad (Original Mix).mp3");
     t.set_last_modified_at(c::system_clock::time_point{c::seconds{1509371790}});
     t.set_bitrate(320);
-    t.set_last_played_at(djinterop::stdx::nullopt);
+    t.set_last_played_at(std::nullopt);
     t.set_last_accessed_at(c::system_clock::time_point{c::seconds{1509321600}});
-    t.set_import_info(djinterop::stdx::nullopt);
+    t.set_import_info(std::nullopt);
     t.set_album_art_id(2);
 }
 

@@ -6,7 +6,6 @@ djinterop_header_files = [
     'djinterop/exceptions.hpp',
     'djinterop/enginelibrary.hpp',
     'djinterop/musical_key.hpp',
-    'djinterop/optional.hpp',
     'djinterop/pad_color.hpp',
     'djinterop/performance_data.hpp',
     'djinterop/semantic_version.hpp',
