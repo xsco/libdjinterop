@@ -16,13 +16,13 @@
  */
 
 #define BOOST_TEST_MODULE database_test
+#include <boost/test/included/unit_test.hpp>
 
 #include <ostream>
 #include <string>
 
 #include <sqlite_modern_cpp.h>
 #include <boost/filesystem.hpp>
-#include <boost/test/unit_test.hpp>
 
 #include <djinterop/database.hpp>
 #include <djinterop/enginelibrary.hpp>

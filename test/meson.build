@@ -1,5 +1,4 @@
-boost_test_dep = dependency('boost', modules : [
-    'system', 'filesystem', 'unit_test_framework'])
+boost_test_dep = dependency('boost', modules : ['system', 'filesystem'])
 
 engine_library_test_names = [
     'crate_test',

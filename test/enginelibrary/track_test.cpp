@@ -16,6 +16,7 @@
  */
 
 #define BOOST_TEST_MODULE track_test
+#include <boost/test/included/unit_test.hpp>
 
 #include <chrono>
 #include <iostream>
@@ -23,7 +24,6 @@
 #include <string>
 
 #include <boost/filesystem.hpp>
-#include <boost/test/unit_test.hpp>
 
 #include <djinterop/crate.hpp>
 #include <djinterop/database.hpp>

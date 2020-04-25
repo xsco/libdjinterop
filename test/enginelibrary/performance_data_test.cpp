@@ -16,6 +16,8 @@
  */
 
 #define BOOST_TEST_MODULE performance_data_test
+#include <boost/test/included/unit_test.hpp>
+#include <boost/test/tools/floating_point_comparison.hpp>
 
 #include <chrono>
 #include <cstdio>
@@ -23,8 +25,6 @@
 #include <string>
 
 #include <boost/filesystem.hpp>
-#include <boost/test/floating_point_comparison.hpp>
-#include <boost/test/unit_test.hpp>
 
 #include <djinterop/database.hpp>
 #include <djinterop/enginelibrary.hpp>

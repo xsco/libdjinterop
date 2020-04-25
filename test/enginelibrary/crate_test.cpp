@@ -16,13 +16,13 @@
  */
 
 #define BOOST_TEST_MODULE crate_test
+#include <boost/test/included/unit_test.hpp>
 
 #include <iostream>
 #include <stdexcept>
 #include <string>
 
 #include <boost/filesystem.hpp>
-#include <boost/test/unit_test.hpp>
 
 #include <djinterop/crate.hpp>
 #include <djinterop/database.hpp>
