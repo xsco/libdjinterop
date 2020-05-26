@@ -23,6 +23,10 @@
 #error This library needs at least a C++17 compliant compiler
 #endif
 
+#include <cstdint>
+#include <stdexcept>
+#include <string>
+
 #include <djinterop/semantic_version.hpp>
 
 

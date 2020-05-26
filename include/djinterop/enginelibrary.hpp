@@ -23,6 +23,11 @@
 #error This library needs at least a C++17 compliant compiler
 #endif
 
+#include <array>
+#include <cstdint>
+#include <string>
+#include <vector>
+
 #include <djinterop/pad_color.hpp>
 #include <djinterop/semantic_version.hpp>
 

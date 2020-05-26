@@ -16,6 +16,8 @@
  */
 
 #include <cmath>
+#include <iomanip>
+#include <sstream>
 
 #include <djinterop/djinterop.hpp>
 #include <djinterop/enginelibrary/el_crate_impl.hpp>

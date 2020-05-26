@@ -18,6 +18,8 @@
 #include <djinterop/impl/transaction_guard_impl.hpp>
 #include <djinterop/transaction_guard.hpp>
 
+#include <stdexcept>
+
 namespace djinterop
 {
 transaction_guard::transaction_guard() noexcept = default;

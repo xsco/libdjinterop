@@ -23,8 +23,11 @@
 #error This library needs at least a C++17 compliant compiler
 #endif
 
+#include <cstdint>
 #include <memory>
 #include <optional>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 

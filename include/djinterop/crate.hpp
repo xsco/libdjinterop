@@ -21,6 +21,7 @@ Lesser General Public License for more details.
 #error This library needs at least a C++17 compliant compiler
 #endif
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>

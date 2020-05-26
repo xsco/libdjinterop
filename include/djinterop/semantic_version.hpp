@@ -23,7 +23,7 @@
 #error This library needs at least a C++17 compliant compiler
 #endif
 
-#include <iomanip>
+#include <ostream>
 
 
 namespace djinterop
