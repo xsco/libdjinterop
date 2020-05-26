@@ -113,7 +113,7 @@ static void populate_track_1(djinterop::track& t)
     // High-resolution waveform data
     std::vector<djinterop::waveform_entry> waveform;
     int64_t samples_per_entry = t.required_waveform_samples_per_entry();
-    int64_t waveform_size = (t.sampling()->sample_count / samples_per_entry) + 1;
+    int64_t waveform_size = (t.sampling()->sample_count + samples_per_entry - 1) / samples_per_entry;
     waveform.reserve(waveform_size);
     for (int64_t i = 0; i < waveform_size; ++i)
     {
@@ -265,7 +265,7 @@ static void populate_track_2(djinterop::track& t)
 
     // High-resolution waveform data
     int64_t samples_per_entry = t.required_waveform_samples_per_entry();
-    int64_t waveform_size = (t.sampling()->sample_count / samples_per_entry) + 1;
+    int64_t waveform_size = (t.sampling()->sample_count + samples_per_entry - 1) / samples_per_entry;
     std::vector<djinterop::waveform_entry> waveform;
     waveform.reserve(waveform_size);
     for (int64_t i = 0; i < waveform_size; ++i)
