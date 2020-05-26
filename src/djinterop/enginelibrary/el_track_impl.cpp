@@ -65,7 +65,7 @@ boost::optional<int64_t> to_timestamp(
 /// to multiples of a particular "quantisation number", that is equal to
 /// the sample rate divided by 105, and then rounded to the nearest
 /// multiple of two.
-inline int64_t quantisation_number(int64_t sample_rate)
+int64_t quantisation_number(int64_t sample_rate)
 {
     return (sample_rate / 210) * 2;
 }
@@ -75,7 +75,7 @@ inline int64_t quantisation_number(int64_t sample_rate)
 /// An overview waveform always has 1024 entries, and the number of samples
 /// that each one represents must be calculated from the true sample count by
 /// rounding the number of samples to the quantisation number first.
-inline int64_t calculate_overview_waveform_samples_per_entry(
+int64_t calculate_overview_waveform_samples_per_entry(
         int64_t sample_rate, int64_t sample_count)
 {
     auto qn = quantisation_number(sample_rate);
