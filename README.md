@@ -106,6 +106,7 @@ How Do I Build It?
 
 `libdjinterop` requires the following compile-time dependencies:
 
+* [SQLite3](https://sqlite.org)
 * [zlib](http://zlib.net)
 * [Boost](https://boost.org) (libraries required for unit tests; headers only for the main library)
 

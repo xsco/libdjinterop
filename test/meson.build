@@ -1,5 +1,8 @@
 boost_test_dep = dependency('boost', modules : ['system', 'filesystem'])
 
+# Dependencies required by all unit test executables.
+test_deps = [boost_test_dep, sqlite3_dep]
+
 engine_library_test_names = [
     'crate_test',
     'database_test',
@@ -19,7 +22,7 @@ if compiler.get_id() != 'msvc'
             'enginelibrary/' + test_name + '.cpp',
             cpp_args : ['-DTESTDATA_DIR=' + testdata_dir],
             include_directories : [inc, internal_inc],
-            dependencies : [boost_test_dep],
+            dependencies : test_deps,
             link_with : djinterop_lib)
         test(test_name, exe)
     endforeach

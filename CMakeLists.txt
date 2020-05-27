@@ -15,6 +15,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Require Boost >= 1.65 (headers only)
 find_package(Boost 1.65 REQUIRED)
 
+# Require sqlite3 >= 3.11.0
+find_package(SQLite3 3.11.0 REQUIRED)
+
 # Require zlib >= 1.2.8
 find_package(ZLIB 1.2.8 REQUIRED)
 
@@ -39,8 +42,7 @@ add_library(
     src/djinterop/impl/database_impl.cpp
     src/djinterop/impl/track_impl.cpp
     src/djinterop/impl/transaction_guard_impl.cpp
-    src/djinterop/impl/util.cpp
-    src/sqlite3.c)
+    src/djinterop/impl/util.cpp)
 
 target_compile_definitions(
     djinterop PUBLIC
@@ -49,11 +51,13 @@ target_compile_definitions(
 target_include_directories(
     djinterop PUBLIC
     ${Boost_INCLUDE_DIRS}
+    ${SQLite3_INCLUDE_DIRS}
     ${ZLIB_INCLUDE_DIRS}
     include src)
 
 target_link_libraries(
     djinterop
+    ${SQLite3_LIBRARIES}
     ${ZLIB_LIBRARIES})
 
 install(TARGETS djinterop DESTINATION lib)

@@ -19,8 +19,10 @@ sources = [
     'djinterop/impl/track_impl.cpp',
     'djinterop/impl/transaction_guard_impl.cpp',
     'djinterop/impl/util.cpp',
-    'sqlite3.c'
 ]
+
+# Dependencies required by the main library.
+core_deps = [thread_dep, dl_dep, sqlite3_dep, zlib_dep, boost_dep]
 
 # Used by unit tests to reference internal classes.
 internal_inc = include_directories('.')

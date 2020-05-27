@@ -1,9 +1,9 @@
 project(
     'djinterop',
     'cpp', 'c',
-    version: '0.9.0',
+    version: '0.10.0',
     license: 'LGPL-3.0',
-    default_options: ['cpp_std=c++17', 'c_std=c11'])
+    default_options: ['cpp_std=c++17', 'default_library=both'])
 
 add_global_arguments('-D_MODERN_SQLITE_BOOST_OPTIONAL_SUPPORT', language: 'cpp')
 
@@ -12,10 +12,9 @@ cpp_compiler = meson.get_compiler('cpp')
 dl_dep = cpp_compiler.find_library('dl', required: false)
 
 thread_dep = dependency('threads')
+sqlite3_dep = dependency('sqlite3', version: '>=3.11.0', fallback: ['sqlite', 'sqlite_dep'])
 zlib_dep = dependency('zlib', version: '>=1.2.8', fallback: ['zlib', 'zlib_dep'])
 boost_dep = dependency('boost', version: '>=1.65') # Header-only libraries
-
-core_deps = [thread_dep, dl_dep, zlib_dep, boost_dep]
 
 inc = include_directories('include')
 
