@@ -40,7 +40,7 @@ namespace djinterop
 {
 class crate;
 class database_impl;
-class semantic_version;
+struct semantic_version;
 class track;
 class transaction_guard;
 
