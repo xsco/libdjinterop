@@ -135,6 +135,17 @@ public:
     template <typename T>
     void set_perfdata(const char* column_name, const T& content)
     {
+        auto encoded_content = content.encode();
+        // Check that subsequent reads can correctly decode what we are about to
+        // write.
+        if (!(T::decode(encoded_content) == content))
+        {
+            throw std::logic_error{
+                "Data supplied for column " + std::string(column_name) +
+                " is not invariant under encoding and subsequent decoding. "
+                "This is a bug in libdjinterop."};
+        }
+
         bool found = false;
         storage_->db << "SELECT COUNT(*) FROM PerformanceData WHERE id = ?"
                      << id() >>
@@ -182,7 +193,7 @@ public:
 
         storage_->db << (std::string{"UPDATE PerformanceData SET "} +
                          column_name + " = ?, isAnalyzed = 1 WHERE id = ?")
-                     << content.encode() << id();
+                     << encoded_content << id();
     }
 
     beat_data get_beat_data();

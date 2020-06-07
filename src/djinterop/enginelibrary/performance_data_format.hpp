@@ -33,11 +33,19 @@ namespace enginelibrary
 {
 struct beat_data
 {
-    beat_data() noexcept = default;
-
     boost::optional<sampling_info> sampling;
     std::vector<beatgrid_marker> default_beatgrid;
     std::vector<beatgrid_marker> adjusted_beatgrid;
+
+    beat_data() noexcept = default;
+
+    friend bool operator==(
+        const beat_data& first, const beat_data& second) noexcept
+    {
+        return first.sampling == second.sampling &&
+               first.default_beatgrid == second.default_beatgrid &&
+               first.adjusted_beatgrid == second.adjusted_beatgrid;
+    }
 
     std::vector<char> encode() const;
     static beat_data decode(const std::vector<char>& compressed_data);
@@ -45,10 +53,18 @@ struct beat_data
 
 struct high_res_waveform_data
 {
-    high_res_waveform_data() noexcept = default;
-
     double samples_per_entry;
     std::vector<waveform_entry> waveform;
+
+    high_res_waveform_data() noexcept = default;
+
+    friend bool operator==(
+        const high_res_waveform_data& first,
+        const high_res_waveform_data& second) noexcept
+    {
+        return first.samples_per_entry == second.samples_per_entry &&
+               first.waveform == second.waveform;
+    }
 
     std::vector<char> encode() const;
     static high_res_waveform_data decode(
@@ -57,9 +73,15 @@ struct high_res_waveform_data
 
 struct loops_data
 {
-    loops_data() = default;
-
     std::array<boost::optional<loop>, 8> loops;  // Don't use curly braces here!
+
+    loops_data() noexcept = default;
+
+    friend bool operator==(
+        const loops_data& first, const loops_data& second) noexcept
+    {
+        return first.loops == second.loops;
+    }
 
     std::vector<char> encode() const;
     static loops_data decode(
@@ -68,10 +90,18 @@ struct loops_data
 
 struct overview_waveform_data
 {
-    overview_waveform_data() noexcept = default;
-
     double samples_per_entry;
     std::vector<waveform_entry> waveform;
+
+    overview_waveform_data() noexcept = default;
+
+    friend bool operator==(
+        const overview_waveform_data& first,
+        const overview_waveform_data& second) noexcept
+    {
+        return first.samples_per_entry == second.samples_per_entry &&
+               first.waveform == second.waveform;
+    }
 
     std::vector<char> encode() const;
     static overview_waveform_data decode(
@@ -80,27 +110,41 @@ struct overview_waveform_data
 
 struct quick_cues_data
 {
-    quick_cues_data() = default;
-
     std::array<boost::optional<hot_cue>, 8> hot_cues;
     double adjusted_main_cue = 0;
     double default_main_cue = 0;
 
-    std::vector<char> encode() const;
+    quick_cues_data() noexcept = default;
 
+    friend bool operator==(
+        const quick_cues_data& first, const quick_cues_data& second) noexcept
+    {
+        return first.hot_cues == second.hot_cues &&
+               first.adjusted_main_cue == second.adjusted_main_cue &&
+               first.default_main_cue == second.default_main_cue;
+    }
+
+    std::vector<char> encode() const;
     static quick_cues_data decode(const std::vector<char>& compressed_data);
 };
 
 struct track_data
 {
-    track_data() noexcept = default;
-
     boost::optional<sampling_info> sampling;
     boost::optional<double> average_loudness;  // range (0, 1]
     boost::optional<musical_key> key;
 
-    std::vector<char> encode() const;
+    track_data() noexcept = default;
 
+    friend bool operator==(
+        const track_data& first, const track_data& second) noexcept
+    {
+        return first.sampling == second.sampling &&
+               first.average_loudness == second.average_loudness &&
+               first.key == second.key;
+    }
+
+    std::vector<char> encode() const;
     static track_data decode(const std::vector<char>& compressed_data);
 };
 

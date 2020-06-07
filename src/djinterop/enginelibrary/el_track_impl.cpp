@@ -201,6 +201,12 @@ overview_waveform_data el_track_impl::get_overview_waveform_data()
 
 void el_track_impl::set_overview_waveform_data(overview_waveform_data data)
 {
+    for (auto&& entry : data.waveform)
+    {
+        entry.low.opacity = 255;
+        entry.mid.opacity = 255;
+        entry.high.opacity = 255;
+    }
     set_perfdata("overviewWaveFormData", data);
 }
 
