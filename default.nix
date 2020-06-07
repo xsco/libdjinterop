@@ -6,8 +6,8 @@ let
     name = "git-clang-format";
     version = "2019-06-21";
     src = fetchurl {
-      url = "https://raw.githubusercontent.com/llvm-mirror/clang/2bb8e0fe002e8ffaa9ce5fa58034453c94c7e208/tools/clang-format/git-clang-format";
-      sha256 = "1kby36i80js6rwi11v3ny4bqsi6i44b9yzs23pdcn9wswffx1nlf";
+      url = "https://raw.githubusercontent.com/llvm-mirror/clang/e8c2d2746b1e718b607b78a830534fd3a981d250/tools/clang-format/git-clang-format";
+      sha256 = "sha256:1wp7zw2jgpgnv9cr648nlk6gs26yadvs14qnll3vnay1y0n79nd7";
       executable = true;
     };
     nativeBuildInputs = [
@@ -42,6 +42,7 @@ stdenv.mkDerivation {
   outputs = [ "out" "dev" ];
   buildInputs = [
     boost
+    sqlite
     zlib
   ];
 }
