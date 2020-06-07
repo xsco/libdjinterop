@@ -193,8 +193,21 @@ beat_data beat_data::decode(const std::vector<char>& compressed_data)
         // TODO (haslersn): print a warning that "Is beat data set" is not 1
     }
 
-    std::tie(result.default_beatgrid, ptr) = decode_beatgrid(ptr, end);
-    std::tie(result.adjusted_beatgrid, ptr) = decode_beatgrid(ptr, end);
+    try
+    {
+        std::vector<beatgrid_marker> default_beatgrid;
+        std::vector<beatgrid_marker> adjusted_beatgrid;
+        std::tie(default_beatgrid, ptr) = decode_beatgrid(ptr, end);
+        std::tie(adjusted_beatgrid, ptr) = decode_beatgrid(ptr, end);
+        // If there's an exception, then the following will intentially not be
+        // executed.
+        result.default_beatgrid = std::move(default_beatgrid);
+        result.adjusted_beatgrid = std::move(adjusted_beatgrid);
+    }
+    catch (const std::invalid_argument& e)
+    {
+        // TODO (haslersn): print a warning with e.what().
+    }
 
     if (ptr != end)
     {
