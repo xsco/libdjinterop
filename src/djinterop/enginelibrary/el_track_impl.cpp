@@ -201,6 +201,9 @@ overview_waveform_data el_track_impl::get_overview_waveform_data()
 
 void el_track_impl::set_overview_waveform_data(overview_waveform_data data)
 {
+    // As the overview waveform does not store opacity, it is defaulted to 255
+    // when read back.  If we also set it to 255 here, we can apply a check in
+    // `set_perfdata` that a round-trip encode/decode gives the same data.
     for (auto&& entry : data.waveform)
     {
         entry.low.opacity = 255;
