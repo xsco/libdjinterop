@@ -140,6 +140,9 @@ public:
         // write.
         if (!(T::decode(encoded_content) == content))
         {
+            // TODO (haslersn): As soon as warnings are implemented, add the
+            // wording similar to "Either you got a warning above which tells
+            // you what is wrong, or this is a bug in libdjinterop."
             throw std::logic_error{
                 "Data supplied for column " + std::string(column_name) +
                 " is not invariant under encoding and subsequent decoding. "
