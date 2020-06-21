@@ -172,9 +172,9 @@ static void check_track_2(djinterop::track &t)
             c::system_clock::period::num / c::system_clock::period::den,
         1518825600);
     BOOST_CHECK_EQUAL(
-        t.import_info()->external_db_uuid(),
+        t.import_info()->external_db_uuid,
         "e535b170-26ef-4f30-8cb2-5b9fa4c2a27f");
-    BOOST_CHECK_EQUAL(t.import_info()->external_track_id(), 123);
+    BOOST_CHECK_EQUAL(t.import_info()->external_track_id, 123);
     BOOST_CHECK(!t.album_art_id());
 }
 

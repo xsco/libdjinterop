@@ -29,7 +29,6 @@
 
 #include <djinterop/semantic_version.hpp>
 
-
 namespace djinterop
 {
 /// The `database_inconsistency` exception is thrown when the schema of a

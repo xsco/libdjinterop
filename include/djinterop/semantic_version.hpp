@@ -25,7 +25,6 @@
 
 #include <ostream>
 
-
 namespace djinterop
 {
 struct semantic_version

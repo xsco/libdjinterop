@@ -25,7 +25,6 @@
 
 #include <cstdint>
 
-
 namespace djinterop
 {
 /**

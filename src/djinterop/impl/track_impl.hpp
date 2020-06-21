@@ -29,7 +29,7 @@ namespace djinterop
 {
 class database;
 class track;
-class track_import_info;
+struct track_import_info;
 enum class musical_key;
 
 class track_impl

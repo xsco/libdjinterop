@@ -30,6 +30,7 @@
 #include <string>
 #include <vector>
 
+#include <djinterop/config.hpp>
 
 namespace sqlite
 {
@@ -53,7 +54,7 @@ public:
     }
 };
 
-class database
+class DJINTEROP_PUBLIC database
 {
 public:
     /// Copy constructor
@@ -103,7 +104,7 @@ public:
     /// Returns the UUID of the database
     std::string uuid() const;
 
-    /// Verifies the consistence of the internal storage of the database.
+    /// Verifies the consistency of the internal storage of the database.
     ///
     /// A `database_inconsistency` (or some exception derived from it) is thrown
     /// if any kind of inconsistency is found.

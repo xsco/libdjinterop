@@ -32,10 +32,10 @@
 #include <string>
 #include <vector>
 
+#include <djinterop/config.hpp>
 #include <djinterop/musical_key.hpp>
 #include <djinterop/performance_data.hpp>
 #include <djinterop/semantic_version.hpp>
-
 
 namespace djinterop
 {
@@ -46,30 +46,15 @@ class track_impl;
 /// The `track_import_info` struct holds information about a track in a
 /// different, external Engine Library database.  This can be associated with a
 /// track if it was imported into the current database from another one.
-class track_import_info
+struct track_import_info
 {
-public:
-    track_import_info() noexcept;
-    track_import_info(
-        std::string external_db_uuid, int64_t externl_track_id) noexcept;
+    // TODO (mr-smidge): Refactor to remove Engine-specific details.
 
-    /// Gets the UUID of the external Engine Library database.
-    std::string& external_db_uuid();
+    /// The UUID of the external Engine Library database.
+    std::string external_db_uuid;
 
-    /// Gets a reference to a field holding the UUID of the external Engine
-    /// Library database.
-    const std::string& external_db_uuid() const;
-
-    /// Gets the id of the track in the external Engine Library database.
-    int64_t& external_track_id();
-
-    /// Gets a reference to a field holding the id of the track in the external
-    /// Engine Library database.
-    const int64_t& external_track_id() const;
-
-private:
-    std::string external_db_uuid_;
-    int64_t external_track_id_;
+    /// The id of the track in the external Engine Library database.
+    int64_t external_track_id;
 };
 
 /// A `track` object is a handle to a track stored in a database. As long as it
@@ -84,7 +69,7 @@ private:
 /// A `track` object becomes invalid if the track gets deleted by
 /// `database::remove_track()`. After that, you must not call any methods on the
 /// `track` object, except for destructing it, or assigning to it.
-class track
+class DJINTEROP_PUBLIC track
 {
 public:
     /// Copy constructor
@@ -258,8 +243,7 @@ public:
         std::chrono::system_clock::time_point last_modified_at) const;
 
     /// Returns the time at which the track was last played
-    std::optional<std::chrono::system_clock::time_point> last_played_at()
-        const;
+    std::optional<std::chrono::system_clock::time_point> last_played_at() const;
 
     /// Sets the time at which the track was last played
     void set_last_played_at(

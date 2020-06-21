@@ -39,35 +39,6 @@ using std::chrono::system_clock;
 
 namespace djinterop
 {
-track_import_info::track_import_info() noexcept = default;
-
-track_import_info::track_import_info(
-    std::string external_db_uuid, int64_t external_track_id) noexcept
-    : external_db_uuid_{std::move(external_db_uuid)},
-      external_track_id_{external_track_id}
-{
-}
-
-std::string& track_import_info::external_db_uuid()
-{
-    return external_db_uuid_;
-}
-
-const std::string& track_import_info::external_db_uuid() const
-{
-    return external_db_uuid_;
-}
-
-int64_t& track_import_info::external_track_id()
-{
-    return external_track_id_;
-}
-
-const int64_t& track_import_info::external_track_id() const
-{
-    return external_track_id_;
-}
-
 track::track(const track& other) noexcept = default;
 
 track::~track() = default;
