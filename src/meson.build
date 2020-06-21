@@ -24,13 +24,33 @@ sources = [
 # Dependencies required by the main library.
 core_deps = [thread_dep, dl_dep, sqlite3_dep, zlib_dep, boost_dep]
 
+if cpp_compiler.get_id() == 'msvc'
+    # Boost UUID on Windows uses bcrypt for random UUID generation.
+    bcrypt_dep = cpp_compiler.find_library('bcrypt')
+    core_deps += [bcrypt_dep]
+endif
+
 # Used by unit tests to reference internal classes.
 internal_inc = include_directories('.')
+
+# Set a compile-time definition that we are building the libdjinterop source.
+# This information is needed in `config.hpp` to determine whether public symbols
+# ought to be exported or imported.
+building_library_args = ['-DDJINTEROP_SOURCE']
+
+# Set hidden visibility arguments as required.
+hidden_visibility_args = []
+if get_option('default_library') != 'static'
+    if cpp_compiler.has_argument('-fvisibility=hidden')
+        hidden_visibility_args = ['-fvisibility=hidden']
+    endif
+endif
 
 djinterop_lib = library(
     'djinterop',
     sources: sources,
     include_directories: inc,
     dependencies: core_deps,
-    install: true)
+    install: true,
+    cpp_args: building_library_args + hidden_visibility_args)
 

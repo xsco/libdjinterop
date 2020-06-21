@@ -26,8 +26,8 @@
 #include <cstdint>
 #include <string>
 
+#include <djinterop/config.hpp>
 #include <djinterop/pad_color.hpp>
-
 
 namespace djinterop
 {

@@ -25,12 +25,13 @@
 
 #include <memory>
 
+#include <djinterop/config.hpp>
 
 namespace djinterop
 {
 class transaction_guard_impl;
 
-class transaction_guard
+class DJINTEROP_PUBLIC transaction_guard
 {
 public:
     transaction_guard() noexcept;

@@ -504,8 +504,8 @@ void el_track_impl::set_import_info(
     if (import_info)
     {
         set_cell("isExternalTrack", 1);
-        set_cell("uuidOfExternalDatabase", import_info->external_db_uuid());
-        set_cell("idTrackInExternalDatabase", import_info->external_track_id());
+        set_cell("uuidOfExternalDatabase", import_info->external_db_uuid);
+        set_cell("idTrackInExternalDatabase", import_info->external_track_id);
     }
     else
     {

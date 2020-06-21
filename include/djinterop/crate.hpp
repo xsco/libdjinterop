@@ -27,6 +27,7 @@ Lesser General Public License for more details.
 #include <string>
 #include <vector>
 
+#include <djinterop/config.hpp>
 
 namespace djinterop
 {
@@ -46,7 +47,7 @@ class track;
 /// A `crate` object becomes invalid if the crate gets deleted by
 /// `database::remove_crate()`. After that, you must not call any methods on the
 /// `crate` object, except for destructing it, or assigning to it.
-class crate
+class DJINTEROP_PUBLIC crate
 {
 public:
     /// Copy constructor
