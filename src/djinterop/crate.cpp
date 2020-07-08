@@ -82,7 +82,7 @@ std::string crate::name() const
 
 std::optional<crate> crate::parent() const
 {
-    return from_boost_optional(pimpl_->parent());
+    return pimpl_->parent();
 }
 
 void crate::remove_track(track tr) const
@@ -97,13 +97,13 @@ void crate::set_name(std::string name) const
 
 void crate::set_parent(std::optional<crate> parent) const
 {
-    pimpl_->set_parent(to_boost_optional(parent));
+    pimpl_->set_parent(parent);
 }
 
 std::optional<crate> crate::sub_crate_by_name(
     const std::string& name) const
 {
-    return from_boost_optional(pimpl_->sub_crate_by_name(name));
+    return pimpl_->sub_crate_by_name(name);
 }
 
 std::vector<track> crate::tracks() const

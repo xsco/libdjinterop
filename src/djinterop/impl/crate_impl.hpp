@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -46,12 +47,12 @@ public:
     virtual std::vector<crate> descendants() = 0;
     virtual bool is_valid() = 0;
     virtual std::string name() = 0;
-    virtual boost::optional<crate> parent() = 0;
+    virtual std::optional<crate> parent() = 0;
     virtual void remove_track(track tr) = 0;
-    virtual boost::optional<crate> sub_crate_by_name(
+    virtual std::optional<crate> sub_crate_by_name(
         const std::string& name) = 0;
     virtual void set_name(std::string name) = 0;
-    virtual void set_parent(boost::optional<crate> parent) = 0;
+    virtual void set_parent(std::optional<crate> parent) = 0;
     virtual std::vector<track> tracks() = 0;
 
 private:
