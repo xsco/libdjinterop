@@ -19,9 +19,8 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <vector>
-
-#include <boost/optional.hpp>
 
 #include <djinterop/performance_data.hpp>
 
@@ -33,7 +32,7 @@ namespace enginelibrary
 {
 struct beat_data
 {
-    boost::optional<sampling_info> sampling;
+    std::optional<sampling_info> sampling;
     std::vector<beatgrid_marker> default_beatgrid;
     std::vector<beatgrid_marker> adjusted_beatgrid;
 
@@ -73,7 +72,7 @@ struct high_res_waveform_data
 
 struct loops_data
 {
-    std::array<boost::optional<loop>, 8> loops;  // Don't use curly braces here!
+    std::array<std::optional<loop>, 8> loops;  // Don't use curly braces here!
 
     loops_data() noexcept = default;
 
@@ -110,7 +109,7 @@ struct overview_waveform_data
 
 struct quick_cues_data
 {
-    std::array<boost::optional<hot_cue>, 8> hot_cues;
+    std::array<std::optional<hot_cue>, 8> hot_cues;
     double adjusted_main_cue = 0;
     double default_main_cue = 0;
 
@@ -130,9 +129,9 @@ struct quick_cues_data
 
 struct track_data
 {
-    boost::optional<sampling_info> sampling;
-    boost::optional<double> average_loudness;  // range (0, 1]
-    boost::optional<musical_key> key;
+    std::optional<sampling_info> sampling;
+    std::optional<double> average_loudness;  // range (0, 1]
+    std::optional<musical_key> key;
 
     track_data() noexcept = default;
 

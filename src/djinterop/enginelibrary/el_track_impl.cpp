@@ -37,10 +37,10 @@ using std::chrono::system_clock;
 
 namespace
 {
-boost::optional<system_clock::time_point> to_time_point(
-    boost::optional<int64_t> timestamp)
+std::optional<system_clock::time_point> to_time_point(
+    std::optional<int64_t> timestamp)
 {
-    boost::optional<system_clock::time_point> result;
+    std::optional<system_clock::time_point> result;
     if (timestamp)
     {
         result = system_clock::time_point{seconds(*timestamp)};
@@ -48,10 +48,10 @@ boost::optional<system_clock::time_point> to_time_point(
     return result;
 }
 
-boost::optional<int64_t> to_timestamp(
-    boost::optional<system_clock::time_point> time)
+std::optional<int64_t> to_timestamp(
+    std::optional<system_clock::time_point> time)
 {
-    boost::optional<int64_t> result;
+    std::optional<int64_t> result;
     if (time)
     {
         result = duration_cast<seconds>(time->time_since_epoch()).count();
@@ -89,10 +89,10 @@ el_track_impl::el_track_impl(std::shared_ptr<el_storage> storage, int64_t id)
 {
 }
 
-boost::optional<std::string> el_track_impl::get_metadata_str(
+std::optional<std::string> el_track_impl::get_metadata_str(
     metadata_str_type type)
 {
-    boost::optional<std::string> result;
+    std::optional<std::string> result;
     storage_->db << "SELECT text FROM MetaData WHERE id = ? AND "
                     "type = ? AND text IS NOT NULL"
                  << id() << static_cast<int64_t>(type) >>
@@ -113,7 +113,7 @@ boost::optional<std::string> el_track_impl::get_metadata_str(
 }
 
 void el_track_impl::set_metadata_str(
-    metadata_str_type type, boost::optional<std::string> content)
+    metadata_str_type type, std::optional<std::string> content)
 {
     if (content)
     {
@@ -134,9 +134,9 @@ void el_track_impl::set_metadata_str(
                  << id() << static_cast<int64_t>(type) << content;
 }
 
-boost::optional<int64_t> el_track_impl::get_metadata_int(metadata_int_type type)
+std::optional<int64_t> el_track_impl::get_metadata_int(metadata_int_type type)
 {
-    boost::optional<int64_t> result;
+    std::optional<int64_t> result;
     storage_->db << "SELECT value FROM MetaDataInteger WHERE id = "
                     "? AND type = ? AND value IS NOT NULL"
                  << id() << static_cast<int64_t>(type) >>
@@ -157,7 +157,7 @@ boost::optional<int64_t> el_track_impl::get_metadata_int(metadata_int_type type)
 }
 
 void el_track_impl::set_metadata_int(
-    metadata_int_type type, boost::optional<int64_t> content)
+    metadata_int_type type, std::optional<int64_t> content)
 {
     storage_->db
         << "REPLACE INTO MetaDataInteger (id, type, value) VALUES (?, ?, ?)"
@@ -262,20 +262,20 @@ void el_track_impl::set_adjusted_main_cue(double sample_offset)
     trans.commit();
 }
 
-boost::optional<std::string> el_track_impl::album()
+std::optional<std::string> el_track_impl::album()
 {
     return get_metadata_str(metadata_str_type::album);
 }
 
-void el_track_impl::set_album(boost::optional<std::string> album)
+void el_track_impl::set_album(std::optional<std::string> album)
 {
     set_metadata_str(metadata_str_type::album, album);
 }
 
-boost::optional<int64_t> el_track_impl::album_art_id()
+std::optional<int64_t> el_track_impl::album_art_id()
 {
     int64_t cell = get_cell<int64_t>("idAlbumArt");
-    boost::optional<int64_t> album_art_id;
+    std::optional<int64_t> album_art_id;
     if (cell < 1)
     {
         // TODO (haslersn): Throw something.
@@ -287,7 +287,7 @@ boost::optional<int64_t> el_track_impl::album_art_id()
     return album_art_id;
 }
 
-void el_track_impl::set_album_art_id(boost::optional<int64_t> album_art_id)
+void el_track_impl::set_album_art_id(std::optional<int64_t> album_art_id)
 {
     if (album_art_id && *album_art_id <= 1)
     {
@@ -297,23 +297,23 @@ void el_track_impl::set_album_art_id(boost::optional<int64_t> album_art_id)
     // 1 is the magic number for "no album art"
 }
 
-boost::optional<std::string> el_track_impl::artist()
+std::optional<std::string> el_track_impl::artist()
 {
     return get_metadata_str(metadata_str_type::artist);
 }
 
-void el_track_impl::set_artist(boost::optional<std::string> artist)
+void el_track_impl::set_artist(std::optional<std::string> artist)
 {
     set_metadata_str(metadata_str_type::artist, artist);
 }
 
-boost::optional<double> el_track_impl::average_loudness()
+std::optional<double> el_track_impl::average_loudness()
 {
     return get_track_data().average_loudness;
 }
 
 void el_track_impl::set_average_loudness(
-    boost::optional<double> average_loudness)
+    std::optional<double> average_loudness)
 {
     el_transaction_guard_impl trans{storage_};
     auto track_d = get_track_data();
@@ -322,25 +322,25 @@ void el_track_impl::set_average_loudness(
     trans.commit();
 }
 
-boost::optional<int64_t> el_track_impl::bitrate()
+std::optional<int64_t> el_track_impl::bitrate()
 {
-    return get_cell<boost::optional<int64_t>>("bitrate");
+    return get_cell<std::optional<int64_t>>("bitrate");
 }
 
-void el_track_impl::set_bitrate(boost::optional<int64_t> bitrate)
+void el_track_impl::set_bitrate(std::optional<int64_t> bitrate)
 {
     set_cell("bitrate", bitrate);
 }
 
-boost::optional<double> el_track_impl::bpm()
+std::optional<double> el_track_impl::bpm()
 {
-    return get_cell<boost::optional<double>>("bpmAnalyzed");
+    return get_cell<std::optional<double>>("bpmAnalyzed");
 }
 
-void el_track_impl::set_bpm(boost::optional<double> bpm)
+void el_track_impl::set_bpm(std::optional<double> bpm)
 {
     set_cell("bpmAnalyzed", bpm);
-    boost::optional<int64_t> ceiled_bpm;
+    std::optional<int64_t> ceiled_bpm;
     if (bpm)
     {
         ceiled_bpm = static_cast<int64_t>(std::ceil(*bpm));
@@ -348,22 +348,22 @@ void el_track_impl::set_bpm(boost::optional<double> bpm)
     set_cell("bpm", ceiled_bpm);
 }
 
-boost::optional<std::string> el_track_impl::comment()
+std::optional<std::string> el_track_impl::comment()
 {
     return get_metadata_str(metadata_str_type::comment);
 }
 
-void el_track_impl::set_comment(boost::optional<std::string> comment)
+void el_track_impl::set_comment(std::optional<std::string> comment)
 {
     set_metadata_str(metadata_str_type::comment, comment);
 }
 
-boost::optional<std::string> el_track_impl::composer()
+std::optional<std::string> el_track_impl::composer()
 {
     return get_metadata_str(metadata_str_type::composer);
 }
 
-void el_track_impl::set_composer(boost::optional<std::string> composer)
+void el_track_impl::set_composer(std::optional<std::string> composer)
 {
     set_metadata_str(metadata_str_type::composer, composer);
 }
@@ -414,21 +414,21 @@ void el_track_impl::set_default_main_cue(double sample_offset)
     trans.commit();
 }
 
-boost::optional<milliseconds> el_track_impl::duration()
+std::optional<milliseconds> el_track_impl::duration()
 {
-    boost::optional<milliseconds> result;
+    std::optional<milliseconds> result;
     auto smp = sampling();
     if (smp)
     {
         double secs = smp->sample_count / smp->sample_rate;
         return milliseconds{static_cast<int64_t>(1000 * secs)};
     }
-    auto secs = get_cell<boost::optional<int64_t>>("length");
+    auto secs = get_cell<std::optional<int64_t>>("length");
     if (secs)
     {
         return milliseconds{*secs * 1000};
     }
-    return boost::none;
+    return std::nullopt;
 }
 
 std::string el_track_impl::file_extension()
@@ -444,23 +444,23 @@ std::string el_track_impl::filename()
     return get_filename(rel_path);
 }
 
-boost::optional<std::string> el_track_impl::genre()
+std::optional<std::string> el_track_impl::genre()
 {
     return get_metadata_str(metadata_str_type::genre);
 }
 
-void el_track_impl::set_genre(boost::optional<std::string> genre)
+void el_track_impl::set_genre(std::optional<std::string> genre)
 {
     set_metadata_str(metadata_str_type::genre, genre);
 }
 
-boost::optional<hot_cue> el_track_impl::hot_cue_at(int32_t index)
+std::optional<hot_cue> el_track_impl::hot_cue_at(int32_t index)
 {
     auto quick_cues_d = get_quick_cues_data();
     return std::move(quick_cues_d.hot_cues[index]);
 }
 
-void el_track_impl::set_hot_cue_at(int32_t index, boost::optional<hot_cue> cue)
+void el_track_impl::set_hot_cue_at(int32_t index, std::optional<hot_cue> cue)
 {
     el_transaction_guard_impl trans{storage_};
     auto quick_cues_d = get_quick_cues_data();
@@ -469,13 +469,13 @@ void el_track_impl::set_hot_cue_at(int32_t index, boost::optional<hot_cue> cue)
     trans.commit();
 }
 
-std::array<boost::optional<hot_cue>, 8> el_track_impl::hot_cues()
+std::array<std::optional<hot_cue>, 8> el_track_impl::hot_cues()
 {
     auto quick_cues_d = get_quick_cues_data();
     return std::move(quick_cues_d.hot_cues);
 }
 
-void el_track_impl::set_hot_cues(std::array<boost::optional<hot_cue>, 8> cues)
+void el_track_impl::set_hot_cues(std::array<std::optional<hot_cue>, 8> cues)
 {
     el_transaction_guard_impl trans{storage_};
     // TODO (haslersn): The following can be optimized because in this case we
@@ -486,11 +486,11 @@ void el_track_impl::set_hot_cues(std::array<boost::optional<hot_cue>, 8> cues)
     trans.commit();
 }
 
-boost::optional<track_import_info> el_track_impl::import_info()
+std::optional<track_import_info> el_track_impl::import_info()
 {
     if (get_cell<int64_t>("isExternalTrack") == 0)
     {
-        return boost::none;
+        return std::nullopt;
     }
     return track_import_info{get_cell<std::string>("uuidOfExternalDatabase"),
                              get_cell<int64_t>("idTrackInExternalDatabase")};
@@ -499,7 +499,7 @@ boost::optional<track_import_info> el_track_impl::import_info()
 }
 
 void el_track_impl::set_import_info(
-    const boost::optional<track_import_info>& import_info)
+    const std::optional<track_import_info>& import_info)
 {
     if (import_info)
     {
@@ -533,9 +533,9 @@ bool el_track_impl::is_valid()
     return valid;
 }
 
-boost::optional<musical_key> el_track_impl::key()
+std::optional<musical_key> el_track_impl::key()
 {
-    boost::optional<musical_key> result;
+    std::optional<musical_key> result;
     auto key_num = get_metadata_int(metadata_int_type::musical_key);
     if (key_num)
     {
@@ -544,9 +544,9 @@ boost::optional<musical_key> el_track_impl::key()
     return result;
 }
 
-void el_track_impl::set_key(boost::optional<musical_key> key)
+void el_track_impl::set_key(std::optional<musical_key> key)
 {
-    boost::optional<int64_t> key_num;
+    std::optional<int64_t> key_num;
     if (key)
     {
         key_num = static_cast<int64_t>(*key);
@@ -560,7 +560,7 @@ void el_track_impl::set_key(boost::optional<musical_key> key)
     trans.commit();
 }
 
-boost::optional<system_clock::time_point> el_track_impl::last_accessed_at()
+std::optional<system_clock::time_point> el_track_impl::last_accessed_at()
 
 {
     // TODO (haslersn): Is there a difference between
@@ -571,7 +571,7 @@ boost::optional<system_clock::time_point> el_track_impl::last_accessed_at()
 }
 
 void el_track_impl::set_last_accessed_at(
-    boost::optional<system_clock::time_point> accessed_at)
+    std::optional<system_clock::time_point> accessed_at)
 {
     if (accessed_at)
     {
@@ -590,34 +590,34 @@ void el_track_impl::set_last_accessed_at(
     }
     else
     {
-        set_metadata_int(metadata_int_type::last_accessed_ts, boost::none);
+        set_metadata_int(metadata_int_type::last_accessed_ts, std::nullopt);
     }
 }
 
-boost::optional<system_clock::time_point> el_track_impl::last_modified_at()
+std::optional<system_clock::time_point> el_track_impl::last_modified_at()
 
 {
     return to_time_point(get_metadata_int(metadata_int_type::last_modified_ts));
 }
 
 void el_track_impl::set_last_modified_at(
-    boost::optional<system_clock::time_point> modified_at)
+    std::optional<system_clock::time_point> modified_at)
 {
     set_metadata_int(
         metadata_int_type::last_modified_ts, to_timestamp(modified_at));
 }
 
-boost::optional<system_clock::time_point> el_track_impl::last_played_at()
+std::optional<system_clock::time_point> el_track_impl::last_played_at()
 
 {
     return to_time_point(get_metadata_int(metadata_int_type::last_played_ts));
 }
 
 void el_track_impl::set_last_played_at(
-    boost::optional<system_clock::time_point> played_at)
+    std::optional<system_clock::time_point> played_at)
 {
-    static boost::optional<std::string> zero{"0"};
-    static boost::optional<std::string> one{"1"};
+    static std::optional<std::string> zero{"0"};
+    static std::optional<std::string> one{"1"};
     set_metadata_str(metadata_str_type::ever_played, played_at ? one : zero);
     set_metadata_int(
         metadata_int_type::last_played_ts, to_timestamp(played_at));
@@ -632,13 +632,13 @@ void el_track_impl::set_last_played_at(
     }
 }
 
-boost::optional<loop> el_track_impl::loop_at(int32_t index)
+std::optional<loop> el_track_impl::loop_at(int32_t index)
 {
     auto loops_d = get_loops_data();
     return std::move(loops_d.loops[index]);
 }
 
-void el_track_impl::set_loop_at(int32_t index, boost::optional<loop> l)
+void el_track_impl::set_loop_at(int32_t index, std::optional<loop> l)
 {
     el_transaction_guard_impl trans{storage_};
     auto loops_d = get_loops_data();
@@ -647,13 +647,13 @@ void el_track_impl::set_loop_at(int32_t index, boost::optional<loop> l)
     trans.commit();
 }
 
-std::array<boost::optional<loop>, 8> el_track_impl::loops()
+std::array<std::optional<loop>, 8> el_track_impl::loops()
 {
     auto loops_d = get_loops_data();
     return std::move(loops_d.loops);
 }
 
-void el_track_impl::set_loops(std::array<boost::optional<loop>, 8> cues)
+void el_track_impl::set_loops(std::array<std::optional<loop>, 8> cues)
 {
     el_transaction_guard_impl trans{storage_};
     loops_data loops_d;
@@ -668,12 +668,12 @@ std::vector<waveform_entry> el_track_impl::overview_waveform()
     return std::move(overview_waveform_d.waveform);
 }
 
-boost::optional<std::string> el_track_impl::publisher()
+std::optional<std::string> el_track_impl::publisher()
 {
     return get_metadata_str(metadata_str_type::publisher);
 }
 
-void el_track_impl::set_publisher(boost::optional<std::string> publisher)
+void el_track_impl::set_publisher(std::optional<std::string> publisher)
 {
     set_metadata_str(metadata_str_type::publisher, publisher);
 }
@@ -711,16 +711,16 @@ void el_track_impl::set_relative_path(std::string relative_path)
     set_metadata_str(metadata_str_type::file_extension, extension);
 }
 
-boost::optional<sampling_info> el_track_impl::sampling()
+std::optional<sampling_info> el_track_impl::sampling()
 {
     return get_track_data().sampling;
 }
 
-void el_track_impl::set_sampling(boost::optional<sampling_info> sampling)
+void el_track_impl::set_sampling(std::optional<sampling_info> sampling)
 {
     el_transaction_guard_impl trans{storage_};
 
-    boost::optional<int64_t> secs;
+    std::optional<int64_t> secs;
     if (sampling)
     {
         secs = static_cast<int64_t>(
@@ -738,7 +738,7 @@ void el_track_impl::set_sampling(boost::optional<sampling_info> sampling)
     }
     else
     {
-        set_metadata_str(metadata_str_type::duration_mm_ss, boost::none);
+        set_metadata_str(metadata_str_type::duration_mm_ss, std::nullopt);
     }
     set_cell("length", secs);
     set_cell("lengthCalculated", secs);
@@ -781,22 +781,22 @@ void el_track_impl::set_sampling(boost::optional<sampling_info> sampling)
     trans.commit();
 }
 
-boost::optional<std::string> el_track_impl::title()
+std::optional<std::string> el_track_impl::title()
 {
     return get_metadata_str(metadata_str_type::title);
 }
 
-void el_track_impl::set_title(boost::optional<std::string> title)
+void el_track_impl::set_title(std::optional<std::string> title)
 {
     set_metadata_str(metadata_str_type::title, title);
 }
 
-boost::optional<int32_t> el_track_impl::track_number()
+std::optional<int32_t> el_track_impl::track_number()
 {
-    return get_cell<boost::optional<int32_t>>("playOrder");
+    return get_cell<std::optional<int32_t>>("playOrder");
 }
 
-void el_track_impl::set_track_number(boost::optional<int32_t> track_number)
+void el_track_impl::set_track_number(std::optional<int32_t> track_number)
 {
     set_cell("playOrder", track_number);
 }
@@ -844,12 +844,12 @@ void el_track_impl::set_waveform(std::vector<waveform_entry> waveform)
     trans.commit();
 }
 
-boost::optional<int32_t> el_track_impl::year()
+std::optional<int32_t> el_track_impl::year()
 {
-    return get_cell<boost::optional<int32_t>>("year");
+    return get_cell<std::optional<int32_t>>("year");
 }
 
-void el_track_impl::set_year(boost::optional<int32_t> year)
+void el_track_impl::set_year(std::optional<int32_t> year)
 {
     set_cell("year", year);
 }

@@ -70,9 +70,9 @@ transaction_guard el_database_impl::begin_transaction()
         std::make_unique<el_transaction_guard_impl>(storage_)};
 }
 
-boost::optional<crate> el_database_impl::crate_by_id(int64_t id)
+std::optional<crate> el_database_impl::crate_by_id(int64_t id)
 {
-    boost::optional<crate> cr;
+    std::optional<crate> cr;
     storage_->db << "SELECT COUNT(*) FROM Crate WHERE id = ?" << id >>
         [&](int64_t count) {
             if (count == 1)
@@ -162,7 +162,7 @@ track el_database_impl::create_track(std::string relative_path)
             << "REPLACE INTO MetaData (id, type, text) VALUES (?, ?, ?)";
         for (int64_t type : {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 15, 16})
         {
-            boost::optional<std::string> text;
+            std::optional<std::string> text;
             switch (type)
             {
                 case 10:
@@ -193,7 +193,7 @@ track el_database_impl::create_track(std::string relative_path)
                                         "type, value) VALUES (?, ?, ?)";
         for (int64_t type = 1; type <= 11 /* 12 */; ++type)
         {
-            boost::optional<int64_t> value;
+            std::optional<int64_t> value;
             switch (type)
             {
                 case 5: value = 0; break;
@@ -258,9 +258,9 @@ std::vector<crate> el_database_impl::root_crates()
     return results;
 }
 
-boost::optional<crate> el_database_impl::root_crate_by_name(const std::string& name)
+std::optional<crate> el_database_impl::root_crate_by_name(const std::string& name)
 {
-    boost::optional<crate> cr;
+    std::optional<crate> cr;
     storage_->db << "SELECT cr.id FROM Crate cr "
                     "JOIN CrateParentList cpl ON (cpl.crateOriginId = cr.id) "
                     "WHERE cr.title = ? "
@@ -273,9 +273,9 @@ boost::optional<crate> el_database_impl::root_crate_by_name(const std::string& n
     return cr;
 }
 
-boost::optional<track> el_database_impl::track_by_id(int64_t id)
+std::optional<track> el_database_impl::track_by_id(int64_t id)
 {
-    boost::optional<track> tr;
+    std::optional<track> tr;
     storage_->db << "SELECT COUNT(*) FROM Track WHERE id = ?" << id >>
         [&](int64_t count) {
             if (count == 1)

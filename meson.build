@@ -6,7 +6,6 @@ project(
     default_options: ['cpp_std=c++17', 'default_library=both'])
 
 cpp_compiler = meson.get_compiler('cpp')
-add_global_arguments('-D_MODERN_SQLITE_BOOST_OPTIONAL_SUPPORT', language: 'cpp')
 if cpp_compiler.get_id() == 'msvc'
     # Ask MSVC to populate the __cplusplus macro properly.
     add_global_arguments('/Zc:__cplusplus', language: 'cpp')

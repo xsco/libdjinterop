@@ -26,10 +26,10 @@ std::string get_filename(const std::string& file_path)
     return file_path.substr(slash_pos + 1);
 }
 
-boost::optional<std::string> get_file_extension(const std::string& file_path)
+std::optional<std::string> get_file_extension(const std::string& file_path)
 {
     auto filename = get_filename(file_path);
-    boost::optional<std::string> file_extension;
+    std::optional<std::string> file_extension;
     auto dot_pos = filename.rfind('.');
     if (dot_pos != std::string::npos)
     {

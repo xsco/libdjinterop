@@ -19,11 +19,10 @@
 
 #include <chrono>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
-
-#include <boost/optional.hpp>
 
 #include <djinterop/enginelibrary.hpp>
 #include <djinterop/enginelibrary/el_storage.hpp>
@@ -68,18 +67,18 @@ class el_track_impl : public djinterop::track_impl
 public:
     el_track_impl(std::shared_ptr<el_storage> storage, int64_t id);
 
-    boost::optional<std::string> get_metadata_str(metadata_str_type type);
+    std::optional<std::string> get_metadata_str(metadata_str_type type);
     void set_metadata_str(
-        metadata_str_type type, boost::optional<std::string> content);
+        metadata_str_type type, std::optional<std::string> content);
     void set_metadata_str(metadata_str_type type, const std::string& content);
-    boost::optional<int64_t> get_metadata_int(metadata_int_type type);
+    std::optional<int64_t> get_metadata_int(metadata_int_type type);
     void set_metadata_int(
-        metadata_int_type type, boost::optional<int64_t> content);
+        metadata_int_type type, std::optional<int64_t> content);
 
     template <typename T>
     T get_cell(const char* column_name)
     {
-        boost::optional<T> result;
+        std::optional<T> result;
         storage_->db << (std::string{"SELECT "} + column_name +
                          " FROM Track WHERE id = ?")
                      << id() >>
@@ -112,7 +111,7 @@ public:
     template <typename T>
     T get_perfdata(const char* column_name)
     {
-        boost::optional<T> result;
+        std::optional<T> result;
         storage_->db << (std::string{"SELECT "} + column_name +
                          " From PerformanceData WHERE id = ?")
                      << id() >>
@@ -217,79 +216,79 @@ public:
     void set_adjusted_beatgrid(std::vector<beatgrid_marker> beatgrid) override;
     double adjusted_main_cue() override;
     void set_adjusted_main_cue(double sample_offset) override;
-    boost::optional<std::string> album() override;
-    void set_album(boost::optional<std::string> album) override;
-    boost::optional<int64_t> album_art_id() override;
-    void set_album_art_id(boost::optional<int64_t> album_art_id) override;
-    boost::optional<std::string> artist() override;
-    void set_artist(boost::optional<std::string> artist) override;
-    boost::optional<double> average_loudness() override;
+    std::optional<std::string> album() override;
+    void set_album(std::optional<std::string> album) override;
+    std::optional<int64_t> album_art_id() override;
+    void set_album_art_id(std::optional<int64_t> album_art_id) override;
+    std::optional<std::string> artist() override;
+    void set_artist(std::optional<std::string> artist) override;
+    std::optional<double> average_loudness() override;
     void set_average_loudness(
-        boost::optional<double> average_loudness) override;
-    boost::optional<int64_t> bitrate() override;
-    void set_bitrate(boost::optional<int64_t> bitrate) override;
-    boost::optional<double> bpm() override;
-    void set_bpm(boost::optional<double> bpm) override;
-    boost::optional<std::string> comment() override;
-    void set_comment(boost::optional<std::string> comment) override;
-    boost::optional<std::string> composer() override;
-    void set_composer(boost::optional<std::string> composer) override;
+        std::optional<double> average_loudness) override;
+    std::optional<int64_t> bitrate() override;
+    void set_bitrate(std::optional<int64_t> bitrate) override;
+    std::optional<double> bpm() override;
+    void set_bpm(std::optional<double> bpm) override;
+    std::optional<std::string> comment() override;
+    void set_comment(std::optional<std::string> comment) override;
+    std::optional<std::string> composer() override;
+    void set_composer(std::optional<std::string> composer) override;
     std::vector<djinterop::crate> containing_crates() override;
     database db() override;
     std::vector<beatgrid_marker> default_beatgrid() override;
     void set_default_beatgrid(std::vector<beatgrid_marker> beatgrid) override;
     double default_main_cue() override;
     void set_default_main_cue(double sample_offset) override;
-    boost::optional<std::chrono::milliseconds> duration() override;
+    std::optional<std::chrono::milliseconds> duration() override;
     std::string file_extension() override;
     std::string filename() override;
-    boost::optional<std::string> genre() override;
-    void set_genre(boost::optional<std::string> genre) override;
-    boost::optional<hot_cue> hot_cue_at(int32_t index) override;
-    void set_hot_cue_at(int32_t index, boost::optional<hot_cue> cue) override;
-    std::array<boost::optional<hot_cue>, 8> hot_cues() override;
-    void set_hot_cues(std::array<boost::optional<hot_cue>, 8> cues) override;
-    boost::optional<track_import_info> import_info() override;
+    std::optional<std::string> genre() override;
+    void set_genre(std::optional<std::string> genre) override;
+    std::optional<hot_cue> hot_cue_at(int32_t index) override;
+    void set_hot_cue_at(int32_t index, std::optional<hot_cue> cue) override;
+    std::array<std::optional<hot_cue>, 8> hot_cues() override;
+    void set_hot_cues(std::array<std::optional<hot_cue>, 8> cues) override;
+    std::optional<track_import_info> import_info() override;
     void set_import_info(
-        const boost::optional<track_import_info>& import_info) override;
+        const std::optional<track_import_info>& import_info) override;
     bool is_valid() override;
-    boost::optional<musical_key> key() override;
-    void set_key(boost::optional<musical_key> key) override;
-    boost::optional<std::chrono::system_clock::time_point> last_accessed_at()
+    std::optional<musical_key> key() override;
+    void set_key(std::optional<musical_key> key) override;
+    std::optional<std::chrono::system_clock::time_point> last_accessed_at()
         override;
     void set_last_accessed_at(
-        boost::optional<std::chrono::system_clock::time_point> accessed_at)
+        std::optional<std::chrono::system_clock::time_point> accessed_at)
         override;
-    boost::optional<std::chrono::system_clock::time_point> last_modified_at()
+    std::optional<std::chrono::system_clock::time_point> last_modified_at()
         override;
     void set_last_modified_at(
-        boost::optional<std::chrono::system_clock::time_point> modified_at)
+        std::optional<std::chrono::system_clock::time_point> modified_at)
         override;
-    boost::optional<std::chrono::system_clock::time_point> last_played_at()
+    std::optional<std::chrono::system_clock::time_point> last_played_at()
         override;
     void set_last_played_at(
-        boost::optional<std::chrono::system_clock::time_point> played_at)
+        std::optional<std::chrono::system_clock::time_point> played_at)
         override;
-    boost::optional<loop> loop_at(int32_t index) override;
-    void set_loop_at(int32_t index, boost::optional<loop> l) override;
-    std::array<boost::optional<loop>, 8> loops() override;
-    void set_loops(std::array<boost::optional<loop>, 8> cues) override;
+    std::optional<loop> loop_at(int32_t index) override;
+    void set_loop_at(int32_t index, std::optional<loop> l) override;
+    std::array<std::optional<loop>, 8> loops() override;
+    void set_loops(std::array<std::optional<loop>, 8> cues) override;
     std::vector<waveform_entry> overview_waveform() override;
-    boost::optional<std::string> publisher() override;
-    void set_publisher(boost::optional<std::string> publisher) override;
+    std::optional<std::string> publisher() override;
+    void set_publisher(std::optional<std::string> publisher) override;
     int64_t required_waveform_samples_per_entry() override;
     std::string relative_path() override;
     void set_relative_path(std::string relative_path) override;
-    boost::optional<sampling_info> sampling() override;
-    void set_sampling(boost::optional<sampling_info> sampling) override;
-    boost::optional<std::string> title() override;
-    void set_title(boost::optional<std::string> title) override;
-    boost::optional<int32_t> track_number() override;
-    void set_track_number(boost::optional<int32_t> track_number) override;
+    std::optional<sampling_info> sampling() override;
+    void set_sampling(std::optional<sampling_info> sampling) override;
+    std::optional<std::string> title() override;
+    void set_title(std::optional<std::string> title) override;
+    std::optional<int32_t> track_number() override;
+    void set_track_number(std::optional<int32_t> track_number) override;
     std::vector<waveform_entry> waveform() override;
     void set_waveform(std::vector<waveform_entry> waveform) override;
-    boost::optional<int32_t> year() override;
-    void set_year(boost::optional<int32_t> year) override;
+    std::optional<int32_t> year() override;
+    void set_year(std::optional<int32_t> year) override;
 
 private:
     std::shared_ptr<el_storage> storage_;

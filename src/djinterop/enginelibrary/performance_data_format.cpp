@@ -18,6 +18,7 @@
 #include <chrono>
 #include <iomanip>
 #include <numeric>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -34,23 +35,23 @@ namespace enginelibrary
 namespace
 {
 template <typename T, typename U>
-boost::optional<std::decay_t<T>> prohibit(const U& sentinel, T&& data)
+std::optional<std::decay_t<T>> prohibit(const U& sentinel, T&& data)
 {
     if (data == sentinel)
     {
-        return boost::none;
+        return std::nullopt;
     }
-    return boost::make_optional(std::forward<T>(data));
+    return std::make_optional(std::forward<T>(data));
 }
 
 template <typename T, typename U>
-boost::optional<T> opt_static_cast(const boost::optional<U>& u)
+std::optional<T> opt_static_cast(const std::optional<U>& u)
 {
     if (!u)
     {
-        return boost::none;
+        return std::nullopt;
     }
-    return boost::make_optional(static_cast<T>(*u));
+    return std::make_optional(static_cast<T>(*u));
 }
 
 char* encode_beatgrid(const std::vector<beatgrid_marker>& beatgrid, char* ptr)
@@ -184,7 +185,7 @@ beat_data beat_data::decode(const std::vector<char>& compressed_data)
     std::tie(sampling.sample_rate, ptr) = decode_double_be(ptr);
     std::tie(sampling.sample_count, ptr) = decode_double_be(ptr);
     result.sampling = sampling.sample_rate != 0
-        ? boost::make_optional(sampling) : boost::none;
+        ? std::make_optional(sampling) : std::nullopt;
 
     uint8_t is_beat_data_set;
     std::tie(is_beat_data_set, ptr) = decode_uint8(ptr);
@@ -332,7 +333,7 @@ std::vector<char> loops_data::encode() const
 {
     auto total_label_length = std::accumulate(
         loops.begin(), loops.end(), int64_t{0},
-        [](int64_t x, const boost::optional<loop>& loop) {
+        [](int64_t x, const std::optional<loop>& loop) {
             return x + (loop ? loop->label.length() : 0);
         });
 
@@ -564,7 +565,7 @@ std::vector<char> quick_cues_data::encode() const
 {
     auto total_label_length = std::accumulate(
         hot_cues.begin(), hot_cues.end(), int64_t{0},
-        [](int64_t x, const boost::optional<hot_cue>& hot_cue) {
+        [](int64_t x, const std::optional<hot_cue>& hot_cue) {
             return x + (hot_cue ? hot_cue->label.length() : 0);
         });
 
@@ -743,7 +744,7 @@ track_data track_data::decode(const std::vector<char>& compressed_track_data)
     std::tie(sampling.sample_rate, ptr) = decode_double_be(ptr);
     std::tie(sampling.sample_count, ptr) = decode_int64_be(ptr);
     result.sampling = sampling.sample_rate != 0
-        ? boost::make_optional(sampling) : boost::none;
+        ? std::make_optional(sampling) : std::nullopt;
 
     double raw_average_loudness;
     std::tie(raw_average_loudness, ptr) = decode_double_be(ptr);
