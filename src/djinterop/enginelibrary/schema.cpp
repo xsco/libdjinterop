@@ -18,9 +18,6 @@
 #include <string>
 
 #include <sqlite_modern_cpp.h>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
 
 #include <djinterop/djinterop.hpp>
 #include <djinterop/enginelibrary/schema.hpp>

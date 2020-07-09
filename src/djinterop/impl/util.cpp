@@ -17,8 +17,15 @@
 
 #include <djinterop/impl/util.hpp>
 
+#include <ios>
+#include <optional>
+#include <random>
+#include <sstream>
+#include <string>
+
 namespace djinterop
 {
+
 std::string get_filename(const std::string& file_path)
 {
     // TODO (haslersn): How to handle Windows path separator?
@@ -36,6 +43,55 @@ std::optional<std::string> get_file_extension(const std::string& file_path)
         file_extension = filename.substr(dot_pos + 1);
     }
     return file_extension;
+}
+
+std::string generate_random_uuid()
+{
+    static std::random_device rng;
+    static std::mt19937 generator{rng()};
+    static std::uniform_int_distribution<int> nibble_dist{0, 15};
+    static std::uniform_int_distribution<int> variant_nibble_dist{8, 11};
+
+    // Generate a version 4 (random), variant 1 UUID.
+    std::stringstream ss;
+    ss
+        << std::hex
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << "-"
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << "-4" // Version 4 indicator
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << "-"
+        << variant_nibble_dist(generator) // Variant 1 indicator
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << "-"
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << nibble_dist(generator)
+        << nibble_dist(generator);
+    return ss.str();
 }
 
 }  // namespace djinterop

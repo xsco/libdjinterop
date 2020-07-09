@@ -110,7 +110,7 @@ How Do I Build It?
 
 * [SQLite3](https://sqlite.org)
 * [zlib](http://zlib.net)
-* [Boost](https://boost.org) (libraries required for unit tests; headers only for the main library)
+* [Boost](https://boost.org) (only required for unit tests, not the main library)
 
 `libdjinterop` uses the [Meson build system](https://mesonbuild.com).  Assuming you have the above dependencies in place, and the build tools, you can issue the following commands:
 
@@ -146,9 +146,9 @@ Thanks To
 `libdjinterop` makes use of a number of software libraries, and is extremely grateful for:
 
 * [Boost](https://boost.org)
+* [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html)
 * [SQLite](https://sqlite.org)
 * [SQLite Modern C++ Wrapper](https://github.com/SqliteModernCpp/sqlite_modern_cpp)
 * [zlib](http://zlib.net)
-* [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html)
 
 Interfacing with the Engine Library database format was made a lot easier with the help of MixMasterG from ATGR, who is the author of the [Denon Conversion Utility](https://sellfy.com/atgr_production_team).
