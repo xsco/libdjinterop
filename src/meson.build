@@ -22,13 +22,7 @@ sources = [
 ]
 
 # Dependencies required by the main library.
-core_deps = [thread_dep, dl_dep, sqlite3_dep, zlib_dep, boost_dep]
-
-if cpp_compiler.get_id() == 'msvc'
-    # Boost UUID on Windows uses bcrypt for random UUID generation.
-    bcrypt_dep = cpp_compiler.find_library('bcrypt')
-    core_deps += [bcrypt_dep]
-endif
+core_deps = [thread_dep, dl_dep, sqlite3_dep, zlib_dep]
 
 # Used by unit tests to reference internal classes.
 internal_inc = include_directories('.')

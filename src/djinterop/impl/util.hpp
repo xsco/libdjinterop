@@ -18,10 +18,12 @@
 #pragma once
 
 #include <optional>
+#include <string>
 
 namespace djinterop
 {
 std::string get_filename(const std::string& file_path);
 std::optional<std::string> get_file_extension(const std::string& file_path);
+std::string generate_random_uuid();
 
 }  // namespace djinterop

@@ -15,20 +15,14 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string>
-
 #include <sqlite_modern_cpp.h>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
 
 #include <djinterop/djinterop.hpp>
 #include <djinterop/enginelibrary/schema_1_6_0.hpp>
 #include <djinterop/enginelibrary/schema_validate_utils.hpp>
+#include <djinterop/impl/util.hpp>
 
-namespace djinterop
-{
-namespace enginelibrary
+namespace djinterop::enginelibrary
 {
 static void verify_album_art(sqlite::database &db)
 {
@@ -965,11 +959,11 @@ void create_music_schema_1_6_0(sqlite::database &db)
     db << "CREATE INDEX music.index_CopiedTrack_trackId ON CopiedTrack ( "
           "trackId )";
 
-    // Generate UUIDs for the Information table
-    boost::uuids::uuid uuid{boost::uuids::random_generator()()};
-    auto uuid_str = boost::uuids::to_string(uuid);
+    // Generate UUID for the Information table
+    auto uuid_str = generate_random_uuid();
 
-    // Not yet sure how the currentPlayedIndiciator value is formed.
+    // Not yet sure how the "currentPlayedIndiciator" (typo deliberate) value
+    // is formed.
     auto current_played_indicator_fake_value = 5100658837829259927l;
 
     // Insert row into Information
@@ -1009,9 +1003,8 @@ void create_performance_schema_1_6_0(sqlite::database &db)
     db << "CREATE INDEX perfdata.index_PerformanceData_id ON PerformanceData ( "
           "id )";
 
-    // Generate UUIDs for the Information table
-    boost::uuids::uuid uuid{boost::uuids::random_generator()()};
-    auto uuid_str = boost::uuids::to_string(uuid);
+    // Generate UUID for the Information table
+    auto uuid_str = generate_random_uuid();
 
     // Insert row into Information
     db << "INSERT INTO perfdata.Information ([uuid], [schemaVersionMajor], "
@@ -1021,5 +1014,4 @@ void create_performance_schema_1_6_0(sqlite::database &db)
        << version_1_6_0.pat << 0;
 }
 
-}  // namespace enginelibrary
-}  // namespace djinterop
+}  // namespace djinterop::enginelibrary
