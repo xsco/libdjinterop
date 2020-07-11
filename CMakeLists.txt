@@ -6,14 +6,11 @@
 # The meson/ninja build should be preferred in all other cases.
 #
 cmake_minimum_required(VERSION 3.10)
-project(libdjinterop VERSION 0.9.0)
+project(libdjinterop VERSION 0.11.0)
 
 # Require C++17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-
-# Require Boost >= 1.65 (headers only)
-find_package(Boost 1.65 REQUIRED)
 
 # Require sqlite3 >= 3.11.0
 find_package(SQLite3 3.11.0 REQUIRED)
@@ -46,11 +43,10 @@ add_library(
 
 target_compile_definitions(
     djinterop PUBLIC
-    _MODERN_SQLITE_BOOST_OPTIONAL_SUPPORT)
+    DJINTEROP_SOURCE)
 
 target_include_directories(
     djinterop PUBLIC
-    ${Boost_INCLUDE_DIRS}
     ${SQLite3_INCLUDE_DIRS}
     ${ZLIB_INCLUDE_DIRS}
     include src)
@@ -63,6 +59,7 @@ target_link_libraries(
 install(TARGETS djinterop DESTINATION lib)
 install(FILES
     include/djinterop/album_art.hpp
+    include/djinterop/config.hpp
     include/djinterop/crate.hpp
     include/djinterop/database.hpp
     include/djinterop/djinterop.hpp
