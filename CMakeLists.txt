@@ -49,6 +49,7 @@ target_include_directories(
     djinterop PUBLIC
     ${SQLite3_INCLUDE_DIRS}
     ${ZLIB_INCLUDE_DIRS}
+    ext/sqlite_modern_cpp
     include src)
 
 target_link_libraries(
