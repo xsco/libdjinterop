@@ -30,8 +30,6 @@
 #include <djinterop/enginelibrary.hpp>
 #include <djinterop/track.hpp>
 
-#include "sqlite_modern_cpp.h"
-
 #define STRINGIFY(x) STRINGIFY_(x)
 #define STRINGIFY_(x) #x
 

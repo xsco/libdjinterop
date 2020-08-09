@@ -1,7 +1,7 @@
 boost_test_dep = dependency('boost', modules : ['system', 'filesystem'])
 
 # Dependencies required by all unit test executables.
-test_deps = [boost_test_dep, sqlite3_dep]
+test_deps = [boost_test_dep, sqlite3_dep, sqlite_modern_cpp_dep]
 
 engine_library_test_names = [
     'crate_test',
