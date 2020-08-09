@@ -24,6 +24,7 @@ subdir('include')
 subdir('src')
 subdir('testdata')
 subdir('test')
+subdir('example')
 
 # TODO - add Doxygen support
 
