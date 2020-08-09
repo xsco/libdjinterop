@@ -8,12 +8,14 @@
 #include <tuple>
 #include <memory>
 #include <vector>
-#include <locale>
-#include <codecvt>
+
+#define MODERN_SQLITE_VERSION 3002008
 
 #ifdef __has_include
 #if __cplusplus > 201402 && __has_include(<optional>)
 #define MODERN_SQLITE_STD_OPTIONAL_SUPPORT
+#elif __has_include(<experimental/optional>)
+#define MODERN_SQLITE_EXPERIMENTAL_OPTIONAL_SUPPORT
 #endif
 #endif
 
@@ -27,6 +29,11 @@
 #include <optional>
 #endif
 
+#ifdef MODERN_SQLITE_EXPERIMENTAL_OPTIONAL_SUPPORT
+#include <experimental/optional>
+#define MODERN_SQLITE_STD_OPTIONAL_SUPPORT
+#endif
+
 #ifdef _MODERN_SQLITE_BOOST_OPTIONAL_SUPPORT
 #include <boost/optional.hpp>
 #endif
@@ -36,12 +43,25 @@
 #include "sqlite_modern_cpp/errors.h"
 #include "sqlite_modern_cpp/utility/function_traits.h"
 #include "sqlite_modern_cpp/utility/uncaught_exceptions.h"
+#include "sqlite_modern_cpp/utility/utf16_utf8.h"
 
 #ifdef MODERN_SQLITE_STD_VARIANT_SUPPORT
 #include "sqlite_modern_cpp/utility/variant.h"
 #endif
 
 namespace sqlite {
+
+		// std::optional support for NULL values
+	#ifdef MODERN_SQLITE_STD_OPTIONAL_SUPPORT
+	#ifdef MODERN_SQLITE_EXPERIMENTAL_OPTIONAL_SUPPORT
+	template<class T>
+	using optional = std::experimental::optional<T>;
+	#else
+	template<class T>
+	using optional = std::optional<T>;
+	#endif
+	#endif
+
 	class database;
 	class database_binder;
 
@@ -73,23 +93,15 @@ namespace sqlite {
 			_stmt(std::move(other._stmt)),
 			_inx(other._inx), execution_started(other.execution_started) { }
 
-		void reset() {
-			sqlite3_reset(_stmt.get());
-			sqlite3_clear_bindings(_stmt.get());
-			_inx = 1;
-			used(false);
-		}
-
 		void execute() {
+			_start_execute();
 			int hresult;
-			used(true); /* prevent from executing again when goes out of scope */
 
 			while((hresult = sqlite3_step(_stmt.get())) == SQLITE_ROW) {}
 
 			if(hresult != SQLITE_DONE) {
 				errors::throw_sqlite_error(hresult, sql());
 			}
-			
 		}
 		
 		std::string sql() {
@@ -107,8 +119,10 @@ namespace sqlite {
 		}
 
 		void used(bool state) {
-			if(execution_started == true && state == true) {
-				throw errors::reexecution("Already used statement executed again! Please reset() first!",sql());
+			if(!state) {
+				// We may have to reset first if we haven't done so already:
+				_next_index();
+				--_inx;
 			}
 			execution_started = state; 
 		}
@@ -123,9 +137,22 @@ namespace sqlite {
 
 		bool execution_started = false;
 
+		int _next_index() {
+			if(execution_started && !_inx) {
+				sqlite3_reset(_stmt.get());
+				sqlite3_clear_bindings(_stmt.get());
+			}
+			return ++_inx;
+		}
+		void _start_execute() {
+			_next_index();
+			_inx = 0;
+			used(true);
+		}
+
 		void _extract(std::function<void(void)> call_back) {
 			int hresult;
-			used(true);
+			_start_execute();
 
 			while((hresult = sqlite3_step(_stmt.get())) == SQLITE_ROW) {
 				call_back();
@@ -138,7 +165,7 @@ namespace sqlite {
 
 		void _extract_single_value(std::function<void(void)> call_back) {
 			int hresult;
-			used(true);
+			_start_execute();
 
 			if((hresult = sqlite3_step(_stmt.get())) == SQLITE_ROW) {
 				call_back();
@@ -155,15 +182,9 @@ namespace sqlite {
 			}
 		}
 
-#ifdef _MSC_VER
 		sqlite3_stmt* _prepare(const std::u16string& sql) {
-			return _prepare(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>().to_bytes(reinterpret_cast<const wchar_t*>(sql.c_str())));
+			return _prepare(utility::utf16_to_utf8(sql));
 		}
-#else
-		sqlite3_stmt* _prepare(const std::u16string& sql) {
-			return _prepare(std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>().to_bytes(sql));
-		}
-#endif
 
 		sqlite3_stmt* _prepare(const std::string& sql) {
 			int hresult;
@@ -171,7 +192,7 @@ namespace sqlite {
 			const char *remaining;
 			hresult = sqlite3_prepare_v2(_db.get(), sql.data(), -1, &tmp, &remaining);
 			if(hresult != SQLITE_OK) errors::throw_sqlite_error(hresult, sql);
-			if(!std::all_of(remaining, sql.data() + sql.size(), [](char ch) {return std::isblank(ch);}))
+			if(!std::all_of(remaining, sql.data() + sql.size(), [](char ch) {return std::isspace(ch);}))
 				throw errors::more_statements("Multiple semicolon separated statements are unsupported", sql);
 			return tmp;
 		}
@@ -229,8 +250,8 @@ namespace sqlite {
 
 
 #ifdef MODERN_SQLITE_STD_OPTIONAL_SUPPORT
-		template <typename OptionalT> friend database_binder& operator <<(database_binder& db, const std::optional<OptionalT>& val);
-		template <typename OptionalT> friend void get_col_from_db(database_binder& db, int inx, std::optional<OptionalT>& o);
+		template <typename OptionalT> friend database_binder& operator <<(database_binder& db, const optional<OptionalT>& val);
+		template <typename OptionalT> friend void get_col_from_db(database_binder& db, int inx, optional<OptionalT>& o);
 #endif
 
 #ifdef _MODERN_SQLITE_BOOST_OPTIONAL_SUPPORT
@@ -243,13 +264,13 @@ namespace sqlite {
 		database_binder(std::shared_ptr<sqlite3> db, std::u16string const & sql):
 			_db(db),
 			_stmt(_prepare(sql), sqlite3_finalize),
-			_inx(1) {
+			_inx(0) {
 		}
 
 		database_binder(std::shared_ptr<sqlite3> db, std::string const & sql):
 			_db(db),
 			_stmt(_prepare(sql), sqlite3_finalize),
-			_inx(1) {
+			_inx(0) {
 		}
 
 		~database_binder() noexcept(false) {
@@ -365,7 +386,7 @@ namespace sqlite {
 	};
 	inline OpenFlags operator|(const OpenFlags& a, const OpenFlags& b) {
 		return static_cast<OpenFlags>(static_cast<int>(a) | static_cast<int>(b));
-	};
+	}
 	enum class Encoding {
 		ANY = SQLITE_ANY,
 		UTF8 = SQLITE_UTF8,
@@ -393,11 +414,7 @@ namespace sqlite {
 		}
 
 		database(const std::u16string &db_name, const sqlite_config &config = {}): _db(nullptr) {
-#ifdef _MSC_VER
-			auto db_name_utf8 = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>().to_bytes(reinterpret_cast<const wchar_t*>(db_name.c_str()));
-#else
-			auto db_name_utf8 = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>().to_bytes(db_name);
-#endif
+			auto db_name_utf8 = utility::utf16_to_utf8(db_name);
 			sqlite3* tmp = nullptr;
 			auto ret = sqlite3_open_v2(db_name_utf8.data(), &tmp, static_cast<int>(config.flags), config.zVfs);
 			_db = std::shared_ptr<sqlite3>(tmp, [=](sqlite3* ptr) { sqlite3_close_v2(ptr); }); // this will close the connection eventually when no longer needed.
@@ -515,10 +532,9 @@ namespace sqlite {
 	// int
 	 inline database_binder& operator<<(database_binder& db, const int& val) {
 		int hresult;
-		if((hresult = sqlite3_bind_int(db._stmt.get(), db._inx, val)) != SQLITE_OK) {
+		if((hresult = sqlite3_bind_int(db._stmt.get(), db._next_index(), val)) != SQLITE_OK) {
 			errors::throw_sqlite_error(hresult, db.sql());
 		}
-		++db._inx;
 		return db;
 	}
 	 inline void store_result_in_db(sqlite3_context* db, const int& val) {
@@ -542,11 +558,10 @@ namespace sqlite {
 	// sqlite_int64
 	 inline database_binder& operator <<(database_binder& db, const sqlite_int64&  val) {
 		int hresult;
-		if((hresult = sqlite3_bind_int64(db._stmt.get(), db._inx, val)) != SQLITE_OK) {
+		if((hresult = sqlite3_bind_int64(db._stmt.get(), db._next_index(), val)) != SQLITE_OK) {
 			errors::throw_sqlite_error(hresult, db.sql());
 		}
 
-		++db._inx;
 		return db;
 	}
 	 inline void store_result_in_db(sqlite3_context* db, const sqlite_int64& val) {
@@ -570,11 +585,10 @@ namespace sqlite {
 	// float
 	 inline database_binder& operator <<(database_binder& db, const float& val) {
 		int hresult;
-		if((hresult = sqlite3_bind_double(db._stmt.get(), db._inx, double(val))) != SQLITE_OK) {
+		if((hresult = sqlite3_bind_double(db._stmt.get(), db._next_index(), double(val))) != SQLITE_OK) {
 			errors::throw_sqlite_error(hresult, db.sql());
 		}
 
-		++db._inx;
 		return db;
 	}
 	 inline void store_result_in_db(sqlite3_context* db, const float& val) {
@@ -598,11 +612,10 @@ namespace sqlite {
 	// double
 	 inline database_binder& operator <<(database_binder& db, const double& val) {
 		int hresult;
-		if((hresult = sqlite3_bind_double(db._stmt.get(), db._inx, val)) != SQLITE_OK) {
+		if((hresult = sqlite3_bind_double(db._stmt.get(), db._next_index(), val)) != SQLITE_OK) {
 			errors::throw_sqlite_error(hresult, db.sql());
 		}
 
-		++db._inx;
 		return db;
 	}
 	 inline void store_result_in_db(sqlite3_context* db, const double& val) {
@@ -628,10 +641,9 @@ namespace sqlite {
 		void const* buf = reinterpret_cast<void const *>(vec.data());
 		int bytes = vec.size() * sizeof(T);
 		int hresult;
-		if((hresult = sqlite3_bind_blob(db._stmt.get(), db._inx, buf, bytes, SQLITE_TRANSIENT)) != SQLITE_OK) {
+		if((hresult = sqlite3_bind_blob(db._stmt.get(), db._next_index(), buf, bytes, SQLITE_TRANSIENT)) != SQLITE_OK) {
 			errors::throw_sqlite_error(hresult, db.sql());
 		}
-		++db._inx;
 		return db;
 	}
 	template<typename T, typename A> inline void store_result_in_db(sqlite3_context* db, const std::vector<T, A>& vec) {
@@ -661,10 +673,9 @@ namespace sqlite {
 	/* for nullptr support */
 	inline database_binder& operator <<(database_binder& db, std::nullptr_t) {
 		int hresult;
-		if((hresult = sqlite3_bind_null(db._stmt.get(), db._inx)) != SQLITE_OK) {
+		if((hresult = sqlite3_bind_null(db._stmt.get(), db._next_index())) != SQLITE_OK) {
 			errors::throw_sqlite_error(hresult, db.sql());
 		}
-		++db._inx;
 		return db;
 	}
 	 inline void store_result_in_db(sqlite3_context* db, std::nullptr_t) {
@@ -723,11 +734,10 @@ namespace sqlite {
 
 	 inline database_binder& operator <<(database_binder& db, const std::string& txt) {
 		int hresult;
-		if((hresult = sqlite3_bind_text(db._stmt.get(), db._inx, txt.data(), -1, SQLITE_TRANSIENT)) != SQLITE_OK) {
+		if((hresult = sqlite3_bind_text(db._stmt.get(), db._next_index(), txt.data(), -1, SQLITE_TRANSIENT)) != SQLITE_OK) {
 			errors::throw_sqlite_error(hresult, db.sql());
 		}
 
-		++db._inx;
 		return db;
 	}
 	 inline void store_result_in_db(sqlite3_context* db, const std::string& val) {
@@ -754,11 +764,10 @@ namespace sqlite {
 
 	 inline database_binder& operator <<(database_binder& db, const std::u16string& txt) {
 		int hresult;
-		if((hresult = sqlite3_bind_text16(db._stmt.get(), db._inx, txt.data(), -1, SQLITE_TRANSIENT)) != SQLITE_OK) {
+		if((hresult = sqlite3_bind_text16(db._stmt.get(), db._next_index(), txt.data(), -1, SQLITE_TRANSIENT)) != SQLITE_OK) {
 			errors::throw_sqlite_error(hresult, db.sql());
 		}
 
-		++db._inx;
 		return db;
 	}
 	 inline void store_result_in_db(sqlite3_context* db, const std::u16string& val) {
@@ -789,37 +798,40 @@ namespace sqlite {
 
 	// std::optional support for NULL values
 #ifdef MODERN_SQLITE_STD_OPTIONAL_SUPPORT
-	template <typename OptionalT> inline database_binder& operator <<(database_binder& db, const std::optional<OptionalT>& val) {
+	template <typename OptionalT> inline database_binder& operator <<(database_binder& db, const optional<OptionalT>& val) {
 		if(val) {
-			return operator << (std::move(db), std::move(*val));
+			return db << std::move(*val);
+		} else {
+			return db << nullptr;
 		}
-		int hresult;
-		if((hresult = sqlite3_bind_null(db._stmt.get(), db._inx)) != SQLITE_OK) {
-			errors::throw_sqlite_error(hresult, db.sql());
-		}
-
-		++db._inx;
-		return db;
 	}
-	template <typename OptionalT> inline void store_result_in_db(sqlite3_context* db, const std::optional<OptionalT>& val) {
+	template <typename OptionalT> inline void store_result_in_db(sqlite3_context* db, const optional<OptionalT>& val) {
 		if(val) {
 			store_result_in_db(db, *val);
 		}
 		sqlite3_result_null(db);
 	}
 
-	template <typename OptionalT> inline void get_col_from_db(database_binder& db, int inx, std::optional<OptionalT>& o) {
+	template <typename OptionalT> inline void get_col_from_db(database_binder& db, int inx, optional<OptionalT>& o) {
 		if(sqlite3_column_type(db._stmt.get(), inx) == SQLITE_NULL) {
+			#ifdef MODERN_SQLITE_EXPERIMENTAL_OPTIONAL_SUPPORT
+			o = std::experimental::nullopt;
+			#else
 			o.reset();
+			#endif
 		} else {
 			OptionalT v;
 			get_col_from_db(db, inx, v);
 			o = std::move(v);
 		}
 	}
-	template <typename OptionalT> inline void get_val_from_db(sqlite3_value *value, std::optional<OptionalT>& o) {
+	template <typename OptionalT> inline void get_val_from_db(sqlite3_value *value, optional<OptionalT>& o) {
 		if(sqlite3_value_type(value) == SQLITE_NULL) {
+			#ifdef MODERN_SQLITE_EXPERIMENTAL_OPTIONAL_SUPPORT
+			o = std::experimental::nullopt;
+			#else
 			o.reset();
+			#endif
 		} else {
 			OptionalT v;
 			get_val_from_db(value, v);
@@ -832,15 +844,10 @@ namespace sqlite {
 #ifdef _MODERN_SQLITE_BOOST_OPTIONAL_SUPPORT
 	template <typename BoostOptionalT> inline database_binder& operator <<(database_binder& db, const boost::optional<BoostOptionalT>& val) {
 		if(val) {
-			return operator << (std::move(db), std::move(*val));
+			return db << std::move(*val);
+		} else {
+			return db << nullptr;
 		}
-		int hresult;
-		if((hresult = sqlite3_bind_null(db._stmt.get(), db._inx)) != SQLITE_OK) {
-			errors::throw_sqlite_error(hresult, db.sql());
-		}
-
-		++db._inx;
-		return db;
 	}
 	template <typename BoostOptionalT> inline void store_result_in_db(sqlite3_context* db, const boost::optional<BoostOptionalT>& val) {
 		if(val) {
@@ -892,10 +899,10 @@ namespace sqlite {
 #endif
 
 	// Some ppl are lazy so we have a operator for proper prep. statemant handling.
-	void inline operator++(database_binder& db, int) { db.execute(); db.reset(); }
+	void inline operator++(database_binder& db, int) { db.execute(); }
 
 	// Convert the rValue binder to a reference and call first op<<, its needed for the call that creates the binder (be carefull of recursion here!)
-	template<typename T> database_binder& operator << (database_binder&& db, const T& val) { return db << val; }
+	template<typename T> database_binder&& operator << (database_binder&& db, const T& val) { db << val; return std::move(db); }
 
 	namespace sql_function_binder {
 		template<class T>
@@ -967,7 +974,7 @@ namespace sqlite {
 				Values&&...      values
 		) {
 			static_cast<Functions*>(sqlite3_user_data(db))->first(std::forward<Values>(values)...);
-		};
+		}
 
 		template<
 			typename    ContextType,

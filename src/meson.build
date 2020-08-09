@@ -22,7 +22,7 @@ sources = [
 ]
 
 # Dependencies required by the main library.
-core_deps = [thread_dep, dl_dep, sqlite3_dep, zlib_dep]
+core_deps = [thread_dep, dl_dep, sqlite3_dep, zlib_dep, sqlite_modern_cpp_dep]
 
 # Used by unit tests to reference internal classes.
 internal_inc = include_directories('.')

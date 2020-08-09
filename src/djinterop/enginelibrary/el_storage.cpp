@@ -25,6 +25,7 @@ namespace enginelibrary
 el_storage::el_storage(std::string directory)
     : directory{directory}, db{":memory:"}
 {
+    // TODO (mr-smidge): Throw custom database_not_found if files don't exist.
     // TODO (haslersn): Should we check that directory is an absolute path?
     db << "ATTACH ? as 'music'" << (directory + "/m.db");
     db << "ATTACH ? as 'perfdata'" << (directory + "/p.db");

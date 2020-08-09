@@ -18,6 +18,10 @@ thread_dep = dependency('threads')
 sqlite3_dep = dependency('sqlite3', version: '>=3.11.0', fallback: ['sqlite', 'sqlite_dep'])
 zlib_dep = dependency('zlib', version: '>=1.2.8', fallback: ['zlib', 'zlib_dep'])
 
+sqlite_modern_cpp_dep = declare_dependency(
+    dependencies: [sqlite3_dep],
+    include_directories: 'ext/sqlite_modern_cpp')
+
 inc = include_directories('include')
 
 subdir('include')
