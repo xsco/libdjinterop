@@ -1,6 +1,8 @@
+# Used only to generate config.hpp in the nested include dir.
+subdir('djinterop')
+
 djinterop_header_files = [
     'djinterop/album_art.hpp',
-    'djinterop/config.hpp',
     'djinterop/crate.hpp',
     'djinterop/database.hpp',
     'djinterop/djinterop.hpp',

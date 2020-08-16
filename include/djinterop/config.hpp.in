@@ -46,4 +46,10 @@
 #endif  // DJINTEROP_SOURCE
 #define DJINTEROP_LOCAL DJINTEROP_SYMBOL_LOCAL
 
+// Symbols defined after this point represent the environment at the time
+// that this library was built.  The environment when this library is used must
+// be compatible in order to use the library successfully.
+#cmakedefine DJINTEROP_STD_OPTIONAL
+#cmakedefine DJINTEROP_STD_EXPERIMENTAL_OPTIONAL
+
 #endif  // DJINTEROP_CONFIG_HPP
