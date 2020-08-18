@@ -59,124 +59,124 @@ void track::set_adjusted_main_cue(double sample_offset) const
     pimpl_->set_adjusted_main_cue(sample_offset);
 }
 
-std::optional<std::string> track::album() const
+stdx::optional<std::string> track::album() const
 {
     return pimpl_->album();
 }
 
-void track::set_album(std::optional<std::string> album) const
+void track::set_album(stdx::optional<std::string> album) const
 {
     pimpl_->set_album(album);
 }
 
 void track::set_album(std::string album) const
 {
-    set_album(std::make_optional(album));
+    set_album(stdx::make_optional(album));
 }
 
-std::optional<int64_t> track::album_art_id() const
+stdx::optional<int64_t> track::album_art_id() const
 {
     return pimpl_->album_art_id();
 }
 
-void track::set_album_art_id(std::optional<int64_t> album_art_id) const
+void track::set_album_art_id(stdx::optional<int64_t> album_art_id) const
 {
     pimpl_->set_album_art_id(album_art_id);
 }
 
 void track::set_album_art_id(int64_t album_art_id) const
 {
-    set_album_art_id(std::make_optional(album_art_id));
+    set_album_art_id(stdx::make_optional(album_art_id));
 }
 
-std::optional<std::string> track::artist() const
+stdx::optional<std::string> track::artist() const
 {
     return pimpl_->artist();
 }
 
-void track::set_artist(std::optional<std::string> artist) const
+void track::set_artist(stdx::optional<std::string> artist) const
 {
     pimpl_->set_artist(artist);
 }
 
 void track::set_artist(std::string artist) const
 {
-    set_artist(std::make_optional(artist));
+    set_artist(stdx::make_optional(artist));
 }
 
-std::optional<double> track::average_loudness() const
+stdx::optional<double> track::average_loudness() const
 {
     return pimpl_->average_loudness();
 }
 
-void track::set_average_loudness(std::optional<double> average_loudness) const
+void track::set_average_loudness(stdx::optional<double> average_loudness) const
 {
     pimpl_->set_average_loudness(average_loudness);
 }
 
 void track::set_average_loudness(double average_loudness) const
 {
-    set_average_loudness(std::make_optional(average_loudness));
+    set_average_loudness(stdx::make_optional(average_loudness));
 }
 
-std::optional<int64_t> track::bitrate() const
+stdx::optional<int64_t> track::bitrate() const
 {
     return pimpl_->bitrate();
 }
 
-void track::set_bitrate(std::optional<int64_t> bitrate) const
+void track::set_bitrate(stdx::optional<int64_t> bitrate) const
 {
     pimpl_->set_bitrate(bitrate);
 }
 
 void track::set_bitrate(int64_t bitrate) const
 {
-    set_bitrate(std::make_optional(bitrate));
+    set_bitrate(stdx::make_optional(bitrate));
 }
 
-std::optional<double> track::bpm() const
+stdx::optional<double> track::bpm() const
 {
     return pimpl_->bpm();
 }
 
-void track::set_bpm(std::optional<double> bpm) const
+void track::set_bpm(stdx::optional<double> bpm) const
 {
     pimpl_->set_bpm(bpm);
 }
 
 void track::set_bpm(double bpm) const
 {
-    set_bpm(std::make_optional(bpm));
+    set_bpm(stdx::make_optional(bpm));
 }
 
-std::optional<std::string> track::comment() const
+stdx::optional<std::string> track::comment() const
 {
     return pimpl_->comment();
 }
 
-void track::set_comment(std::optional<std::string> comment) const
+void track::set_comment(stdx::optional<std::string> comment) const
 {
     pimpl_->set_comment(comment);
 }
 
 void track::set_comment(std::string comment) const
 {
-    set_comment(std::make_optional(comment));
+    set_comment(stdx::make_optional(comment));
 }
 
-std::optional<std::string> track::composer() const
+stdx::optional<std::string> track::composer() const
 {
     return pimpl_->composer();
 }
 
-void track::set_composer(std::optional<std::string> composer) const
+void track::set_composer(stdx::optional<std::string> composer) const
 {
     pimpl_->set_composer(composer);
 }
 
 void track::set_composer(std::string composer) const
 {
-    set_composer(std::make_optional(composer));
+    set_composer(stdx::make_optional(composer));
 }
 
 std::vector<crate> track::containing_crates() const
@@ -209,7 +209,7 @@ void track::set_default_main_cue(double sample_offset) const
     pimpl_->set_default_main_cue(sample_offset);
 }
 
-std::optional<milliseconds> track::duration() const
+stdx::optional<milliseconds> track::duration() const
 {
     return pimpl_->duration();
 }
@@ -224,42 +224,42 @@ std::string track::filename() const
     return pimpl_->filename();
 }
 
-std::optional<std::string> track::genre() const
+stdx::optional<std::string> track::genre() const
 {
     return pimpl_->genre();
 }
 
-void track::set_genre(std::optional<std::string> genre) const
+void track::set_genre(stdx::optional<std::string> genre) const
 {
     pimpl_->set_genre(genre);
 }
 
 void track::set_genre(std::string genre) const
 {
-    set_genre(std::make_optional(genre));
+    set_genre(stdx::make_optional(genre));
 }
 
-std::optional<hot_cue> track::hot_cue_at(int32_t index) const
+stdx::optional<hot_cue> track::hot_cue_at(int32_t index) const
 {
     return pimpl_->hot_cue_at(index);
 }
 
-void track::set_hot_cue_at(int32_t index, std::optional<hot_cue> cue) const
+void track::set_hot_cue_at(int32_t index, stdx::optional<hot_cue> cue) const
 {
     pimpl_->set_hot_cue_at(index, cue);
 }
 
 void track::set_hot_cue_at(int32_t index, hot_cue cue) const
 {
-    set_hot_cue_at(index, std::make_optional(std::move(cue)));
+    set_hot_cue_at(index, stdx::make_optional(std::move(cue)));
 }
 
-std::array<std::optional<hot_cue>, 8> track::hot_cues() const
+std::array<stdx::optional<hot_cue>, 8> track::hot_cues() const
 {
     return pimpl_->hot_cues();
 }
 
-void track::set_hot_cues(std::array<std::optional<hot_cue>, 8> cues) const
+void track::set_hot_cues(std::array<stdx::optional<hot_cue>, 8> cues) const
 {
     pimpl_->set_hot_cues(std::move(cues));
 }
@@ -269,20 +269,20 @@ int64_t track::id() const
     return pimpl_->id();
 }
 
-std::optional<track_import_info> track::import_info() const
+stdx::optional<track_import_info> track::import_info() const
 {
     return pimpl_->import_info();
 }
 
 void track::set_import_info(
-    const std::optional<track_import_info>& import_info) const
+    const stdx::optional<track_import_info>& import_info) const
 {
     pimpl_->set_import_info(import_info);
 }
 
 void track::set_import_info(const track_import_info& import_info) const
 {
-    set_import_info(std::make_optional(import_info));
+    set_import_info(stdx::make_optional(import_info));
 }
 
 bool track::is_valid() const
@@ -290,90 +290,90 @@ bool track::is_valid() const
     return pimpl_->is_valid();
 }
 
-std::optional<musical_key> track::key() const
+stdx::optional<musical_key> track::key() const
 {
     return pimpl_->key();
 }
 
-void track::set_key(std::optional<musical_key> key) const
+void track::set_key(stdx::optional<musical_key> key) const
 {
     pimpl_->set_key(key);
 }
 
 void track::set_key(musical_key key) const
 {
-    set_key(std::make_optional(key));
+    set_key(stdx::make_optional(key));
 }
 
-std::optional<system_clock::time_point> track::last_accessed_at() const
+stdx::optional<system_clock::time_point> track::last_accessed_at() const
 {
     return pimpl_->last_accessed_at();
 }
 
 void track::set_last_accessed_at(
-    std::optional<system_clock::time_point> accessed_at) const
+    stdx::optional<system_clock::time_point> accessed_at) const
 {
     pimpl_->set_last_accessed_at(accessed_at);
 }
 
 void track::set_last_accessed_at(system_clock::time_point accessed_at) const
 {
-    set_last_accessed_at(std::make_optional(accessed_at));
+    set_last_accessed_at(stdx::make_optional(accessed_at));
 }
 
-std::optional<system_clock::time_point> track::last_modified_at() const
+stdx::optional<system_clock::time_point> track::last_modified_at() const
 {
     return pimpl_->last_modified_at();
 }
 
 void track::set_last_modified_at(
-    std::optional<system_clock::time_point> modified_at) const
+    stdx::optional<system_clock::time_point> modified_at) const
 {
     pimpl_->set_last_modified_at(modified_at);
 }
 
 void track::set_last_modified_at(system_clock::time_point modified_at) const
 {
-    set_last_modified_at(std::make_optional(modified_at));
+    set_last_modified_at(stdx::make_optional(modified_at));
 }
 
-std::optional<system_clock::time_point> track::last_played_at() const
+stdx::optional<system_clock::time_point> track::last_played_at() const
 {
     return pimpl_->last_played_at();
 }
 
 void track::set_last_played_at(
-    std::optional<system_clock::time_point> played_at) const
+    stdx::optional<system_clock::time_point> played_at) const
 {
     pimpl_->set_last_played_at(played_at);
 }
 
 void track::set_last_played_at(system_clock::time_point played_at) const
 {
-    set_last_played_at(std::make_optional(played_at));
+    set_last_played_at(stdx::make_optional(played_at));
 }
 
-std::optional<loop> track::loop_at(int32_t index) const
+stdx::optional<loop> track::loop_at(int32_t index) const
 {
     return pimpl_->loop_at(index);
 }
 
-void track::set_loop_at(int32_t index, std::optional<loop> l) const
+void track::set_loop_at(int32_t index, stdx::optional<loop> l) const
 {
     pimpl_->set_loop_at(index, l);
 }
 
 void track::set_loop_at(int32_t index, loop l) const
 {
-    set_loop_at(index, std::make_optional(l));
+    set_loop_at(index, stdx::make_optional(l));
 }
 
-std::array<std::optional<loop>, 8> track::loops() const
+std::array<stdx::optional<loop>, 8> track::loops() const
 {
     return pimpl_->loops();
 }
 
-void track::set_loops(std::array<std::optional<loop>, 8> loops) const
+void track::set_loops(std::array<stdx::optional<loop>, 8> loops) const
 {
     pimpl_->set_loops(std::move(loops));
 }
@@ -383,19 +383,19 @@ std::vector<waveform_entry> track::overview_waveform() const
     return pimpl_->overview_waveform();
 }
 
-std::optional<std::string> track::publisher() const
+stdx::optional<std::string> track::publisher() const
 {
     return pimpl_->publisher();
 }
 
-void track::set_publisher(std::optional<std::string> publisher) const
+void track::set_publisher(stdx::optional<std::string> publisher) const
 {
     pimpl_->set_publisher(publisher);
 }
 
 void track::set_publisher(std::string publisher) const
 {
-    set_publisher(std::make_optional(publisher));
+    set_publisher(stdx::make_optional(publisher));
 }
 
 int64_t track::required_waveform_samples_per_entry() const
@@ -413,49 +413,49 @@ void track::set_relative_path(std::string relative_path) const
     pimpl_->set_relative_path(relative_path);
 }
 
-std::optional<sampling_info> track::sampling() const
+stdx::optional<sampling_info> track::sampling() const
 {
     return pimpl_->sampling();
 }
 
-void track::set_sampling(std::optional<sampling_info> sampling) const
+void track::set_sampling(stdx::optional<sampling_info> sampling) const
 {
     pimpl_->set_sampling(sampling);
 }
 
 void track::set_sampling(sampling_info sampling) const
 {
-    set_sampling(std::make_optional(sampling));
+    set_sampling(stdx::make_optional(sampling));
 }
 
-std::optional<std::string> track::title() const
+stdx::optional<std::string> track::title() const
 {
     return pimpl_->title();
 }
 
-void track::set_title(std::optional<std::string> title) const
+void track::set_title(stdx::optional<std::string> title) const
 {
     pimpl_->set_title(title);
 }
 
 void track::set_title(std::string title) const
 {
-    set_title(std::make_optional(title));
+    set_title(stdx::make_optional(title));
 }
 
-std::optional<int32_t> track::track_number() const
+stdx::optional<int32_t> track::track_number() const
 {
     return pimpl_->track_number();
 }
 
-void track::set_track_number(std::optional<int32_t> track_number) const
+void track::set_track_number(stdx::optional<int32_t> track_number) const
 {
     pimpl_->set_track_number(track_number);
 }
 
 void track::set_track_number(int32_t track_number) const
 {
-    set_track_number(std::make_optional(track_number));
+    set_track_number(stdx::make_optional(track_number));
 }
 
 std::vector<waveform_entry> track::waveform() const
@@ -468,19 +468,19 @@ void track::set_waveform(std::vector<waveform_entry> waveform) const
     pimpl_->set_waveform(waveform);
 }
 
-std::optional<int32_t> track::year() const
+stdx::optional<int32_t> track::year() const
 {
     return pimpl_->year();
 }
 
-void track::set_year(std::optional<int32_t> year) const
+void track::set_year(stdx::optional<int32_t> year) const
 {
     pimpl_->set_year(year);
 }
 
 void track::set_year(int32_t year) const
 {
-    set_year(std::make_optional(year));
+    set_year(stdx::make_optional(year));
 }
 
 track::track(std::shared_ptr<track_impl> pimpl) : pimpl_{std::move(pimpl)} {}

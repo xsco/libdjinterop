@@ -33,7 +33,7 @@ public:
     el_database_impl(std::shared_ptr<el_storage> storage);
 
     transaction_guard begin_transaction() override;
-    std::optional<djinterop::crate> crate_by_id(int64_t id) override;
+    stdx::optional<djinterop::crate> crate_by_id(int64_t id) override;
     std::vector<djinterop::crate> crates() override;
     std::vector<djinterop::crate> crates_by_name(
         const std::string& name) override;
@@ -45,9 +45,9 @@ public:
     void remove_crate(djinterop::crate cr) override;
     void remove_track(djinterop::track tr) override;
     std::vector<djinterop::crate> root_crates() override;
-    std::optional<djinterop::crate> root_crate_by_name(
+    stdx::optional<djinterop::crate> root_crate_by_name(
         const std::string& name) override;
-    std::optional<djinterop::track> track_by_id(int64_t id) override;
+    stdx::optional<djinterop::track> track_by_id(int64_t id) override;
     std::vector<djinterop::track> tracks() override;
     std::vector<djinterop::track> tracks_by_relative_path(
         const std::string& relative_path) override;

@@ -50,17 +50,16 @@ void ensure_valid_crate_name(const std::string& name)
 
 }  // namespace
 
-
-el_database_impl::el_database_impl(std::string directory)
-    : storage_{std::make_shared<el_storage>(std::move(directory))}
+el_database_impl::el_database_impl(std::string directory) :
+    storage_{std::make_shared<el_storage>(std::move(directory))}
 {
     // TODO (haslersn): On construction, should we check that the database
     // version is supported? This would give more guarantees to a user that
     // obtains a database object.
 }
 
-el_database_impl::el_database_impl(std::shared_ptr<el_storage> storage)
-    : storage_{std::move(storage)}
+el_database_impl::el_database_impl(std::shared_ptr<el_storage> storage) :
+    storage_{std::move(storage)}
 {
 }
 
@@ -70,9 +69,9 @@ transaction_guard el_database_impl::begin_transaction()
         std::make_unique<el_transaction_guard_impl>(storage_)};
 }
 
-std::optional<crate> el_database_impl::crate_by_id(int64_t id)
+stdx::optional<crate> el_database_impl::crate_by_id(int64_t id)
 {
-    std::optional<crate> cr;
+    stdx::optional<crate> cr;
     storage_->db << "SELECT COUNT(*) FROM Crate WHERE id = ?" << id >>
         [&](int64_t count) {
             if (count == 1)
@@ -162,7 +161,7 @@ track el_database_impl::create_track(std::string relative_path)
             << "REPLACE INTO MetaData (id, type, text) VALUES (?, ?, ?)";
         for (int64_t type : {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 15, 16})
         {
-            std::optional<std::string> text;
+            stdx::optional<std::string> text;
             switch (type)
             {
                 case 10:
@@ -193,7 +192,7 @@ track el_database_impl::create_track(std::string relative_path)
                                         "type, value) VALUES (?, ?, ?)";
         for (int64_t type = 1; type <= 11 /* 12 */; ++type)
         {
-            std::optional<int64_t> value;
+            stdx::optional<int64_t> value;
             switch (type)
             {
                 case 5: value = 0; break;
@@ -258,9 +257,10 @@ std::vector<crate> el_database_impl::root_crates()
     return results;
 }
 
-std::optional<crate> el_database_impl::root_crate_by_name(const std::string& name)
+stdx::optional<crate> el_database_impl::root_crate_by_name(
+    const std::string& name)
 {
-    std::optional<crate> cr;
+    stdx::optional<crate> cr;
     storage_->db << "SELECT cr.id FROM Crate cr "
                     "JOIN CrateParentList cpl ON (cpl.crateOriginId = cr.id) "
                     "WHERE cr.title = ? "
@@ -273,9 +273,9 @@ std::optional<crate> el_database_impl::root_crate_by_name(const std::string& nam
     return cr;
 }
 
-std::optional<track> el_database_impl::track_by_id(int64_t id)
+stdx::optional<track> el_database_impl::track_by_id(int64_t id)
 {
-    std::optional<track> tr;
+    stdx::optional<track> tr;
     storage_->db << "SELECT COUNT(*) FROM Track WHERE id = ?" << id >>
         [&](int64_t count) {
             if (count == 1)

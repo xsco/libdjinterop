@@ -18,14 +18,14 @@
 #include <djinterop/impl/util.hpp>
 
 #include <ios>
-#include <optional>
 #include <random>
 #include <sstream>
 #include <string>
 
+#include <djinterop/optional.hpp>
+
 namespace djinterop
 {
-
 std::string get_filename(const std::string& file_path)
 {
     // TODO (haslersn): How to handle Windows path separator?
@@ -33,10 +33,10 @@ std::string get_filename(const std::string& file_path)
     return file_path.substr(slash_pos + 1);
 }
 
-std::optional<std::string> get_file_extension(const std::string& file_path)
+stdx::optional<std::string> get_file_extension(const std::string& file_path)
 {
     auto filename = get_filename(file_path);
-    std::optional<std::string> file_extension;
+    stdx::optional<std::string> file_extension;
     auto dot_pos = filename.rfind('.');
     if (dot_pos != std::string::npos)
     {
@@ -54,43 +54,24 @@ std::string generate_random_uuid()
 
     // Generate a version 4 (random), variant 1 UUID.
     std::stringstream ss;
-    ss
-        << std::hex
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << "-"
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << "-4" // Version 4 indicator
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << "-"
-        << variant_nibble_dist(generator) // Variant 1 indicator
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << "-"
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << nibble_dist(generator)
-        << nibble_dist(generator);
+    ss << std::hex << nibble_dist(generator) << nibble_dist(generator)
+       << nibble_dist(generator) << nibble_dist(generator)
+       << nibble_dist(generator) << nibble_dist(generator)
+       << nibble_dist(generator) << nibble_dist(generator) << "-"
+       << nibble_dist(generator) << nibble_dist(generator)
+       << nibble_dist(generator) << nibble_dist(generator)
+       << "-4"  // Version 4 indicator
+       << nibble_dist(generator) << nibble_dist(generator)
+       << nibble_dist(generator) << "-"
+       << variant_nibble_dist(generator)  // Variant 1 indicator
+       << nibble_dist(generator) << nibble_dist(generator)
+       << nibble_dist(generator) << "-" << nibble_dist(generator)
+       << nibble_dist(generator) << nibble_dist(generator)
+       << nibble_dist(generator) << nibble_dist(generator)
+       << nibble_dist(generator) << nibble_dist(generator)
+       << nibble_dist(generator) << nibble_dist(generator)
+       << nibble_dist(generator) << nibble_dist(generator)
+       << nibble_dist(generator);
     return ss.str();
 }
 

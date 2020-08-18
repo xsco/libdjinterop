@@ -54,7 +54,7 @@ int main(int argc, char** argv)
     tr.set_year(1970);
     tr.set_title("Some Song"s);
     tr.set_artist("Some Artist"s);
-    tr.set_publisher(std::nullopt);  // std::nullopt indicates missing metadata
+    tr.set_publisher(djinterop::stdx::nullopt);  // indicates missing metadata
     tr.set_key(djinterop::musical_key::a_minor);
     tr.set_bitrate(320);
     tr.set_average_loudness(0.5);  // loudness range (0, 1]
@@ -73,7 +73,7 @@ int main(int argc, char** argv)
     tr.set_adjusted_main_cue(2732);  // manually adjusted
 
     // There are always 8 hot cues, whereby each can optionally be set
-    std::array<std::optional<djinterop::hot_cue>, 8> cues;
+    std::array<djinterop::stdx::optional<djinterop::hot_cue>, 8> cues;
     cues[0] = djinterop::hot_cue{
         "Cue 1", 1377924.5,  // position in number of samples
         el::standard_pad_colors::pad_1};
