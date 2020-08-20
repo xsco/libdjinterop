@@ -37,10 +37,10 @@ using std::chrono::system_clock;
 
 namespace
 {
-std::optional<system_clock::time_point> to_time_point(
-    std::optional<int64_t> timestamp)
+stdx::optional<system_clock::time_point> to_time_point(
+    stdx::optional<int64_t> timestamp)
 {
-    std::optional<system_clock::time_point> result;
+    stdx::optional<system_clock::time_point> result;
     if (timestamp)
     {
         result = system_clock::time_point{seconds(*timestamp)};
@@ -48,10 +48,10 @@ std::optional<system_clock::time_point> to_time_point(
     return result;
 }
 
-std::optional<int64_t> to_timestamp(
-    std::optional<system_clock::time_point> time)
+stdx::optional<int64_t> to_timestamp(
+    stdx::optional<system_clock::time_point> time)
 {
-    std::optional<int64_t> result;
+    stdx::optional<int64_t> result;
     if (time)
     {
         result = duration_cast<seconds>(time->time_since_epoch()).count();
@@ -59,7 +59,8 @@ std::optional<int64_t> to_timestamp(
     return result;
 }
 
-/// Calculate the quantisation number for waveforms, given a quantisation number.
+/// Calculate the quantisation number for waveforms, given a quantisation
+/// number.
 ///
 /// A few numbers written to the waveform performance data are rounded
 /// to multiples of a particular "quantisation number", that is equal to
@@ -76,7 +77,7 @@ int64_t quantisation_number(int64_t sample_rate)
 /// that each one represents must be calculated from the true sample count by
 /// rounding the number of samples to the quantisation number first.
 int64_t calculate_overview_waveform_samples_per_entry(
-        int64_t sample_rate, int64_t sample_count)
+    int64_t sample_rate, int64_t sample_count)
 {
     auto qn = quantisation_number(sample_rate);
     return ((sample_count / qn) * qn) / 1024;
@@ -84,15 +85,15 @@ int64_t calculate_overview_waveform_samples_per_entry(
 
 }  // namespace
 
-el_track_impl::el_track_impl(std::shared_ptr<el_storage> storage, int64_t id)
-    : track_impl{id}, storage_{std::move(storage)}
+el_track_impl::el_track_impl(std::shared_ptr<el_storage> storage, int64_t id) :
+    track_impl{id}, storage_{std::move(storage)}
 {
 }
 
-std::optional<std::string> el_track_impl::get_metadata_str(
+stdx::optional<std::string> el_track_impl::get_metadata_str(
     metadata_str_type type)
 {
-    std::optional<std::string> result;
+    stdx::optional<std::string> result;
     storage_->db << "SELECT text FROM MetaData WHERE id = ? AND "
                     "type = ? AND text IS NOT NULL"
                  << id() << static_cast<int64_t>(type) >>
@@ -113,7 +114,7 @@ std::optional<std::string> el_track_impl::get_metadata_str(
 }
 
 void el_track_impl::set_metadata_str(
-    metadata_str_type type, std::optional<std::string> content)
+    metadata_str_type type, stdx::optional<std::string> content)
 {
     if (content)
     {
@@ -134,9 +135,9 @@ void el_track_impl::set_metadata_str(
                  << id() << static_cast<int64_t>(type) << content;
 }
 
-std::optional<int64_t> el_track_impl::get_metadata_int(metadata_int_type type)
+stdx::optional<int64_t> el_track_impl::get_metadata_int(metadata_int_type type)
 {
-    std::optional<int64_t> result;
+    stdx::optional<int64_t> result;
     storage_->db << "SELECT value FROM MetaDataInteger WHERE id = "
                     "? AND type = ? AND value IS NOT NULL"
                  << id() << static_cast<int64_t>(type) >>
@@ -157,7 +158,7 @@ std::optional<int64_t> el_track_impl::get_metadata_int(metadata_int_type type)
 }
 
 void el_track_impl::set_metadata_int(
-    metadata_int_type type, std::optional<int64_t> content)
+    metadata_int_type type, stdx::optional<int64_t> content)
 {
     storage_->db
         << "REPLACE INTO MetaDataInteger (id, type, value) VALUES (?, ?, ?)"
@@ -262,20 +263,20 @@ void el_track_impl::set_adjusted_main_cue(double sample_offset)
     trans.commit();
 }
 
-std::optional<std::string> el_track_impl::album()
+stdx::optional<std::string> el_track_impl::album()
 {
     return get_metadata_str(metadata_str_type::album);
 }
 
-void el_track_impl::set_album(std::optional<std::string> album)
+void el_track_impl::set_album(stdx::optional<std::string> album)
 {
     set_metadata_str(metadata_str_type::album, album);
 }
 
-std::optional<int64_t> el_track_impl::album_art_id()
+stdx::optional<int64_t> el_track_impl::album_art_id()
 {
     int64_t cell = get_cell<int64_t>("idAlbumArt");
-    std::optional<int64_t> album_art_id;
+    stdx::optional<int64_t> album_art_id;
     if (cell < 1)
     {
         // TODO (haslersn): Throw something.
@@ -287,7 +288,7 @@ std::optional<int64_t> el_track_impl::album_art_id()
     return album_art_id;
 }
 
-void el_track_impl::set_album_art_id(std::optional<int64_t> album_art_id)
+void el_track_impl::set_album_art_id(stdx::optional<int64_t> album_art_id)
 {
     if (album_art_id && *album_art_id <= 1)
     {
@@ -297,23 +298,23 @@ void el_track_impl::set_album_art_id(std::optional<int64_t> album_art_id)
     // 1 is the magic number for "no album art"
 }
 
-std::optional<std::string> el_track_impl::artist()
+stdx::optional<std::string> el_track_impl::artist()
 {
     return get_metadata_str(metadata_str_type::artist);
 }
 
-void el_track_impl::set_artist(std::optional<std::string> artist)
+void el_track_impl::set_artist(stdx::optional<std::string> artist)
 {
     set_metadata_str(metadata_str_type::artist, artist);
 }
 
-std::optional<double> el_track_impl::average_loudness()
+stdx::optional<double> el_track_impl::average_loudness()
 {
     return get_track_data().average_loudness;
 }
 
 void el_track_impl::set_average_loudness(
-    std::optional<double> average_loudness)
+    stdx::optional<double> average_loudness)
 {
     el_transaction_guard_impl trans{storage_};
     auto track_d = get_track_data();
@@ -322,25 +323,25 @@ void el_track_impl::set_average_loudness(
     trans.commit();
 }
 
-std::optional<int64_t> el_track_impl::bitrate()
+stdx::optional<int64_t> el_track_impl::bitrate()
 {
-    return get_cell<std::optional<int64_t>>("bitrate");
+    return get_cell<stdx::optional<int64_t> >("bitrate");
 }
 
-void el_track_impl::set_bitrate(std::optional<int64_t> bitrate)
+void el_track_impl::set_bitrate(stdx::optional<int64_t> bitrate)
 {
     set_cell("bitrate", bitrate);
 }
 
-std::optional<double> el_track_impl::bpm()
+stdx::optional<double> el_track_impl::bpm()
 {
-    return get_cell<std::optional<double>>("bpmAnalyzed");
+    return get_cell<stdx::optional<double> >("bpmAnalyzed");
 }
 
-void el_track_impl::set_bpm(std::optional<double> bpm)
+void el_track_impl::set_bpm(stdx::optional<double> bpm)
 {
     set_cell("bpmAnalyzed", bpm);
-    std::optional<int64_t> ceiled_bpm;
+    stdx::optional<int64_t> ceiled_bpm;
     if (bpm)
     {
         ceiled_bpm = static_cast<int64_t>(std::ceil(*bpm));
@@ -348,22 +349,22 @@ void el_track_impl::set_bpm(std::optional<double> bpm)
     set_cell("bpm", ceiled_bpm);
 }
 
-std::optional<std::string> el_track_impl::comment()
+stdx::optional<std::string> el_track_impl::comment()
 {
     return get_metadata_str(metadata_str_type::comment);
 }
 
-void el_track_impl::set_comment(std::optional<std::string> comment)
+void el_track_impl::set_comment(stdx::optional<std::string> comment)
 {
     set_metadata_str(metadata_str_type::comment, comment);
 }
 
-std::optional<std::string> el_track_impl::composer()
+stdx::optional<std::string> el_track_impl::composer()
 {
     return get_metadata_str(metadata_str_type::composer);
 }
 
-void el_track_impl::set_composer(std::optional<std::string> composer)
+void el_track_impl::set_composer(stdx::optional<std::string> composer)
 {
     set_metadata_str(metadata_str_type::composer, composer);
 }
@@ -414,28 +415,26 @@ void el_track_impl::set_default_main_cue(double sample_offset)
     trans.commit();
 }
 
-std::optional<milliseconds> el_track_impl::duration()
+stdx::optional<milliseconds> el_track_impl::duration()
 {
-    std::optional<milliseconds> result;
     auto smp = sampling();
     if (smp)
     {
         double secs = smp->sample_count / smp->sample_rate;
         return milliseconds{static_cast<int64_t>(1000 * secs)};
     }
-    auto secs = get_cell<std::optional<int64_t>>("length");
+    auto secs = get_cell<stdx::optional<int64_t> >("length");
     if (secs)
     {
         return milliseconds{*secs * 1000};
     }
-    return std::nullopt;
+    return stdx::nullopt;
 }
 
 std::string el_track_impl::file_extension()
 {
     auto rel_path = relative_path();
-    return get_file_extension(rel_path)
-        .value_or(std::string{});
+    return get_file_extension(rel_path).value_or(std::string{});
 }
 
 std::string el_track_impl::filename()
@@ -444,23 +443,23 @@ std::string el_track_impl::filename()
     return get_filename(rel_path);
 }
 
-std::optional<std::string> el_track_impl::genre()
+stdx::optional<std::string> el_track_impl::genre()
 {
     return get_metadata_str(metadata_str_type::genre);
 }
 
-void el_track_impl::set_genre(std::optional<std::string> genre)
+void el_track_impl::set_genre(stdx::optional<std::string> genre)
 {
     set_metadata_str(metadata_str_type::genre, genre);
 }
 
-std::optional<hot_cue> el_track_impl::hot_cue_at(int32_t index)
+stdx::optional<hot_cue> el_track_impl::hot_cue_at(int32_t index)
 {
     auto quick_cues_d = get_quick_cues_data();
     return std::move(quick_cues_d.hot_cues[index]);
 }
 
-void el_track_impl::set_hot_cue_at(int32_t index, std::optional<hot_cue> cue)
+void el_track_impl::set_hot_cue_at(int32_t index, stdx::optional<hot_cue> cue)
 {
     el_transaction_guard_impl trans{storage_};
     auto quick_cues_d = get_quick_cues_data();
@@ -469,13 +468,13 @@ void el_track_impl::set_hot_cue_at(int32_t index, std::optional<hot_cue> cue)
     trans.commit();
 }
 
-std::array<std::optional<hot_cue>, 8> el_track_impl::hot_cues()
+std::array<stdx::optional<hot_cue>, 8> el_track_impl::hot_cues()
 {
     auto quick_cues_d = get_quick_cues_data();
     return std::move(quick_cues_d.hot_cues);
 }
 
-void el_track_impl::set_hot_cues(std::array<std::optional<hot_cue>, 8> cues)
+void el_track_impl::set_hot_cues(std::array<stdx::optional<hot_cue>, 8> cues)
 {
     el_transaction_guard_impl trans{storage_};
     // TODO (haslersn): The following can be optimized because in this case we
@@ -486,20 +485,21 @@ void el_track_impl::set_hot_cues(std::array<std::optional<hot_cue>, 8> cues)
     trans.commit();
 }
 
-std::optional<track_import_info> el_track_impl::import_info()
+stdx::optional<track_import_info> el_track_impl::import_info()
 {
     if (get_cell<int64_t>("isExternalTrack") == 0)
     {
-        return std::nullopt;
+        return stdx::nullopt;
     }
-    return track_import_info{get_cell<std::string>("uuidOfExternalDatabase"),
-                             get_cell<int64_t>("idTrackInExternalDatabase")};
+    return track_import_info{
+        get_cell<std::string>("uuidOfExternalDatabase"),
+        get_cell<int64_t>("idTrackInExternalDatabase")};
     // TODO (haslersn): How should we handle cells that unexpectedly don't
     // contain integral values?
 }
 
 void el_track_impl::set_import_info(
-    const std::optional<track_import_info>& import_info)
+    const stdx::optional<track_import_info>& import_info)
 {
     if (import_info)
     {
@@ -533,9 +533,9 @@ bool el_track_impl::is_valid()
     return valid;
 }
 
-std::optional<musical_key> el_track_impl::key()
+stdx::optional<musical_key> el_track_impl::key()
 {
-    std::optional<musical_key> result;
+    stdx::optional<musical_key> result;
     auto key_num = get_metadata_int(metadata_int_type::musical_key);
     if (key_num)
     {
@@ -544,9 +544,9 @@ std::optional<musical_key> el_track_impl::key()
     return result;
 }
 
-void el_track_impl::set_key(std::optional<musical_key> key)
+void el_track_impl::set_key(stdx::optional<musical_key> key)
 {
-    std::optional<int64_t> key_num;
+    stdx::optional<int64_t> key_num;
     if (key)
     {
         key_num = static_cast<int64_t>(*key);
@@ -560,7 +560,7 @@ void el_track_impl::set_key(std::optional<musical_key> key)
     trans.commit();
 }
 
-std::optional<system_clock::time_point> el_track_impl::last_accessed_at()
+stdx::optional<system_clock::time_point> el_track_impl::last_accessed_at()
 
 {
     // TODO (haslersn): Is there a difference between
@@ -571,7 +571,7 @@ std::optional<system_clock::time_point> el_track_impl::last_accessed_at()
 }
 
 void el_track_impl::set_last_accessed_at(
-    std::optional<system_clock::time_point> accessed_at)
+    stdx::optional<system_clock::time_point> accessed_at)
 {
     if (accessed_at)
     {
@@ -590,34 +590,34 @@ void el_track_impl::set_last_accessed_at(
     }
     else
     {
-        set_metadata_int(metadata_int_type::last_accessed_ts, std::nullopt);
+        set_metadata_int(metadata_int_type::last_accessed_ts, stdx::nullopt);
     }
 }
 
-std::optional<system_clock::time_point> el_track_impl::last_modified_at()
+stdx::optional<system_clock::time_point> el_track_impl::last_modified_at()
 
 {
     return to_time_point(get_metadata_int(metadata_int_type::last_modified_ts));
 }
 
 void el_track_impl::set_last_modified_at(
-    std::optional<system_clock::time_point> modified_at)
+    stdx::optional<system_clock::time_point> modified_at)
 {
     set_metadata_int(
         metadata_int_type::last_modified_ts, to_timestamp(modified_at));
 }
 
-std::optional<system_clock::time_point> el_track_impl::last_played_at()
+stdx::optional<system_clock::time_point> el_track_impl::last_played_at()
 
 {
     return to_time_point(get_metadata_int(metadata_int_type::last_played_ts));
 }
 
 void el_track_impl::set_last_played_at(
-    std::optional<system_clock::time_point> played_at)
+    stdx::optional<system_clock::time_point> played_at)
 {
-    static std::optional<std::string> zero{"0"};
-    static std::optional<std::string> one{"1"};
+    static stdx::optional<std::string> zero{"0"};
+    static stdx::optional<std::string> one{"1"};
     set_metadata_str(metadata_str_type::ever_played, played_at ? one : zero);
     set_metadata_int(
         metadata_int_type::last_played_ts, to_timestamp(played_at));
@@ -632,13 +632,13 @@ void el_track_impl::set_last_played_at(
     }
 }
 
-std::optional<loop> el_track_impl::loop_at(int32_t index)
+stdx::optional<loop> el_track_impl::loop_at(int32_t index)
 {
     auto loops_d = get_loops_data();
     return std::move(loops_d.loops[index]);
 }
 
-void el_track_impl::set_loop_at(int32_t index, std::optional<loop> l)
+void el_track_impl::set_loop_at(int32_t index, stdx::optional<loop> l)
 {
     el_transaction_guard_impl trans{storage_};
     auto loops_d = get_loops_data();
@@ -647,13 +647,13 @@ void el_track_impl::set_loop_at(int32_t index, std::optional<loop> l)
     trans.commit();
 }
 
-std::array<std::optional<loop>, 8> el_track_impl::loops()
+std::array<stdx::optional<loop>, 8> el_track_impl::loops()
 {
     auto loops_d = get_loops_data();
     return std::move(loops_d.loops);
 }
 
-void el_track_impl::set_loops(std::array<std::optional<loop>, 8> cues)
+void el_track_impl::set_loops(std::array<stdx::optional<loop>, 8> cues)
 {
     el_transaction_guard_impl trans{storage_};
     loops_data loops_d;
@@ -668,12 +668,12 @@ std::vector<waveform_entry> el_track_impl::overview_waveform()
     return std::move(overview_waveform_d.waveform);
 }
 
-std::optional<std::string> el_track_impl::publisher()
+stdx::optional<std::string> el_track_impl::publisher()
 {
     return get_metadata_str(metadata_str_type::publisher);
 }
 
-void el_track_impl::set_publisher(std::optional<std::string> publisher)
+void el_track_impl::set_publisher(stdx::optional<std::string> publisher)
 {
     set_metadata_str(metadata_str_type::publisher, publisher);
 }
@@ -687,8 +687,8 @@ int64_t el_track_impl::required_waveform_samples_per_entry()
     }
     if (smp->sample_rate <= 0)
     {
-        throw track_database_inconsistency{"Track has non-positive sample rate",
-                                           id()};
+        throw track_database_inconsistency{
+            "Track has non-positive sample rate", id()};
     }
 
     // In high-resolution waveforms, the samples-per-entry is the same as
@@ -711,16 +711,16 @@ void el_track_impl::set_relative_path(std::string relative_path)
     set_metadata_str(metadata_str_type::file_extension, extension);
 }
 
-std::optional<sampling_info> el_track_impl::sampling()
+stdx::optional<sampling_info> el_track_impl::sampling()
 {
     return get_track_data().sampling;
 }
 
-void el_track_impl::set_sampling(std::optional<sampling_info> sampling)
+void el_track_impl::set_sampling(stdx::optional<sampling_info> sampling)
 {
     el_transaction_guard_impl trans{storage_};
 
-    std::optional<int64_t> secs;
+    stdx::optional<int64_t> secs;
     if (sampling)
     {
         secs = static_cast<int64_t>(
@@ -733,12 +733,11 @@ void el_track_impl::set_sampling(std::optional<sampling_info> sampling)
         oss << ":";
         oss << (*secs % 60);
         auto str = oss.str();
-        set_metadata_str(
-            metadata_str_type::duration_mm_ss, std::string{str});
+        set_metadata_str(metadata_str_type::duration_mm_ss, std::string{str});
     }
     else
     {
-        set_metadata_str(metadata_str_type::duration_mm_ss, std::nullopt);
+        set_metadata_str(metadata_str_type::duration_mm_ss, stdx::nullopt);
     }
     set_cell("length", secs);
     set_cell("lengthCalculated", secs);
@@ -764,7 +763,8 @@ void el_track_impl::set_sampling(std::optional<sampling_info> sampling)
         // entry that is dependent on the sample rate.  If the sample rate is
         // genuinely changed using this method, note that the waveform is likely
         // to need to be updated as well afterwards.
-        high_res_waveform_d.samples_per_entry = quantisation_number(sample_rate);
+        high_res_waveform_d.samples_per_entry =
+            quantisation_number(sample_rate);
         set_high_res_waveform_data(std::move(high_res_waveform_d));
     }
 
@@ -774,29 +774,29 @@ void el_track_impl::set_sampling(std::optional<sampling_info> sampling)
         // the number of entries is always fixed.
         overview_waveform_d.samples_per_entry =
             calculate_overview_waveform_samples_per_entry(
-                    sample_rate, sample_count);
+                sample_rate, sample_count);
         set_overview_waveform_data(std::move(overview_waveform_d));
     }
 
     trans.commit();
 }
 
-std::optional<std::string> el_track_impl::title()
+stdx::optional<std::string> el_track_impl::title()
 {
     return get_metadata_str(metadata_str_type::title);
 }
 
-void el_track_impl::set_title(std::optional<std::string> title)
+void el_track_impl::set_title(stdx::optional<std::string> title)
 {
     set_metadata_str(metadata_str_type::title, title);
 }
 
-std::optional<int32_t> el_track_impl::track_number()
+stdx::optional<int32_t> el_track_impl::track_number()
 {
-    return get_cell<std::optional<int32_t>>("playOrder");
+    return get_cell<stdx::optional<int32_t> >("playOrder");
 }
 
-void el_track_impl::set_track_number(std::optional<int32_t> track_number)
+void el_track_impl::set_track_number(stdx::optional<int32_t> track_number)
 {
     set_cell("playOrder", track_number);
 }
@@ -823,8 +823,8 @@ void el_track_impl::set_waveform(std::vector<waveform_entry> waveform)
         // Calculate an overview waveform automatically.
         // Note that the overview waveform always has 1024 entries in it.
         overview_waveform_d.samples_per_entry =
-                calculate_overview_waveform_samples_per_entry(
-                        sample_rate, sample_count);
+            calculate_overview_waveform_samples_per_entry(
+                sample_rate, sample_count);
         overview_waveform_d.waveform.reserve(1024);
         for (int32_t i = 0; i < 1024; ++i)
         {
@@ -834,7 +834,8 @@ void el_track_impl::set_waveform(std::vector<waveform_entry> waveform)
 
         // Make the assumption that the client has respected the required number
         // of samples per entry when constructing the waveform.
-        high_res_waveform_d.samples_per_entry = quantisation_number(sample_rate);
+        high_res_waveform_d.samples_per_entry =
+            quantisation_number(sample_rate);
         high_res_waveform_d.waveform = std::move(waveform);
     }
 
@@ -844,12 +845,12 @@ void el_track_impl::set_waveform(std::vector<waveform_entry> waveform)
     trans.commit();
 }
 
-std::optional<int32_t> el_track_impl::year()
+stdx::optional<int32_t> el_track_impl::year()
 {
-    return get_cell<std::optional<int32_t>>("year");
+    return get_cell<stdx::optional<int32_t> >("year");
 }
 
-void el_track_impl::set_year(std::optional<int32_t> year)
+void el_track_impl::set_year(stdx::optional<int32_t> year)
 {
     set_cell("year", year);
 }

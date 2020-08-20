@@ -71,14 +71,14 @@ static void populate_track_1(djinterop::track& t)
     t.set_genre("Tech House"s);
     t.set_comment("Purchased at Beatport.com"s);
     t.set_publisher("Stereo Productions"s);
-    t.set_composer(std::nullopt);
+    t.set_composer(djinterop::stdx::nullopt);
     t.set_key(djinterop::musical_key::a_minor);
     t.set_relative_path("../01 - Dennis Cruz - Mad (Original Mix).mp3");
     t.set_last_modified_at(c::system_clock::time_point{c::seconds{1509371790}});
     t.set_bitrate(320);
-    t.set_last_played_at(std::nullopt);
+    t.set_last_played_at(djinterop::stdx::nullopt);
     t.set_last_accessed_at(c::system_clock::time_point{c::seconds{1509321600}});
-    t.set_import_info(std::nullopt);
+    t.set_import_info(djinterop::stdx::nullopt);
 
     // Track data fields
     t.set_sampling(djinterop::sampling_info{44100, 17452800});
@@ -99,29 +99,31 @@ static void populate_track_1(djinterop::track& t)
     t.set_default_main_cue(1144.012);
 
     // Loop fields
-    std::array<std::optional<djinterop::loop>, 8> loops;
-    loops[0] = djinterop::loop{"Loop 1", 1144.012, 345339.134,
-                               el::standard_pad_colors::pad_1};
-    loops[1] = djinterop::loop{"Loop 2", 2582607.427, 2754704.988,
-                               el::standard_pad_colors::pad_2};
-    loops[3] = djinterop::loop{"Loop 4", 4131485.476, 4303583.037,
-                               el::standard_pad_colors::pad_4};
+    std::array<djinterop::stdx::optional<djinterop::loop>, 8> loops;
+    loops[0] = djinterop::loop{
+        "Loop 1", 1144.012, 345339.134, el::standard_pad_colors::pad_1};
+    loops[1] = djinterop::loop{
+        "Loop 2", 2582607.427, 2754704.988, el::standard_pad_colors::pad_2};
+    loops[3] = djinterop::loop{
+        "Loop 4", 4131485.476, 4303583.037, el::standard_pad_colors::pad_4};
     t.set_loops(std::move(loops));
 
     // High-resolution waveform data
     std::vector<djinterop::waveform_entry> waveform;
     int64_t samples_per_entry = t.required_waveform_samples_per_entry();
-    int64_t waveform_size = (t.sampling()->sample_count + samples_per_entry - 1) / samples_per_entry;
+    int64_t waveform_size =
+        (t.sampling()->sample_count + samples_per_entry - 1) /
+        samples_per_entry;
     waveform.reserve(waveform_size);
     for (int64_t i = 0; i < waveform_size; ++i)
     {
-        waveform.push_back({
-                {(uint8_t)(i * 255 / waveform_size),
-                 (uint8_t)(i * 255 / waveform_size)},
-                {(uint8_t)(i * 127 / waveform_size),
-                 (uint8_t)(i * 127 / waveform_size)},
-                {(uint8_t)(i * 63 / waveform_size),
-                 (uint8_t)(i * 63 / waveform_size)}});
+        waveform.push_back(
+            {{(uint8_t)(i * 255 / waveform_size),
+              (uint8_t)(i * 255 / waveform_size)},
+             {(uint8_t)(i * 127 / waveform_size),
+              (uint8_t)(i * 127 / waveform_size)},
+             {(uint8_t)(i * 63 / waveform_size),
+              (uint8_t)(i * 63 / waveform_size)}});
     }
     t.set_waveform(std::move(waveform));
 }
@@ -238,7 +240,7 @@ static void populate_track_2(djinterop::track& t)
     t.set_last_played_at(c::system_clock::time_point{c::seconds{1518739200}});
     t.set_last_accessed_at(c::system_clock::time_point{c::seconds{1518815683}});
     t.set_import_info({"e535b170-26ef-4f30-8cb2-5b9fa4c2a27f", 123});
-    
+
     // Track data fields
     t.set_sampling(djinterop::sampling_info{48000, 10795393});
     t.set_key(djinterop::musical_key::b_minor);
@@ -249,7 +251,7 @@ static void populate_track_2(djinterop::track& t)
     t.set_adjusted_beatgrid({{-4, -107595.55}, {402, 10820254.92}});
 
     // Quick cue fields
-    std::array<std::optional<djinterop::hot_cue>, 8> cues;
+    std::array<djinterop::stdx::optional<djinterop::hot_cue>, 8> cues;
     cues[1] =
         djinterop::hot_cue{"Cue 2", 1234567.89, el::standard_pad_colors::pad_2};
     t.set_hot_cues(std::move(cues));
@@ -263,18 +265,20 @@ static void populate_track_2(djinterop::track& t)
 
     // High-resolution waveform data
     int64_t samples_per_entry = t.required_waveform_samples_per_entry();
-    int64_t waveform_size = (t.sampling()->sample_count + samples_per_entry - 1) / samples_per_entry;
+    int64_t waveform_size =
+        (t.sampling()->sample_count + samples_per_entry - 1) /
+        samples_per_entry;
     std::vector<djinterop::waveform_entry> waveform;
     waveform.reserve(waveform_size);
     for (int64_t i = 0; i < waveform_size; ++i)
     {
-        waveform.push_back({
-                {(uint8_t)(i * 255 / waveform_size),
-                 (uint8_t)(i * 255 / waveform_size)},
-                {(uint8_t)(i * 127 / waveform_size),
-                 (uint8_t)(i * 127 / waveform_size)},
-                {(uint8_t)(i * 63 / waveform_size),
-                 (uint8_t)(i * 63 / waveform_size)}});
+        waveform.push_back(
+            {{(uint8_t)(i * 255 / waveform_size),
+              (uint8_t)(i * 255 / waveform_size)},
+             {(uint8_t)(i * 127 / waveform_size),
+              (uint8_t)(i * 127 / waveform_size)},
+             {(uint8_t)(i * 63 / waveform_size),
+              (uint8_t)(i * 63 / waveform_size)}});
     }
     t.set_waveform(std::move(waveform));
 }
@@ -393,4 +397,3 @@ BOOST_AUTO_TEST_CASE(set_hot_cue_at__empty_track_valid_entries__succeeds)
     auto hot_cues = t.hot_cues();
     BOOST_CHECK(hot_cues[1]);
 }
-

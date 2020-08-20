@@ -54,7 +54,6 @@ using djinterop::track;
 //     relationship is not written to this table.
 namespace
 {
-
 void update_path(
     sqlite::database& music_db, crate cr, const std::string& parent_path)
 {
@@ -85,8 +84,8 @@ void ensure_valid_name(const std::string& name)
 
 }  // namespace
 
-el_crate_impl::el_crate_impl(std::shared_ptr<el_storage> storage, int64_t id)
-    : crate_impl{id}, storage_{std::move(storage)}
+el_crate_impl::el_crate_impl(std::shared_ptr<el_storage> storage, int64_t id) :
+    crate_impl{id}, storage_{std::move(storage)}
 {
 }
 
@@ -133,9 +132,7 @@ crate el_crate_impl::create_sub_crate(std::string name)
     el_transaction_guard_impl trans{storage_};
 
     std::string path;
-    storage_->db
-            << "SELECT path FROM Crate WHERE id = ?"
-            << id() >>
+    storage_->db << "SELECT path FROM Crate WHERE id = ?" << id() >>
         [&](std::string path_val) {
             if (path.empty())
             {
@@ -157,13 +154,12 @@ crate el_crate_impl::create_sub_crate(std::string name)
                     "crateParentId) VALUES (?, ?)"
                  << sub_id << id();
 
-    storage_->db
-        << "INSERT INTO CrateHierarchy (crateId, crateIdChild) "
-           "SELECT crateId, ? FROM CrateHierarchy "
-           "WHERE crateIdChild = ? "
-           "UNION "
-           "SELECT ? AS crateId, ? AS crateIdChild"
-        << sub_id << id() << id() << sub_id;
+    storage_->db << "INSERT INTO CrateHierarchy (crateId, crateIdChild) "
+                    "SELECT crateId, ? FROM CrateHierarchy "
+                    "WHERE crateIdChild = ? "
+                    "UNION "
+                    "SELECT ? AS crateId, ? AS crateIdChild"
+                 << sub_id << id() << id() << sub_id;
 
     crate cr{std::make_shared<el_crate_impl>(storage_, sub_id)};
 
@@ -211,7 +207,7 @@ bool el_crate_impl::is_valid()
 
 std::string el_crate_impl::name()
 {
-    std::optional<std::string> name;
+    stdx::optional<std::string> name;
     storage_->db << "SELECT title FROM Crate WHERE id = ?" << id() >>
         [&](std::string title) {
             if (!name)
@@ -231,9 +227,9 @@ std::string el_crate_impl::name()
     return *name;
 }
 
-std::optional<crate> el_crate_impl::parent()
+stdx::optional<crate> el_crate_impl::parent()
 {
-    std::optional<crate> parent;
+    stdx::optional<crate> parent;
     storage_->db
             << "SELECT crateParentId FROM CrateParentList WHERE crateOriginId "
                "= ? AND crateParentId <> crateOriginId"
@@ -298,7 +294,7 @@ void el_crate_impl::set_name(std::string name)
     trans.commit();
 }
 
-void el_crate_impl::set_parent(std::optional<crate> parent)
+void el_crate_impl::set_parent(stdx::optional<crate> parent)
 {
     el_transaction_guard_impl trans{storage_};
 
@@ -323,9 +319,9 @@ void el_crate_impl::set_parent(std::optional<crate> parent)
     trans.commit();
 }
 
-std::optional<crate> el_crate_impl::sub_crate_by_name(const std::string& name)
+stdx::optional<crate> el_crate_impl::sub_crate_by_name(const std::string& name)
 {
-    std::optional<crate> cr;
+    stdx::optional<crate> cr;
     storage_->db << "SELECT cr.id FROM Crate cr "
                     "JOIN CrateParentList cpl ON (cpl.crateOriginId = cr.id) "
                     "WHERE cr.title = ? "

@@ -18,13 +18,12 @@
 #include <chrono>
 #include <iomanip>
 #include <numeric>
-#include <optional>
-#include <string>
 #include <vector>
 
 #include <djinterop/enginelibrary/encode_decode_utils.hpp>
 #include <djinterop/enginelibrary/performance_data_format.hpp>
 #include <djinterop/musical_key.hpp>
+#include <djinterop/optional.hpp>
 
 typedef std::vector<char>::size_type data_size_t;
 
@@ -35,23 +34,23 @@ namespace enginelibrary
 namespace
 {
 template <typename T, typename U>
-std::optional<std::decay_t<T>> prohibit(const U& sentinel, T&& data)
+stdx::optional<std::decay_t<T> > prohibit(const U& sentinel, T&& data)
 {
     if (data == sentinel)
     {
-        return std::nullopt;
+        return stdx::nullopt;
     }
-    return std::make_optional(std::forward<T>(data));
+    return stdx::make_optional(std::forward<T>(data));
 }
 
 template <typename T, typename U>
-std::optional<T> opt_static_cast(const std::optional<U>& u)
+stdx::optional<T> opt_static_cast(const stdx::optional<U>& u)
 {
     if (!u)
     {
-        return std::nullopt;
+        return stdx::nullopt;
     }
-    return std::make_optional(static_cast<T>(*u));
+    return stdx::make_optional(static_cast<T>(*u));
 }
 
 char* encode_beatgrid(const std::vector<beatgrid_marker>& beatgrid, char* ptr)
@@ -184,8 +183,8 @@ beat_data beat_data::decode(const std::vector<char>& compressed_data)
     sampling_info sampling;
     std::tie(sampling.sample_rate, ptr) = decode_double_be(ptr);
     std::tie(sampling.sample_count, ptr) = decode_double_be(ptr);
-    result.sampling = sampling.sample_rate != 0
-        ? std::make_optional(sampling) : std::nullopt;
+    result.sampling = sampling.sample_rate != 0 ? stdx::make_optional(sampling)
+                                                : stdx::nullopt;
 
     uint8_t is_beat_data_set;
     std::tie(is_beat_data_set, ptr) = decode_uint8(ptr);
@@ -333,7 +332,7 @@ std::vector<char> loops_data::encode() const
 {
     auto total_label_length = std::accumulate(
         loops.begin(), loops.end(), int64_t{0},
-        [](int64_t x, const std::optional<loop>& loop) {
+        [](int64_t x, const stdx::optional<loop>& loop) {
             return x + (loop ? loop->label.length() : 0);
         });
 
@@ -565,7 +564,7 @@ std::vector<char> quick_cues_data::encode() const
 {
     auto total_label_length = std::accumulate(
         hot_cues.begin(), hot_cues.end(), int64_t{0},
-        [](int64_t x, const std::optional<hot_cue>& hot_cue) {
+        [](int64_t x, const stdx::optional<hot_cue>& hot_cue) {
             return x + (hot_cue ? hot_cue->label.length() : 0);
         });
 
@@ -743,8 +742,8 @@ track_data track_data::decode(const std::vector<char>& compressed_track_data)
     sampling_info sampling;
     std::tie(sampling.sample_rate, ptr) = decode_double_be(ptr);
     std::tie(sampling.sample_count, ptr) = decode_int64_be(ptr);
-    result.sampling = sampling.sample_rate != 0
-        ? std::make_optional(sampling) : std::nullopt;
+    result.sampling = sampling.sample_rate != 0 ? stdx::make_optional(sampling)
+                                                : stdx::nullopt;
 
     double raw_average_loudness;
     std::tie(raw_average_loudness, ptr) = decode_double_be(ptr);

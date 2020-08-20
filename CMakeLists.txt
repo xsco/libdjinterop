@@ -6,7 +6,7 @@
 # The meson/ninja build should be preferred in all other cases.
 #
 cmake_minimum_required(VERSION 3.10)
-project(libdjinterop VERSION 0.11.0)
+project(libdjinterop VERSION 0.12.0)
 
 # Require C++17
 set(CMAKE_CXX_STANDARD 17)
@@ -17,6 +17,14 @@ find_package(SQLite3 3.11.0 REQUIRED)
 
 # Require zlib >= 1.2.8
 find_package(ZLIB 1.2.8 REQUIRED)
+
+# Generate config.hpp based on build-time environment.
+include(CheckIncludeFileCXX)
+CHECK_INCLUDE_FILE_CXX(optional DJINTEROP_STD_OPTIONAL)
+CHECK_INCLUDE_FILE_CXX(experimental/optional DJINTEROP_STD_EXPERIMENTAL_OPTIONAL)
+configure_file(
+    include/djinterop/config.hpp.in
+    include/djinterop/config.hpp)
 
 add_library(
     djinterop
@@ -50,6 +58,7 @@ target_include_directories(
     ${SQLite3_INCLUDE_DIRS}
     ${ZLIB_INCLUDE_DIRS}
     ext/sqlite_modern_cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/include
     include src)
 
 target_link_libraries(
@@ -60,7 +69,7 @@ target_link_libraries(
 install(TARGETS djinterop DESTINATION lib)
 install(FILES
     include/djinterop/album_art.hpp
-    include/djinterop/config.hpp
+    ${CMAKE_CURRENT_BINARY_DIR}/include/djinterop/config.hpp
     include/djinterop/crate.hpp
     include/djinterop/database.hpp
     include/djinterop/djinterop.hpp
