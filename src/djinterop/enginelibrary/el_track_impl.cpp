@@ -417,7 +417,6 @@ void el_track_impl::set_default_main_cue(double sample_offset)
 
 stdx::optional<milliseconds> el_track_impl::duration()
 {
-    stdx::optional<milliseconds> result;
     auto smp = sampling();
     if (smp)
     {
