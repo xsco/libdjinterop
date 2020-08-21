@@ -178,7 +178,7 @@ track el_database_impl::create_track(std::string relative_path)
                 case 15:
                 case 16:
                     // Always 1 to our knowledge
-                    text = "1";
+                    text = std::string{"1"};
                     break;
             }
             metadata_str_inserter << id << type << text;
