@@ -21,7 +21,7 @@
 
 #include <djinterop/config.hpp>
 
-#ifdef DJINTEROP_STD_OPTIONAL
+#if defined DJINTEROP_STD_OPTIONAL
 
 #include <optional>
 
@@ -39,7 +39,8 @@ using std::optional;
 }  // namespace stdx
 }  // namespace djinterop
 
-#elif DJINTEROP_STD_EXPERIMENTAL_OPTIONAL
+#elif defined DJINTEROP_STD_EXPERIMENTAL_OPTIONAL
+
 #include <experimental/optional>
 
 namespace djinterop
@@ -57,7 +58,9 @@ using std::experimental::optional;
 }  // namespace djinterop
 
 #else
+
 #error This library requires support for optional<T>, but none was found
+
 #endif
 
 #endif  // DJINTEROP_OPTIONAL_HPP
