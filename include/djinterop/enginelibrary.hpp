@@ -29,6 +29,7 @@
 #include <vector>
 
 #include <djinterop/config.hpp>
+#include <djinterop/database.hpp>
 #include <djinterop/pad_color.hpp>
 #include <djinterop/semantic_version.hpp>
 
@@ -39,9 +40,48 @@ struct beatgrid_marker;
 
 namespace enginelibrary
 {
-static constexpr semantic_version version_1_6_0{1, 6, 0};
-static constexpr semantic_version version_1_7_1{1, 7, 1};
-static constexpr semantic_version version_latest = version_1_7_1;
+/// The schema associated with SC5000 Firmware 1.0.0.
+constexpr const semantic_version version_1_6_0{1, 6, 0};
+
+/// The schema associated with SC5000 Firmware 1.0.3.
+constexpr const semantic_version version_1_7_1{1, 7, 1};
+
+/// The schema associated with Engine Prime 1.1.1.
+constexpr const semantic_version version_1_9_1{1, 9, 1};
+
+/// The schema associated with SC5000 Firmware 1.2.0.
+constexpr const semantic_version version_1_11_1{1, 11, 1};
+
+/// The schema associated with SC5000 Firmware 1.2.2.
+constexpr const semantic_version version_1_13_0{1, 13, 0};
+
+/// The schema associated with Engine Prime 1.2.2.
+constexpr const semantic_version version_1_13_1{1, 13, 1};
+
+/// The schema associated with SC5000 Firmware 1.3.1.
+constexpr const semantic_version version_1_13_2{1, 13, 2};
+
+/// The schema associated with SC5000 Firmware 1.4.0.
+constexpr const semantic_version version_1_15_0{1, 15, 0};
+
+/// The schema associated with SC5000 Firmware 1.5.1/1.5.2.
+constexpr const semantic_version version_1_17_0{1, 17, 0};
+
+/// The schema associated with Engine Prime 1.5.1.
+constexpr const semantic_version version_1_18_0{1, 18, 0};
+
+/// Set of available schemas.
+constexpr const std::array<semantic_version, 10> all_versions{
+    version_1_6_0,  version_1_7_1,  version_1_9_1,  version_1_11_1,
+    version_1_13_0, version_1_13_1, version_1_13_2, version_1_15_0,
+    version_1_17_0, version_1_18_0,
+};
+
+/// The most recent schema version supported by the library.
+constexpr semantic_version version_latest = version_1_18_0;
+
+/// The most recent "firmware-usable" schema version supported by the library.
+constexpr semantic_version version_latest_firmware = version_1_17_0;
 
 namespace standard_pad_colors
 {
@@ -61,6 +101,9 @@ constexpr const std::array<pad_color, 8> pads{pad_1, pad_2, pad_3, pad_4,
 
 constexpr const char* default_database_dir_name = "Engine Library";
 
+/// Gets a descriptive name for a given schema version.
+std::string DJINTEROP_PUBLIC version_name(const semantic_version& version);
+
 /// Creates a new, empty database in a directory using the schema version
 /// provided.
 ///
@@ -68,7 +111,7 @@ constexpr const char* default_database_dir_name = "Engine Library";
 /// a database already exists in the target directory, an exception will be
 /// thrown.
 database DJINTEROP_PUBLIC create_database(
-    std::string directory,
+    const std::string& directory,
     const semantic_version& schema_version = version_latest);
 
 /// Create or load an Engine Library database in a given directory.
@@ -78,7 +121,7 @@ database DJINTEROP_PUBLIC create_database(
 /// database is returned.  The boolean reference parameter `created` can be used
 /// to determine whether the database was created or merely loaded.
 database DJINTEROP_PUBLIC create_or_load_database(
-    std::string directory, const semantic_version& schema_version,
+    const std::string& directory, const semantic_version& schema_version,
     bool& created);
 
 /// Returns a boolean indicating whether an Engine Library already exists in a
@@ -86,7 +129,7 @@ database DJINTEROP_PUBLIC create_or_load_database(
 bool DJINTEROP_PUBLIC database_exists(const std::string& directory);
 
 /// Loads an Engine Library database from a given directory.
-database DJINTEROP_PUBLIC load_database(std::string directory);
+database DJINTEROP_PUBLIC load_database(const std::string& directory);
 
 /// Given an Engine Library database, returns the path to its m.db sqlite
 /// database file

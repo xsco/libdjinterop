@@ -8,6 +8,7 @@ engine_library_test_names = [
     'database_test',
     'enginelibrary_test',
     'performance_data_test',
+    'semantic_version_test',
     'track_test'
 ]
 

@@ -15,78 +15,42 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/stat.h>
 #include <cmath>
 #include <string>
-#if defined(_WIN32)
-#include <direct.h>
-#endif
 
 #include <djinterop/djinterop.hpp>
-#include <djinterop/enginelibrary/el_database_impl.hpp>
-#include <djinterop/enginelibrary/el_transaction_guard_impl.hpp>
+#include "enginelibrary/el_database_impl.hpp"
+#include "enginelibrary/el_transaction_guard_impl.hpp"
+#include "enginelibrary/schema/schema.hpp"
+#include "util.hpp"
 
-namespace djinterop
+namespace djinterop::enginelibrary
 {
-namespace enginelibrary
+/// Gets a descriptive name for a given schema version.
+std::string version_name(const semantic_version& version)
 {
-
-static bool dir_exists(const std::string& directory)
-{
-    struct stat buf;
-    return stat(directory.c_str(), &buf) == 0;
-}
-
-static void ensure_dir_exists(const std::string &directory, bool &created)
-{
-    created = false;
-    if (!dir_exists(directory))
-    {
-#if defined(_WIN32)
-        if (_mkdir(directory.c_str()) != 0)
-#else
-        if (mkdir(directory.c_str(), 0755) != 0)
-#endif
-        {
-            throw std::runtime_error{
-                "Failed to create directory"};
-        }
-
-        created = true;
-    }
+    auto schema_creator_validator =
+        schema::make_schema_creator_validator(version);
+    return schema_creator_validator->name();
 }
 
 database create_database(
-        std::string directory, const semantic_version& schema_version)
+    const std::string& directory, const semantic_version& schema_version)
 {
-    if (!el_storage::schema_version_supported(schema_version))
-    {
-        throw unsupported_database_version{"Unsupported database version",
-                                           schema_version};
-    }
-
-    // Ensure the target directory exists.
-    bool dir_created;
-    ensure_dir_exists(directory, dir_created);
-
-    // Create schema.
-    auto storage = std::make_shared<el_storage>(std::move(directory));
-    el_transaction_guard_impl trans{storage};
-    storage->create_and_validate_schema(schema_version);
-    database db{std::make_shared<el_database_impl>(storage)};
-    trans.commit();
-    return db;
+    auto storage = std::make_shared<el_storage>(directory, schema_version);
+    return database{std::make_shared<el_database_impl>(storage)};
 }
 
 database create_or_load_database(
-    std::string directory, const semantic_version& schema_version, bool &created)
+    const std::string& directory, const semantic_version& schema_version,
+    bool& created)
 {
-    if (database_exists(directory))
+    try
     {
         created = false;
         return load_database(directory);
     }
-    else
+    catch (database_not_found& e)
     {
         created = true;
         return create_database(directory, schema_version);
@@ -95,24 +59,22 @@ database create_or_load_database(
 
 bool database_exists(const std::string& directory)
 {
-    // We have to find out whether the engine library exists. Naively, we'd do
-    // this by checking if the m.db and p.db files exist. However, if a previous
-    // attempt to create the engine library failed after creating the files and
-    // before creating the schemata, then the files exist but the enginelibrary
-    // doesn't exist.
-    if (!dir_exists(directory))
+    try
     {
-        // No EL DB directory.
+        load_database(directory);
+    }
+    catch (database_not_found& e)
+    {
         return false;
     }
 
-    el_storage storage{std::move(directory)};
-    return storage.schema_created();
+    return true;
 }
 
-database load_database(std::string directory)
+database load_database(const std::string& directory)
 {
-    return database{std::make_shared<el_database_impl>(std::move(directory))};
+    auto storage = std::make_shared<el_storage>(directory);
+    return database{std::make_shared<el_database_impl>(storage)};
 }
 
 std::string music_db_path(const database& db)
@@ -185,5 +147,4 @@ std::string perfdata_db_path(const database& db)
     return db.directory() + "/p.db";
 }
 
-}  // namespace enginelibrary
-}  // namespace djinterop
+}  // namespace djinterop::enginelibrary

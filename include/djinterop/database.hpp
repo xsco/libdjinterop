@@ -108,6 +108,9 @@ public:
     /// Returns the schema version of the database
     semantic_version version() const;
 
+    /// Returns a descriptive name for the database version.
+    std::string version_name() const;
+
     /// Removes a crate from the database
     ///
     /// All handles to that crate become invalid.

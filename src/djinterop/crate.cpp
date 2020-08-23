@@ -20,7 +20,7 @@
 
 #include <djinterop/djinterop.hpp>
 #include <djinterop/impl/crate_impl.hpp>
-#include <djinterop/impl/util.hpp>
+#include <djinterop/util.hpp>
 
 namespace djinterop
 {

@@ -19,10 +19,10 @@
 
 #include <djinterop/djinterop.hpp>
 #include <djinterop/enginelibrary/el_database_impl.hpp>
-#include <djinterop/enginelibrary/schema.hpp>
+#include <djinterop/enginelibrary/schema/schema.hpp>
 #include <djinterop/impl/database_impl.hpp>
-#include <djinterop/impl/util.hpp>
 #include <djinterop/transaction_guard.hpp>
+#include <djinterop/util.hpp>
 
 namespace djinterop
 {
@@ -122,6 +122,11 @@ std::string database::uuid() const
 semantic_version database::version() const
 {
     return pimpl_->version();
+}
+
+std::string database::version_name() const
+{
+    return pimpl_->version_name();
 }
 
 database::database(std::shared_ptr<database_impl> pimpl) :

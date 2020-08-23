@@ -145,10 +145,25 @@ crate el_crate_impl::create_sub_crate(std::string name)
             }
         };
 
-    storage_->db << "INSERT INTO Crate (title, path) VALUES (?, ?)"
-                 << name.data() << (path + name + ";");
-
-    int64_t sub_id = storage_->db.last_insert_rowid();
+    int64_t sub_id;
+    if (storage_->version >= version_1_9_1)
+    {
+        // Newer schemas consider crates to be a kind of 'list', and so the
+        // `Crate` table has been replaced with a VIEW onto `List`.  The main
+        // difference is that `List` does not have an integer primary key, so
+        // the new id will need to be determined in advance.
+        storage_->db << "SELECT IFNULL(MAX(id), 0) + 1 FROM Crate" >> sub_id;
+        storage_->db << "INSERT INTO Crate (id, title, path) VALUES (?, ?, ?)"
+                     << sub_id << name.data() << (path + name + ";");
+    }
+    else
+    {
+        // Older schema versions have a dedicated table for crates that has
+        // an integer primary key, which will be filled automatically.
+        storage_->db << "INSERT INTO Crate (title, path) VALUES (?, ?)"
+                     << name.data() << (path + name + ";");
+        sub_id = storage_->db.last_insert_rowid();
+    }
 
     storage_->db << "INSERT INTO CrateParentList (crateOriginId, "
                     "crateParentId) VALUES (?, ?)"

@@ -33,6 +33,7 @@ int main(int argc, char** argv)
     auto db = el::create_or_load_database(dir, el::version_latest, created);
     std::cout << (created ? "Created " : "Loaded ") << "database in directory "
               << dir << std::endl;
+    std::cout << "DB version is " << db.version_name() << std::endl;
 
     for (auto& cr : db.crates())
     {
