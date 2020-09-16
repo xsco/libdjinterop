@@ -15,51 +15,96 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <djinterop/enginelibrary/el_storage.hpp>
-#include <djinterop/enginelibrary/schema.hpp>
+#include "el_storage.hpp"
 
-namespace djinterop
+#include <djinterop/database.hpp>
+#include <djinterop/exceptions.hpp>
+
+#include "../util.hpp"
+#include "schema/schema.hpp"
+
+namespace djinterop::enginelibrary
 {
-namespace enginelibrary
+namespace
 {
-el_storage::el_storage(std::string directory)
-    : directory{directory}, db{":memory:"}
+sqlite::database make_attached_db(const std::string& directory, bool must_exist)
 {
-    // TODO (mr-smidge): Throw custom database_not_found if files don't exist.
-    // TODO (haslersn): Should we check that directory is an absolute path?
+    if (!dir_exists(directory))
+    {
+        if (must_exist)
+        {
+            throw database_not_found{directory};
+        }
+        else
+        {
+            // Note: only creates leaf directory, not entire tree.
+            create_dir(directory);
+        }
+    }
+
+    sqlite::database db{":memory:"};
     db << "ATTACH ? as 'music'" << (directory + "/m.db");
     db << "ATTACH ? as 'perfdata'" << (directory + "/p.db");
+    return db;
 }
 
-bool el_storage::schema_version_supported(semantic_version schema_version)
+semantic_version get_version(sqlite::database& db)
 {
-    return is_supported(schema_version);
-}
-
-void el_storage::create_and_validate_schema(semantic_version schema_version)
-{
-    create_music_schema(db, schema_version);
-    verify_music_schema(db);
-    create_performance_schema(db, schema_version);
-    verify_performance_schema(db);
-}
-
-bool el_storage::schema_created() const
-{
+    // Check that the `Information` table has been created.
     std::string sql =
         "SELECT SUM(rows) FROM ("
         "  SELECT COUNT(*) AS rows "
-        "  FROM music.sqlite_master WHERE "
-        "  type = 'table' "
+        "  FROM music.sqlite_master "
+        "  WHERE name = 'Information' "
         "  UNION ALL "
         "  SELECT COUNT(*) AS rows "
         "  FROM perfdata.sqlite_master "
-        "  WHERE type = 'table'"
+        "  WHERE name = 'Information' "
         ")";
     int32_t table_count;
     db << sql >> table_count;
-    return table_count != 0;
+    if (table_count != 2)
+    {
+        throw database_inconsistency{
+            "Did not find an `Information` table for both the music and "
+            "performance databases"};
+    }
+
+    semantic_version music_version;
+    semantic_version perfdata_version;
+    db << "SELECT schemaVersionMajor, schemaVersionMinor, "
+          "schemaVersionPatch FROM music.Information" >>
+        std::tie(music_version.maj, music_version.min, music_version.pat);
+    db << "SELECT schemaVersionMajor, schemaVersionMinor, "
+          "schemaVersionPatch FROM music.Information" >>
+        std::tie(
+            perfdata_version.maj, perfdata_version.min, perfdata_version.pat);
+    if (music_version != perfdata_version)
+    {
+        throw database_inconsistency{
+            "The stated schema versions do not match between the music and "
+            "performance data databases!"};
+    }
+
+    return music_version;
 }
 
-}  // namespace enginelibrary
-}  // namespace djinterop
+}  // anonymous namespace
+
+el_storage::el_storage(const std::string& directory) :
+    directory{directory}, db{make_attached_db(directory, true)},
+    version{get_version(db)},
+    schema_creator_validator{schema::make_schema_creator_validator(version)}
+{
+}
+
+el_storage::el_storage(const std::string& directory, semantic_version version) :
+    directory{directory}, db{make_attached_db(directory, false)},
+    version{version}, schema_creator_validator{
+                          schema::make_schema_creator_validator(version)}
+{
+    // Create the desired schema on the new database.
+    schema_creator_validator->create(db);
+}
+
+}  // namespace djinterop::enginelibrary

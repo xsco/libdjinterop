@@ -17,14 +17,25 @@
 
 #pragma once
 
-#include <string>
+#include <sqlite_modern_cpp.h>
+#include <djinterop/enginelibrary/schema/schema_1_13_0.hpp>
 
-#include <djinterop/optional.hpp>
-
-namespace djinterop
+namespace djinterop::enginelibrary::schema
 {
-std::string get_filename(const std::string& file_path);
-stdx::optional<std::string> get_file_extension(const std::string& file_path);
-std::string generate_random_uuid();
+class schema_1_13_1 : public schema_1_13_0
+{
+public:
+    std::string name() const override { return "EP 1.2.2"; }
 
-}  // namespace djinterop
+protected:
+    void verify_list(sqlite::database& db) const override;
+    void verify_performance_data(sqlite::database& db) const override;
+
+    void verify_music_schema(sqlite::database& db) const override;
+    void verify_performance_schema(sqlite::database& db) const override;
+
+    void create_music_schema(sqlite::database& db) override;
+    void create_performance_schema(sqlite::database& db) override;
+};
+
+}  // namespace djinterop::enginelibrary::schema

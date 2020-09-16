@@ -18,18 +18,25 @@
 #pragma once
 
 #include <sqlite_modern_cpp.h>
+#include <djinterop/enginelibrary/schema/schema_1_11_1.hpp>
 
-namespace djinterop
+namespace djinterop::enginelibrary::schema
 {
-namespace enginelibrary
+class schema_1_13_0 : public schema_1_11_1
 {
-void verify_music_schema_1_6_0(sqlite::database& db);
+public:
+    std::string name() const override { return "SC5000 Firmware 1.2.2"; }
 
-void verify_performance_schema_1_6_0(sqlite::database& db);
+protected:
+    void verify_music_master_list(sqlite::database& db) const override;
 
-void create_music_schema_1_6_0(sqlite::database& db);
+    virtual void verify_internal_database(sqlite::database& db) const;
+    void verify_list(sqlite::database& db) const override;
 
-void create_performance_schema_1_6_0(sqlite::database& db);
+    void verify_music_schema(sqlite::database& db) const override;
 
-}  // namespace enginelibrary
-}  // namespace djinterop
+    void create_music_schema(sqlite::database& db) override;
+    void create_performance_schema(sqlite::database& db) override;
+};
+
+}  // namespace djinterop::schema

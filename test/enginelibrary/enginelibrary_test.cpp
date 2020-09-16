@@ -16,43 +16,50 @@
  */
 
 #define BOOST_TEST_MODULE enginelibrary_test
+#include <boost/test/data/test_case.hpp>
 #include <boost/test/included/unit_test.hpp>
 
 #include <djinterop/enginelibrary.hpp>
 
+#include "temporary_directory.hpp"
+
+namespace utf = boost::unit_test;
 namespace el = djinterop::enginelibrary;
 
-
-BOOST_AUTO_TEST_CASE(operators_equality__various__expected)
+BOOST_TEST_DECORATOR(
+    * utf::description("load_database() with a non-existent path"))
+BOOST_AUTO_TEST_CASE(load_database__fake_path__throw)
 {
-    // Arrange/Act/Assert
-    BOOST_CHECK(el::version_1_6_0 == el::version_1_6_0);
-    BOOST_CHECK(el::version_1_7_1 == el::version_1_7_1);
-    BOOST_CHECK(!(el::version_1_6_0 == el::version_1_7_1));
-    BOOST_CHECK(!(el::version_1_7_1 == el::version_1_6_0));
-    BOOST_CHECK(el::version_1_6_0 != el::version_1_7_1);
-    BOOST_CHECK(el::version_1_7_1 != el::version_1_6_0);
-    BOOST_CHECK(!(el::version_1_6_0 != el::version_1_6_0));
-    BOOST_CHECK(!(el::version_1_7_1 != el::version_1_7_1));
+    // Note separate scope to ensure no locks are held on the temporary dir.
+    temporary_directory tmp_loc;
+
+    {
+        // Arrange/Act/Assert
+        BOOST_CHECK_THROW(
+            auto db = el::load_database(tmp_loc.temp_dir + "/does_not_exist"),
+            djinterop::database_not_found);
+    }
 }
 
-BOOST_AUTO_TEST_CASE(operators_ordering__various__expected)
+BOOST_TEST_DECORATOR(
+    * utf::description("create_database() with all supported schema versions"))
+BOOST_DATA_TEST_CASE(
+    create_database__valid_version__creates_verified, el::all_versions, version)
 {
-    // Arrange/Act/Assert
-    BOOST_CHECK(el::version_1_6_0 <= el::version_1_6_0);
-    BOOST_CHECK(el::version_1_7_1 <= el::version_1_7_1);
-    BOOST_CHECK(el::version_1_6_0 <= el::version_1_7_1);
-    BOOST_CHECK(!(el::version_1_7_1 <= el::version_1_6_0));
-    BOOST_CHECK(!(el::version_1_6_0 < el::version_1_6_0));
-    BOOST_CHECK(!(el::version_1_7_1 < el::version_1_7_1));
-    BOOST_CHECK(el::version_1_6_0 < el::version_1_7_1);
-    BOOST_CHECK(!(el::version_1_7_1 < el::version_1_6_0));
-    BOOST_CHECK(el::version_1_6_0 >= el::version_1_6_0);
-    BOOST_CHECK(el::version_1_7_1 >= el::version_1_7_1);
-    BOOST_CHECK(!(el::version_1_6_0 >= el::version_1_7_1));
-    BOOST_CHECK(el::version_1_7_1 >= el::version_1_6_0);
-    BOOST_CHECK(!(el::version_1_6_0 > el::version_1_6_0));
-    BOOST_CHECK(!(el::version_1_7_1 > el::version_1_7_1));
-    BOOST_CHECK(!(el::version_1_6_0 > el::version_1_7_1));
-    BOOST_CHECK(el::version_1_7_1 > el::version_1_6_0);
+    // Note separate scope to ensure no locks are held on the temporary dir.
+    temporary_directory tmp_loc;
+
+    {
+        // Arrange/Act
+        auto db = el::create_database(tmp_loc.temp_dir, version);
+
+        // Assert
+        BOOST_CHECK_NO_THROW(db.verify());
+        BOOST_CHECK_EQUAL(db.is_supported(), true);
+        BOOST_CHECK_EQUAL(db.directory(), tmp_loc.temp_dir);
+        BOOST_CHECK_EQUAL(el::music_db_path(db), (tmp_loc.temp_dir + "/m.db"));
+        BOOST_CHECK_EQUAL(
+            el::perfdata_db_path(db), (tmp_loc.temp_dir + "/p.db"));
+        BOOST_CHECK_EQUAL(db.version(), version);
+    }
 }

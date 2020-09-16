@@ -15,34 +15,38 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <djinterop/impl/util.hpp>
+#include <djinterop/util.hpp>
 
 #include <ios>
 #include <random>
 #include <sstream>
 #include <string>
 
+#include <sys/stat.h>
+#if defined(_WIN32)
+#include <direct.h>
+#endif
+
 #include <djinterop/optional.hpp>
 
 namespace djinterop
 {
-std::string get_filename(const std::string& file_path)
+void create_dir(const std::string& directory)
 {
-    // TODO (haslersn): How to handle Windows path separator?
-    auto slash_pos = file_path.rfind('/');  // returns -1 in case of no match
-    return file_path.substr(slash_pos + 1);
+#if defined(_WIN32)
+    if (_mkdir(directory.c_str()) != 0)
+#else
+    if (mkdir(directory.c_str(), 0755) != 0)
+#endif
+    {
+        throw std::runtime_error{"Failed to create directory"};
+    }
 }
 
-stdx::optional<std::string> get_file_extension(const std::string& file_path)
+bool dir_exists(const std::string& directory)
 {
-    auto filename = get_filename(file_path);
-    stdx::optional<std::string> file_extension;
-    auto dot_pos = filename.rfind('.');
-    if (dot_pos != std::string::npos)
-    {
-        file_extension = filename.substr(dot_pos + 1);
-    }
-    return file_extension;
+    struct stat buf;
+    return stat(directory.c_str(), &buf) == 0;
 }
 
 std::string generate_random_uuid()
@@ -73,6 +77,25 @@ std::string generate_random_uuid()
        << nibble_dist(generator) << nibble_dist(generator)
        << nibble_dist(generator);
     return ss.str();
+}
+
+std::string get_filename(const std::string& file_path)
+{
+    // TODO (haslersn): How to handle Windows path separator?
+    auto slash_pos = file_path.rfind('/');  // returns -1 in case of no match
+    return file_path.substr(slash_pos + 1);
+}
+
+stdx::optional<std::string> get_file_extension(const std::string& file_path)
+{
+    auto filename = get_filename(file_path);
+    stdx::optional<std::string> file_extension;
+    auto dot_pos = filename.rfind('.');
+    if (dot_pos != std::string::npos)
+    {
+        file_extension = filename.substr(dot_pos + 1);
+    }
+    return file_extension;
 }
 
 }  // namespace djinterop

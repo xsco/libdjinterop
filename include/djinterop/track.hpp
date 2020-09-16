@@ -165,6 +165,8 @@ public:
     /// Returns the duration (metadata) of the track
     stdx::optional<std::chrono::milliseconds> duration() const;
 
+    // TODO (mr-smidge): Add `file_bytes()` and `set_file_bytes()` methods.
+
     /// Returns the file extension part of `track::relative_path()`
     ///
     /// An empty string is returned if the file doesn't have an extension.
@@ -303,6 +305,8 @@ public:
     /// Sets the track number (metadata) of the track
     void set_track_number(stdx::optional<int32_t> track_number) const;
     void set_track_number(int32_t track_number) const;
+
+    // TODO (mr-smidge): Add `uri()` and `set_uri()` methods.
 
     std::vector<waveform_entry> waveform() const;
 

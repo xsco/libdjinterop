@@ -24,7 +24,7 @@
 #include <djinterop/enginelibrary/el_database_impl.hpp>
 #include <djinterop/enginelibrary/el_track_impl.hpp>
 #include <djinterop/enginelibrary/el_transaction_guard_impl.hpp>
-#include <djinterop/impl/util.hpp>
+#include <djinterop/util.hpp>
 
 namespace djinterop
 {
@@ -59,8 +59,7 @@ stdx::optional<int64_t> to_timestamp(
     return result;
 }
 
-/// Calculate the quantisation number for waveforms, given a quantisation
-/// number.
+/// Calculate the quantisation number for waveforms, given a sample rate.
 ///
 /// A few numbers written to the waveform performance data are rounded
 /// to multiples of a particular "quantisation number", that is equal to

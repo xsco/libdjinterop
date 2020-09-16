@@ -21,9 +21,9 @@
 #include <djinterop/enginelibrary/el_storage.hpp>
 #include <djinterop/enginelibrary/el_track_impl.hpp>
 #include <djinterop/enginelibrary/el_transaction_guard_impl.hpp>
-#include <djinterop/enginelibrary/schema.hpp>
-#include <djinterop/impl/util.hpp>
+#include <djinterop/enginelibrary/schema/schema.hpp>
 #include <djinterop/transaction_guard.hpp>
+#include <djinterop/util.hpp>
 
 namespace djinterop
 {
@@ -49,14 +49,6 @@ void ensure_valid_crate_name(const std::string& name)
 }
 
 }  // namespace
-
-el_database_impl::el_database_impl(std::string directory) :
-    storage_{std::make_shared<el_storage>(std::move(directory))}
-{
-    // TODO (haslersn): On construction, should we check that the database
-    // version is supported? This would give more guarantees to a user that
-    // obtains a database object.
-}
 
 el_database_impl::el_database_impl(std::shared_ptr<el_storage> storage) :
     storage_{std::move(storage)}
@@ -113,10 +105,25 @@ crate el_database_impl::create_root_crate(std::string name)
     ensure_valid_crate_name(name);
     el_transaction_guard_impl trans{storage_};
 
-    storage_->db << "INSERT INTO Crate (title, path) VALUES (?, ?)"
-                 << name.data() << std::string{name} + ';';
-
-    int64_t id = storage_->db.last_insert_rowid();
+    int64_t id;
+    if (storage_->version >= version_1_9_1)
+    {
+        // Newer schemas consider crates to be a kind of 'list', and so the
+        // `Crate` table has been replaced with a VIEW onto `List`.  The main
+        // difference is that `List` does not have an integer primary key, so
+        // the new id will need to be determined in advance.
+        storage_->db << "SELECT IFNULL(MAX(id), 0) + 1 FROM Crate" >> id;
+        storage_->db << "INSERT INTO Crate (id, title, path) VALUES (?, ?, ?)"
+                     << id << name.data() << std::string{name} + ';';
+    }
+    else
+    {
+        // Older schema versions have a dedicated table for crates that has
+        // an integer primary key, which will be filled automatically.
+        storage_->db << "INSERT INTO Crate (title, path) VALUES (?, ?)"
+                     << name.data() << std::string{name} + ';';
+        id = storage_->db.last_insert_rowid();
+    }
 
     storage_->db << "INSERT INTO CrateParentList (crateOriginId, "
                     "crateParentId) VALUES (?, ?)"
@@ -220,16 +227,14 @@ std::string el_database_impl::directory()
 
 bool el_database_impl::is_supported()
 {
-    return djinterop::enginelibrary::is_supported(version());
+    return schema::is_supported(version());
 }
 
 void el_database_impl::verify()
 {
-    // Verify music schema
-    verify_music_schema(storage_->db);
-
-    // Verify performance schema
-    verify_performance_schema(storage_->db);
+    auto schema_creator_validator =
+        schema::make_schema_creator_validator(version());
+    schema_creator_validator->verify(storage_->db);
 }
 
 void el_database_impl::remove_crate(crate cr)
@@ -322,11 +327,12 @@ std::string el_database_impl::uuid()
 
 semantic_version el_database_impl::version()
 {
-    semantic_version version;
-    storage_->db << "SELECT schemaVersionMajor, schemaVersionMinor, "
-                    "schemaVersionPatch FROM Information" >>
-        std::tie(version.maj, version.min, version.pat);
-    return version;
+    return storage_->version;
+}
+
+std::string el_database_impl::version_name()
+{
+    return storage_->schema_creator_validator->name();
 }
 
 }  // namespace enginelibrary

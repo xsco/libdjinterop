@@ -6,7 +6,7 @@
 # The meson/ninja build should be preferred in all other cases.
 #
 cmake_minimum_required(VERSION 3.10)
-project(libdjinterop VERSION 0.12.0)
+project(libdjinterop VERSION 0.13.0)
 
 # Require C++17
 set(CMAKE_CXX_STANDARD 17)
@@ -35,9 +35,17 @@ add_library(
     src/djinterop/enginelibrary/el_transaction_guard_impl.cpp
     src/djinterop/enginelibrary/encode_decode_utils.cpp
     src/djinterop/enginelibrary/performance_data_format.cpp
-    src/djinterop/enginelibrary/schema_1_6_0.cpp
-    src/djinterop/enginelibrary/schema_1_7_1.cpp
-    src/djinterop/enginelibrary/schema.cpp
+    src/djinterop/enginelibrary/schema/schema_1_6_0.cpp
+    src/djinterop/enginelibrary/schema/schema_1_7_1.cpp
+    src/djinterop/enginelibrary/schema/schema_1_9_1.cpp
+    src/djinterop/enginelibrary/schema/schema_1_11_1.cpp
+    src/djinterop/enginelibrary/schema/schema_1_13_0.cpp
+    src/djinterop/enginelibrary/schema/schema_1_13_1.cpp
+    src/djinterop/enginelibrary/schema/schema_1_13_2.cpp
+    src/djinterop/enginelibrary/schema/schema_1_15_0.cpp
+    src/djinterop/enginelibrary/schema/schema_1_17_0.cpp
+    src/djinterop/enginelibrary/schema/schema_1_18_0.cpp
+    src/djinterop/enginelibrary/schema/schema.cpp
     src/djinterop/crate.cpp
     src/djinterop/database.cpp
     src/djinterop/enginelibrary.cpp
@@ -47,7 +55,7 @@ add_library(
     src/djinterop/impl/database_impl.cpp
     src/djinterop/impl/track_impl.cpp
     src/djinterop/impl/transaction_guard_impl.cpp
-    src/djinterop/impl/util.cpp)
+        src/djinterop/util.cpp)
 
 target_compile_definitions(
     djinterop PUBLIC

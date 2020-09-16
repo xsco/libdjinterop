@@ -29,7 +29,6 @@ namespace enginelibrary
 class el_database_impl : public database_impl
 {
 public:
-    el_database_impl(std::string directory);
     el_database_impl(std::shared_ptr<el_storage> storage);
 
     transaction_guard begin_transaction() override;
@@ -53,6 +52,7 @@ public:
         const std::string& relative_path) override;
     std::string uuid() override;
     semantic_version version() override;
+    std::string version_name() override;
 
 private:
     std::shared_ptr<el_storage> storage_;

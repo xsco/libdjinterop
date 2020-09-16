@@ -54,6 +54,7 @@ public:
         const std::string& relative_path) = 0;
     virtual std::string uuid() = 0;
     virtual semantic_version version() = 0;
+    virtual std::string version_name() = 0;
 };
 
 }  // namespace djinterop

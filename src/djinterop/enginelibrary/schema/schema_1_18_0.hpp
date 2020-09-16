@@ -17,27 +17,25 @@
 
 #pragma once
 
-#include <stdexcept>
-#include <string>
-
 #include <sqlite_modern_cpp.h>
+#include <djinterop/enginelibrary/schema/schema_1_17_0.hpp>
 
-#include <djinterop/semantic_version.hpp>
-
-namespace djinterop
+namespace djinterop::enginelibrary::schema
 {
-namespace enginelibrary
+class schema_1_18_0 : public schema_1_17_0
 {
-bool is_supported(const semantic_version& version);
+public:
+    std::string name() const override { return "EP 1.5.1"; }
 
-semantic_version verify_music_schema(sqlite::database& db);
+protected:
+    void verify_track(sqlite::database& db) const override;
+    void verify_performance_data(sqlite::database& db) const override;
 
-semantic_version verify_performance_schema(sqlite::database& db);
+    void verify_music_schema(sqlite::database& db) const override;
+    void verify_performance_schema(sqlite::database& db) const override;
 
-void create_music_schema(sqlite::database& db, const semantic_version& version);
+    void create_music_schema(sqlite::database& db) override;
+    void create_performance_schema(sqlite::database& db) override;
+};
 
-void create_performance_schema(
-    sqlite::database& db, const semantic_version& version);
-
-}  // namespace enginelibrary
-}  // namespace djinterop
+}  // namespace djinterop::enginelibrary::schema
