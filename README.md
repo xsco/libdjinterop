@@ -22,9 +22,12 @@ What is supported:
 * Loops
 * Waveforms (overview and high-resolution)
 * Crates
-* Engine library formats for the following database schema versions:
-  * Schema 1.6.0 (used by firmware 1.0.0)
-  * Schema 1.7.1 (used by firmware 1.0.3)
+
+The library supports the following firmware and application versions:
+
+* SC5000 Firmware 1.0.3, 1.2.0, 1.2.2, 1.3.1, 1.4.0, 1.5.1, 1.5.2.
+  * Other players (e.g. SC6000/M) may work, but this is currently untested.
+* Engine Prime 1.0.1, 1.2.2, 1.5.1.
 
 What is not supported (yet):
 
