@@ -84,6 +84,7 @@ install(FILES
     include/djinterop/exceptions.hpp
     include/djinterop/enginelibrary.hpp
     include/djinterop/musical_key.hpp
+    include/djinterop/optional.hpp
     include/djinterop/pad_color.hpp
     include/djinterop/performance_data.hpp
     include/djinterop/semantic_version.hpp
