@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(create_sub_crate__valid_name__succeeds)
     // Assert
     auto parent = sc.parent();
     BOOST_CHECK(parent);
-    BOOST_CHECK_EQUAL(parent.value().id(), c.id());
+    BOOST_CHECK_EQUAL(parent->id(), c.id());
     auto children = c.children();
     BOOST_CHECK_EQUAL(children.size(), 1);
     auto child = children[0];
