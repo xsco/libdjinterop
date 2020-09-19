@@ -16,6 +16,7 @@
  */
 
 #include <cmath>
+#include <fstream>
 #include <string>
 
 #include <djinterop/djinterop.hpp>
@@ -39,6 +40,28 @@ database create_database(
 {
     auto storage = std::make_shared<el_storage>(directory, schema_version);
     return database{std::make_shared<el_database_impl>(storage)};
+}
+
+database create_database_from_scripts(
+    const std::string& db_directory, const std::string& script_directory)
+{
+    std::string stmt;
+
+    std::ifstream m_db_script{script_directory + "/m.db.sql"};
+    sqlite::database m_db{db_directory + "/m.db"};
+    while (std::getline(m_db_script, stmt))
+    {
+        m_db << stmt;
+    }
+
+    std::ifstream p_db_script{script_directory + "/p.db.sql"};
+    sqlite::database p_db{db_directory + "/p.db"};
+    while (std::getline(p_db_script, stmt))
+    {
+        p_db << stmt;
+    }
+
+    return load_database(db_directory);
 }
 
 database create_or_load_database(

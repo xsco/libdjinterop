@@ -22,8 +22,6 @@
 #include <ostream>
 #include <string>
 
-#include <sqlite_modern_cpp.h>
-
 #include <djinterop/crate.hpp>
 #include <djinterop/database.hpp>
 #include <djinterop/enginelibrary.hpp>
@@ -52,27 +50,18 @@ std::ostream& operator<<(std::ostream& os, const reference_script& rs)
     return os;
 }
 
-void hydrate_from_scripts(
-    const std::string& db_dir, const std::string& script_relative_path)
-{
-    // Path is expected to be relative to the test data dir.
-    auto path = std::string{STRINGIFY(TESTDATA_DIR) "/"} + script_relative_path;
-    std::string stmt;
-
-    std::ifstream m_db_script{path + "/m.db.sql"};
-    sqlite::database m_db{db_dir + "/m.db"};
-    while (std::getline(m_db_script, stmt))
-    {
-        m_db << stmt;
-    }
-
-    std::ifstream p_db_script{path + "/p.db.sql"};
-    sqlite::database p_db{db_dir + "/p.db"};
-    while (std::getline(p_db_script, stmt))
-    {
-        p_db << stmt;
-    }
-}
+const std::vector<reference_script> reference_db_scripts{
+    reference_script{"/ref/sc5000/firmware-1.0.3", el::version_1_7_1},
+    reference_script{"/ref/ep/ep-1.1.1", el::version_1_9_1},
+    reference_script{"/ref/sc5000/firmware-1.2.0", el::version_1_11_1},
+    reference_script{"/ref/sc5000/firmware-1.2.2", el::version_1_13_0},
+    reference_script{"/ref/ep/ep-1.2.2", el::version_1_13_1},
+    reference_script{"/ref/sc5000/firmware-1.3.1", el::version_1_13_2},
+    reference_script{"/ref/sc5000/firmware-1.4.0", el::version_1_15_0},
+    reference_script{"/ref/sc5000/firmware-1.5.1", el::version_1_17_0},
+    reference_script{"/ref/ep/ep-1.5.1", el::version_1_18_0},
+    reference_script{"/ref/sc5000/firmware-1.5.2", el::version_1_17_0},
+};
 
 struct example_file
 {
@@ -91,19 +80,6 @@ const std::vector<example_file> valid_files{
     example_file{
         "../path/to/file_in_other_dir.mp3", "file_in_other_dir.mp3", "mp3"},
     example_file{"local_file.flac", "local_file.flac", "flac"},
-};
-
-const std::vector<reference_script> reference_db_scripts{
-    reference_script{"/ref/sc5000/firmware-1.0.3", el::version_1_7_1},
-    reference_script{"/ref/ep/ep-1.1.1", el::version_1_9_1},
-    reference_script{"/ref/sc5000/firmware-1.2.0", el::version_1_11_1},
-    reference_script{"/ref/sc5000/firmware-1.2.2", el::version_1_13_0},
-    reference_script{"/ref/ep/ep-1.2.2", el::version_1_13_1},
-    reference_script{"/ref/sc5000/firmware-1.3.1", el::version_1_13_2},
-    reference_script{"/ref/sc5000/firmware-1.4.0", el::version_1_15_0},
-    reference_script{"/ref/sc5000/firmware-1.5.1", el::version_1_17_0},
-    reference_script{"/ref/ep/ep-1.5.1", el::version_1_18_0},
-    reference_script{"/ref/sc5000/firmware-1.5.2", el::version_1_17_0},
 };
 }  // anonymous namespace
 
@@ -167,8 +143,10 @@ BOOST_DATA_TEST_CASE(
 
     {
         // Arrange
-        hydrate_from_scripts(tmp_loc.temp_dir, reference_script.path);
-        auto db = el::load_database(tmp_loc.temp_dir);
+        auto script_path = std::string{STRINGIFY(TESTDATA_DIR) "/"} +
+                           reference_script.path;
+        auto db = el::create_database_from_scripts(
+            tmp_loc.temp_dir, script_path);
 
         // Act
         db.verify();
