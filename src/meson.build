@@ -30,23 +30,12 @@ sources = [
 ]
 
 # Dependencies required by the main library.
-core_deps = [thread_dep, dl_dep, sqlite3_dep, zlib_dep, sqlite_modern_cpp_dep]
-
-# Used by unit tests to reference internal classes.
-internal_inc = include_directories('.')
+core_deps = [thread_dep, dl_dep, zlib_dep, sqlite3_dep, sqlite_modern_cpp_dep]
 
 # Set a compile-time definition that we are building the libdjinterop source.
 # This information is needed in `config.hpp` to determine whether public symbols
 # ought to be exported or imported.
 building_library_args = ['-DDJINTEROP_SOURCE']
-
-# Set hidden visibility arguments as required.
-hidden_visibility_args = []
-if get_option('default_library') != 'static'
-    if cpp_compiler.has_argument('-fvisibility=hidden')
-        hidden_visibility_args = ['-fvisibility=hidden']
-    endif
-endif
 
 djinterop_lib = library(
     'djinterop',
@@ -54,5 +43,5 @@ djinterop_lib = library(
     include_directories: inc,
     dependencies: core_deps,
     install: true,
-    cpp_args: building_library_args + hidden_visibility_args)
+    cpp_args: building_library_args)
 

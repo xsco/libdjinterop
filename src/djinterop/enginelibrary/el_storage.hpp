@@ -39,10 +39,10 @@ public:
     const std::string directory;
     // TODO - don't expose mutable SQLite connection - allow txn guard to be
     // obtained from el_storage by other EL classes.
-    mutable sqlite::database db;
+    sqlite::database db;
 
     const semantic_version version;
-    std::unique_ptr<schema::schema_creator_validator> schema_creator_validator;
+    const std::unique_ptr<schema::schema_creator_validator> schema_creator_validator;
 
     int64_t last_savepoint = 0;
 };

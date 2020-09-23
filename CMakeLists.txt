@@ -5,15 +5,15 @@
 #
 # The meson/ninja build should be preferred in all other cases.
 #
-cmake_minimum_required(VERSION 3.10)
-project(libdjinterop VERSION 0.13.0)
+cmake_minimum_required(VERSION 3.13)
+project(libdjinterop VERSION 0.14.0)
 
 # Require C++17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Require sqlite3 >= 3.11.0
-find_package(SQLite3 3.11.0 REQUIRED)
+# Option to use either system SQLite or embedded SQLite.
+option(SYSTEM_SQLITE "Use system installation of SQLite" ON)
 
 # Require zlib >= 1.2.8
 find_package(ZLIB 1.2.8 REQUIRED)
@@ -28,13 +28,10 @@ configure_file(
 
 add_library(
     djinterop
-    src/djinterop/enginelibrary/el_crate_impl.cpp
-    src/djinterop/enginelibrary/el_database_impl.cpp
-    src/djinterop/enginelibrary/el_storage.cpp
-    src/djinterop/enginelibrary/el_track_impl.cpp
-    src/djinterop/enginelibrary/el_transaction_guard_impl.cpp
-    src/djinterop/enginelibrary/encode_decode_utils.cpp
-    src/djinterop/enginelibrary/performance_data_format.cpp
+    src/djinterop/impl/crate_impl.cpp
+    src/djinterop/impl/database_impl.cpp
+    src/djinterop/impl/track_impl.cpp
+    src/djinterop/impl/transaction_guard_impl.cpp
     src/djinterop/enginelibrary/schema/schema_1_6_0.cpp
     src/djinterop/enginelibrary/schema/schema_1_7_1.cpp
     src/djinterop/enginelibrary/schema/schema_1_9_1.cpp
@@ -46,16 +43,19 @@ add_library(
     src/djinterop/enginelibrary/schema/schema_1_17_0.cpp
     src/djinterop/enginelibrary/schema/schema_1_18_0.cpp
     src/djinterop/enginelibrary/schema/schema.cpp
+    src/djinterop/enginelibrary/el_crate_impl.cpp
+    src/djinterop/enginelibrary/el_database_impl.cpp
+    src/djinterop/enginelibrary/el_storage.cpp
+    src/djinterop/enginelibrary/el_track_impl.cpp
+    src/djinterop/enginelibrary/el_transaction_guard_impl.cpp
+    src/djinterop/enginelibrary/encode_decode_utils.cpp
+    src/djinterop/enginelibrary/performance_data_format.cpp
     src/djinterop/crate.cpp
     src/djinterop/database.cpp
     src/djinterop/enginelibrary.cpp
     src/djinterop/track.cpp
     src/djinterop/transaction_guard.cpp
-    src/djinterop/impl/crate_impl.cpp
-    src/djinterop/impl/database_impl.cpp
-    src/djinterop/impl/track_impl.cpp
-    src/djinterop/impl/transaction_guard_impl.cpp
-        src/djinterop/util.cpp)
+    src/djinterop/util.cpp)
 
 target_compile_definitions(
     djinterop PUBLIC
@@ -63,16 +63,40 @@ target_compile_definitions(
 
 target_include_directories(
     djinterop PUBLIC
-    ${SQLite3_INCLUDE_DIRS}
     ${ZLIB_INCLUDE_DIRS}
     ext/sqlite_modern_cpp
     ${CMAKE_CURRENT_BINARY_DIR}/include
     include src)
 
 target_link_libraries(
-    djinterop
-    ${SQLite3_LIBRARIES}
+    djinterop PUBLIC
     ${ZLIB_LIBRARIES})
+
+if(SYSTEM_SQLITE)
+    # Search for system installation of SQLite and use that.
+    find_package(SQLite3 3.11.0 REQUIRED)
+    target_include_directories(
+        djinterop PUBLIC
+        ${SQLite3_INCLUDE_DIRS})
+    target_link_libraries(
+        djinterop PUBLIC
+        ${SQLite3_LIBRARIES})
+else()
+    # Use embedded SQLite amalgamation sources.
+    message(STATUS "Using embedded SQLite")
+    target_sources(
+        djinterop PUBLIC
+        ext/sqlite-amalgamation/sqlite3.c)
+    target_compile_definitions(
+        djinterop PUBLIC
+        SQLITE_OMIT_LOAD_EXTENSION)
+    target_include_directories(
+        djinterop PUBLIC
+        ext/sqlite-amalgamation)
+endif()
+
+set_target_properties(djinterop PROPERTIES C_VISIBILITY_PRESET hidden)
+set_target_properties(djinterop PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
 install(TARGETS djinterop DESTINATION lib)
 install(FILES

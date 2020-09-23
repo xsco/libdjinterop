@@ -114,6 +114,15 @@ database DJINTEROP_PUBLIC create_database(
     const std::string& directory,
     const semantic_version& schema_version = version_latest);
 
+/// Creates a new database from a set of SQL scripts.
+///
+/// The directory indicated by `script_directory` is expected to contain files
+/// of the form "<dbname>.db.sql", which will be read and used to hydrate
+/// SQLite databases with the name "<dbname>.db".  These hydrated SQLite
+/// databases are then loaded into the returned `database` object.
+database DJINTEROP_PUBLIC create_database_from_scripts(
+    const std::string& db_directory, const std::string& script_directory);
+
 /// Create or load an Engine Library database in a given directory.
 ///
 /// If a database already exists in the directory, it will be loaded.  If not,
