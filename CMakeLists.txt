@@ -6,11 +6,15 @@
 # The meson/ninja build should be preferred in all other cases.
 #
 cmake_minimum_required(VERSION 3.13)
-project(libdjinterop VERSION 0.14.0)
+project(libdjinterop VERSION 0.14.1)
 
 # Require C++17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+if (MSVC)
+    # Ask MSVC to populate the __cplusplus macro properly.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus")
+endif()
 
 # Option to use either system SQLite or embedded SQLite.
 option(SYSTEM_SQLITE "Use system installation of SQLite" ON)
