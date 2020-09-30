@@ -23,10 +23,19 @@
 #error This library needs at least a C++17 compliant compiler
 #endif
 
+// Statement about whether the library was built/installed as static or shared.
+#cmakedefine DJINTEROP_STATIC
+
 #if defined _WIN32 || defined __CYGWIN__
+#if defined DJINTEROP_STATIC
+#define DJINTEROP_SYMBOL_IMPORT
+#define DJINTEROP_SYMBOL_EXPORT
+#define DJINTEROP_SYMBOL_LOCAL
+#else
 #define DJINTEROP_SYMBOL_IMPORT __declspec(dllimport)
 #define DJINTEROP_SYMBOL_EXPORT __declspec(dllexport)
 #define DJINTEROP_SYMBOL_LOCAL
+#endif
 #else
 #if __GNUC__ >= 4
 #define DJINTEROP_SYMBOL_IMPORT __attribute__((visibility("default")))

@@ -6,7 +6,7 @@
 # The meson/ninja build should be preferred in all other cases.
 #
 cmake_minimum_required(VERSION 3.13)
-project(libdjinterop VERSION 0.14.1)
+project(libdjinterop VERSION 0.14.2)
 
 # Require C++17
 set(CMAKE_CXX_STANDARD 17)
@@ -21,14 +21,6 @@ option(SYSTEM_SQLITE "Use system installation of SQLite" ON)
 
 # Require zlib >= 1.2.8
 find_package(ZLIB 1.2.8 REQUIRED)
-
-# Generate config.hpp based on build-time environment.
-include(CheckIncludeFileCXX)
-CHECK_INCLUDE_FILE_CXX(optional DJINTEROP_STD_OPTIONAL)
-CHECK_INCLUDE_FILE_CXX(experimental/optional DJINTEROP_STD_EXPERIMENTAL_OPTIONAL)
-configure_file(
-    include/djinterop/config.hpp.in
-    include/djinterop/config.hpp)
 
 add_library(
     djinterop
@@ -61,9 +53,20 @@ add_library(
     src/djinterop/transaction_guard.cpp
     src/djinterop/util.cpp)
 
-target_compile_definitions(
-    djinterop PUBLIC
-    DJINTEROP_SOURCE)
+target_compile_definitions(djinterop PUBLIC DJINTEROP_SOURCE)
+
+get_target_property(djinterop_library_type djinterop TYPE)
+if(djinterop_library_type STREQUAL "STATIC_LIBRARY")
+	set(DJINTEROP_STATIC ON)
+endif()
+
+# Generate config.hpp based on build-time environment.
+include(CheckIncludeFileCXX)
+CHECK_INCLUDE_FILE_CXX(optional DJINTEROP_STD_OPTIONAL)
+CHECK_INCLUDE_FILE_CXX(experimental/optional DJINTEROP_STD_EXPERIMENTAL_OPTIONAL)
+configure_file(
+    include/djinterop/config.hpp.in
+    include/djinterop/config.hpp)
 
 target_include_directories(
     djinterop PUBLIC
@@ -75,6 +78,7 @@ target_include_directories(
 target_link_libraries(
     djinterop PUBLIC
     ${ZLIB_LIBRARIES})
+
 
 if(SYSTEM_SQLITE)
     # Search for system installation of SQLite and use that.
