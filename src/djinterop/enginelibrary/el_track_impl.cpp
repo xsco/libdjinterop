@@ -320,7 +320,7 @@ void el_track_impl::set_average_loudness(
 
     // Zero average loudness is interpreted as no average loudness.
     track_d.average_loudness =
-        average_loudness == 0 ? stdx::nullopt : average_loudness;
+        average_loudness.value_or(0) == 0 ? stdx::nullopt : average_loudness;
 
     set_track_data(track_d);
     trans.commit();

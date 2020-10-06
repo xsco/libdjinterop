@@ -6,7 +6,7 @@
 # The meson/ninja build should be preferred in all other cases.
 #
 cmake_minimum_required(VERSION 3.13)
-project(libdjinterop VERSION 0.14.2)
+project(libdjinterop VERSION 0.14.3)
 
 # Require C++17
 set(CMAKE_CXX_STANDARD 17)
