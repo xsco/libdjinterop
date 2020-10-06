@@ -1,9 +1,9 @@
 project(
     'djinterop',
     'cpp', 'c',
-    version: '0.14.1',
+    version: '0.14.2',
     license: 'LGPL-3.0',
-    default_options: ['cpp_std=c++17', 'default_library=both'])
+    default_options: ['cpp_std=c++17', 'default_library=shared'])
 
 cpp_compiler = meson.get_compiler('cpp')
 
@@ -13,10 +13,13 @@ if cpp_compiler.get_id() == 'msvc'
 endif
 
 # Set hidden visibility arguments for everything the project, if available.
-if get_option('default_library') != 'static'
+default_library_type = get_option('default_library')
+if default_library_type != 'static'
     if cpp_compiler.has_argument('-fvisibility=hidden')
         add_global_arguments('-fvisibility=hidden', language: ['c', 'cpp'])
     endif
+else
+	add_global_arguments('-DDJINTEROP_STATIC', language: 'cpp')
 endif
 
 

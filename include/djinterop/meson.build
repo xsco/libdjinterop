@@ -4,6 +4,9 @@
 # of configure_file() does not, at the time of writing (meson 0.55.0), support
 # writing the output file to a different directory.
 conf_data = configuration_data()
+if default_library_type == 'static'
+	conf_data.set10('DJINTEROP_STATIC', true)
+endif
 if cpp_compiler.has_header('optional')
     conf_data.set10('DJINTEROP_STD_OPTIONAL', true)
 endif
