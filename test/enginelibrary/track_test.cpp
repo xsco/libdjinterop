@@ -312,3 +312,31 @@ BOOST_AUTO_TEST_CASE(op_copy_assign__saved_track__copied_fields)
     check_track_1(copy);
     remove_temp_dir(temp_dir);
 }
+
+BOOST_AUTO_TEST_CASE(set_average_loudness__zero__no_loudness)
+{
+    // Arrange
+    auto temp_dir = create_temp_dir();
+    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
+    auto t = db.create_track("");
+
+    // Act
+    t.set_average_loudness(0);
+
+    // Assert
+    BOOST_CHECK(t.average_loudness() == djinterop::stdx::nullopt);
+}
+
+BOOST_AUTO_TEST_CASE(set_sampling__zero_rate__no_sampling)
+{
+    // Arrange
+    auto temp_dir = create_temp_dir();
+    auto db = el::create_database(temp_dir.string(), el::version_1_7_1);
+    auto t = db.create_track("");
+
+    // Act
+    t.set_sampling(djinterop::sampling_info{});
+
+    // Assert
+    BOOST_CHECK(t.sampling() == djinterop::stdx::nullopt);
+}
