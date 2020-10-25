@@ -723,8 +723,14 @@ void el_track_impl::set_sampling(stdx::optional<sampling_info> sampling)
 {
     el_transaction_guard_impl trans{storage_};
 
+    // A zero sample rate is interpreted as no sample rate.
+    if (sampling && sampling->sample_rate == 0)
+    {
+        sampling = stdx::nullopt;
+    }
+
     stdx::optional<int64_t> secs;
-    if (sampling)
+    if (sampling && sampling->sample_rate != 0)
     {
         secs = static_cast<int64_t>(
             sampling->sample_count / sampling->sample_rate);
