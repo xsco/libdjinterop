@@ -140,7 +140,7 @@ std::vector<beatgrid_marker> normalize_beatgrid(
     if (beatgrid.size() < 2)
     {
         throw std::invalid_argument{
-            "Attempted to normalize a misplaced beadgrid"};
+            "Attempted to normalize a misplaced beatgrid"};
     }
 
     {
