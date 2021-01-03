@@ -25,8 +25,6 @@
 #include <djinterop/musical_key.hpp>
 #include <djinterop/optional.hpp>
 
-typedef std::vector<char>::size_type data_size_t;
-
 namespace djinterop
 {
 namespace enginelibrary
@@ -199,7 +197,7 @@ beat_data beat_data::decode(const std::vector<char>& compressed_data)
         std::vector<beatgrid_marker> adjusted_beatgrid;
         std::tie(default_beatgrid, ptr) = decode_beatgrid(ptr, end);
         std::tie(adjusted_beatgrid, ptr) = decode_beatgrid(ptr, end);
-        // If there's an exception, then the following will intentially not be
+        // If there's an exception, then the following will intentionally not be
         // executed.
         result.default_beatgrid = std::move(default_beatgrid);
         result.adjusted_beatgrid = std::move(adjusted_beatgrid);
@@ -209,9 +207,18 @@ beat_data beat_data::decode(const std::vector<char>& compressed_data)
         // TODO (haslersn): print a warning with e.what().
     }
 
-    if (ptr != end)
+    // Beat data has known to be encoded with 9 additional zero bytes at the
+    // end of the data buffer, across various Engine Library-supporting software
+    // and hardware.  The precise reason for this is unknown, but it is
+    // tolerated here in accordance with the robustness principle.
+    while (ptr != end)
     {
-        throw std::invalid_argument{"Beat data has too much data"};
+        if (*ptr != 0)
+        {
+            throw std::invalid_argument{"Beat data has trailing non-zero data"};
+        }
+
+        ptr++;
     }
 
     return result;
