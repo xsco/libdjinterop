@@ -106,7 +106,14 @@ endif()
 set_target_properties(djinterop PROPERTIES C_VISIBILITY_PRESET hidden)
 set_target_properties(djinterop PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
-install(TARGETS djinterop DESTINATION lib)
+include(GNUInstallDirs)
+
+install(TARGETS djinterop
+  ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+  LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+  RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+)
+
 install(FILES
     include/djinterop/album_art.hpp
     ${CMAKE_CURRENT_BINARY_DIR}/include/djinterop/config.hpp
@@ -122,5 +129,5 @@ install(FILES
     include/djinterop/semantic_version.hpp
     include/djinterop/track.hpp
     include/djinterop/transaction_guard.hpp
-    DESTINATION include/djinterop)
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/djinterop")
 
