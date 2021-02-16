@@ -6,7 +6,10 @@
 # The meson/ninja build should be preferred in all other cases.
 #
 cmake_minimum_required(VERSION 3.13)
-project(libdjinterop VERSION 0.14.6)
+project(libdjinterop
+        VERSION 0.14.6
+        DESCRIPTION "C++ library providing access to DJ record libraries"
+        HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
 # Require C++17
 set(CMAKE_CXX_STANDARD 17)
@@ -15,6 +18,9 @@ if (MSVC)
     # Ask MSVC to populate the __cplusplus macro properly.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus")
 endif()
+
+# Build shared a library by default.
+option(BUILD_SHARED_LIBS "Build shared library" ON)
 
 # Option to use either system SQLite or embedded SQLite.
 option(SYSTEM_SQLITE "Use system installation of SQLite" ON)
@@ -131,3 +137,11 @@ install(FILES
     include/djinterop/transaction_guard.hpp
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/djinterop")
 
+
+include(InstallRequiredSystemLibraries)
+set(CPACK_PACKAGE_VENDOR "XSCO")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Adam Szmigin <adam.szmigin@xsco.net>")
+set(CPACK_DEBIAN_PACKAGE_SECTION "sound")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "zlib1g (>= 1.2.8), libsqlite3-0 (>= 3.11)")
+include(CPack)
