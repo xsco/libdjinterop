@@ -13,3 +13,7 @@ compile_commands.json
 
 # IDE settings
 /.vscode/
+
+# CMake typical build dir
+/cmake_build/
+
