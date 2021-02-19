@@ -7,7 +7,7 @@
 #
 cmake_minimum_required(VERSION 3.13)
 project(libdjinterop
-        VERSION 0.14.6
+        VERSION 0.14.7
         DESCRIPTION "C++ library providing access to DJ record libraries"
         HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
@@ -26,7 +26,8 @@ option(BUILD_SHARED_LIBS "Build shared library" ON)
 option(SYSTEM_SQLITE "Use system installation of SQLite" ON)
 
 # Require zlib >= 1.2.8
-find_package(ZLIB 1.2.8 REQUIRED)
+set(ZLIB_MIN_VERSION 1.2.8)
+find_package(ZLIB ${ZLIB_MIN_VERSION} REQUIRED)
 
 add_library(
     djinterop
@@ -61,8 +62,8 @@ add_library(
 
 target_compile_definitions(djinterop PUBLIC DJINTEROP_SOURCE)
 
-get_target_property(djinterop_library_type djinterop TYPE)
-if(djinterop_library_type STREQUAL "STATIC_LIBRARY")
+get_target_property(DJINTEROP_LIBRARY_TYPE djinterop TYPE)
+if(DJINTEROP_LIBRARY_TYPE STREQUAL "STATIC_LIBRARY")
 	set(DJINTEROP_STATIC ON)
 endif()
 
@@ -88,7 +89,8 @@ target_link_libraries(
 
 if(SYSTEM_SQLITE)
     # Search for system installation of SQLite and use that.
-    find_package(SQLite3 3.11.0 REQUIRED)
+    set(SQLITE_MIN_VERSION 3.11)
+    find_package(SQLite3 ${SQLITE_MIN_VERSION} REQUIRED)
     target_include_directories(
         djinterop PUBLIC
         ${SQLite3_INCLUDE_DIRS})
@@ -137,11 +139,15 @@ install(FILES
     include/djinterop/transaction_guard.hpp
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/djinterop")
 
-
-include(InstallRequiredSystemLibraries)
-set(CPACK_PACKAGE_VENDOR "XSCO")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Adam Szmigin <adam.szmigin@xsco.net>")
-set(CPACK_DEBIAN_PACKAGE_SECTION "sound")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "zlib1g (>= 1.2.8), libsqlite3-0 (>= 3.11)")
-include(CPack)
+if (UNIX)
+    set(PKGCONFIG_TARGET djinterop)
+    if (SYSTEM_SQLITE)
+        set(PKGCONFIG_REQUIRES "zlib >= ${ZLIB_MIN_VERSION}, sqlite3 >= ${SQLITE_MIN_VERSION}")
+    else()
+        set(PKGCONFIG_REQUIRES "zlib >= ${ZLIB_MIN_VERSION}")
+    endif()
+    configure_file(djinterop.pc.in djinterop.pc @ONLY)
+    install(FILES
+            ${CMAKE_CURRENT_BINARY_DIR}/djinterop.pc
+            DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+endif()
