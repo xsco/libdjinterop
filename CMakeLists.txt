@@ -60,6 +60,10 @@ add_library(
     src/djinterop/transaction_guard.cpp
     src/djinterop/util.cpp)
 
+set_target_properties(djinterop PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR})
+
 target_compile_definitions(djinterop PUBLIC DJINTEROP_SOURCE)
 
 get_target_property(DJINTEROP_LIBRARY_TYPE djinterop TYPE)
@@ -151,3 +155,7 @@ if (UNIX)
             ${CMAKE_CURRENT_BINARY_DIR}/djinterop.pc
             DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 endif()
+
+include(InstallRequiredSystemLibraries)
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+include(CPack)

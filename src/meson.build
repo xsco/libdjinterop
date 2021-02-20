@@ -43,5 +43,7 @@ djinterop_lib = library(
     include_directories: inc,
     dependencies: core_deps,
     install: true,
+    version: meson.project_version(),
+    soversion: meson.project_version().split('.')[0],
     cpp_args: building_library_args)
 
