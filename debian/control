@@ -1,0 +1,31 @@
+Source: libdjinterop
+Priority: optional
+Maintainer: Adam Szmigin <smidge@xsco.net>
+Build-Depends: debhelper-compat (= 10), cmake (>= 3.10), zlib1g-dev (>= 1.2.8), libsqlite3-dev (>= 3.11)
+Standards-Version: 4.4.1
+Section: libs
+Homepage: https://github.com/xsco/libdjinterop
+
+Package: libdjinterop-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Depends: libdjinterop0 (= ${binary:Version}), ${misc:Depends}
+Description: C++ library for access to DJ record libraries (development package)
+ libdjinterop is a C++ library that allows access to database formats used to
+ store information about DJ record libraries.
+ .
+ This library currently supports Engine Library, as used on "Prime"-series DJ
+ equipment.
+
+Package: libdjinterop0
+Architecture: any
+Multi-Arch: same
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: C++ library for access to DJ record libraries
+ libdjinterop is a C++ library that allows access to database formats used to
+ store information about DJ record libraries.
+ .
+ This library currently supports Engine Library, as used on "Prime"-series DJ
+ equipment.
+
