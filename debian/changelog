@@ -1,3 +1,9 @@
+libdjinterop (0.14.7-0ubuntu2) focal; urgency=medium
+
+  * Fix cmake dependencies in earlier broken package.
+
+ -- Adam Szmigin <smidge@xsco.net>  Sun, 21 Feb 2021 01:13:19 +0000
+
 libdjinterop (0.14.7-0ubuntu1) focal; urgency=medium
 
   * Initial release
