@@ -5,11 +5,18 @@
 #
 # The meson/ninja build should be preferred in all other cases.
 #
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
         VERSION 0.14.7
-        DESCRIPTION "C++ library providing access to DJ record libraries"
-        HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
+        DESCRIPTION "C++ library providing access to DJ record libraries")
+set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
+if(POLICY CMP0076)
+    # CMP0076: target_sources() command converts relative paths to absolute.
+    cmake_policy(SET CMP0076 NEW)
+endif()
 
 # Require C++17
 set(CMAKE_CXX_STANDARD 17)
