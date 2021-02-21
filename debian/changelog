@@ -1,3 +1,9 @@
+libdjinterop (0.14.8-0ubuntu1) focal; urgency=medium
+
+  * Version bump for clean break for initial packaging
+
+ -- Adam Szmigin <smidge@xsco.net>  Sun, 21 Feb 2021 01:33:53 +0000
+
 libdjinterop (0.14.7-0ubuntu2) focal; urgency=medium
 
   * Fix cmake dependencies in earlier broken package.
