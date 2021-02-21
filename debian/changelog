@@ -1,3 +1,9 @@
+libdjinterop (0.14.8-0ubuntu2) focal; urgency=medium
+
+  * Restrict architecture to amd64.
+
+ -- Adam Szmigin <smidge@xsco.net>  Sun, 21 Feb 2021 11:43:51 +0000
+
 libdjinterop (0.14.8-0ubuntu1) focal; urgency=medium
 
   * Version bump for clean break for initial packaging
