@@ -1,3 +1,9 @@
+libdjinterop (0.14.8-0ubuntu3) bionic; urgency=medium
+
+  * Target Ubuntu 18.04 (bionic)
+
+ -- Adam Szmigin <smidge@xsco.net>  Sun, 21 Feb 2021 12:57:08 +0000
+
 libdjinterop (0.14.8-0ubuntu2) focal; urgency=medium
 
   * Restrict architecture to amd64.
