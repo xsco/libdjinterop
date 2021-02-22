@@ -1,7 +1,10 @@
 # libdjinterop CMake file
 #
-# This minimal CMake build script is provided for simpler integration with
-# projects that wish to include libdjinterop in an "in source tree" fashion.
+# This CMake build script is provided for simpler integration with projects
+# that wish to include libdjinterop via CMake's ExternalProject module.
+#
+# It is also automatically-detected as the preferred build system to use when
+# building `.deb` packages for Debian/Ubuntu and derivatives.
 #
 # The meson/ninja build should be preferred in all other cases.
 #
@@ -162,6 +165,41 @@ if (UNIX)
             ${CMAKE_CURRENT_BINARY_DIR}/djinterop.pc
             DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 endif()
+
+include(CTest)
+find_package(Boost 1.65.1 COMPONENTS filesystem system)
+set(ENABLE_TESTING Boost_FOUND)
+if (ENABLE_TESTING)
+    set(TESTDATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/testdata")
+    add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
+
+    function(add_djinterop_test test_name)
+        add_executable(${test_name} EXCLUDE_FROM_ALL
+                test/enginelibrary/${test_name}.cpp)
+        target_compile_definitions(${test_name} PUBLIC
+                -DTESTDATA_DIR=${TESTDATA_DIR})
+        target_include_directories(${test_name} PUBLIC
+                ${Boost_INCLUDE_DIRS}
+                ${CMAKE_CURRENT_BINARY_DIR}/include
+                include)
+        target_link_libraries(${test_name} PUBLIC
+                djinterop
+                ${Boost_LIBRARIES})
+        add_test(NAME ${test_name} COMMAND ${test_name})
+        add_dependencies(check ${test_name})
+    endfunction()
+
+    add_djinterop_test(crate_test)
+    add_djinterop_test(database_test)
+    add_djinterop_test(enginelibrary_test)
+    add_djinterop_test(performance_data_test)
+    add_djinterop_test(semantic_version_test)
+    add_djinterop_test(track_test)
+
+else()
+message(STATUS "Unit tests not available, as Boost cannot be found")
+endif()
+
 
 include(InstallRequiredSystemLibraries)
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
