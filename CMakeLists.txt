@@ -10,7 +10,7 @@
 #
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.14.8
+        VERSION 0.14.9
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
@@ -89,12 +89,19 @@ configure_file(
     include/djinterop/config.hpp.in
     include/djinterop/config.hpp)
 
+include(GNUInstallDirs)
+set(DJINTEROP_INSTALL_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}/djinterop")
+
 target_include_directories(
-    djinterop PUBLIC
-    ${ZLIB_INCLUDE_DIRS}
-    ext/sqlite_modern_cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/include
-    include src)
+        djinterop PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${DJINTEROP_INSTALL_INCLUDEDIR}>)
+target_include_directories(
+        djinterop PRIVATE
+        ${ZLIB_INCLUDE_DIRS}
+        ext/sqlite_modern_cpp
+        src)
 
 target_link_libraries(
     djinterop PUBLIC
@@ -106,7 +113,7 @@ if(SYSTEM_SQLITE)
     set(SQLITE_MIN_VERSION 3.11)
     find_package(SQLite3 ${SQLITE_MIN_VERSION} REQUIRED)
     target_include_directories(
-        djinterop PUBLIC
+        djinterop PRIVATE
         ${SQLite3_INCLUDE_DIRS})
     target_link_libraries(
         djinterop PUBLIC
@@ -121,20 +128,18 @@ else()
         djinterop PUBLIC
         SQLITE_OMIT_LOAD_EXTENSION)
     target_include_directories(
-        djinterop PUBLIC
+        djinterop PRIVATE
         ext/sqlite-amalgamation)
 endif()
 
 set_target_properties(djinterop PROPERTIES C_VISIBILITY_PRESET hidden)
 set_target_properties(djinterop PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
-include(GNUInstallDirs)
-
 install(TARGETS djinterop
-  ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-  LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-  RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
-)
+        EXPORT DjInteropTargets
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 
 install(FILES
     include/djinterop/album_art.hpp
@@ -151,7 +156,7 @@ install(FILES
     include/djinterop/semantic_version.hpp
     include/djinterop/track.hpp
     include/djinterop/transaction_guard.hpp
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/djinterop")
+    DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}")
 
 if (UNIX)
     set(PKGCONFIG_TARGET djinterop)
@@ -165,6 +170,26 @@ if (UNIX)
             ${CMAKE_CURRENT_BINARY_DIR}/djinterop.pc
             DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 endif()
+
+# CMake package config export.
+include(CMakePackageConfigHelpers)
+set(DJINTEROP_INSTALL_CMAKEDIR "lib/cmake/djinterop")
+install(EXPORT DjInteropTargets
+        FILE DjInteropTargets.cmake
+        NAMESPACE DjInterop::
+        DESTINATION "${DJINTEROP_INSTALL_CMAKEDIR}")
+configure_package_config_file(
+        DjInteropConfig.cmake.in
+        "${CMAKE_CURRENT_BINARY_DIR}/DjInteropConfig.cmake"
+        INSTALL_DESTINATION "${DJINTEROP_INSTALL_CMAKEDIR}")
+write_basic_package_version_file(
+        "${CMAKE_CURRENT_BINARY_DIR}/DjInteropConfigVersion.cmake"
+        VERSION "${CMAKE_PROJECT_VERSION}"
+        COMPATIBILITY SameMajorVersion)
+install(FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/DjInteropConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/DjInteropConfigVersion.cmake"
+        DESTINATION "${DJINTEROP_INSTALL_CMAKEDIR}")
 
 include(CTest)
 find_package(Boost 1.65.1 COMPONENTS filesystem system)

@@ -1,0 +1,12 @@
+@PACKAGE_INIT@
+set(DJINTEROP_SYSTEM_SQLITE @SYSTEM_SQLITE@)
+
+include(CMakeFindDependencyMacro)
+find_dependency(ZLIB)
+if(DJINTEROP_SYSTEM_SQLITE)
+  find_dependency(SQLite3)
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/DjInteropTargets.cmake")
+
+check_required_components(DjInterop)
