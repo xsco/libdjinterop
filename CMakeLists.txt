@@ -10,7 +10,7 @@
 #
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.14.8
+        VERSION 0.14.9
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
@@ -40,7 +40,7 @@ set(ZLIB_MIN_VERSION 1.2.8)
 find_package(ZLIB ${ZLIB_MIN_VERSION} REQUIRED)
 
 add_library(
-    djinterop
+    DjInterop
     src/djinterop/impl/crate_impl.cpp
     src/djinterop/impl/database_impl.cpp
     src/djinterop/impl/track_impl.cpp
@@ -70,13 +70,14 @@ add_library(
     src/djinterop/transaction_guard.cpp
     src/djinterop/util.cpp)
 
-set_target_properties(djinterop PROPERTIES
+set_target_properties(DjInterop PROPERTIES
+    OUTPUT_NAME "djinterop"
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR})
 
-target_compile_definitions(djinterop PUBLIC DJINTEROP_SOURCE)
+target_compile_definitions(DjInterop PUBLIC DJINTEROP_SOURCE)
 
-get_target_property(DJINTEROP_LIBRARY_TYPE djinterop TYPE)
+get_target_property(DJINTEROP_LIBRARY_TYPE DjInterop TYPE)
 if(DJINTEROP_LIBRARY_TYPE STREQUAL "STATIC_LIBRARY")
 	set(DJINTEROP_STATIC ON)
 endif()
@@ -89,15 +90,22 @@ configure_file(
     include/djinterop/config.hpp.in
     include/djinterop/config.hpp)
 
+include(GNUInstallDirs)
+set(DJINTEROP_INSTALL_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}/djinterop")
+
 target_include_directories(
-    djinterop PUBLIC
-    ${ZLIB_INCLUDE_DIRS}
-    ext/sqlite_modern_cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/include
-    include src)
+        DjInterop PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${DJINTEROP_INSTALL_INCLUDEDIR}>)
+target_include_directories(
+        DjInterop PRIVATE
+        ${ZLIB_INCLUDE_DIRS}
+        ext/sqlite_modern_cpp
+        src)
 
 target_link_libraries(
-    djinterop PUBLIC
+    DjInterop PUBLIC
     ${ZLIB_LIBRARIES})
 
 
@@ -106,35 +114,33 @@ if(SYSTEM_SQLITE)
     set(SQLITE_MIN_VERSION 3.11)
     find_package(SQLite3 ${SQLITE_MIN_VERSION} REQUIRED)
     target_include_directories(
-        djinterop PUBLIC
+        DjInterop PRIVATE
         ${SQLite3_INCLUDE_DIRS})
     target_link_libraries(
-        djinterop PUBLIC
+        DjInterop PUBLIC
         ${SQLite3_LIBRARIES})
 else()
     # Use embedded SQLite amalgamation sources.
     message(STATUS "Using embedded SQLite")
     target_sources(
-        djinterop PUBLIC
+        DjInterop PUBLIC
         ext/sqlite-amalgamation/sqlite3.c)
     target_compile_definitions(
-        djinterop PUBLIC
+        DjInterop PUBLIC
         SQLITE_OMIT_LOAD_EXTENSION)
     target_include_directories(
-        djinterop PUBLIC
+        DjInterop PRIVATE
         ext/sqlite-amalgamation)
 endif()
 
-set_target_properties(djinterop PROPERTIES C_VISIBILITY_PRESET hidden)
-set_target_properties(djinterop PROPERTIES CXX_VISIBILITY_PRESET hidden)
+set_target_properties(DjInterop PROPERTIES C_VISIBILITY_PRESET hidden)
+set_target_properties(DjInterop PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
-include(GNUInstallDirs)
-
-install(TARGETS djinterop
-  ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-  LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-  RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
-)
+install(TARGETS DjInterop
+        EXPORT DjInteropTargets
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 
 install(FILES
     include/djinterop/album_art.hpp
@@ -151,7 +157,7 @@ install(FILES
     include/djinterop/semantic_version.hpp
     include/djinterop/track.hpp
     include/djinterop/transaction_guard.hpp
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/djinterop")
+    DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}")
 
 if (UNIX)
     set(PKGCONFIG_TARGET djinterop)
@@ -166,10 +172,32 @@ if (UNIX)
             DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 endif()
 
+# CMake package config export.
+include(CMakePackageConfigHelpers)
+set(DJINTEROP_INSTALL_CMAKEDIR "lib/cmake/DjInterop")
+install(EXPORT DjInteropTargets
+        FILE DjInteropTargets.cmake
+        NAMESPACE DjInterop::
+        DESTINATION "${DJINTEROP_INSTALL_CMAKEDIR}")
+configure_package_config_file(
+        DjInteropConfig.cmake.in
+        "${CMAKE_CURRENT_BINARY_DIR}/DjInteropConfig.cmake"
+        INSTALL_DESTINATION "${DJINTEROP_INSTALL_CMAKEDIR}")
+write_basic_package_version_file(
+        "${CMAKE_CURRENT_BINARY_DIR}/DjInteropConfigVersion.cmake"
+        VERSION "${CMAKE_PROJECT_VERSION}"
+        COMPATIBILITY SameMajorVersion)
+install(FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/DjInteropConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/DjInteropConfigVersion.cmake"
+        cmake/FindPackageHandleStandardArgs.cmake
+        cmake/FindPackageMessage.cmake
+        cmake/FindSQLite3.cmake
+        DESTINATION "${DJINTEROP_INSTALL_CMAKEDIR}")
+
 include(CTest)
-find_package(Boost 1.65.1 COMPONENTS filesystem system)
-set(ENABLE_TESTING Boost_FOUND)
-if (ENABLE_TESTING)
+find_package(Boost 1.65.1 QUIET COMPONENTS filesystem system)
+if (Boost_FOUND)
     set(TESTDATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/testdata")
     add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
 
@@ -183,7 +211,7 @@ if (ENABLE_TESTING)
                 ${CMAKE_CURRENT_BINARY_DIR}/include
                 include)
         target_link_libraries(${test_name} PUBLIC
-                djinterop
+                DjInterop
                 ${Boost_LIBRARIES})
         add_test(NAME ${test_name} COMMAND ${test_name})
         add_dependencies(check ${test_name})
@@ -197,7 +225,7 @@ if (ENABLE_TESTING)
     add_djinterop_test(track_test)
 
 else()
-message(STATUS "Unit tests not available, as Boost cannot be found")
+    message(STATUS "Unit tests not available, as Boost cannot be found")
 endif()
 
 
