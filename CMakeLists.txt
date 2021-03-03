@@ -196,9 +196,8 @@ install(FILES
         DESTINATION "${DJINTEROP_INSTALL_CMAKEDIR}")
 
 include(CTest)
-find_package(Boost 1.65.1 COMPONENTS filesystem system)
-set(ENABLE_TESTING Boost_FOUND)
-if (ENABLE_TESTING)
+find_package(Boost 1.65.1 QUIET COMPONENTS filesystem system)
+if (Boost_FOUND)
     set(TESTDATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/testdata")
     add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
 
@@ -226,7 +225,7 @@ if (ENABLE_TESTING)
     add_djinterop_test(track_test)
 
 else()
-message(STATUS "Unit tests not available, as Boost cannot be found")
+    message(STATUS "Unit tests not available, as Boost cannot be found")
 endif()
 
 
