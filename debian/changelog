@@ -1,28 +1,37 @@
+libdjinterop (0.14.9-0ubuntu1) bionic; urgency=medium
+
+  * Ability to run unit tests using CMake build
+  * CMake export package on install
+  * Rename target for compat, fix sqlite dep
+  * Fix build running without boost
+
+ -- Adam Szmigin <smidge@xsco.net>  Sat, 06 Mar 2021 14:24:22 +0000
+
 libdjinterop (0.14.8-0ubuntu3) bionic; urgency=medium
 
   * Target Ubuntu 18.04 (bionic)
 
  -- Adam Szmigin <smidge@xsco.net>  Sun, 21 Feb 2021 12:57:08 +0000
 
-libdjinterop (0.14.8-0ubuntu2) focal; urgency=medium
+libdjinterop (0.14.8-0ubuntu2) bionic; urgency=medium
 
   * Restrict architecture to amd64.
 
  -- Adam Szmigin <smidge@xsco.net>  Sun, 21 Feb 2021 11:43:51 +0000
 
-libdjinterop (0.14.8-0ubuntu1) focal; urgency=medium
+libdjinterop (0.14.8-0ubuntu1) bionic; urgency=medium
 
   * Version bump for clean break for initial packaging
 
  -- Adam Szmigin <smidge@xsco.net>  Sun, 21 Feb 2021 01:33:53 +0000
 
-libdjinterop (0.14.7-0ubuntu2) focal; urgency=medium
+libdjinterop (0.14.7-0ubuntu2) bionic; urgency=medium
 
   * Fix cmake dependencies in earlier broken package.
 
  -- Adam Szmigin <smidge@xsco.net>  Sun, 21 Feb 2021 01:13:19 +0000
 
-libdjinterop (0.14.7-0ubuntu1) focal; urgency=medium
+libdjinterop (0.14.7-0ubuntu1) bionic; urgency=medium
 
   * Initial release
 
