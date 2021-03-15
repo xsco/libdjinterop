@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 #include <djinterop/optional.hpp>
@@ -25,6 +26,7 @@ namespace djinterop
 {
 void create_dir(const std::string& directory);
 bool dir_exists(const std::string& directory);
+int64_t generate_random_int64();
 std::string generate_random_uuid();
 std::string get_filename(const std::string& file_path);
 stdx::optional<std::string> get_file_extension(const std::string& file_path);

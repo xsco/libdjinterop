@@ -57,9 +57,9 @@ crate database::create_root_crate(std::string name) const
     return pimpl_->create_root_crate(name);
 }
 
-track database::create_track(std::string relative_path) const
+track database::create_track(const track_snapshot& snapshot)
 {
-    return pimpl_->create_track(relative_path);
+    return pimpl_->create_track(snapshot);
 }
 
 std::string database::directory() const

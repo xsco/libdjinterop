@@ -25,6 +25,7 @@
 #include <djinterop/impl/database_impl.hpp>
 #include <djinterop/impl/track_impl.hpp>
 #include <djinterop/track.hpp>
+#include <djinterop/track_snapshot.hpp>
 
 using std::chrono::duration_cast;
 using std::chrono::milliseconds;
@@ -38,6 +39,16 @@ track::track(const track& other) noexcept = default;
 track::~track() = default;
 
 track& track::operator=(const track& other) noexcept = default;
+
+track_snapshot track::snapshot() const
+{
+    return pimpl_->snapshot();
+}
+
+void track::update(const track_snapshot& snapshot)
+{
+    pimpl_->update(snapshot);
+}
 
 std::vector<beatgrid_marker> track::adjusted_beatgrid() const
 {
@@ -398,9 +409,19 @@ void track::set_publisher(std::string publisher) const
     set_publisher(stdx::make_optional(publisher));
 }
 
-int64_t track::required_waveform_samples_per_entry() const
+stdx::optional<int32_t> track::rating() const
 {
-    return pimpl_->required_waveform_samples_per_entry();
+    return pimpl_->rating();
+}
+
+void track::set_rating(stdx::optional<int32_t> rating)
+{
+    pimpl_->set_rating(rating);
+}
+
+void track::set_rating(int32_t rating)
+{
+    pimpl_->set_rating(stdx::make_optional(rating));
 }
 
 std::string track::relative_path() const

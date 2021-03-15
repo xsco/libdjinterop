@@ -114,6 +114,13 @@ database DJINTEROP_PUBLIC create_database(
     const std::string& directory,
     const semantic_version& schema_version = version_latest);
 
+/// Creates a new temporary database.
+///
+/// Any changes made to the database will not be persisted anywhere, and will
+/// be lost upon destruction of the returned variable.
+database DJINTEROP_PUBLIC create_temporary_database(
+    const semantic_version& schema_version = version_latest);
+
 /// Creates a new database from a set of SQL scripts.
 ///
 /// The directory indicated by `script_directory` is expected to contain files
@@ -157,6 +164,17 @@ std::string DJINTEROP_PUBLIC music_db_path(const database& db);
 /// Engine Prime do not lie within the actual track.
 std::vector<beatgrid_marker> DJINTEROP_PUBLIC
 normalize_beatgrid(std::vector<beatgrid_marker> beatgrid, int64_t sample_count);
+
+/// Calculate the required number of samples per waveform entry expected by
+/// Engine Prime.
+///
+/// The waveform for a track is provided merely as a set of waveform points,
+/// and so the scale of it is only meaningful when a relationship between
+/// the waveform and the samples it represents is known.  This function
+/// provides the required number of samples per waveform entry that should
+/// be understood when constructing or reading waveforms in Engine Prime format.
+int64_t DJINTEROP_PUBLIC required_waveform_samples_per_entry(
+    double sample_rate);
 
 /// Given an enginelibrary database, returns the path to its p.db sqlite
 /// database file

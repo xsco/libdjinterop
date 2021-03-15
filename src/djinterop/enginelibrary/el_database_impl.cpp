@@ -14,10 +14,9 @@
     You should have received a copy of the GNU Lesser General Public License
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#include <djinterop/djinterop.hpp>
-#include <djinterop/enginelibrary/el_crate_impl.hpp>
 #include <djinterop/enginelibrary/el_database_impl.hpp>
+
+#include <djinterop/enginelibrary/el_crate_impl.hpp>
 #include <djinterop/enginelibrary/el_storage.hpp>
 #include <djinterop/enginelibrary/el_track_impl.hpp>
 #include <djinterop/enginelibrary/el_transaction_guard_impl.hpp>
@@ -136,88 +135,9 @@ crate el_database_impl::create_root_crate(std::string name)
     return cr;
 }
 
-track el_database_impl::create_track(std::string relative_path)
+track el_database_impl::create_track(const track_snapshot& snapshot)
 {
-    // TODO (haslersn): Should it be allowed to create two tracks with the same
-    // `relative_path`?
-
-    auto filename = get_filename(relative_path);
-
-    el_transaction_guard_impl trans{storage_};
-
-    // Insert a new entry in the track table
-    storage_->db << "INSERT INTO Track (path, filename, trackType, "
-                    "isExternalTrack, idAlbumArt) VALUES (?,?,?,?,?)"
-                 << relative_path.data()   //
-                 << std::string{filename}  //
-                 << 1                      // trackType
-                 << 0                      // isExternalTrack
-                 << 1;                     // idAlbumArt
-
-    auto id = storage_->db.last_insert_rowid();
-
-    if (version() >= version_1_7_1)
-    {
-        storage_->db << "UPDATE Track SET pdbImportKey = 0 WHERE id = ?" << id;
-    }
-
-    {
-        auto extension = get_file_extension(filename);
-        auto metadata_str_inserter =
-            storage_->db
-            << "REPLACE INTO MetaData (id, type, text) VALUES (?, ?, ?)";
-        for (int64_t type : {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 15, 16})
-        {
-            stdx::optional<std::string> text;
-            switch (type)
-            {
-                case 10:
-                    // duration in MM:SS
-                    // TODO (haslersn)
-                    break;
-                case 13:
-                    // extension
-                    if (extension)
-                    {
-                        text = extension;
-                    }
-                    break;
-                case 15:
-                case 16:
-                    // Always 1 to our knowledge
-                    text = std::string{"1"};
-                    break;
-            }
-            metadata_str_inserter << id << type << text;
-            metadata_str_inserter++;
-        }
-    }
-
-    {
-        auto metadata_int_inserter = storage_->db
-                                     << "REPLACE INTO MetaDataInteger (id, "
-                                        "type, value) VALUES (?, ?, ?)";
-        for (int64_t type = 1; type <= 11 /* 12 */; ++type)
-        {
-            stdx::optional<int64_t> value;
-            switch (type)
-            {
-                case 5: value = 0; break;
-                case 11:
-                    // case 12:
-                    value = 1;
-                    break;
-            }
-            metadata_int_inserter << id << type << value;
-            metadata_int_inserter++;
-        }
-    }
-
-    track tr{std::make_shared<el_track_impl>(storage_, id)};
-
-    trans.commit();
-
-    return tr;
+    return djinterop::enginelibrary::create_track(storage_, snapshot);
 }
 
 std::string el_database_impl::directory()

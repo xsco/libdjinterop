@@ -15,6 +15,7 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <sstream>
@@ -24,11 +25,10 @@
 #include <djinterop/enginelibrary/el_database_impl.hpp>
 #include <djinterop/enginelibrary/el_track_impl.hpp>
 #include <djinterop/enginelibrary/el_transaction_guard_impl.hpp>
+#include <djinterop/enginelibrary/track_utils.hpp>
 #include <djinterop/util.hpp>
 
-namespace djinterop
-{
-namespace enginelibrary
+namespace djinterop::enginelibrary
 {
 using std::chrono::duration_cast;
 using std::chrono::milliseconds;
@@ -37,6 +37,7 @@ using std::chrono::system_clock;
 
 namespace
 {
+// TODO (mr-smidge): consider moving anon namespace below into track_utils.hpp
 stdx::optional<system_clock::time_point> to_time_point(
     stdx::optional<int64_t> timestamp)
 {
@@ -59,17 +60,6 @@ stdx::optional<int64_t> to_timestamp(
     return result;
 }
 
-/// Calculate the quantisation number for waveforms, given a sample rate.
-///
-/// A few numbers written to the waveform performance data are rounded
-/// to multiples of a particular "quantisation number", that is equal to
-/// the sample rate divided by 105, and then rounded to the nearest
-/// multiple of two.
-int64_t quantisation_number(int64_t sample_rate)
-{
-    return (sample_rate / 210) * 2;
-}
-
 /// Calculate the samples-per-entry in an overview waveform.
 ///
 /// An overview waveform always has 1024 entries, and the number of samples
@@ -78,8 +68,233 @@ int64_t quantisation_number(int64_t sample_rate)
 int64_t calculate_overview_waveform_samples_per_entry(
     int64_t sample_rate, int64_t sample_count)
 {
-    auto qn = quantisation_number(sample_rate);
+    auto qn = util::waveform_quantisation_number(sample_rate);
+    if (qn == 0)
+    {
+        return 0;
+    }
+
     return ((sample_count / qn) * qn) / 1024;
+}
+
+const int64_t default_track_type = 1;
+
+const int64_t default_is_external_track = 0;
+
+const stdx::optional<std::string> default_uuid_of_external_database;
+
+const stdx::optional<int64_t> default_id_track_in_external_database;
+
+const int64_t no_album_art_id = 1;
+
+const int64_t default_pdb_import_key = 0;
+
+const stdx::optional<std::string> default_uri;
+
+const int64_t default_is_beatgrid_locked = 0;
+
+const int64_t default_is_rendered = 1;
+
+const int64_t default_has_serato_values = 0;
+
+const int64_t default_has_rekordbox_values = 0;
+
+const int64_t default_has_traktor_values = 0;
+
+struct length_field_data
+{
+    stdx::optional<int64_t> length;
+    stdx::optional<int64_t> length_calculated;
+    stdx::optional<std::string> length_mm_ss;
+};
+
+length_field_data to_length_fields(
+    stdx::optional<std::chrono::milliseconds> duration,
+    stdx::optional<sampling_info> sampling)
+{
+    stdx::optional<int64_t> length;
+    stdx::optional<std::string> length_mm_ss;
+    if (duration)
+    {
+        length = static_cast<int64_t>(duration->count() / 1000);
+
+        // String metadata, type 10, is the duration encoded as "MM:SS".
+        std::ostringstream oss;
+        oss << std::setw(2) << std::setfill('0');
+        oss << (*length / 60);
+        oss << ":";
+        oss << (*length % 60);
+        length_mm_ss = oss.str();
+    }
+
+    // A zero sample rate is interpreted as no sample rate.
+    if (sampling && sampling->sample_rate == 0)
+    {
+        sampling = stdx::nullopt;
+    }
+
+    stdx::optional<int64_t> length_calculated;
+    if (sampling)
+    {
+        length_calculated = static_cast<int64_t>(
+            sampling->sample_count / sampling->sample_rate);
+    }
+
+    return length_field_data{length, length_calculated, length_mm_ss};
+}
+
+struct bpm_field_data
+{
+    stdx::optional<int64_t> bpm;
+    stdx::optional<double> bpm_analyzed;
+};
+
+bpm_field_data to_bpm_fields(
+    stdx::optional<double> bpm, stdx::optional<sampling_info> sampling,
+    const std::vector<beatgrid_marker>& beatgrid)
+{
+    stdx::optional<int64_t> rounded_bpm;
+    if (bpm)
+    {
+        rounded_bpm = static_cast<int64_t>(*bpm);
+    }
+
+    stdx::optional<double> bpm_analyzed;
+    if (sampling && beatgrid.size() >= 2)
+    {
+        auto marker_1 = beatgrid[0];
+        auto marker_2 = beatgrid[1];
+        if (marker_1.sample_offset != marker_2.sample_offset)
+        {
+            bpm_analyzed = sampling->sample_rate * 60 *
+                           (marker_2.index - marker_1.index) /
+                           (marker_2.sample_offset - marker_1.sample_offset);
+        }
+    }
+
+    return bpm_field_data{rounded_bpm, bpm_analyzed};
+}
+
+struct timestamp_field_data
+{
+    stdx::optional<int64_t> last_played_at_ts;
+    stdx::optional<int64_t> last_modified_at_ts;
+    stdx::optional<int64_t> last_accessed_at_ts;
+    stdx::optional<std::string> ever_played;
+};
+
+timestamp_field_data to_timestamp_fields(
+    stdx::optional<std::chrono::system_clock::time_point> last_played_at,
+    stdx::optional<std::chrono::system_clock::time_point> last_modified_at,
+    stdx::optional<std::chrono::system_clock::time_point> last_accessed_at)
+{
+    auto last_played_at_ts = to_timestamp(last_played_at);
+    auto last_modified_at_ts = to_timestamp(last_modified_at);
+
+    stdx::optional<int64_t> last_accessed_at_ts;
+    if (last_accessed_at)
+    {
+        // Field is always ceiled to the midnight at the end of the day the
+        // track is played, it seems.  This is believed to be due to the
+        // hardware players using the VFAT ACCDATE to populate the field, which
+        // is truncated only to a date.
+        //
+        // TODO (haslersn): Shouldn't we just set the unceiled time? This would
+        // leave the decision whether to ceil it to the library user. Also, it
+        // would make `el_track_impl::last_accessed_at()` consistent with the
+        // value that has been set using this method.
+        auto timestamp = *to_timestamp(last_accessed_at);
+        auto secs_per_day = 86400;
+        timestamp += secs_per_day - 1;
+        timestamp -= timestamp % secs_per_day;
+        last_accessed_at_ts = timestamp;
+    }
+
+    stdx::optional<std::string> ever_played =
+        std::string{last_played_at ? "1" : "0"};
+
+    return timestamp_field_data{
+        last_played_at_ts, last_modified_at_ts, last_accessed_at_ts,
+        ever_played};
+}
+
+stdx::optional<int64_t> to_key_num(stdx::optional<musical_key> key)
+{
+    stdx::optional<int64_t> key_num;
+    if (key)
+    {
+        key_num = static_cast<int64_t>(*key);
+    }
+
+    return key_num;
+}
+
+track_data to_track_data(
+    stdx::optional<sampling_info> sampling,
+    stdx::optional<double> average_loudness, stdx::optional<musical_key> key)
+{
+    return track_data{sampling, average_loudness, key};
+}
+
+quick_cues_data to_cues_data(
+    const std::array<stdx::optional<hot_cue>, 8>& hot_cues,
+    stdx::optional<double> adjusted_main_cue,
+    stdx::optional<double> default_main_cue)
+{
+    return quick_cues_data{
+        hot_cues, adjusted_main_cue.value_or(0), default_main_cue.value_or(0)};
+}
+
+beat_data to_beat_data(
+    stdx::optional<sampling_info> sampling,
+    const std::vector<beatgrid_marker>& default_beatgrid,
+    const std::vector<beatgrid_marker>& adjusted_beatgrid)
+{
+    return beat_data{sampling, default_beatgrid, adjusted_beatgrid};
+}
+
+loops_data to_loops_data(const std::array<stdx::optional<loop>, 8>& loops)
+{
+    return loops_data{loops};
+}
+
+overview_waveform_data to_overview_waveform_data(
+    stdx::optional<sampling_info> sampling,
+    const std::vector<waveform_entry>& waveform)
+{
+    auto sample_count = sampling ? sampling->sample_count : 0;
+    auto sample_rate = sampling ? sampling->sample_rate : 0;
+    double samples_per_entry = calculate_overview_waveform_samples_per_entry(
+        sample_rate, sample_count);
+
+    std::vector<waveform_entry> overview_waveform;
+    if (!waveform.empty())
+    {
+        // Calculate an overview waveform automatically.
+        // Note that the overview waveform always has 1024 entries in it.
+        overview_waveform.reserve(1024);
+        for (int32_t i = 0; i < 1024; ++i)
+        {
+            auto entry = waveform[waveform.size() * (2 * i + 1) / 2048];
+            overview_waveform.push_back(entry);
+        }
+    }
+
+    return overview_waveform_data{samples_per_entry, overview_waveform};
+}
+
+high_res_waveform_data to_high_res_waveform_data(
+    stdx::optional<sampling_info> sampling,
+    const std::vector<waveform_entry>& waveform)
+{
+    auto sample_rate = sampling ? sampling->sample_rate : 0;
+
+    // Make the assumption that the client has respected the required number
+    // of samples per entry when constructing the waveform.
+    double samples_per_entry = util::waveform_quantisation_number(sample_rate);
+
+    // TODO (mr-smidge) Rework to avoid copying the waveform here.
+    return high_res_waveform_data{samples_per_entry, waveform};
 }
 
 }  // namespace
@@ -89,114 +304,42 @@ el_track_impl::el_track_impl(std::shared_ptr<el_storage> storage, int64_t id) :
 {
 }
 
-stdx::optional<std::string> el_track_impl::get_metadata_str(
-    metadata_str_type type)
-{
-    stdx::optional<std::string> result;
-    storage_->db << "SELECT text FROM MetaData WHERE id = ? AND "
-                    "type = ? AND text IS NOT NULL"
-                 << id() << static_cast<int64_t>(type) >>
-        [&](std::string text) {
-            if (!result)
-            {
-                result = std::move(text);
-            }
-            else
-            {
-                throw track_database_inconsistency{
-                    "More than one MetaData entry of the same type for the "
-                    "same track",
-                    id()};
-            }
-        };
-    return result;
-}
-
-void el_track_impl::set_metadata_str(
-    metadata_str_type type, stdx::optional<std::string> content)
-{
-    if (content)
-    {
-        set_metadata_str(type, std::string{*content});
-    }
-    else
-    {
-        storage_->db
-            << "REPLACE INTO MetaData (id, type, text) VALUES (?, ?, ?)" << id()
-            << static_cast<int64_t>(type) << nullptr;
-    }
-}
-
-void el_track_impl::set_metadata_str(
-    metadata_str_type type, const std::string& content)
-{
-    storage_->db << "REPLACE INTO MetaData (id, type, text) VALUES (?, ?, ?)"
-                 << id() << static_cast<int64_t>(type) << content;
-}
-
-stdx::optional<int64_t> el_track_impl::get_metadata_int(metadata_int_type type)
-{
-    stdx::optional<int64_t> result;
-    storage_->db << "SELECT value FROM MetaDataInteger WHERE id = "
-                    "? AND type = ? AND value IS NOT NULL"
-                 << id() << static_cast<int64_t>(type) >>
-        [&](int64_t value) {
-            if (!result)
-            {
-                result = value;
-            }
-            else
-            {
-                throw track_database_inconsistency{
-                    "More than one MetaDataInteger entry of the same type "
-                    "for the same track",
-                    id()};
-            }
-        };
-    return result;
-}
-
-void el_track_impl::set_metadata_int(
-    metadata_int_type type, stdx::optional<int64_t> content)
-{
-    storage_->db
-        << "REPLACE INTO MetaDataInteger (id, type, value) VALUES (?, ?, ?)"
-        << id() << static_cast<int64_t>(type) << content;
-}
-
 beat_data el_track_impl::get_beat_data()
 {
-    return get_perfdata<beat_data>("beatData");
+    return storage_->get_performance_data_column<beat_data>(id(), "beatData");
 }
 
 void el_track_impl::set_beat_data(beat_data data)
 {
-    set_perfdata("beatData", data);
+    storage_->set_performance_data_column(id(), "beatData", data);
 }
 
 high_res_waveform_data el_track_impl::get_high_res_waveform_data()
 {
-    return get_perfdata<high_res_waveform_data>("highResolutionWaveFormData");
+    return storage_->get_performance_data_column<high_res_waveform_data>(
+        id(), "highResolutionWaveFormData");
 }
 
 void el_track_impl::set_high_res_waveform_data(high_res_waveform_data data)
 {
-    set_perfdata("highResolutionWaveFormData", data);
+    storage_->set_performance_data_column(
+        id(), "highResolutionWaveFormData", data);
 }
 
 loops_data el_track_impl::get_loops_data()
 {
-    return get_perfdata<loops_data>("loops");
+    return storage_->get_performance_data_column<loops_data>(id(), "loops");
 }
 
 void el_track_impl::set_loops_data(loops_data data)
 {
-    set_perfdata("loops", data);
+    storage_->set_performance_data_column(id(), "loops", data);
 }
 
 overview_waveform_data el_track_impl::get_overview_waveform_data()
 {
-    return get_perfdata<overview_waveform_data>("overviewWaveFormData");
+    return storage_->get_performance_data_column<overview_waveform_data>(
+        id(), "overviewWaveFormData");
 }
 
 void el_track_impl::set_overview_waveform_data(overview_waveform_data data)
@@ -210,27 +353,259 @@ void el_track_impl::set_overview_waveform_data(overview_waveform_data data)
         entry.mid.opacity = 255;
         entry.high.opacity = 255;
     }
-    set_perfdata("overviewWaveFormData", data);
+    storage_->set_performance_data_column(id(), "overviewWaveFormData", data);
 }
 
 quick_cues_data el_track_impl::get_quick_cues_data()
 {
-    return get_perfdata<quick_cues_data>("quickCues");
+    return storage_->get_performance_data_column<quick_cues_data>(
+        id(), "quickCues");
 }
 
 void el_track_impl::set_quick_cues_data(quick_cues_data data)
 {
-    set_perfdata("quickCues", data);
+    storage_->set_performance_data_column(id(), "quickCues", data);
 }
 
 track_data el_track_impl::get_track_data()
 {
-    return get_perfdata<track_data>("trackData");
+    return storage_->get_performance_data_column<track_data>(id(), "trackData");
 }
 
 void el_track_impl::set_track_data(track_data data)
 {
-    set_perfdata("trackData", data);
+    storage_->set_performance_data_column(id(), "trackData", data);
+}
+
+track_snapshot el_track_impl::snapshot() const
+{
+    track_snapshot snapshot{id()};
+
+    auto track_data = storage_->get_track(id());
+    auto meta_data = storage_->get_all_meta_data(id());
+    auto meta_data_integer = storage_->get_all_meta_data_integer(id());
+    auto perf_data = storage_->get_performance_data(id());
+
+    snapshot.sampling = perf_data.track_performance_data
+                            ? perf_data.track_performance_data->sampling
+                            : stdx::nullopt;
+
+    if (perf_data.beats)
+    {
+        snapshot.adjusted_beatgrid =
+            std::move(perf_data.beats->adjusted_beatgrid);
+    }
+    snapshot.adjusted_main_cue =
+        perf_data.quick_cues
+            ? stdx::make_optional(perf_data.quick_cues->adjusted_main_cue)
+            : stdx::nullopt;
+    snapshot.average_loudness =
+        perf_data.track_performance_data
+            ? perf_data.track_performance_data->average_loudness
+            : stdx::nullopt;
+    snapshot.bitrate = track_data.bitrate;
+    snapshot.bpm =
+        track_data.bpm_analyzed
+            ? track_data.bpm_analyzed
+            : track_data.bpm
+                  ? stdx::make_optional(static_cast<double>(*track_data.bpm))
+                  : stdx::nullopt;
+    if (perf_data.beats)
+    {
+        snapshot.default_beatgrid =
+            std::move(perf_data.beats->default_beatgrid);
+    }
+    snapshot.default_main_cue =
+        perf_data.quick_cues
+            ? stdx::make_optional(perf_data.quick_cues->default_main_cue)
+            : stdx::nullopt;
+    if (snapshot.sampling)
+    {
+        auto ms = 1000.0 * snapshot.sampling->sample_count /
+                  snapshot.sampling->sample_rate;
+        snapshot.duration =
+            stdx::make_optional(milliseconds{static_cast<int64_t>(ms)});
+    }
+    else if (track_data.length)
+    {
+        auto ms = 1000 * *track_data.length;
+        snapshot.duration = stdx::make_optional(milliseconds{ms});
+    }
+    snapshot.file_bytes = track_data.file_bytes;
+    if (perf_data.quick_cues)
+    {
+        snapshot.hot_cues = std::move(perf_data.quick_cues->hot_cues);
+    }
+    snapshot.key = perf_data.track_performance_data
+                       ? perf_data.track_performance_data->key
+                       : stdx::nullopt;
+    if (perf_data.loops)
+    {
+        snapshot.loops = std::move(perf_data.loops->loops);
+    }
+    snapshot.relative_path = std::move(track_data.relative_path);
+    snapshot.track_number =
+        track_data.play_order
+            ? stdx::make_optional(static_cast<int32_t>(*track_data.play_order))
+            : stdx::nullopt;
+    if (perf_data.high_res_waveform)
+    {
+        snapshot.waveform = std::move(perf_data.high_res_waveform->waveform);
+    }
+    snapshot.year =
+        track_data.year
+            ? stdx::make_optional(static_cast<int32_t>(*track_data.year))
+            : stdx::nullopt;
+
+    for (auto&& row : meta_data)
+    {
+        switch (row.type)
+        {
+            case metadata_str_type::title: snapshot.title = row.value; break;
+            case metadata_str_type::artist: snapshot.artist = row.value; break;
+            case metadata_str_type::album: snapshot.album = row.value; break;
+            case metadata_str_type::genre: snapshot.genre = row.value; break;
+            case metadata_str_type::comment:
+                snapshot.comment = row.value;
+                break;
+            case metadata_str_type::publisher:
+                snapshot.publisher = row.value;
+                break;
+            case metadata_str_type::composer:
+                snapshot.composer = row.value;
+                break;
+            default: break;
+        }
+    }
+
+    for (auto&& row : meta_data_integer)
+    {
+        switch (row.type)
+        {
+            case metadata_int_type::last_played_ts:
+                snapshot.last_played_at = to_time_point(row.value);
+                break;
+            case metadata_int_type::last_modified_ts:
+                snapshot.last_modified_at = to_time_point(row.value);
+                break;
+            case metadata_int_type::last_accessed_ts:
+                snapshot.last_accessed_at = to_time_point(row.value);
+                break;
+            case metadata_int_type::musical_key:
+                if (!snapshot.key)
+                {
+                    snapshot.key = stdx::make_optional(
+                        static_cast<musical_key>(row.value));
+                }
+
+                break;
+            default: break;
+        }
+    }
+
+    return snapshot;
+}
+
+void el_track_impl::update(const track_snapshot& snapshot)
+{
+    if (snapshot.id && *snapshot.id != id())
+    {
+        throw invalid_track_snapshot{
+            "Snapshot pertains to a different track, and so it cannot be used "
+            "to update this track"};
+    }
+    else if (!snapshot.relative_path)
+    {
+        throw invalid_track_snapshot{
+            "Snapshot does not contain a populated `relative_path` field, "
+            "which is required on any track"};
+    }
+
+    auto length_fields = to_length_fields(snapshot.duration, snapshot.sampling);
+    auto bpm_fields = to_bpm_fields(
+        snapshot.bpm, snapshot.sampling, snapshot.adjusted_beatgrid);
+    auto filename = get_filename(*snapshot.relative_path);
+    auto extension = get_file_extension(filename);
+    auto track_number =
+        snapshot.track_number
+            ? stdx::make_optional(static_cast<int64_t>(*snapshot.track_number))
+            : stdx::nullopt;
+    auto year = snapshot.year
+                    ? stdx::make_optional(static_cast<int64_t>(*snapshot.year))
+                    : stdx::nullopt;
+    auto timestamp_fields = to_timestamp_fields(
+        snapshot.last_played_at, snapshot.last_modified_at,
+        snapshot.last_accessed_at);
+    auto key_num = to_key_num(snapshot.key);
+    auto clamped_rating = snapshot.rating
+                              ? stdx::make_optional(static_cast<int64_t>(
+                                    std::clamp(*snapshot.rating, 0, 100)))
+                              : stdx::nullopt;
+    stdx::optional<int64_t> last_play_hash;
+    auto track_data = to_track_data(
+        snapshot.sampling, snapshot.average_loudness, snapshot.key);
+    auto overview_waveform_data =
+        to_overview_waveform_data(snapshot.sampling, snapshot.waveform);
+    auto high_res_waveform_data =
+        to_high_res_waveform_data(snapshot.sampling, snapshot.waveform);
+    auto beat_data = to_beat_data(
+        snapshot.sampling, snapshot.default_beatgrid,
+        snapshot.adjusted_beatgrid);
+    auto cues_data = to_cues_data(
+        snapshot.hot_cues, snapshot.adjusted_main_cue,
+        snapshot.default_main_cue);
+    auto loops_data = to_loops_data(snapshot.loops);
+
+    el_transaction_guard_impl trans{storage_};
+
+    // Firstly, update the `Track` table entry.
+    storage_->update_track(
+        id(), track_number, length_fields.length,
+        length_fields.length_calculated, bpm_fields.bpm, year,
+        snapshot.relative_path, filename, snapshot.bitrate,
+        bpm_fields.bpm_analyzed, default_track_type, default_is_external_track,
+        default_uuid_of_external_database,
+        default_id_track_in_external_database, no_album_art_id,
+        snapshot.file_bytes, default_pdb_import_key, default_uri,
+        default_is_beatgrid_locked);
+
+    // Set string-based metadata.
+    storage_->set_meta_data(
+        id(), snapshot.title, snapshot.artist, snapshot.album, snapshot.genre,
+        snapshot.comment, snapshot.publisher, snapshot.composer,
+        length_fields.length_mm_ss, timestamp_fields.ever_played, extension);
+
+    // Set integer-based metadata.
+    storage_->set_meta_data_integer(
+        id(), key_num, clamped_rating, timestamp_fields.last_played_at_ts,
+        timestamp_fields.last_modified_at_ts,
+        timestamp_fields.last_accessed_at_ts, last_play_hash);
+
+    // Set performance data, or remove, as appropriate.
+    auto any_hot_cues = std::any_of(
+        snapshot.hot_cues.begin(), snapshot.hot_cues.end(),
+        [](auto hc) { return hc; });
+    auto any_loops = std::any_of(
+        snapshot.loops.begin(), snapshot.loops.end(), [](auto l) { return l; });
+    auto has_perf_data = snapshot.sampling || snapshot.average_loudness ||
+                         !snapshot.adjusted_beatgrid.empty() ||
+                         !snapshot.default_beatgrid.empty() || any_hot_cues ||
+                         any_loops;
+    auto is_analysed = 1;
+    if (has_perf_data)
+    {
+        storage_->set_performance_data(
+            id(), is_analysed, default_is_rendered, track_data,
+            high_res_waveform_data, overview_waveform_data, beat_data,
+            cues_data, loops_data, default_has_serato_values,
+            default_has_rekordbox_values, default_has_traktor_values);
+    }
+    else
+    {
+        storage_->clear_performance_data(id());
+    }
+
+    trans.commit();
 }
 
 std::vector<beatgrid_marker> el_track_impl::adjusted_beatgrid()
@@ -264,17 +639,17 @@ void el_track_impl::set_adjusted_main_cue(double sample_offset)
 
 stdx::optional<std::string> el_track_impl::album()
 {
-    return get_metadata_str(metadata_str_type::album);
+    return storage_->get_meta_data(id(), metadata_str_type::album);
 }
 
 void el_track_impl::set_album(stdx::optional<std::string> album)
 {
-    set_metadata_str(metadata_str_type::album, album);
+    storage_->set_meta_data(id(), metadata_str_type::album, album);
 }
 
 stdx::optional<int64_t> el_track_impl::album_art_id()
 {
-    int64_t cell = get_cell<int64_t>("idAlbumArt");
+    auto cell = storage_->get_track_column<int64_t>(id(), "idAlbumArt");
     stdx::optional<int64_t> album_art_id;
     if (cell < 1)
     {
@@ -293,18 +668,18 @@ void el_track_impl::set_album_art_id(stdx::optional<int64_t> album_art_id)
     {
         // TODO (haslersn): Throw something.
     }
-    set_cell("idAlbumArt", album_art_id.value_or(1));
+    storage_->set_track_column(id(), "idAlbumArt", album_art_id.value_or(1));
     // 1 is the magic number for "no album art"
 }
 
 stdx::optional<std::string> el_track_impl::artist()
 {
-    return get_metadata_str(metadata_str_type::artist);
+    return storage_->get_meta_data(id(), metadata_str_type::artist);
 }
 
 void el_track_impl::set_artist(stdx::optional<std::string> artist)
 {
-    set_metadata_str(metadata_str_type::artist, artist);
+    return storage_->set_meta_data(id(), metadata_str_type::artist, artist);
 }
 
 stdx::optional<double> el_track_impl::average_loudness()
@@ -328,48 +703,50 @@ void el_track_impl::set_average_loudness(
 
 stdx::optional<int64_t> el_track_impl::bitrate()
 {
-    return get_cell<stdx::optional<int64_t> >("bitrate");
+    return storage_->get_track_column<stdx::optional<int64_t> >(
+        id(), "bitrate");
 }
 
 void el_track_impl::set_bitrate(stdx::optional<int64_t> bitrate)
 {
-    set_cell("bitrate", bitrate);
+    storage_->set_track_column(id(), "bitrate", bitrate);
 }
 
 stdx::optional<double> el_track_impl::bpm()
 {
-    return get_cell<stdx::optional<double> >("bpmAnalyzed");
+    return storage_->get_track_column<stdx::optional<double> >(
+        id(), "bpmAnalyzed");
 }
 
 void el_track_impl::set_bpm(stdx::optional<double> bpm)
 {
-    set_cell("bpmAnalyzed", bpm);
+    storage_->set_track_column(id(), "bpmAnalyzed", bpm);
     stdx::optional<int64_t> ceiled_bpm;
     if (bpm)
     {
         ceiled_bpm = static_cast<int64_t>(std::ceil(*bpm));
     }
-    set_cell("bpm", ceiled_bpm);
+    storage_->set_track_column(id(), "bpm", ceiled_bpm);
 }
 
 stdx::optional<std::string> el_track_impl::comment()
 {
-    return get_metadata_str(metadata_str_type::comment);
+    return storage_->get_meta_data(id(), metadata_str_type::comment);
 }
 
 void el_track_impl::set_comment(stdx::optional<std::string> comment)
 {
-    set_metadata_str(metadata_str_type::comment, comment);
+    storage_->set_meta_data(id(), metadata_str_type::comment, comment);
 }
 
 stdx::optional<std::string> el_track_impl::composer()
 {
-    return get_metadata_str(metadata_str_type::composer);
+    return storage_->get_meta_data(id(), metadata_str_type::composer);
 }
 
 void el_track_impl::set_composer(stdx::optional<std::string> composer)
 {
-    set_metadata_str(metadata_str_type::composer, composer);
+    storage_->set_meta_data(id(), metadata_str_type::composer, composer);
 }
 
 database el_track_impl::db()
@@ -426,7 +803,8 @@ stdx::optional<milliseconds> el_track_impl::duration()
         double secs = smp->sample_count / smp->sample_rate;
         return milliseconds{static_cast<int64_t>(1000 * secs)};
     }
-    auto secs = get_cell<stdx::optional<int64_t> >("length");
+    auto secs =
+        storage_->get_track_column<stdx::optional<int64_t> >(id(), "length");
     if (secs)
     {
         return milliseconds{*secs * 1000};
@@ -448,12 +826,12 @@ std::string el_track_impl::filename()
 
 stdx::optional<std::string> el_track_impl::genre()
 {
-    return get_metadata_str(metadata_str_type::genre);
+    return storage_->get_meta_data(id(), metadata_str_type::genre);
 }
 
 void el_track_impl::set_genre(stdx::optional<std::string> genre)
 {
-    set_metadata_str(metadata_str_type::genre, genre);
+    storage_->set_meta_data(id(), metadata_str_type::genre, genre);
 }
 
 stdx::optional<hot_cue> el_track_impl::hot_cue_at(int32_t index)
@@ -490,13 +868,13 @@ void el_track_impl::set_hot_cues(std::array<stdx::optional<hot_cue>, 8> cues)
 
 stdx::optional<track_import_info> el_track_impl::import_info()
 {
-    if (get_cell<int64_t>("isExternalTrack") == 0)
+    if (storage_->get_track_column<int64_t>(id(), "isExternalTrack") == 0)
     {
         return stdx::nullopt;
     }
     return track_import_info{
-        get_cell<std::string>("uuidOfExternalDatabase"),
-        get_cell<int64_t>("idTrackInExternalDatabase")};
+        storage_->get_track_column<std::string>(id(), "uuidOfExternalDatabase"),
+        storage_->get_track_column<int64_t>(id(), "idTrackInExternalDatabase")};
     // TODO (haslersn): How should we handle cells that unexpectedly don't
     // contain integral values?
 }
@@ -506,15 +884,17 @@ void el_track_impl::set_import_info(
 {
     if (import_info)
     {
-        set_cell("isExternalTrack", 1);
-        set_cell("uuidOfExternalDatabase", import_info->external_db_uuid);
-        set_cell("idTrackInExternalDatabase", import_info->external_track_id);
+        storage_->set_track_column(id(), "isExternalTrack", 1);
+        storage_->set_track_column(
+            id(), "uuidOfExternalDatabase", import_info->external_db_uuid);
+        storage_->set_track_column(
+            id(), "idTrackInExternalDatabase", import_info->external_track_id);
     }
     else
     {
-        set_cell("isExternalTrack", 0);
-        set_cell("uuidOfExternalDatabase", nullptr);
-        set_cell("idTrackInExternalDatabase", nullptr);
+        storage_->set_track_column(id(), "isExternalTrack", 0);
+        storage_->set_track_column(id(), "uuidOfExternalDatabase", nullptr);
+        storage_->set_track_column(id(), "idTrackInExternalDatabase", nullptr);
     }
 }
 
@@ -539,7 +919,8 @@ bool el_track_impl::is_valid()
 stdx::optional<musical_key> el_track_impl::key()
 {
     stdx::optional<musical_key> result;
-    auto key_num = get_metadata_int(metadata_int_type::musical_key);
+    auto key_num =
+        storage_->get_meta_data_integer(id(), metadata_int_type::musical_key);
     if (key_num)
     {
         result = static_cast<musical_key>(*key_num);
@@ -559,7 +940,8 @@ void el_track_impl::set_key(stdx::optional<musical_key> key)
     auto track_d = get_track_data();
     track_d.key = key;
     set_track_data(track_d);
-    set_metadata_int(metadata_int_type::musical_key, key_num);
+    storage_->set_meta_data_integer(
+        id(), metadata_int_type::musical_key, key_num);
     trans.commit();
 }
 
@@ -570,7 +952,8 @@ stdx::optional<system_clock::time_point> el_track_impl::last_accessed_at()
     // `el_track_impl::last_accessed_at()` and
     // `el_track_impl::last_played_at()`, except for the ceiling of the
     // timestamp?
-    return to_time_point(get_metadata_int(metadata_int_type::last_accessed_ts));
+    return to_time_point(storage_->get_meta_data_integer(
+        id(), metadata_int_type::last_accessed_ts));
 }
 
 void el_track_impl::set_last_accessed_at(
@@ -589,31 +972,33 @@ void el_track_impl::set_last_accessed_at(
         auto secs_per_day = 86400;
         timestamp += secs_per_day - 1;
         timestamp -= timestamp % secs_per_day;
-        set_metadata_int(metadata_int_type::last_accessed_ts, timestamp);
+        storage_->set_meta_data_integer(
+            id(), metadata_int_type::last_accessed_ts, timestamp);
     }
     else
     {
-        set_metadata_int(metadata_int_type::last_accessed_ts, stdx::nullopt);
+        storage_->set_meta_data_integer(
+            id(), metadata_int_type::last_accessed_ts, stdx::nullopt);
     }
 }
 
 stdx::optional<system_clock::time_point> el_track_impl::last_modified_at()
-
 {
-    return to_time_point(get_metadata_int(metadata_int_type::last_modified_ts));
+    return to_time_point(storage_->get_meta_data_integer(
+        id(), metadata_int_type::last_modified_ts));
 }
 
 void el_track_impl::set_last_modified_at(
     stdx::optional<system_clock::time_point> modified_at)
 {
-    set_metadata_int(
-        metadata_int_type::last_modified_ts, to_timestamp(modified_at));
+    storage_->set_meta_data_integer(
+        id(), metadata_int_type::last_modified_ts, to_timestamp(modified_at));
 }
 
 stdx::optional<system_clock::time_point> el_track_impl::last_played_at()
-
 {
-    return to_time_point(get_metadata_int(metadata_int_type::last_played_ts));
+    return to_time_point(storage_->get_meta_data_integer(
+        id(), metadata_int_type::last_played_ts));
 }
 
 void el_track_impl::set_last_played_at(
@@ -621,9 +1006,10 @@ void el_track_impl::set_last_played_at(
 {
     static stdx::optional<std::string> zero{"0"};
     static stdx::optional<std::string> one{"1"};
-    set_metadata_str(metadata_str_type::ever_played, played_at ? one : zero);
-    set_metadata_int(
-        metadata_int_type::last_played_ts, to_timestamp(played_at));
+    storage_->set_meta_data(
+        id(), metadata_str_type::ever_played, played_at ? one : zero);
+    storage_->set_meta_data_integer(
+        id(), metadata_int_type::last_played_ts, to_timestamp(played_at));
     if (played_at)
     {
         // TODO (haslersn): Add entry to HistorylistTrackList
@@ -673,45 +1059,44 @@ std::vector<waveform_entry> el_track_impl::overview_waveform()
 
 stdx::optional<std::string> el_track_impl::publisher()
 {
-    return get_metadata_str(metadata_str_type::publisher);
+    return storage_->get_meta_data(id(), metadata_str_type::publisher);
 }
 
 void el_track_impl::set_publisher(stdx::optional<std::string> publisher)
 {
-    set_metadata_str(metadata_str_type::publisher, publisher);
+    storage_->set_meta_data(id(), metadata_str_type::publisher, publisher);
 }
 
-int64_t el_track_impl::required_waveform_samples_per_entry()
+stdx::optional<int32_t> el_track_impl::rating()
 {
-    auto smp = sampling();
-    if (!smp)
-    {
-        return 0;
-    }
-    if (smp->sample_rate <= 0)
-    {
-        throw track_database_inconsistency{
-            "Track has non-positive sample rate", id()};
-    }
+    auto result =
+        storage_->get_meta_data_integer(id(), metadata_int_type::rating);
+    return result ? stdx::make_optional(static_cast<int32_t>(*result))
+                  : stdx::nullopt;
+}
 
-    // In high-resolution waveforms, the samples-per-entry is the same as
-    // the quantisation number.
-    return quantisation_number(smp->sample_rate);
+void el_track_impl::set_rating(stdx::optional<int32_t> rating)
+{
+    auto clamped_rating = rating ? stdx::make_optional(static_cast<int64_t>(
+                                       std::clamp(*rating, 0, 100)))
+                                 : stdx::nullopt;
+    storage_->set_meta_data_integer(
+        id(), metadata_int_type::rating, clamped_rating);
 }
 
 std::string el_track_impl::relative_path()
 {
-    return get_cell<std::string>("path");
+    return storage_->get_track_column<std::string>(id(), "path");
 }
 
 void el_track_impl::set_relative_path(std::string relative_path)
 {
     // TODO (haslersn): Should we check the path?
-    set_cell("path", std::string{relative_path});
+    storage_->set_track_column(id(), "path", std::string{relative_path});
     auto filename = get_filename(relative_path);
-    set_cell("filename", std::string{filename});
+    storage_->set_track_column(id(), "filename", std::string{filename});
     auto extension = get_file_extension(filename);
-    set_metadata_str(metadata_str_type::file_extension, extension);
+    storage_->set_meta_data(id(), metadata_str_type::file_extension, extension);
 }
 
 stdx::optional<sampling_info> el_track_impl::sampling()
@@ -742,14 +1127,16 @@ void el_track_impl::set_sampling(stdx::optional<sampling_info> sampling)
         oss << ":";
         oss << (*secs % 60);
         auto str = oss.str();
-        set_metadata_str(metadata_str_type::duration_mm_ss, std::string{str});
+        storage_->set_meta_data(
+            id(), metadata_str_type::duration_mm_ss, std::string{str});
     }
     else
     {
-        set_metadata_str(metadata_str_type::duration_mm_ss, stdx::nullopt);
+        storage_->set_meta_data(
+            id(), metadata_str_type::duration_mm_ss, stdx::nullopt);
     }
-    set_cell("length", secs);
-    set_cell("lengthCalculated", secs);
+    storage_->set_track_column(id(), "length", secs);
+    storage_->set_track_column(id(), "lengthCalculated", secs);
 
     // read old data
     auto track_d = get_track_data();
@@ -773,7 +1160,7 @@ void el_track_impl::set_sampling(stdx::optional<sampling_info> sampling)
         // genuinely changed using this method, note that the waveform is likely
         // to need to be updated as well afterwards.
         high_res_waveform_d.samples_per_entry =
-            quantisation_number(sample_rate);
+            util::waveform_quantisation_number(sample_rate);
         set_high_res_waveform_data(std::move(high_res_waveform_d));
     }
 
@@ -792,22 +1179,23 @@ void el_track_impl::set_sampling(stdx::optional<sampling_info> sampling)
 
 stdx::optional<std::string> el_track_impl::title()
 {
-    return get_metadata_str(metadata_str_type::title);
+    return storage_->get_meta_data(id(), metadata_str_type::title);
 }
 
 void el_track_impl::set_title(stdx::optional<std::string> title)
 {
-    set_metadata_str(metadata_str_type::title, title);
+    storage_->set_meta_data(id(), metadata_str_type::title, title);
 }
 
 stdx::optional<int32_t> el_track_impl::track_number()
 {
-    return get_cell<stdx::optional<int32_t> >("playOrder");
+    return storage_->get_track_column<stdx::optional<int32_t> >(
+        id(), "playOrder");
 }
 
 void el_track_impl::set_track_number(stdx::optional<int32_t> track_number)
 {
-    set_cell("playOrder", track_number);
+    storage_->set_track_column(id(), "playOrder", track_number);
 }
 
 std::vector<waveform_entry> el_track_impl::waveform()
@@ -844,7 +1232,7 @@ void el_track_impl::set_waveform(std::vector<waveform_entry> waveform)
         // Make the assumption that the client has respected the required number
         // of samples per entry when constructing the waveform.
         high_res_waveform_d.samples_per_entry =
-            quantisation_number(sample_rate);
+            util::waveform_quantisation_number(sample_rate);
         high_res_waveform_d.waveform = std::move(waveform);
     }
 
@@ -856,13 +1244,114 @@ void el_track_impl::set_waveform(std::vector<waveform_entry> waveform)
 
 stdx::optional<int32_t> el_track_impl::year()
 {
-    return get_cell<stdx::optional<int32_t> >("year");
+    return storage_->get_track_column<stdx::optional<int32_t> >(id(), "year");
 }
 
 void el_track_impl::set_year(stdx::optional<int32_t> year)
 {
-    set_cell("year", year);
+    storage_->set_track_column(id(), "year", year);
 }
 
-}  // namespace enginelibrary
-}  // namespace djinterop
+track create_track(
+    std::shared_ptr<el_storage> storage, const track_snapshot& snapshot)
+{
+    if (snapshot.id)
+    {
+        throw invalid_track_snapshot{
+            "Snapshot already pertains to a persisted track, and so it cannot "
+            "be created again"};
+    }
+    else if (!snapshot.relative_path)
+    {
+        throw invalid_track_snapshot{
+            "Snapshot does not contain a populated `relative_path` field, "
+            "which is required to create a track"};
+    }
+
+    auto length_fields = to_length_fields(snapshot.duration, snapshot.sampling);
+    auto bpm_fields = to_bpm_fields(
+        snapshot.bpm, snapshot.sampling, snapshot.adjusted_beatgrid);
+    auto filename = get_filename(*snapshot.relative_path);
+    auto extension = get_file_extension(filename);
+    auto track_number =
+        snapshot.track_number
+            ? stdx::make_optional(static_cast<int64_t>(*snapshot.track_number))
+            : stdx::nullopt;
+    auto year = snapshot.year
+                    ? stdx::make_optional(static_cast<int64_t>(*snapshot.year))
+                    : stdx::nullopt;
+    auto timestamp_fields = to_timestamp_fields(
+        snapshot.last_played_at, snapshot.last_modified_at,
+        snapshot.last_accessed_at);
+    auto key_num = to_key_num(snapshot.key);
+    auto clamped_rating = snapshot.rating
+                              ? stdx::make_optional(static_cast<int64_t>(
+                                    std::clamp(*snapshot.rating, 0, 100)))
+                              : stdx::nullopt;
+    stdx::optional<int64_t> last_play_hash;
+    auto track_data = to_track_data(
+        snapshot.sampling, snapshot.average_loudness, snapshot.key);
+    auto overview_waveform_data =
+        to_overview_waveform_data(snapshot.sampling, snapshot.waveform);
+    auto high_res_waveform_data =
+        to_high_res_waveform_data(snapshot.sampling, snapshot.waveform);
+    auto beat_data = to_beat_data(
+        snapshot.sampling, snapshot.default_beatgrid,
+        snapshot.adjusted_beatgrid);
+    auto cues_data = to_cues_data(
+        snapshot.hot_cues, snapshot.adjusted_main_cue,
+        snapshot.default_main_cue);
+    auto loops_data = to_loops_data(snapshot.loops);
+
+    el_transaction_guard_impl trans{storage};
+
+    // Firstly, create the `Track` table entry.
+    auto id = storage->create_track(
+        track_number, length_fields.length, length_fields.length_calculated,
+        bpm_fields.bpm, year, snapshot.relative_path, filename,
+        snapshot.bitrate, bpm_fields.bpm_analyzed, default_track_type,
+        default_is_external_track, default_uuid_of_external_database,
+        default_id_track_in_external_database, no_album_art_id,
+        snapshot.file_bytes, default_pdb_import_key, default_uri,
+        default_is_beatgrid_locked);
+
+    // Set string-based metadata.
+    storage->set_meta_data(
+        id, snapshot.title, snapshot.artist, snapshot.album, snapshot.genre,
+        snapshot.comment, snapshot.publisher, snapshot.composer,
+        length_fields.length_mm_ss, timestamp_fields.ever_played, extension);
+
+    // Set integer-based metadata.
+    storage->set_meta_data_integer(
+        id, key_num, clamped_rating, timestamp_fields.last_played_at_ts,
+        timestamp_fields.last_modified_at_ts,
+        timestamp_fields.last_accessed_at_ts, last_play_hash);
+
+    // Set performance data, if any.
+    auto any_hot_cues = std::any_of(
+        snapshot.hot_cues.begin(), snapshot.hot_cues.end(),
+        [](auto hc) { return hc; });
+    auto any_loops = std::any_of(
+        snapshot.loops.begin(), snapshot.loops.end(), [](auto l) { return l; });
+    auto has_perf_data = snapshot.sampling || snapshot.average_loudness ||
+                         !snapshot.adjusted_beatgrid.empty() ||
+                         !snapshot.default_beatgrid.empty() || any_hot_cues ||
+                         any_loops;
+    auto is_analysed = 1;
+    if (has_perf_data)
+    {
+        storage->set_performance_data(
+            id, is_analysed, default_is_rendered, track_data,
+            high_res_waveform_data, overview_waveform_data, beat_data,
+            cues_data, loops_data, default_has_serato_values,
+            default_has_rekordbox_values, default_has_traktor_values);
+    }
+
+    track tr{std::make_shared<el_track_impl>(storage, id)};
+
+    trans.commit();
+
+    return tr;
+}
+
+}  // namespace djinterop::enginelibrary

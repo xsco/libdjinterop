@@ -29,6 +29,7 @@ namespace djinterop
 class database;
 class track;
 struct track_import_info;
+struct track_snapshot;
 enum class musical_key;
 
 class track_impl
@@ -37,7 +38,11 @@ public:
     track_impl(int64_t id) noexcept;
     virtual ~track_impl() noexcept;
 
-    int64_t id() noexcept;
+    int64_t id() const noexcept;
+
+    virtual track_snapshot snapshot() const = 0;
+
+    virtual void update(const track_snapshot& snapshot) = 0;
 
     virtual std::vector<beatgrid_marker> adjusted_beatgrid() = 0;
     virtual void set_adjusted_beatgrid(
@@ -104,7 +109,8 @@ public:
     virtual std::vector<waveform_entry> overview_waveform() = 0;
     virtual stdx::optional<std::string> publisher() = 0;
     virtual void set_publisher(stdx::optional<std::string> publisher) = 0;
-    virtual int64_t required_waveform_samples_per_entry() = 0;
+    virtual stdx::optional<int32_t> rating() = 0;
+    virtual void set_rating(stdx::optional<int32_t> rating) = 0;
     virtual std::string relative_path() = 0;
     virtual void set_relative_path(std::string relative_path) = 0;
     virtual stdx::optional<sampling_info> sampling() = 0;
