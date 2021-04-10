@@ -14,19 +14,32 @@
     You should have received a copy of the GNU Lesser General Public License
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <djinterop/track_snapshot.hpp>
 
-#include <djinterop/database.hpp>
-#include <djinterop/impl/track_impl.hpp>
+#define BOOST_TEST_MODULE track_snapshot_test
+#include <boost/test/included/unit_test.hpp>
 
-namespace djinterop
+#include <cstdint>
+
+BOOST_AUTO_TEST_CASE(ctor__default__no_id)
 {
-track_impl::track_impl(int64_t id) noexcept : id_{id} {}
+    // Arrange/Act
+    djinterop::track_snapshot snapshot{};
 
-track_impl::~track_impl() noexcept = default;
-
-int64_t track_impl::id() const noexcept
-{
-    return id_;
+    // Assert
+    BOOST_CHECK(!snapshot.id);
 }
 
-}  // namespace djinterop
+BOOST_AUTO_TEST_CASE(ctor__specify_id__id_populated)
+{
+    // Arrange
+    int64_t expected_id = 1234;
+
+    // Act
+    djinterop::track_snapshot snapshot{expected_id};
+
+    // Assert
+    BOOST_CHECK(snapshot.id);
+    BOOST_CHECK_EQUAL(expected_id, *snapshot.id);
+}
+

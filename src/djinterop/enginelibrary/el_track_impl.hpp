@@ -24,11 +24,13 @@
 #include <vector>
 
 #include <djinterop/enginelibrary.hpp>
-#include <djinterop/enginelibrary/el_storage.hpp>
-#include <djinterop/enginelibrary/performance_data_format.hpp>
 #include <djinterop/exceptions.hpp>
-#include <djinterop/impl/track_impl.hpp>
 #include <djinterop/optional.hpp>
+
+#include <djinterop/impl/track_impl.hpp>
+
+#include "el_storage.hpp"
+#include "performance_data_format.hpp"
 
 namespace djinterop
 {
@@ -38,165 +40,10 @@ enum class musical_key;
 
 namespace enginelibrary
 {
-enum class metadata_str_type
-{
-    title = 1,
-    artist = 2,
-    album = 3,
-    genre = 4,
-    comment = 5,
-    publisher = 6,
-    composer = 7,
-    duration_mm_ss = 10,
-    ever_played = 12,
-    file_extension = 13
-};
-
-enum class metadata_int_type
-{
-    last_played_ts = 1,
-    last_modified_ts = 2,
-    last_accessed_ts =
-        3,  // NOTE: truncated to date on VFAT (see FAT "ACCDATE")
-    musical_key = 4,
-    hash = 10
-};
-
 class el_track_impl : public djinterop::track_impl
 {
 public:
     el_track_impl(std::shared_ptr<el_storage> storage, int64_t id);
-
-    stdx::optional<std::string> get_metadata_str(metadata_str_type type);
-    void set_metadata_str(
-        metadata_str_type type, stdx::optional<std::string> content);
-    void set_metadata_str(metadata_str_type type, const std::string& content);
-    stdx::optional<int64_t> get_metadata_int(metadata_int_type type);
-    void set_metadata_int(
-        metadata_int_type type, stdx::optional<int64_t> content);
-
-    template <typename T>
-    T get_cell(const char* column_name)
-    {
-        stdx::optional<T> result;
-        storage_->db << (std::string{"SELECT "} + column_name +
-                         " FROM Track WHERE id = ?")
-                     << id() >>
-            [&](T cell) {
-                if (!result)
-                {
-                    result = cell;
-                }
-                else
-                {
-                    throw track_database_inconsistency{
-                        "More than one track with the same ID", id()};
-                }
-            };
-        if (!result)
-        {
-            throw track_deleted{id()};
-        }
-        return *result;
-    }
-
-    template <typename T>
-    void set_cell(const char* column_name, const T& content)
-    {
-        storage_->db << (std::string{"UPDATE Track SET "} + column_name +
-                         " = ? WHERE id = ?")
-                     << content << id();
-    }
-
-    template <typename T>
-    T get_perfdata(const char* column_name)
-    {
-        stdx::optional<T> result;
-        storage_->db << (std::string{"SELECT "} + column_name +
-                         " From PerformanceData WHERE id = ?")
-                     << id() >>
-            [&](const std::vector<char>& encoded_data) {
-                if (!result)
-                {
-                    result = T::decode(encoded_data);
-                }
-                else
-                {
-                    throw track_database_inconsistency{
-                        "More than one PerformanceData entry for the same "
-                        "track",
-                        id()};
-                }
-            };
-        return result.value_or(T{});
-    }
-
-    template <typename T>
-    void set_perfdata(const char* column_name, const T& content)
-    {
-        auto encoded_content = content.encode();
-        // Check that subsequent reads can correctly decode what we are about to
-        // write.
-        if (!(T::decode(encoded_content) == content))
-        {
-            // TODO (haslersn): As soon as warnings are implemented, add the
-            // wording similar to "Either you got a warning above which tells
-            // you what is wrong, or this is a bug in libdjinterop."
-            throw std::logic_error{
-                "Data supplied for column " + std::string(column_name) +
-                " is not invariant under encoding and subsequent decoding. "
-                "This is a bug in libdjinterop."};
-        }
-
-        bool found = false;
-        storage_->db << "SELECT COUNT(*) FROM PerformanceData WHERE id = ?"
-                     << id() >>
-            [&](int32_t count) {
-                if (count == 1)
-                {
-                    found = true;
-                }
-                else if (count > 1)
-                {
-                    throw track_database_inconsistency{
-                        "More than one PerformanceData entry for the same "
-                        "track",
-                        id()};
-                }
-            };
-
-        if (!found)
-        {
-            storage_->db
-                << "INSERT INTO PerformanceData (id, isAnalyzed, isRendered, "
-                   "trackData, highResolutionWaveFormData, "
-                   "overviewWaveFormData, beatData, quickCues, loops, "
-                   "hasSeratoValues) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-                << id()                               //
-                << 1.0                                // isAnalyzed
-                << 0.0                                // isRendered
-                << track_data{}.encode()              //
-                << high_res_waveform_data{}.encode()  //
-                << overview_waveform_data{}.encode()  //
-                << beat_data{}.encode()               //
-                << quick_cues_data{}.encode()         //
-                << loops_data{}.encode()              //
-                << 0.0;                               // hasSeratoValues
-
-            // TODO (haslersn): Don't allocate during the version() call
-            if (db().version() >= version_1_7_1)
-            {
-                storage_->db
-                    << "UPDATE PerformanceData SET hasRekordboxValues = 0 "
-                       "WHERE id = ?"
-                    << id();
-            }
-        }
-
-        storage_->db << (std::string{"UPDATE PerformanceData SET "} +
-                         column_name + " = ?, isAnalyzed = 1 WHERE id = ?")
-                     << encoded_content << id();
-    }
 
     beat_data get_beat_data();
     void set_beat_data(beat_data data);
@@ -211,6 +58,10 @@ public:
     void set_quick_cues_data(quick_cues_data data);
     track_data get_track_data();
     void set_track_data(track_data data);
+
+    track_snapshot snapshot() const override;
+
+    void update(const track_snapshot& snapshot) override;
 
     std::vector<beatgrid_marker> adjusted_beatgrid() override;
     void set_adjusted_beatgrid(std::vector<beatgrid_marker> beatgrid) override;
@@ -275,7 +126,8 @@ public:
     std::vector<waveform_entry> overview_waveform() override;
     stdx::optional<std::string> publisher() override;
     void set_publisher(stdx::optional<std::string> publisher) override;
-    int64_t required_waveform_samples_per_entry() override;
+    stdx::optional<int32_t> rating() override;
+    void set_rating(stdx::optional<int32_t> rating) override;
     std::string relative_path() override;
     void set_relative_path(std::string relative_path) override;
     stdx::optional<sampling_info> sampling() override;
@@ -292,6 +144,9 @@ public:
 private:
     std::shared_ptr<el_storage> storage_;
 };
+
+track create_track(
+    std::shared_ptr<el_storage> storage, const track_snapshot& snapshot);
 
 }  // namespace enginelibrary
 }  // namespace djinterop

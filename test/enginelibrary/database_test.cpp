@@ -14,6 +14,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <djinterop/database.hpp>
 
 #define BOOST_TEST_MODULE database_test
 #include <boost/test/data/test_case.hpp>
@@ -23,10 +24,11 @@
 #include <string>
 
 #include <djinterop/crate.hpp>
-#include <djinterop/database.hpp>
 #include <djinterop/enginelibrary.hpp>
 #include <djinterop/optional.hpp>
 #include <djinterop/track.hpp>
+#include <djinterop/track_snapshot.hpp>
+#include <djinterop/semantic_version.hpp>
 
 #include "temporary_directory.hpp"
 
@@ -81,6 +83,8 @@ const std::vector<example_file> valid_files{
         "../path/to/file_in_other_dir.mp3", "file_in_other_dir.mp3", "mp3"},
     example_file{"local_file.flac", "local_file.flac", "flac"},
 };
+
+const std::string sample_path{STRINGIFY(TESTDATA_DIR) "/el2"};
 }  // anonymous namespace
 
 
@@ -119,10 +123,12 @@ BOOST_DATA_TEST_CASE(
 
     {
         // Arrange
+        djinterop::track_snapshot track_data;
+        track_data.relative_path = file.relative_path;
         auto db = el::create_database(tmp_loc.temp_dir, version);
 
         // Act
-        auto track = db.create_track(file.relative_path);
+        auto track = db.create_track(track_data);
 
         // Assert
         BOOST_CHECK_NE(track.id(), 0);
@@ -159,4 +165,52 @@ BOOST_DATA_TEST_CASE(
             el::perfdata_db_path(db), (tmp_loc.temp_dir + "/p.db"));
         BOOST_CHECK_EQUAL(db.version(), reference_script.expected_version);
     }
+}
+
+BOOST_AUTO_TEST_CASE(tracks__sample_db__expected_ids)
+{
+    // Arrange
+    auto db = el::load_database(sample_path);
+
+    // Act
+    auto results = db.tracks();
+
+    // Assert
+    BOOST_CHECK_EQUAL(results.size(), 1);
+    BOOST_CHECK_EQUAL(results[0].id(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(tracks_by_relative_path__valid_path__expected_id)
+{
+    // Arrange
+    auto db = el::load_database(sample_path);
+
+    // Act
+    auto results = db.tracks_by_relative_path(
+        "../01 - Dennis Cruz - Mad (Original Mix).mp3");
+
+    // Assert
+    BOOST_CHECK_EQUAL(results.size(), 1);
+    BOOST_CHECK_EQUAL(results[0].id(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(tracks_by_relative_path__invalid_path__no_ids)
+{
+    // Arrange
+    auto db = el::load_database(sample_path);
+
+    // Act
+    auto results = db.tracks_by_relative_path("Does Not Exist.mp3");
+
+    // Assert
+    BOOST_CHECK_EQUAL(results.size(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(track_by_id__invalid_id__nullopt)
+{
+    // Arrange
+    auto db = el::load_database(sample_path);
+
+    // Act / Assert
+    BOOST_CHECK(!db.track_by_id(123));
 }

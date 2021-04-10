@@ -42,6 +42,7 @@ namespace djinterop
 class database;
 class crate;
 class track_impl;
+struct track_snapshot;
 
 /// The `track_import_info` struct holds information about a track in a
 /// different, external Engine Library database.  This can be associated with a
@@ -80,6 +81,12 @@ public:
 
     /// Copy assignment operator
     track& operator=(const track& other) noexcept;
+
+    /// Obtain a snapshot of the track's current state.
+    track_snapshot snapshot() const;
+
+    /// Update the track with the contents of the provided snapshot.
+    void update(const track_snapshot& snapshot);
 
     std::vector<beatgrid_marker> adjusted_beatgrid() const;
 
@@ -271,14 +278,13 @@ public:
     void set_publisher(stdx::optional<std::string> publisher) const;
     void set_publisher(std::string publisher) const;
 
-    /// Get the required number of samples per waveform entry.
-    ///
-    /// The waveform for a track is provided merely as a set of waveform points,
-    /// and so the scale of it is only meaningful when a relationship between
-    /// the waveform and the samples it represents is known.  This method
-    /// provides the required number of samples per waveform entry that should
-    /// be understood when constructing or reading waveforms.
-    int64_t required_waveform_samples_per_entry() const;
+    /// Gets the track rating, from 0-100.
+    stdx::optional<int32_t> rating() const;
+
+    /// Sets the track rating, from 0-100.  Any rating provided outside this
+    /// range will be clamped.
+    void set_rating(stdx::optional<int32_t> rating);
+    void set_rating(int32_t rating);
 
     /// Get the path to this track's file on disk, relative to the music
     /// database.

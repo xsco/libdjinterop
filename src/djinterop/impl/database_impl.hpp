@@ -27,6 +27,7 @@ namespace djinterop
 class crate;
 struct semantic_version;
 class track;
+struct track_snapshot;
 class transaction_guard;
 
 class database_impl
@@ -39,7 +40,7 @@ public:
     virtual std::vector<crate> crates() = 0;
     virtual std::vector<crate> crates_by_name(const std::string& name) = 0;
     virtual crate create_root_crate(std::string name) = 0;
-    virtual track create_track(std::string relative_path) = 0;
+    virtual track create_track(const track_snapshot& snapshot) = 0;
     virtual std::string directory() = 0;
     virtual bool is_supported() = 0;
     virtual void verify() = 0;

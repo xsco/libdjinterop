@@ -33,5 +33,6 @@
 #include <djinterop/performance_data.hpp>
 #include <djinterop/semantic_version.hpp>
 #include <djinterop/track.hpp>
+#include <djinterop/track_snapshot.hpp>
 
 #endif  // DJINTEROP_DJINTEROP_HPP
