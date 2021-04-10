@@ -1,3 +1,9 @@
+libdjinterop (0.15.0-0ubuntu1) bionic; urgency=medium
+
+  * Snapshot struct for quicker track creation
+
+ -- Adam Szmigin <smidge@xsco.net>  Sat, 10 Apr 2021 17:56:40 +0100
+
 libdjinterop (0.14.9-0ubuntu1) bionic; urgency=medium
 
   * Ability to run unit tests using CMake build
