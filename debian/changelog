@@ -1,3 +1,9 @@
+libdjinterop (0.15.1-0ubuntu1) bionic; urgency=medium
+
+  * Fix SQLite amalgamation CMake scope
+
+ -- Adam Szmigin <smidge@xsco.net>  Sat, 10 Apr 2021 20:25:27 +0100
+
 libdjinterop (0.15.0-0ubuntu1) bionic; urgency=medium
 
   * Snapshot struct for quicker track creation
