@@ -14,6 +14,7 @@ djinterop_header_files = [
     'djinterop/performance_data.hpp',
     'djinterop/semantic_version.hpp',
     'djinterop/track.hpp',
+    'djinterop/track_snapshot.hpp',
     'djinterop/transaction_guard.hpp'
 ]
 

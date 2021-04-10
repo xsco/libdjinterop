@@ -15,18 +15,41 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <djinterop/database.hpp>
-#include <djinterop/impl/track_impl.hpp>
+#pragma once
 
-namespace djinterop
+namespace djinterop::enginelibrary
 {
-track_impl::track_impl(int64_t id) noexcept : id_{id} {}
-
-track_impl::~track_impl() noexcept = default;
-
-int64_t track_impl::id() const noexcept
+enum class metadata_str_type
 {
-    return id_;
-}
+    title = 1,
+    artist = 2,
+    album = 3,
+    genre = 4,
+    comment = 5,
+    publisher = 6,
+    composer = 7,
+    unknown_8 = 8,
+    unknown_9 = 9,
+    duration_mm_ss = 10,
+    ever_played = 12,
+    file_extension = 13,
+    unknown_15 = 15,
+    unknown_16 = 16,
+};
 
-}  // namespace djinterop
+enum class metadata_int_type
+{
+    last_played_ts = 1,
+    last_modified_ts = 2,
+    last_accessed_ts = 3,
+    musical_key = 4,
+    rating = 5,
+    unknown_6 = 6,
+    unknown_7 = 7,
+    unknown_8 = 8,
+    unknown_9 = 9,
+    last_play_hash = 10,
+    unknown_11 = 11,
+};
+
+}  // namespace djinterop::enginelibrary

@@ -23,6 +23,7 @@
 #include "enginelibrary/el_database_impl.hpp"
 #include "enginelibrary/el_transaction_guard_impl.hpp"
 #include "enginelibrary/schema/schema.hpp"
+#include "enginelibrary/track_utils.hpp"
 #include "util.hpp"
 
 namespace djinterop::enginelibrary
@@ -39,6 +40,12 @@ database create_database(
     const std::string& directory, const semantic_version& schema_version)
 {
     auto storage = std::make_shared<el_storage>(directory, schema_version);
+    return database{std::make_shared<el_database_impl>(storage)};
+}
+
+database create_temporary_database(const semantic_version& schema_version)
+{
+    auto storage = std::make_shared<el_storage>(schema_version);
     return database{std::make_shared<el_database_impl>(storage)};
 }
 
@@ -163,6 +170,11 @@ std::vector<beatgrid_marker> normalize_beatgrid(
     }
 
     return beatgrid;  // Named RVO
+}
+
+int64_t required_waveform_samples_per_entry(double sample_rate)
+{
+    return util::required_waveform_samples_per_entry(sample_rate);
 }
 
 std::string perfdata_db_path(const database& db)

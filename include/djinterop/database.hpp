@@ -38,6 +38,7 @@ class crate;
 class database_impl;
 struct semantic_version;
 class track;
+struct track_snapshot;
 class transaction_guard;
 
 class database_not_found : public std::runtime_error
@@ -80,12 +81,9 @@ public:
     /// The created crate has no parent.
     crate create_root_crate(std::string name) const;
 
-    /// Creates a new track associated to a given music file
-    ///
-    /// The music file is given by its relative path from the directory passed
-    /// to the `database` constructor. The created track is not contained in any
-    /// crates.
-    track create_track(std::string relative_path) const;
+    /// Create a new track in the database, given a pre-populated track
+    /// snapshot.
+    track create_track(const track_snapshot& snapshot);
 
     /// Returns the path directory of the database
     ///

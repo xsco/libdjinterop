@@ -49,6 +49,14 @@ bool dir_exists(const std::string& directory)
     return stat(directory.c_str(), &buf) == 0;
 }
 
+int64_t generate_random_int64()
+{
+    static std::random_device rng;
+    static std::mt19937_64 generator{rng()};
+    static std::uniform_int_distribution<int64_t> dist{1ll << 61, 1ll << 62};
+    return dist(generator);
+}
+
 std::string generate_random_uuid()
 {
     static std::random_device rng;

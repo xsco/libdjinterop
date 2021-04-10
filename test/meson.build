@@ -8,9 +8,9 @@ engine_library_test_names = [
     'crate_test',
     'database_test',
     'enginelibrary_test',
-    'performance_data_test',
     'semantic_version_test',
-    'track_test'
+    'track_test',
+    'track_snapshot_test'
 ]
 
 foreach test_name : engine_library_test_names

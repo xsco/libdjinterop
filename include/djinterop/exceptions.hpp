@@ -145,6 +145,18 @@ private:
     int64_t id_;
 };
 
+/// The `invalid_track_snapshot` exception is thrown when there is a problem
+/// with a track snapshot.
+class invalid_track_snapshot : public std::invalid_argument
+{
+public:
+    /// Initialise a new instance of the exception with a custom message.
+    explicit invalid_track_snapshot(const std::string& what_arg)
+    : std::invalid_argument(what_arg)
+    {
+    }
+};
+
 /// The `track_database_inconsistency` exception is thrown when a database
 /// inconsistency is found that correlates to a track.
 class track_database_inconsistency : public database_inconsistency

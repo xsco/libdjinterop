@@ -10,12 +10,16 @@
 #
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.14.9
+        VERSION 0.15.0
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
+if(POLICY CMP0074)
+    # CMP0074: find_package() uses <PackageName>_ROOT variables.
+    cmake_policy(SET CMP0074 NEW)
+endif()
 if(POLICY CMP0076)
     # CMP0076: target_sources() command converts relative paths to absolute.
     cmake_policy(SET CMP0076 NEW)
@@ -156,6 +160,7 @@ install(FILES
     include/djinterop/performance_data.hpp
     include/djinterop/semantic_version.hpp
     include/djinterop/track.hpp
+    include/djinterop/track_snapshot.hpp
     include/djinterop/transaction_guard.hpp
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}")
 
@@ -220,9 +225,9 @@ if (Boost_FOUND)
     add_djinterop_test(crate_test)
     add_djinterop_test(database_test)
     add_djinterop_test(enginelibrary_test)
-    add_djinterop_test(performance_data_test)
     add_djinterop_test(semantic_version_test)
     add_djinterop_test(track_test)
+    add_djinterop_test(track_snapshot_test)
 
 else()
     message(STATUS "Unit tests not available, as Boost cannot be found")
