@@ -31,7 +31,8 @@ namespace djinterop
  */
 enum class musical_key
 {
-    a_minor = 1,
+    c_major = 0,
+    a_minor,
     g_major,
     e_minor,
     d_major,
@@ -54,7 +55,6 @@ enum class musical_key
     g_minor,
     f_major,
     d_minor,
-    c_major
 };
 
 }  // namespace djinterop
