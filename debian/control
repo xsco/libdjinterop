@@ -8,7 +8,7 @@ Homepage: https://github.com/xsco/libdjinterop
 
 Package: libdjinterop-dev
 Section: libdevel
-Architecture: amd64
+Architecture: any
 Multi-Arch: same
 Depends: libdjinterop0 (= ${binary:Version}), ${misc:Depends}
 Description: C++ library for access to DJ record libraries (development package)
@@ -19,7 +19,7 @@ Description: C++ library for access to DJ record libraries (development package)
  equipment.
 
 Package: libdjinterop0
-Architecture: amd64
+Architecture: any
 Multi-Arch: same
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: C++ library for access to DJ record libraries
