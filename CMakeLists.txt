@@ -10,7 +10,7 @@
 #
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.15.2
+        VERSION 0.15.3
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 

@@ -604,7 +604,7 @@ std::vector<char> quick_cues_data::encode() const
         else
         {
             ptr = encode_uint8(0, ptr);
-            ptr = encode_double_be(0, ptr);
+            ptr = encode_double_be(-1, ptr);
             for (int i = 0; i < 4; ++i)
             {
                 ptr = encode_uint8(0, ptr);
