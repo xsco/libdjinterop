@@ -1,3 +1,10 @@
+libdjinterop (0.16.0-0ubuntu1) bionic; urgency=medium
+
+  * Unused hotcues must use -1 sample offset, not zero
+  * Add support for Firmware and EP 1.6.x
+
+ -- Adam Szmigin <smidge@xsco.net>  Sat, 24 Jul 2021 23:46:51 +0100
+
 libdjinterop (0.15.2-0ubuntu2) bionic; urgency=medium
 
   * Support 'any' architecture
