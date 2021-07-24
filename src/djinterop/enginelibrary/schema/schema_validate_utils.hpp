@@ -225,7 +225,7 @@ inline void validate(
     if (iter->col_type != col_type)
         throw database_inconsistency{
             "Column " + col_name + " on " + iter->table_name +
-            " has wrong type: " + iter->col_type};
+            " has wrong type: " + iter->col_type + ", expected " + col_type};
     if (iter->nullable != nullable)
         throw database_inconsistency{
             "Column " + col_name + " on " + iter->table_name +
@@ -233,7 +233,8 @@ inline void validate(
     if (iter->default_value != default_value)
         throw database_inconsistency{
             "Column " + col_name + " on " + iter->table_name +
-            " has wrong default value: \"" + iter->default_value + "\""};
+            " has wrong default value: \"" + iter->default_value +
+            "\", expected \"" + default_value + "\""};
     if (iter->part_of_pk != part_of_pk)
         throw database_inconsistency{
             "Column " + col_name + " on " + iter->table_name +
