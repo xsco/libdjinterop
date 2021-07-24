@@ -58,6 +58,24 @@ sqlite::database make_temporary_db()
     return db;
 }
 
+inline djinterop::stdx::optional<std::string> get_column_type(
+    sqlite::database& db, const std::string& db_name,
+    const std::string& table_name, const std::string& column_name)
+{
+    djinterop::stdx::optional<std::string> column_type;
+
+    db << "PRAGMA " + db_name + ".table_info('" + table_name + "')" >>
+        [&](int col_id, std::string col_name, std::string col_type,
+            int nullable, std::string default_value, int part_of_pk) {
+            if (col_name == column_name)
+            {
+                column_type = col_type;
+            }
+        };
+
+    return column_type;
+}
+
 semantic_version get_version(sqlite::database& db)
 {
     // Check that the `Information` table has been created.
@@ -94,6 +112,18 @@ semantic_version get_version(sqlite::database& db)
         throw database_inconsistency{
             "The stated schema versions do not match between the music and "
             "performance data databases!"};
+    }
+
+    // Some schema versions have different variants, meaning that the version
+    // number alone is insufficient.  Detect the variant where required.
+    if (music_version.maj == 1 && music_version.min == 18 &&
+        music_version.pat == 0)
+    {
+        auto has_numeric_bools =
+            get_column_type(db, "music", "Track", "isExternalTrack") ==
+            std::string{"NUMERIC"};
+        return has_numeric_bools ? djinterop::enginelibrary::version_1_18_0_ep
+                                 : djinterop::enginelibrary::version_1_18_0_fw;
     }
 
     return music_version;
@@ -141,7 +171,7 @@ int64_t el_storage::create_track(
     const stdx::optional<std::string>& uri,
     stdx::optional<int64_t> is_beatgrid_locked)
 {
-    if (version >= version_1_18_0)
+    if (version >= version_1_18_0_fw)
     {
         db << "INSERT INTO Track (playOrder, length, "
               "lengthCalculated, bpm, year, path, filename, bitrate, "
@@ -226,7 +256,7 @@ int64_t el_storage::create_track(
 track_row el_storage::get_track(int64_t id)
 {
     stdx::optional<track_row> result;
-    if (version >= version_1_18_0)
+    if (version >= version_1_18_0_fw)
     {
         db << ("SELECT playOrder, length, lengthCalculated, bpm, year, path, "
                "filename, bitrate, bpmAnalyzed, trackType, isExternalTrack, "
@@ -439,7 +469,7 @@ void el_storage::update_track(
     const stdx::optional<std::string>& uri,
     stdx::optional<int64_t> is_beatgrid_locked)
 {
-    if (version >= version_1_18_0)
+    if (version >= version_1_18_0_fw)
     {
         db << "UPDATE Track SET "
               "playOrder = ?, length = ?, lengthCalculated = ?, bpm = ?, "
@@ -579,37 +609,83 @@ void el_storage::set_meta_data(
 {
     // Note that rows are created even for null values.
     stdx::optional<std::string> no_value;
-    db << "INSERT OR REPLACE INTO MetaData(id, type, text) VALUES "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?)"
-       << id << static_cast<int64_t>(metadata_str_type::title) << title << id
-       << static_cast<int64_t>(metadata_str_type::artist) << artist << id
-       << static_cast<int64_t>(metadata_str_type::album) << album << id
-       << static_cast<int64_t>(metadata_str_type::genre) << genre << id
-       << static_cast<int64_t>(metadata_str_type::comment) << comment << id
-       << static_cast<int64_t>(metadata_str_type::publisher) << publisher << id
-       << static_cast<int64_t>(metadata_str_type::composer) << composer << id
-       << static_cast<int64_t>(metadata_str_type::unknown_8) << no_value << id
-       << static_cast<int64_t>(metadata_str_type::unknown_9) << no_value << id
-       << static_cast<int64_t>(metadata_str_type::duration_mm_ss)
-       << duration_mm_ss << id
-       << static_cast<int64_t>(metadata_str_type::ever_played) << ever_played
-       << id << static_cast<int64_t>(metadata_str_type::file_extension)
-       << file_extension << id
-       << static_cast<int64_t>(metadata_str_type::unknown_15) << "1" << id
-       << static_cast<int64_t>(metadata_str_type::unknown_16) << "1";
+    if (this->version >= version_1_15_0)
+    {
+        // A new unknown entry of type 17 may appear from 1.15.0 onwards.
+        db << "INSERT OR REPLACE INTO MetaData(id, type, text) VALUES "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?)"
+           << id << static_cast<int64_t>(metadata_str_type::title) << title
+           << id << static_cast<int64_t>(metadata_str_type::artist) << artist
+           << id << static_cast<int64_t>(metadata_str_type::album) << album
+           << id << static_cast<int64_t>(metadata_str_type::genre) << genre
+           << id << static_cast<int64_t>(metadata_str_type::comment) << comment
+           << id << static_cast<int64_t>(metadata_str_type::publisher)
+           << publisher << id
+           << static_cast<int64_t>(metadata_str_type::composer) << composer
+           << id << static_cast<int64_t>(metadata_str_type::unknown_8)
+           << no_value << id
+           << static_cast<int64_t>(metadata_str_type::unknown_9) << no_value
+           << id << static_cast<int64_t>(metadata_str_type::duration_mm_ss)
+           << duration_mm_ss << id
+           << static_cast<int64_t>(metadata_str_type::ever_played)
+           << ever_played << id
+           << static_cast<int64_t>(metadata_str_type::file_extension)
+           << file_extension << id
+           << static_cast<int64_t>(metadata_str_type::unknown_15) << "1" << id
+           << static_cast<int64_t>(metadata_str_type::unknown_16) << "1" << id
+           << static_cast<int64_t>(metadata_str_type::unknown_17) << no_value;
+    }
+    else
+    {
+        db << "INSERT OR REPLACE INTO MetaData(id, type, text) VALUES "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?)"
+           << id << static_cast<int64_t>(metadata_str_type::title) << title
+           << id << static_cast<int64_t>(metadata_str_type::artist) << artist
+           << id << static_cast<int64_t>(metadata_str_type::album) << album
+           << id << static_cast<int64_t>(metadata_str_type::genre) << genre
+           << id << static_cast<int64_t>(metadata_str_type::comment) << comment
+           << id << static_cast<int64_t>(metadata_str_type::publisher)
+           << publisher << id
+           << static_cast<int64_t>(metadata_str_type::composer) << composer
+           << id << static_cast<int64_t>(metadata_str_type::unknown_8)
+           << no_value << id
+           << static_cast<int64_t>(metadata_str_type::unknown_9) << no_value
+           << id << static_cast<int64_t>(metadata_str_type::duration_mm_ss)
+           << duration_mm_ss << id
+           << static_cast<int64_t>(metadata_str_type::ever_played)
+           << ever_played << id
+           << static_cast<int64_t>(metadata_str_type::file_extension)
+           << file_extension << id
+           << static_cast<int64_t>(metadata_str_type::unknown_15) << "1" << id
+           << static_cast<int64_t>(metadata_str_type::unknown_16) << "1";
+    }
 }
 
 std::vector<meta_data_integer_row> el_storage::get_all_meta_data_integer(
@@ -671,34 +747,75 @@ void el_storage::set_meta_data_integer(
     // order 4, 5, 1, 2, 3, 6, 8, 7, 9, 10, 11, for reasons unknown.  The code
     // below replicates this order for maximum compatibility.
     stdx::optional<int64_t> no_value;
-    db << "INSERT OR REPLACE INTO MetaDataInteger (id, type, value) VALUES "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?), "
-          "(?, ?, ?)"
-       << id << static_cast<int64_t>(metadata_int_type::musical_key)
-       << musical_key << id << static_cast<int64_t>(metadata_int_type::rating)
-       << rating << id
-       << static_cast<int64_t>(metadata_int_type::last_played_ts)
-       << last_played_timestamp << id
-       << static_cast<int64_t>(metadata_int_type::last_modified_ts)
-       << last_modified_timestamp << id
-       << static_cast<int64_t>(metadata_int_type::last_accessed_ts)
-       << last_accessed_timestamp << id
-       << static_cast<int64_t>(metadata_int_type::unknown_6) << no_value << id
-       << static_cast<int64_t>(metadata_int_type::unknown_8) << no_value << id
-       << static_cast<int64_t>(metadata_int_type::unknown_7) << no_value << id
-       << static_cast<int64_t>(metadata_int_type::unknown_9) << no_value << id
-       << static_cast<int64_t>(metadata_int_type::last_play_hash)
-       << last_play_hash << id
-       << static_cast<int64_t>(metadata_int_type::unknown_11) << 1;
+    if (version >= version_1_11_1)
+    {
+        // A new unknown entry of type 12 may appear from 1.11.1 onwards.
+        db << "INSERT OR REPLACE INTO MetaDataInteger (id, type, value) VALUES "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?)"
+           << id << static_cast<int64_t>(metadata_int_type::musical_key)
+           << musical_key << id
+           << static_cast<int64_t>(metadata_int_type::rating) << rating << id
+           << static_cast<int64_t>(metadata_int_type::last_played_ts)
+           << last_played_timestamp << id
+           << static_cast<int64_t>(metadata_int_type::last_modified_ts)
+           << last_modified_timestamp << id
+           << static_cast<int64_t>(metadata_int_type::last_accessed_ts)
+           << last_accessed_timestamp << id
+           << static_cast<int64_t>(metadata_int_type::unknown_6) << no_value
+           << id << static_cast<int64_t>(metadata_int_type::unknown_8)
+           << no_value << id
+           << static_cast<int64_t>(metadata_int_type::unknown_7) << no_value
+           << id << static_cast<int64_t>(metadata_int_type::unknown_9)
+           << no_value << id
+           << static_cast<int64_t>(metadata_int_type::last_play_hash)
+           << last_play_hash << id
+           << static_cast<int64_t>(metadata_int_type::unknown_11) << 1 << id
+           << static_cast<int64_t>(metadata_int_type::unknown_12) << 1;
+    }
+    else
+    {
+        db << "INSERT OR REPLACE INTO MetaDataInteger (id, type, value) VALUES "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?), "
+              "(?, ?, ?)"
+           << id << static_cast<int64_t>(metadata_int_type::musical_key)
+           << musical_key << id
+           << static_cast<int64_t>(metadata_int_type::rating) << rating << id
+           << static_cast<int64_t>(metadata_int_type::last_played_ts)
+           << last_played_timestamp << id
+           << static_cast<int64_t>(metadata_int_type::last_modified_ts)
+           << last_modified_timestamp << id
+           << static_cast<int64_t>(metadata_int_type::last_accessed_ts)
+           << last_accessed_timestamp << id
+           << static_cast<int64_t>(metadata_int_type::unknown_6) << no_value
+           << id << static_cast<int64_t>(metadata_int_type::unknown_8)
+           << no_value << id
+           << static_cast<int64_t>(metadata_int_type::unknown_7) << no_value
+           << id << static_cast<int64_t>(metadata_int_type::unknown_9)
+           << no_value << id
+           << static_cast<int64_t>(metadata_int_type::last_play_hash)
+           << last_play_hash << id
+           << static_cast<int64_t>(metadata_int_type::unknown_11) << 1;
+    }
 }
 
 /// Remove an existing entry in the `PerformanceData` table, if it exists.
