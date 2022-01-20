@@ -43,29 +43,15 @@ public:
     }
 };
 
-/// The `unsupported_database_version` exception is thrown when a database
-/// schema version is encountered that is not yet supported by this version of
-/// the library.
-class unsupported_database_version : public std::runtime_error
+/// The `unsupported_database` exception is thrown when a database is
+/// encountered that is not yet supported by this version of the library.
+class unsupported_database : public std::runtime_error
 {
 public:
-    explicit unsupported_database_version(const semantic_version version)
-        noexcept : runtime_error{"Unsupported database version"},
-                   version_{version}
+    explicit unsupported_database(const std::string& what_arg) noexcept
+        : runtime_error{what_arg}
     {
     }
-
-    explicit unsupported_database_version(
-        const std::string& what_arg, const semantic_version version) noexcept
-        : runtime_error{what_arg},
-          version_{version}
-    {
-    }
-
-    const semantic_version version() const { return version_; }
-
-private:
-    semantic_version version_;
 };
 
 /// The `crate_deleted` exception is thrown when an invalid `crate` object is

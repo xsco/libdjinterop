@@ -28,35 +28,23 @@
 
 namespace djinterop
 {
+/// Simplified semantic version structure (major, minor, and patch).
 struct semantic_version
 {
     int maj;
     int min;
     int pat;
-    const char* metadata = nullptr;
 };
 
 inline std::ostream& operator<<(
     std::ostream& os, const semantic_version& version)
 {
-    if (version.metadata == nullptr)
-        return os << version.maj << "." << version.min << "." << version.pat;
-    else
-        return os << version.maj << "." << version.min << "." << version.pat
-                  << "+" << version.metadata;
+    return os << version.maj << "." << version.min << "." << version.pat;
 }
 
 inline bool operator==(const semantic_version& a, const semantic_version& b)
 {
-    bool metadata_equal;
-    if (a.metadata == nullptr && a.metadata == nullptr)
-        metadata_equal = true;
-    else if (a.metadata == nullptr || b.metadata == nullptr)
-        metadata_equal = false;
-    else
-        metadata_equal = !strcmp(a.metadata, b.metadata);
-
-    return a.maj == b.maj && a.min == b.min && a.pat == b.pat && metadata_equal;
+    return a.maj == b.maj && a.min == b.min && a.pat == b.pat;
 }
 
 inline bool operator!=(const semantic_version& a, const semantic_version& b)

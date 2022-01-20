@@ -21,15 +21,15 @@
 
 #include <djinterop/djinterop.hpp>
 
-namespace el = djinterop::enginelibrary;
+namespace e = djinterop::engine;
 
-int main(int argc, char** argv)
+int main()
 {
     using namespace std::string_literals;
 
     auto dir = "Engine Library"s;
     bool created;
-    auto db = el::create_or_load_database(dir, el::version_latest, created);
+    auto db = e::create_or_load_database(dir, e::latest, created);
     std::cout << (created ? "Created " : "Loaded ") << "database in directory "
               << dir << std::endl;
     std::cout << "DB version is " << db.version_name() << std::endl;
@@ -76,16 +76,17 @@ int main(int argc, char** argv)
     // There are always 8 hot cues, whereby each can optionally be set
     td.hot_cues[0] = djinterop::hot_cue{
         "Cue 1", 1377924.5,  // position in number of samples
-        el::standard_pad_colors::pad_1};
+        e::standard_pad_colors::pad_1};
     td.hot_cues[3] = djinterop::hot_cue{
-        "Cue 4", 5508265.96, el::standard_pad_colors::pad_4};
+        "Cue 4", 5508265.96, e::standard_pad_colors::pad_4};
 
     // The loop API works like the hot cue API
     td.loops[0] = djinterop::loop{
-        "Loop 1", 1144.012, 345339.134, el::standard_pad_colors::pad_1};
+        "Loop 1", 1144.012, 345339.134, e::standard_pad_colors::pad_1};
 
     // Set high-resolution waveform
-    int64_t spe = el::required_waveform_samples_per_entry(
+    int64_t spe =
+        e::required_waveform_samples_per_entry(
         td.sampling->sample_rate);
     int64_t waveform_size = (sample_count + spe - 1) / spe;  // Ceiling division
     td.waveform.reserve(waveform_size);

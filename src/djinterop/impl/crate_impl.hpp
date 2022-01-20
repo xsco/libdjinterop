@@ -21,9 +21,10 @@
 #include <vector>
 
 #include <djinterop/crate.hpp>
-#include <djinterop/impl/database_impl.hpp>
 #include <djinterop/optional.hpp>
 #include <djinterop/track.hpp>
+
+#include "database_impl.hpp"
 
 namespace djinterop
 {

@@ -15,7 +15,7 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <djinterop/impl/database_impl.hpp>
+#include "database_impl.hpp"
 
 namespace djinterop
 {
