@@ -36,7 +36,6 @@ namespace djinterop
 {
 class crate;
 class database_impl;
-struct semantic_version;
 class track;
 struct track_snapshot;
 class transaction_guard;
@@ -90,10 +89,6 @@ public:
     /// This is the same as the directory passed to the `database` constructor.
     std::string directory() const;
 
-    /// Returns true iff the database version is supported by this version of
-    /// `libdjinterop` or not
-    bool is_supported() const;
-
     /// Returns the UUID of the database
     std::string uuid() const;
 
@@ -102,9 +97,6 @@ public:
     /// A `database_inconsistency` (or some exception derived from it) is thrown
     /// if any kind of inconsistency is found.
     void verify() const;
-
-    /// Returns the schema version of the database
-    semantic_version version() const;
 
     /// Returns a descriptive name for the database version.
     std::string version_name() const;

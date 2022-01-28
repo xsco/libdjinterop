@@ -26,7 +26,7 @@
 #include <djinterop/album_art.hpp>
 #include <djinterop/crate.hpp>
 #include <djinterop/database.hpp>
-#include <djinterop/enginelibrary.hpp>
+#include <djinterop/engine/engine.hpp>
 #include <djinterop/exceptions.hpp>
 #include <djinterop/musical_key.hpp>
 #include <djinterop/pad_color.hpp>

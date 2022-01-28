@@ -10,7 +10,7 @@
 #
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.16.0
+        VERSION 0.17.0
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
@@ -49,28 +49,28 @@ add_library(
     src/djinterop/impl/database_impl.cpp
     src/djinterop/impl/track_impl.cpp
     src/djinterop/impl/transaction_guard_impl.cpp
-    src/djinterop/enginelibrary/schema/schema_1_6_0.cpp
-    src/djinterop/enginelibrary/schema/schema_1_7_1.cpp
-    src/djinterop/enginelibrary/schema/schema_1_9_1.cpp
-    src/djinterop/enginelibrary/schema/schema_1_11_1.cpp
-    src/djinterop/enginelibrary/schema/schema_1_13_0.cpp
-    src/djinterop/enginelibrary/schema/schema_1_13_1.cpp
-    src/djinterop/enginelibrary/schema/schema_1_13_2.cpp
-    src/djinterop/enginelibrary/schema/schema_1_15_0.cpp
-    src/djinterop/enginelibrary/schema/schema_1_17_0.cpp
-    src/djinterop/enginelibrary/schema/schema_1_18_0_ep.cpp
-    src/djinterop/enginelibrary/schema/schema_1_18_0_fw.cpp
-    src/djinterop/enginelibrary/schema/schema.cpp
-    src/djinterop/enginelibrary/el_crate_impl.cpp
-    src/djinterop/enginelibrary/el_database_impl.cpp
-    src/djinterop/enginelibrary/el_storage.cpp
-    src/djinterop/enginelibrary/el_track_impl.cpp
-    src/djinterop/enginelibrary/el_transaction_guard_impl.cpp
-    src/djinterop/enginelibrary/encode_decode_utils.cpp
-    src/djinterop/enginelibrary/performance_data_format.cpp
+    src/djinterop/engine/encode_decode_utils.cpp
+    src/djinterop/engine/engine.cpp
+    src/djinterop/engine/schema/schema_1_6_0.cpp
+    src/djinterop/engine/schema/schema_1_7_1.cpp
+    src/djinterop/engine/schema/schema_1_9_1.cpp
+    src/djinterop/engine/schema/schema_1_11_1.cpp
+    src/djinterop/engine/schema/schema_1_13_0.cpp
+    src/djinterop/engine/schema/schema_1_13_1.cpp
+    src/djinterop/engine/schema/schema_1_13_2.cpp
+    src/djinterop/engine/schema/schema_1_15_0.cpp
+    src/djinterop/engine/schema/schema_1_17_0.cpp
+    src/djinterop/engine/schema/schema_1_18_0_desktop.cpp
+    src/djinterop/engine/schema/schema_1_18_0_os.cpp
+    src/djinterop/engine/schema/schema.cpp
+    src/djinterop/engine/v1/engine_crate_impl.cpp
+    src/djinterop/engine/v1/engine_database_impl.cpp
+    src/djinterop/engine/v1/engine_storage.cpp
+    src/djinterop/engine/v1/engine_track_impl.cpp
+    src/djinterop/engine/v1/engine_transaction_guard_impl.cpp
+    src/djinterop/engine/v1/performance_data_format.cpp
     src/djinterop/crate.cpp
     src/djinterop/database.cpp
-    src/djinterop/enginelibrary.cpp
     src/djinterop/track.cpp
     src/djinterop/transaction_guard.cpp
     src/djinterop/util.cpp)
@@ -154,7 +154,6 @@ install(FILES
     include/djinterop/database.hpp
     include/djinterop/djinterop.hpp
     include/djinterop/exceptions.hpp
-    include/djinterop/enginelibrary.hpp
     include/djinterop/musical_key.hpp
     include/djinterop/optional.hpp
     include/djinterop/pad_color.hpp
@@ -164,6 +163,11 @@ install(FILES
     include/djinterop/track_snapshot.hpp
     include/djinterop/transaction_guard.hpp
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}")
+install(FILES
+    include/djinterop/engine/engine.hpp
+    include/djinterop/engine/engine_version.hpp
+    DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/engine")
+
 
 if (UNIX)
     set(PKGCONFIG_TARGET djinterop)
@@ -209,7 +213,7 @@ if (Boost_FOUND)
 
     function(add_djinterop_test test_name)
         add_executable(${test_name} EXCLUDE_FROM_ALL
-                test/enginelibrary/${test_name}.cpp)
+                test/engine/${test_name}.cpp)
         target_compile_definitions(${test_name} PUBLIC
                 -DTESTDATA_DIR=${TESTDATA_DIR})
         target_include_directories(${test_name} PUBLIC
@@ -225,7 +229,7 @@ if (Boost_FOUND)
 
     add_djinterop_test(crate_test)
     add_djinterop_test(database_test)
-    add_djinterop_test(enginelibrary_test)
+    add_djinterop_test(engine_test)
     add_djinterop_test(semantic_version_test)
     add_djinterop_test(track_test)
     add_djinterop_test(track_snapshot_test)

@@ -7,7 +7,6 @@ djinterop_header_files = [
     'djinterop/database.hpp',
     'djinterop/djinterop.hpp',
     'djinterop/exceptions.hpp',
-    'djinterop/enginelibrary.hpp',
     'djinterop/musical_key.hpp',
     'djinterop/optional.hpp',
     'djinterop/pad_color.hpp',
@@ -17,6 +16,10 @@ djinterop_header_files = [
     'djinterop/track_snapshot.hpp',
     'djinterop/transaction_guard.hpp'
 ]
+djinterop_engine_header_files = [
+    'djinterop/engine/engine.hpp',
+    'djinterop/engine/engine_version.hpp',
+]
 
 install_headers(djinterop_header_files, subdir: 'djinterop')
-
+install_headers(djinterop_engine_header_files, subdir: 'djinterop/engine')

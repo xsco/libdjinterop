@@ -15,7 +15,7 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <djinterop/impl/transaction_guard_impl.hpp>
+#include "transaction_guard_impl.hpp"
 
 namespace djinterop
 {

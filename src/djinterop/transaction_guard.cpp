@@ -15,10 +15,11 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <djinterop/impl/transaction_guard_impl.hpp>
+#include <stdexcept>
+
 #include <djinterop/transaction_guard.hpp>
 
-#include <stdexcept>
+#include "impl/transaction_guard_impl.hpp"
 
 namespace djinterop
 {

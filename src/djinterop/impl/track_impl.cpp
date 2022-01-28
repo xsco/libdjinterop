@@ -16,7 +16,8 @@
  */
 
 #include <djinterop/database.hpp>
-#include <djinterop/impl/track_impl.hpp>
+
+#include "track_impl.hpp"
 
 namespace djinterop
 {

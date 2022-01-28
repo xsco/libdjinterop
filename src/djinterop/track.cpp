@@ -22,10 +22,11 @@
 
 #include <djinterop/crate.hpp>
 #include <djinterop/database.hpp>
-#include <djinterop/impl/database_impl.hpp>
-#include <djinterop/impl/track_impl.hpp>
 #include <djinterop/track.hpp>
 #include <djinterop/track_snapshot.hpp>
+
+#include "impl/database_impl.hpp"
+#include "impl/track_impl.hpp"
 
 using std::chrono::duration_cast;
 using std::chrono::milliseconds;
