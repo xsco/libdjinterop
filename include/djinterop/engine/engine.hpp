@@ -96,6 +96,16 @@ constexpr const engine_version os_1_6_0{
     semantic_version{1, 6, 0}, engine_database_type::os,
     "Engine DJ OS 1.6.0/1.6.1/1.6.2", semantic_version{1, 18, 0}};
 
+/// Engine DJ Desktop 2.0.0
+constexpr const engine_version desktop_2_0_0{
+    semantic_version{2, 0, 0}, engine_database_type::desktop,
+    "Engine DJ Desktop 2.0.0", semantic_version{2, 18, 0}};
+
+/// Engine DJ OS 2.0.0
+constexpr const engine_version os_2_0_0{
+    semantic_version{2, 0, 0}, engine_database_type::os,
+    "Engine DJ OS 2.0.0", semantic_version{2, 18, 0}};
+
 /// Set of available schemas.
 constexpr const std::array<engine_version, 11> all_versions{
     os_1_0_0, os_1_0_3, desktop_1_1_1, os_1_2_0,      os_1_2_2, desktop_1_2_2,
@@ -132,15 +142,16 @@ class unsupported_engine_database : public unsupported_database
 {
 public:
     explicit unsupported_engine_database(const semantic_version& version)
-    noexcept : unsupported_database{"Unsupported database version"},
-        version{version}
+        noexcept : unsupported_database{std::string{
+                       "Unsupported database version " + to_string(version)}},
+                   version{version}
     {
     }
 
     explicit unsupported_engine_database(
         const std::string& what_arg, const semantic_version& version) noexcept
         : unsupported_database{what_arg},
-        version{version}
+          version{version}
     {
     }
 

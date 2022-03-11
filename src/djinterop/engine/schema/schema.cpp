@@ -15,7 +15,7 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <djinterop/djinterop.hpp>
+#include <djinterop/engine/engine.hpp>
 
 #include "schema.hpp"
 #include "schema_1_11_1.hpp"
@@ -29,6 +29,7 @@
 #include "schema_1_6_0.hpp"
 #include "schema_1_7_1.hpp"
 #include "schema_1_9_1.hpp"
+#include "schema_2_18_0.hpp"
 
 namespace djinterop::engine::schema
 {
@@ -57,6 +58,10 @@ std::unique_ptr<schema_creator_validator> make_schema_creator_validator(
         return std::make_unique<schema_1_18_0_desktop>();
     else if (version == os_1_6_0)
         return std::make_unique<schema_1_18_0_os>();
+    else if (version == os_2_0_0)
+        return std::make_unique<schema_2_18_0>();
+    else if (version == desktop_2_0_0)
+        return std::make_unique<schema_2_18_0>();
 
     throw unsupported_engine_database{version.schema_version};
 }

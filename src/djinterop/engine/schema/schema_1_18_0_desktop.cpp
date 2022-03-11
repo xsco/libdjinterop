@@ -69,7 +69,7 @@ void schema_1_18_0_desktop::verify_track(sqlite::database& db) const
         ++iter;
         validate(iter, end, "year", "INTEGER", 0, "", 0);
         ++iter;
-        validate_no_more(iter, end, "table_info", "Track");
+        validate_no_more(iter, end);
     }
     {
         index_list indices{db, "music", "Track"};
@@ -92,73 +92,70 @@ void schema_1_18_0_desktop::verify_track(sqlite::database& db) const
         ++iter;
         validate(iter, end, "sqlite_autoindex_Track_1", 1, "u", 0);
         ++iter;
-        validate_no_more(iter, end, "index_list", "Track");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_Track_filename"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "filename");
         ++iter;
-        validate_no_more(iter, end, "index_info", "index_Track_filename");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_Track_id"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "id");
         ++iter;
-        validate_no_more(iter, end, "index_info", "index_Track_id");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_Track_idAlbumArt"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "idAlbumArt");
         ++iter;
-        validate_no_more(iter, end, "index_info", "index_Track_idAlbumArt");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_Track_idTrackInExternalDatabase"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "idTrackInExternalDatabase");
         ++iter;
-        validate_no_more(
-            iter, end, "index_info", "index_Track_idTrackInExternalDatabase");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_Track_isExternalTrack"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "isExternalTrack");
         ++iter;
-        validate_no_more(
-            iter, end, "index_info", "index_Track_isExternalTrack");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_Track_path"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "path");
         ++iter;
-        validate_no_more(iter, end, "index_info", "index_Track_path");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_Track_uri"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "uri");
         ++iter;
-        validate_no_more(iter, end, "index_info", "index_Track_uri");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_Track_uuidOfExternalDatabase"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "uuidOfExternalDatabase");
         ++iter;
-        validate_no_more(
-            iter, end, "index_info", "index_Track_uuidOfExternalDatabase");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "sqlite_autoindex_Track_1"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "path");
         ++iter;
-        validate_no_more(iter, end, "index_info", "sqlite_autoindex_Track_1");
+        validate_no_more(iter, end);
     }
 }
 

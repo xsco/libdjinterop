@@ -46,21 +46,21 @@ void schema_1_7_1::verify_information(sqlite::database& db, const std::string& d
         ++iter;
         validate(iter, end, "uuid", "TEXT", 0, "", 0);
         ++iter;
-        validate_no_more(iter, end, "table_info", "Information");
+        validate_no_more(iter, end);
     }
     {
         index_list indices{db, db_name, "Information"};
         auto iter = indices.begin(), end = indices.end();
         validate(iter, end, "index_Information_id", 0, "c", 0);
         ++iter;
-        validate_no_more(iter, end, "index_list", "Information");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, db_name, "index_Information_id"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "id");
         ++iter;
-        validate_no_more(iter, end, "index_info", "index_Information_id");
+        validate_no_more(iter, end);
     }
 }
 
@@ -101,7 +101,7 @@ void schema_1_7_1::verify_track(sqlite::database& db) const
         ++iter;
         validate(iter, end, "year", "INTEGER", 0, "", 0);
         ++iter;
-        validate_no_more(iter, end, "table_info", "Track");
+        validate_no_more(iter, end);
     }
     {
         index_list indices{db, "music", "Track"};
@@ -120,59 +120,56 @@ void schema_1_7_1::verify_track(sqlite::database& db) const
         ++iter;
         validate(iter, end, "index_Track_uuidOfExternalDatabase", 0, "c", 0);
         ++iter;
-        validate_no_more(iter, end, "index_list", "Track");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_Track_filename"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "filename");
         ++iter;
-        validate_no_more(iter, end, "index_info", "index_Track_filename");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_Track_id"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "id");
         ++iter;
-        validate_no_more(iter, end, "index_info", "index_Track_id");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_Track_idAlbumArt"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "idAlbumArt");
         ++iter;
-        validate_no_more(iter, end, "index_info", "index_Track_idAlbumArt");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_Track_idTrackInExternalDatabase"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "idTrackInExternalDatabase");
         ++iter;
-        validate_no_more(
-            iter, end, "index_info", "index_Track_idTrackInExternalDatabase");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_Track_isExternalTrack"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "isExternalTrack");
         ++iter;
-        validate_no_more(
-            iter, end, "index_info", "index_Track_isExternalTrack");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_Track_path"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "path");
         ++iter;
-        validate_no_more(iter, end, "index_info", "index_Track_path");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_Track_uuidOfExternalDatabase"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "uuidOfExternalDatabase");
         ++iter;
-        validate_no_more(
-            iter, end, "index_info", "index_Track_uuidOfExternalDatabase");
+        validate_no_more(iter, end);
     }
 }
 
@@ -203,21 +200,21 @@ void schema_1_7_1::verify_performance_data(sqlite::database& db) const
         ++iter;
         validate(iter, end, "trackData", "BLOB", 0, "", 0);
         ++iter;
-        validate_no_more(iter, end, "table_info", "PerformanceData");
+        validate_no_more(iter, end);
     }
     {
         index_list indices{db, "perfdata", "PerformanceData"};
         auto iter = indices.begin(), end = indices.end();
         validate(iter, end, "index_PerformanceData_id", 0, "c", 0);
         ++iter;
-        validate_no_more(iter, end, "index_list", "PerformanceData");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "perfdata", "index_PerformanceData_id"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "id");
         ++iter;
-        validate_no_more(iter, end, "index_info", "index_PerformanceData_id");
+        validate_no_more(iter, end);
     }
 }
 

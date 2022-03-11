@@ -59,6 +59,5 @@ BOOST_DATA_TEST_CASE(
         BOOST_CHECK_EQUAL(e::music_db_path(db), (tmp_loc.temp_dir + "/m.db"));
         BOOST_CHECK_EQUAL(
             e::perfdata_db_path(db), (tmp_loc.temp_dir + "/p.db"));
-        BOOST_CHECK_EQUAL(db.version_name(), version.name);
     }
 }

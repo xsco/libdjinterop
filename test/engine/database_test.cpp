@@ -53,21 +53,26 @@ std::ostream& operator<<(std::ostream& os, const reference_script& rs)
 }
 
 const std::vector<reference_script> reference_db_scripts{
-    reference_script{"/ref/sc5000/firmware-1.0.3", e::os_1_0_3},
-    reference_script{"/ref/ep/ep-1.1.1", e::desktop_1_1_1},
-    reference_script{"/ref/sc5000/firmware-1.2.0", e::os_1_2_0},
-    reference_script{"/ref/sc5000/firmware-1.2.2", e::os_1_2_2},
-    reference_script{"/ref/ep/ep-1.2.2", e::desktop_1_2_2},
-    reference_script{"/ref/sc5000/firmware-1.3.1", e::os_1_3_1},
-    reference_script{"/ref/sc5000/firmware-1.4.0", e::os_1_4_0},
-    reference_script{"/ref/sc5000/firmware-1.5.1", e::os_1_5_1},
-    reference_script{"/ref/ep/ep-1.5.1", e::desktop_1_5_1},
-    reference_script{"/ref/sc5000/firmware-1.5.2", e::os_1_5_1},
-    reference_script{"/ref/ep/ep-1.6.0", e::desktop_1_5_1},
-    reference_script{"/ref/sc5000/firmware-1.6.0", e::os_1_6_0},
-    reference_script{"/ref/ep/ep-1.6.1", e::desktop_1_5_1},
-    reference_script{"/ref/sc5000/firmware-1.6.1", e::os_1_6_0},
-    reference_script{"/ref/sc5000/firmware-1.6.2", e::os_1_6_0},
+    reference_script{"/ref/engine/sc5000/firmware-1.0.3", e::os_1_0_3},
+    reference_script{"/ref/engine/ep/ep-1.1.1", e::desktop_1_1_1},
+    reference_script{"/ref/engine/sc5000/firmware-1.2.0", e::os_1_2_0},
+    reference_script{"/ref/engine/sc5000/firmware-1.2.2", e::os_1_2_2},
+    reference_script{"/ref/engine/ep/ep-1.2.2", e::desktop_1_2_2},
+    reference_script{"/ref/engine/sc5000/firmware-1.3.1", e::os_1_3_1},
+    reference_script{"/ref/engine/sc5000/firmware-1.4.0", e::os_1_4_0},
+    reference_script{"/ref/engine/sc5000/firmware-1.5.1", e::os_1_5_1},
+    reference_script{"/ref/engine/ep/ep-1.5.1", e::desktop_1_5_1},
+    reference_script{"/ref/engine/sc5000/firmware-1.5.2", e::os_1_5_1},
+    reference_script{"/ref/engine/ep/ep-1.6.0", e::desktop_1_5_1},
+    reference_script{"/ref/engine/sc5000/firmware-1.6.0", e::os_1_6_0},
+    reference_script{"/ref/engine/ep/ep-1.6.1", e::desktop_1_5_1},
+    reference_script{"/ref/engine/sc5000/firmware-1.6.1", e::os_1_6_0},
+    reference_script{"/ref/engine/sc5000/firmware-1.6.2", e::os_1_6_0},
+    // TODO enable 2.x test cases
+    /*
+    reference_script{"/ref/engine/desktop/desktop-2.0.0", e::desktop_2_0_0},
+    reference_script{"/ref/engine/sc5000/firmware-2.0.0", e::os_2_0_0},
+    */
 };
 
 struct example_file
@@ -168,9 +173,6 @@ BOOST_DATA_TEST_CASE(
         BOOST_CHECK_EQUAL(e::music_db_path(db), (tmp_loc.temp_dir + "/m.db"));
         BOOST_CHECK_EQUAL(
             e::perfdata_db_path(db), (tmp_loc.temp_dir + "/p.db"));
-        BOOST_CHECK_EQUAL(
-            db.version_name(),
-            reference_script.expected_version.name);
     }
 }
 

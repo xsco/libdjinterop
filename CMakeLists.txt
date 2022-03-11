@@ -10,7 +10,7 @@
 #
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.17.0
+        VERSION 0.18.0
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
@@ -62,6 +62,7 @@ add_library(
     src/djinterop/engine/schema/schema_1_17_0.cpp
     src/djinterop/engine/schema/schema_1_18_0_desktop.cpp
     src/djinterop/engine/schema/schema_1_18_0_os.cpp
+    src/djinterop/engine/schema/schema_2_18_0.cpp
     src/djinterop/engine/schema/schema.cpp
     src/djinterop/engine/v1/engine_crate_impl.cpp
     src/djinterop/engine/v1/engine_database_impl.cpp
@@ -69,6 +70,9 @@ add_library(
     src/djinterop/engine/v1/engine_track_impl.cpp
     src/djinterop/engine/v1/engine_transaction_guard_impl.cpp
     src/djinterop/engine/v1/performance_data_format.cpp
+    src/djinterop/engine/v2/engine_database_impl.cpp
+    src/djinterop/engine/v2/engine_storage.cpp
+    src/djinterop/engine/v2/engine_track_impl.cpp
     src/djinterop/crate.cpp
     src/djinterop/database.cpp
     src/djinterop/track.cpp

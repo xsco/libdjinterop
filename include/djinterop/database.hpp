@@ -40,15 +40,6 @@ class track;
 struct track_snapshot;
 class transaction_guard;
 
-class database_not_found : public std::runtime_error
-{
-public:
-    explicit database_not_found(const std::string& what_arg) noexcept
-        : runtime_error{what_arg}
-    {
-    }
-};
-
 class DJINTEROP_PUBLIC database
 {
 public:
