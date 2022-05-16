@@ -22,6 +22,7 @@
 
 #include <sqlite_modern_cpp.h>
 
+#include <djinterop/engine/engine_version.hpp>
 #include <djinterop/semantic_version.hpp>
 
 namespace djinterop::engine::schema
@@ -30,6 +31,15 @@ class schema_creator_validator
 {
 public:
     virtual ~schema_creator_validator() = default;
+
+    virtual void verify(sqlite::database& db) const = 0;
+    virtual void create(sqlite::database& db) = 0;
+};
+
+class schema_v1 : public schema_creator_validator
+{
+public:
+    virtual ~schema_v1() = default;
 
     virtual void verify(sqlite::database& db) const
     {
@@ -48,6 +58,12 @@ protected:
     virtual void verify_performance_schema(sqlite::database& db) const = 0;
     virtual void create_music_schema(sqlite::database& db) = 0;
     virtual void create_performance_schema(sqlite::database& db) = 0;
+};
+
+class schema_v2 : public schema_creator_validator
+{
+public:
+    virtual ~schema_v2() = default;
 };
 
 std::unique_ptr<schema_creator_validator> make_schema_creator_validator(

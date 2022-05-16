@@ -26,19 +26,108 @@
 #include "track_utils.hpp"
 #include "v1/engine_database_impl.hpp"
 #include "v1/engine_transaction_guard_impl.hpp"
+#include "v2/engine_database_impl.hpp"
 
 namespace djinterop::engine
 {
+namespace
+{
+inline djinterop::stdx::optional<std::string> get_column_type(
+    sqlite::database& db, const std::string& table_name,
+    const std::string& column_name)
+{
+    djinterop::stdx::optional<std::string> column_type;
+
+    db << "PRAGMA table_info('" + table_name + "')" >>
+        [&](int col_id, std::string col_name, std::string col_type,
+            int nullable, std::string default_value, int part_of_pk)
+    {
+        if (col_name == column_name)
+        {
+            column_type = col_type;
+        }
+    };
+
+    return column_type;
+}
+
+engine_version detect_version(const std::string& directory)
+{
+    if (!dir_exists(directory))
+    {
+        throw database_not_found{directory};
+    }
+
+    // Assume that all versions of engine libraries have a database called
+    // "m.db", containing a table called "Information", containing the schema
+    // version in some of its columns.
+    sqlite::database db{directory + "/m.db"};
+
+    // Check that the `Information` table has been created.
+    std::string sql =
+        "SELECT COUNT(*) AS rows "
+        "FROM sqlite_master "
+        "WHERE name = 'Information'";
+    int32_t table_count;
+    db << sql >> table_count;
+    if (table_count != 1)
+    {
+        throw database_inconsistency{
+            "Did not find an `Information` table in the database"};
+    }
+
+    semantic_version schema_version;
+    db << "SELECT schemaVersionMajor, schemaVersionMinor, "
+          "schemaVersionPatch FROM Information" >>
+        std::tie(schema_version.maj, schema_version.min, schema_version.pat);
+
+    // Some schema versions have different variants, meaning that the version
+    // number alone is insufficient.  Detect the variant where required.
+    if (schema_version.maj == 1 && schema_version.min == 18 &&
+        schema_version.pat == 0)
+    {
+        auto has_numeric_bools =
+            get_column_type(db, "Track", "isExternalTrack") ==
+            std::string{"NUMERIC"};
+        return has_numeric_bools ? djinterop::engine::desktop_1_5_1
+                                 : djinterop::engine::os_1_6_0;
+    }
+
+    for (auto&& candidate_version : all_versions)
+    {
+        if (schema_version == candidate_version.schema_version)
+        {
+            return candidate_version;
+        }
+    }
+
+    throw unsupported_engine_database{schema_version};
+}
+
+} // anonymous namespace
+
 database create_database(
     const std::string& directory, const engine_version& version)
 {
-    auto storage = std::make_shared<v1::engine_storage>(directory, version);
+    if (version.version.maj >= 2)
+    {
+        auto storage = v2::engine_storage::create(directory, version);
+        return database{std::make_shared<v2::engine_database_impl>(storage)};
+    }
+
+    auto storage = v1::engine_storage::create(directory, version);
     return database{std::make_shared<v1::engine_database_impl>(storage)};
 }
 
 database create_temporary_database(const engine_version& version)
 {
-    auto storage = std::make_shared<v1::engine_storage>(version);
+    if (version.version.maj >= 2)
+    {
+        auto storage = v2::engine_storage::create_temporary(version);
+        return database{std::make_shared<v2::engine_database_impl>(storage)};
+    }
+
+    auto storage = v1::engine_storage::create_temporary(version);
     return database{std::make_shared<v1::engine_database_impl>(storage)};
 }
 
@@ -54,6 +143,8 @@ database create_database_from_scripts(
         m_db << stmt;
     }
 
+    // Note: there may not be a separate performance database, if the database
+    // is >= version 2.
     std::ifstream p_db_script{script_directory + "/p.db.sql"};
     sqlite::database p_db{db_directory + "/p.db"};
     while (std::getline(p_db_script, stmt))
@@ -96,7 +187,14 @@ bool database_exists(const std::string& directory)
 
 database load_database(const std::string& directory)
 {
-    auto storage = std::make_shared<v1::engine_storage>(directory);
+    auto version = detect_version(directory);
+    if (version.version.maj >= 2)
+    {
+        auto storage = std::make_shared<v2::engine_storage>(directory, version);
+        return database{std::make_shared<v2::engine_database_impl>(storage)};
+    }
+
+    auto storage = std::make_shared<v1::engine_storage>(directory, version);
     return database{std::make_shared<v1::engine_database_impl>(storage)};
 }
 

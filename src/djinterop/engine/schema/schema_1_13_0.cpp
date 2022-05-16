@@ -56,7 +56,7 @@ void schema_1_13_0::verify_music_master_list(sqlite::database& db) const
         ++iter;
         validate(iter, end, "music", "table", "Track", "Track");
         ++iter;
-        validate_no_more(iter, end, "master_list", "music");
+        validate_no_more(iter, end);
     }
     {
         master_list items{db, "music", "view"};
@@ -90,7 +90,7 @@ void schema_1_13_0::verify_music_master_list(sqlite::database& db) const
             iter, end, "music", "view", "PreparelistTrackList",
             "PreparelistTrackList");
         ++iter;
-        validate_no_more(iter, end, "master_list", "music");
+        validate_no_more(iter, end);
     }
 }
 
@@ -103,7 +103,7 @@ void schema_1_13_0::verify_internal_database(sqlite::database& db) const
         ++iter;
         validate(iter, end, "uuid", "TEXT", 0, "", 1);
         ++iter;
-        validate_no_more(iter, end, "table_info", "InternalDatabase");
+        validate_no_more(iter, end);
     }
     {
         index_list indices{db, "music", "InternalDatabase"};
@@ -112,22 +112,21 @@ void schema_1_13_0::verify_internal_database(sqlite::database& db) const
         ++iter;
         validate(iter, end, "sqlite_autoindex_InternalDatabase_1", 1, "pk", 0);
         ++iter;
-        validate_no_more(iter, end, "index_list", "InternalDatabase");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_InternalDatabase_uuid"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "uuid");
         ++iter;
-        validate_no_more(
-            iter, end, "index_info", "index_InternalDatabase_uuid");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "sqlite_autoindex_InternalDatabase_1"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "uuid");
         ++iter;
-        validate_no_more(iter, end, "index_info", "sqlite_autoindex_List_1");
+        validate_no_more(iter, end);
     }
 }
 
@@ -150,7 +149,7 @@ void schema_1_13_0::verify_list(sqlite::database& db) const
         ++iter;
         validate(iter, end, "type", "INTEGER", 0, "", 2);
         ++iter;
-        validate_no_more(iter, end, "table_info", "List");
+        validate_no_more(iter, end);
     }
     {
         index_list indices{db, "music", "List"};
@@ -165,35 +164,35 @@ void schema_1_13_0::verify_list(sqlite::database& db) const
         ++iter;
         validate(iter, end, "sqlite_autoindex_List_1", 1, "pk", 0);
         ++iter;
-        validate_no_more(iter, end, "index_list", "List");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_List_ordering"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "ordering");
         ++iter;
-        validate_no_more(iter, end, "index_info", "index_List_ordering");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_List_path"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "path");
         ++iter;
-        validate_no_more(iter, end, "index_info", "index_List_path");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_List_type"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "type");
         ++iter;
-        validate_no_more(iter, end, "index_info", "index_List_type");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_List_id"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "id");
         ++iter;
-        validate_no_more(iter, end, "index_info", "index_List_id");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "sqlite_autoindex_List_1"};
@@ -202,7 +201,7 @@ void schema_1_13_0::verify_list(sqlite::database& db) const
         ++iter;
         validate(iter, end, 1, "type");
         ++iter;
-        validate_no_more(iter, end, "index_info", "sqlite_autoindex_List_1");
+        validate_no_more(iter, end);
     }
 }
 

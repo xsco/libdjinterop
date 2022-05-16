@@ -18,6 +18,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
 #include <sqlite_modern_cpp.h>
@@ -97,16 +98,18 @@ class engine_storage
 {
 public:
     /// Construct by loading from an existing DB directory.
-    engine_storage(const std::string& directory);
+    engine_storage(const std::string& directory, const engine_version& version);
 
-    /// Construct by making a new, empty DB of a given version.
-    engine_storage(const std::string& directory, engine_version version);
+    /// Make a new, empty DB of a given version.
+    static std::shared_ptr<engine_storage> create(
+        const std::string& directory, const engine_version& version);
 
-    /// Construct by making a new, empty in-memory DB of a given version.
+    /// Make a new, empty, in-memory DB of a given version.
     ///
     /// Any changes made to the database will not persist beyond destruction
     /// of the class instance.
-    explicit engine_storage(engine_version version);
+    static std::shared_ptr<engine_storage> create_temporary(
+        const engine_version& version);
 
     /// Create an entry in the `Track` table.
     int64_t create_track(
@@ -352,6 +355,11 @@ public:
         schema_creator_validator;
 
     int64_t last_savepoint = 0;
+
+private:
+    engine_storage(
+        const std::string& directory, const engine_version& version,
+        sqlite::database db);
 };
 
 }  // namespace djinterop::engine::v1

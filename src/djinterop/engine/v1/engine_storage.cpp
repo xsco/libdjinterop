@@ -59,109 +59,46 @@ sqlite::database make_temporary_db()
     return db;
 }
 
-inline djinterop::stdx::optional<std::string> get_column_type(
-    sqlite::database& db, const std::string& db_name,
-    const std::string& table_name, const std::string& column_name)
-{
-    djinterop::stdx::optional<std::string> column_type;
-
-    db << "PRAGMA " + db_name + ".table_info('" + table_name + "')" >>
-        [&](int col_id, std::string col_name, std::string col_type,
-            int nullable, std::string default_value, int part_of_pk) {
-            if (col_name == column_name)
-            {
-                column_type = col_type;
-            }
-        };
-
-    return column_type;
-}
-
-engine_version get_version(sqlite::database& db)
-{
-    // Check that the `Information` table has been created.
-    std::string sql =
-        "SELECT SUM(rows) FROM ("
-        "  SELECT COUNT(*) AS rows "
-        "  FROM music.sqlite_master "
-        "  WHERE name = 'Information' "
-        "  UNION ALL "
-        "  SELECT COUNT(*) AS rows "
-        "  FROM perfdata.sqlite_master "
-        "  WHERE name = 'Information' "
-        ")";
-    int32_t table_count;
-    db << sql >> table_count;
-    if (table_count != 2)
-    {
-        throw database_inconsistency{
-            "Did not find an `Information` table for both the music and "
-            "performance databases"};
-    }
-
-    semantic_version music_version;
-    semantic_version perfdata_version;
-    db << "SELECT schemaVersionMajor, schemaVersionMinor, "
-          "schemaVersionPatch FROM music.Information" >>
-        std::tie(music_version.maj, music_version.min, music_version.pat);
-    db << "SELECT schemaVersionMajor, schemaVersionMinor, "
-          "schemaVersionPatch FROM music.Information" >>
-        std::tie(
-            perfdata_version.maj, perfdata_version.min, perfdata_version.pat);
-    if (music_version != perfdata_version)
-    {
-        throw database_inconsistency{
-            "The stated schema versions do not match between the music and "
-            "performance data databases!"};
-    }
-
-    // Some schema versions have different variants, meaning that the version
-    // number alone is insufficient.  Detect the variant where required.
-    if (music_version.maj == 1 && music_version.min == 18 &&
-        music_version.pat == 0)
-    {
-        auto has_numeric_bools =
-            get_column_type(db, "music", "Track", "isExternalTrack") ==
-            std::string{"NUMERIC"};
-        return has_numeric_bools ? djinterop::engine::desktop_1_5_1
-                                 : djinterop::engine::os_1_6_0;
-    }
-
-    for (auto&& candidate_version : all_versions)
-    {
-        if (music_version == candidate_version.schema_version)
-        {
-            return candidate_version;
-        }
-    }
-
-    throw unsupported_engine_database{music_version};
-}
-
 }  // anonymous namespace
 
-engine_storage::engine_storage(const std::string& directory) :
-    directory{directory}, db{make_attached_db(directory, true)},
-    version{get_version(db)},
-    schema_creator_validator{schema::make_schema_creator_validator(version)}
+engine_storage::engine_storage(
+    const std::string& directory, const engine_version& version) :
+    engine_storage{directory, version, make_attached_db(directory, true)}
 {
 }
 
-engine_storage::engine_storage(const std::string& directory, engine_version version) :
-    directory{directory}, db{make_attached_db(directory, false)},
-    version{version}, schema_creator_validator{
-                          schema::make_schema_creator_validator(version)}
+engine_storage::engine_storage(
+    const std::string& directory, const engine_version& version,
+    sqlite::database db) :
+    directory{directory},
+    db{std::move(db)}, version{version}
 {
-    // Create the desired schema on the new database.
-    schema_creator_validator->create(db);
 }
 
-engine_storage::engine_storage(engine_version version) :
-    directory{":memory:"}, db{make_temporary_db()}, version{version},
-    schema_creator_validator{schema::make_schema_creator_validator(version)}
+std::shared_ptr<engine_storage> engine_storage::create(
+    const std::string& directory, const engine_version& version)
 {
+    auto db = make_attached_db(directory, false);
+
     // Create the desired schema on the new database.
-    schema_creator_validator->create(db);
+    auto schema_creator = schema::make_schema_creator_validator(version);
+    schema_creator->create(db);
+
+    return std::shared_ptr<engine_storage>{
+        new engine_storage{directory, version, std::move(db)}};
+}
+
+std::shared_ptr<engine_storage> engine_storage::create_temporary(
+    const engine_version& version)
+{
+    auto db = make_temporary_db();
+
+    // Create the desired schema on the new database.
+    auto schema_creator = schema::make_schema_creator_validator(version);
+    schema_creator->create(db);
+
+    return std::shared_ptr<engine_storage>{
+        new engine_storage{":memory:", version, std::move(db)}};
 }
 
 int64_t engine_storage::create_track(

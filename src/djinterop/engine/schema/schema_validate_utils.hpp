@@ -23,21 +23,20 @@
 #include <sqlite_modern_cpp.h>
 
 #include <djinterop/exceptions.hpp>
+#include <utility>
 
 namespace djinterop::engine::schema
 {
 struct master_list_entry
 {
-    std::string db_name;
+    std::string item_type;
     std::string item_name;
     std::string table_name;
 };
 
 struct table_info_entry
 {
-    std::string db_name;
     std::string table_name;
-    int col_id;
     std::string col_name;
     std::string col_type;
     int nullable;
@@ -47,9 +46,7 @@ struct table_info_entry
 
 struct index_list_entry
 {
-    std::string db_name;
     std::string table_name;
-    int index_id;
     std::string index_name;
     int unique;
     std::string creation_method;
@@ -58,10 +55,8 @@ struct index_list_entry
 
 struct index_info_entry
 {
-    std::string db_name;
     std::string index_name;
-    int col_index_id;
-    int col_table_id;
+    int ordinal;
     std::string col_name;
 };
 
@@ -82,7 +77,7 @@ inline bool operator<(const index_list_entry& o1, const index_list_entry& o2)
 
 inline bool operator<(const index_info_entry& o1, const index_info_entry& o2)
 {
-    return o1.col_index_id < o2.col_index_id;
+    return o1.ordinal < o2.ordinal;
 }
 
 struct master_list
@@ -96,16 +91,33 @@ struct master_list
     {
         db << "SELECT name, tbl_name FROM " + db_name +
                     ".sqlite_master WHERE type = '" + item_type + "'" >>
-            [&](std::string item_name, std::string table_name) {
-                // Note that emplace() does not support aggregate initialisation
-                cols_.insert(master_list_entry{db_name, item_name, table_name});
-            };
+            [&](std::string item_name, std::string table_name)
+        {
+            // Note that emplace() does not support aggregate initialisation
+            cols_.insert(
+                master_list_entry{item_type, std::move(item_name), std::move(table_name)});
+        };
     }
 
-    iterator begin() { return cols_.begin(); }
-    const_iterator begin() const noexcept { return cols_.cbegin(); }
-    iterator end() { return cols_.end(); }
-    const_iterator end() const noexcept { return cols_.cend(); }
+    master_list(sqlite::database& db, const std::string& item_type)
+    {
+        db << "SELECT name, tbl_name FROM sqlite_master WHERE type = '" +
+                    item_type + "'" >>
+            [&](std::string item_name, std::string table_name)
+        {
+            // Note that emplace() does not support aggregate initialisation
+            cols_.insert(
+                master_list_entry{item_type, std::move(item_name), std::move(table_name)});
+        };
+    }
+
+    [[nodiscard]] iterator begin() { return cols_.begin(); }
+    [[nodiscard]] const_iterator begin() const noexcept
+    {
+        return cols_.cbegin();
+    }
+    [[nodiscard]] iterator end() { return cols_.end(); }
+    [[nodiscard]] const_iterator end() const noexcept { return cols_.cend(); }
 
 private:
     std::set<master_list_entry> cols_;
@@ -122,18 +134,35 @@ struct table_info
     {
         db << "PRAGMA " + db_name + ".table_info('" + table_name + "')" >>
             [&](int col_id, std::string col_name, std::string col_type,
-                int nullable, std::string default_value, int part_of_pk) {
-                // Note that emplace() does not support aggregate initialisation
-                cols_.insert(table_info_entry{
-                    db_name, table_name, col_id, col_name, col_type, nullable,
-                    default_value, part_of_pk});
-            };
+                int nullable, std::string default_value, int part_of_pk)
+        {
+            // Note that emplace() does not support aggregate initialisation
+            cols_.insert(table_info_entry{
+                table_name, std::move(col_name), std::move(col_type), nullable,
+                std::move(default_value), part_of_pk});
+        };
     }
 
-    iterator begin() { return cols_.begin(); }
-    const_iterator begin() const noexcept { return cols_.cbegin(); }
-    iterator end() { return cols_.end(); }
-    const_iterator end() const noexcept { return cols_.cend(); }
+    table_info(sqlite::database& db, const std::string& table_name)
+    {
+        db << "PRAGMA table_info('" + table_name + "')" >>
+            [&](int col_id, std::string col_name, std::string col_type,
+                int nullable, std::string default_value, int part_of_pk)
+        {
+            // Note that emplace() does not support aggregate initialisation
+            cols_.insert(table_info_entry{
+                table_name, std::move(col_name), std::move(col_type), nullable,
+                std::move(default_value), part_of_pk});
+        };
+    }
+
+    [[nodiscard]] iterator begin() { return cols_.begin(); }
+    [[nodiscard]] const_iterator begin() const noexcept
+    {
+        return cols_.cbegin();
+    }
+    [[nodiscard]] iterator end() { return cols_.end(); }
+    [[nodiscard]] const_iterator end() const noexcept { return cols_.cend(); }
 
 private:
     std::set<table_info_entry> cols_;
@@ -150,18 +179,38 @@ struct index_list
     {
         db << "PRAGMA " + db_name + ".index_list('" + table_name + "')" >>
             [&](int index_id, std::string index_name, int unique,
-                std::string creation_method, int partial_index) {
-                // Note that emplace() does not support aggregate initialisation
-                indices_.insert(index_list_entry{
-                    db_name, table_name, index_id, index_name, unique,
-                    creation_method, partial_index});
-            };
+                std::string creation_method, int partial_index)
+        {
+            // Note that emplace() does not support aggregate initialisation
+            indices_.insert(index_list_entry{
+                table_name, std::move(index_name), unique,
+                std::move(creation_method), partial_index});
+        };
     }
 
-    iterator begin() { return indices_.begin(); }
-    const_iterator begin() const noexcept { return indices_.cbegin(); }
-    iterator end() { return indices_.end(); }
-    const_iterator end() const noexcept { return indices_.cend(); }
+    index_list(sqlite::database& db, const std::string& table_name)
+    {
+        db << "PRAGMA index_list('" + table_name + "')" >>
+            [&](int index_id, std::string index_name, int unique,
+                std::string creation_method, int partial_index)
+        {
+            // Note that emplace() does not support aggregate initialisation
+            indices_.insert(index_list_entry{
+                table_name, std::move(index_name), unique,
+                std::move(creation_method), partial_index});
+        };
+    }
+
+    [[nodiscard]] iterator begin() { return indices_.begin(); }
+    [[nodiscard]] const_iterator begin() const noexcept
+    {
+        return indices_.cbegin();
+    }
+    [[nodiscard]] iterator end() { return indices_.end(); }
+    [[nodiscard]] const_iterator end() const noexcept
+    {
+        return indices_.cend();
+    }
 
 private:
     std::set<index_list_entry> indices_;
@@ -177,17 +226,32 @@ struct index_info
         const std::string& index_name)
     {
         db << "PRAGMA " + db_name + ".index_info('" + index_name + "')" >>
-            [&](int col_index_id, int col_table_id, std::string col_name) {
-                // Note that emplace() does not support aggregate initialisation
-                cols_.insert(index_info_entry{
-                    db_name, index_name, col_index_id, col_table_id, col_name});
-            };
+            [&](int ordinal, int col_table_id, std::string col_name)
+        {
+            // Note that emplace() does not support aggregate initialisation
+            cols_.insert(
+                index_info_entry{index_name, ordinal, std::move(col_name)});
+        };
     }
 
-    iterator begin() { return cols_.begin(); }
-    const_iterator begin() const noexcept { return cols_.cbegin(); }
-    iterator end() { return cols_.end(); }
-    const_iterator end() const noexcept { return cols_.cend(); }
+    index_info(sqlite::database& db, const std::string& index_name)
+    {
+        db << "PRAGMA index_info('" + index_name + "')" >>
+            [&](int ordinal, int col_table_id, std::string col_name)
+        {
+            // Note that emplace() does not support aggregate initialisation
+            cols_.insert(
+                index_info_entry{index_name, ordinal, std::move(col_name)});
+        };
+    }
+
+    [[nodiscard]] iterator begin() { return cols_.begin(); }
+    [[nodiscard]] const_iterator begin() const noexcept
+    {
+        return cols_.cbegin();
+    }
+    [[nodiscard]] iterator end() { return cols_.end(); }
+    [[nodiscard]] const_iterator end() const noexcept { return cols_.cend(); }
 
 private:
     std::set<index_info_entry> cols_;
@@ -209,6 +273,44 @@ inline void validate(
             " (relating to table " + iter->table_name + ") on " + db_name +
             " in wrong order, expected " + item_name + " (relating to table " +
             table_name + ")"};
+}
+
+inline void validate(
+    master_list::const_iterator iter, master_list::const_iterator end,
+    const std::string& item_type, const std::string& item_name,
+    const std::string& table_name)
+{
+    if (iter == end)
+        throw database_inconsistency{
+            "Item " + item_name + " of type " + item_type +
+            " (relating to table " + table_name + ") missing from DB"};
+    if (iter->item_name != item_name)
+        throw database_inconsistency{
+            "Item " + iter->item_name + " of type " + item_type +
+            " (relating to table " + iter->table_name +
+            ") in wrong order, expected " + item_name + " (relating to table " +
+            table_name + ")"};
+}
+
+inline void validate_no_more(
+    const master_list::const_iterator iter,
+    const master_list::const_iterator end,
+    const std::string& db_name)
+{
+    if (iter != end)
+        throw database_inconsistency{
+            "There are more " + iter->item_type + " entries in " + db_name +
+            " than expected: next one is " + iter->item_name};
+}
+
+inline void validate_no_more(
+    const master_list::const_iterator iter,
+    const master_list::const_iterator end)
+{
+    if (iter != end)
+        throw database_inconsistency{
+            "There are more " + iter->item_type +
+            " entries than expected: next one is " + iter->item_name};
 }
 
 inline void validate(
@@ -241,6 +343,15 @@ inline void validate(
             " has wrong PK membership: " + std::to_string(iter->part_of_pk)};
 }
 
+inline void validate_no_more(
+    const table_info::const_iterator iter, const table_info::const_iterator end)
+{
+    if (iter != end)
+        throw database_inconsistency{
+            "There are more columns on table " + iter->table_name +
+            " than expected: next one is " + iter->col_name};
+}
+
 inline void validate(
     index_list::const_iterator iter, index_list::const_iterator end,
     const std::string& index_name, int unique,
@@ -267,32 +378,39 @@ inline void validate(
             std::to_string(iter->partial_index)};
 }
 
+inline void validate_no_more(
+    const index_list::const_iterator iter, const index_list::const_iterator end)
+{
+    if (iter != end)
+        throw database_inconsistency{
+            "There are more indexes on table " + iter->table_name +
+            " than expected: next one is " + iter->index_name};
+}
+
 inline void validate(
     index_info::const_iterator iter, index_info::const_iterator end,
-    int col_index_id, const std::string& col_name)
+    int ordinal, const std::string& col_name)
 {
     if (iter == end)
         throw database_inconsistency{"Col " + col_name + " missing from index"};
-    if (iter->col_index_id != col_index_id)
+    if (iter->ordinal != ordinal)
         throw database_inconsistency{
             "Col " + col_name + " on " + iter->index_name +
             " has wrong rank within the index: " +
-            std::to_string(iter->col_index_id)};
+            std::to_string(iter->ordinal)};
     if (iter->col_name != col_name)
         throw database_inconsistency{
             "Col " + iter->col_name + " on " + iter->index_name +
             " in wrong order, expected " + col_name};
 }
 
-template <typename Iterator>
-void validate_no_more(
-    const Iterator& iter, const Iterator& end,
-    const std::string& validation_type, const std::string& item)
+inline void validate_no_more(
+    const index_info::const_iterator iter, const index_info::const_iterator end)
 {
     if (iter != end)
         throw database_inconsistency{
-            validation_type + " for " + item +
-            " has more entries than expected"};
+            "There are more columns in index " + iter->index_name +
+            " than expected: next one is " + iter->col_name};
 }
 
 }  // namespace djinterop::engine::schema

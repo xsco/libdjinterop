@@ -25,7 +25,7 @@
 
 namespace djinterop::engine::schema
 {
-class schema_1_6_0 : public schema_creator_validator
+class schema_1_6_0 : public schema_v1
 {
 public:
     static constexpr const semantic_version schema_version{1, 6, 0};

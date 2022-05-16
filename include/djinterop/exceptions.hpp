@@ -31,6 +31,15 @@
 
 namespace djinterop
 {
+class database_not_found : public std::runtime_error
+{
+public:
+    explicit database_not_found(const std::string& what_arg) noexcept
+        : runtime_error{what_arg}
+    {
+    }
+};
+
 /// The `database_inconsistency` exception is thrown when the schema of a
 /// database does not match the expectations suggested by its reported version
 /// number.

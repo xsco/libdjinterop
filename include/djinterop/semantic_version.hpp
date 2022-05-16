@@ -25,6 +25,8 @@
 
 #include <cstring>
 #include <ostream>
+#include <sstream>
+#include <string>
 
 namespace djinterop
 {
@@ -40,6 +42,13 @@ inline std::ostream& operator<<(
     std::ostream& os, const semantic_version& version)
 {
     return os << version.maj << "." << version.min << "." << version.pat;
+}
+
+inline std::string to_string(const semantic_version& version)
+{
+    std::ostringstream oss;
+    oss << version;
+    return oss.str();
 }
 
 inline bool operator==(const semantic_version& a, const semantic_version& b)

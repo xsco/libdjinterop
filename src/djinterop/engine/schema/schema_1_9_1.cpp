@@ -52,7 +52,7 @@ void schema_1_9_1::verify_music_master_list(sqlite::database& db) const
         ++iter;
         validate(iter, end, "music", "table", "Track", "Track");
         ++iter;
-        validate_no_more(iter, end, "master_list", "music");
+        validate_no_more(iter, end);
     }
     {
         master_list items{db, "music", "view"};
@@ -86,7 +86,7 @@ void schema_1_9_1::verify_music_master_list(sqlite::database& db) const
             iter, end, "music", "view", "PreparelistTrackList",
             "PreparelistTrackList");
         ++iter;
-        validate_no_more(iter, end, "master_list", "music");
+        validate_no_more(iter, end);
     }
 }
 
@@ -101,12 +101,12 @@ void schema_1_9_1::verify_crate(sqlite::database& db) const
         ++iter;
         validate(iter, end, "title", "TEXT", 0, "", 0);
         ++iter;
-        validate_no_more(iter, end, "table_info", "Crate");
+        validate_no_more(iter, end);
     }
     {
         index_list indices{db, "music", "Crate"};
         auto iter = indices.begin(), end = indices.end();
-        validate_no_more(iter, end, "index_list", "Crate");
+        validate_no_more(iter, end);
     }
 }
 
@@ -119,12 +119,12 @@ void schema_1_9_1::verify_crate_hierarchy(sqlite::database& db) const
         ++iter;
         validate(iter, end, "crateIdChild", "INTEGER", 0, "", 0);
         ++iter;
-        validate_no_more(iter, end, "table_info", "CrateHierarchy");
+        validate_no_more(iter, end);
     }
     {
         index_list indices{db, "music", "CrateHierarchy"};
         auto iter = indices.begin(), end = indices.end();
-        validate_no_more(iter, end, "index_list", "CrateHierarchy");
+        validate_no_more(iter, end);
     }
 }
 
@@ -137,12 +137,12 @@ void schema_1_9_1::verify_crate_parent_list(sqlite::database& db) const
         ++iter;
         validate(iter, end, "crateParentId", "INTEGER", 0, "", 0);
         ++iter;
-        validate_no_more(iter, end, "table_info", "CrateParentList");
+        validate_no_more(iter, end);
     }
     {
         index_list indices{db, "music", "CrateParentList"};
         auto iter = indices.begin(), end = indices.end();
-        validate_no_more(iter, end, "index_list", "CrateParentList");
+        validate_no_more(iter, end);
     }
 }
 
@@ -155,12 +155,12 @@ void schema_1_9_1::verify_crate_track_list(sqlite::database& db) const
         ++iter;
         validate(iter, end, "trackId", "INTEGER", 0, "", 0);
         ++iter;
-        validate_no_more(iter, end, "table_info", "CrateTrackList");
+        validate_no_more(iter, end);
     }
     {
         index_list indices{db, "music", "CrateTrackList"};
         auto iter = indices.begin(), end = indices.end();
-        validate_no_more(iter, end, "index_list", "CrateTrackList");
+        validate_no_more(iter, end);
     }
 }
 
@@ -173,12 +173,12 @@ void schema_1_9_1::verify_historylist(sqlite::database& db) const
         ++iter;
         validate(iter, end, "title", "TEXT", 0, "", 0);
         ++iter;
-        validate_no_more(iter, end, "table_info", "Historylist");
+        validate_no_more(iter, end);
     }
     {
         index_list indices{db, "music", "Historylist"};
         auto iter = indices.begin(), end = indices.end();
-        validate_no_more(iter, end, "index_list", "Historylist");
+        validate_no_more(iter, end);
     }
 }
 
@@ -197,12 +197,12 @@ void schema_1_9_1::verify_historylist_track_list(sqlite::database& db) const
         ++iter;
         validate(iter, end, "trackIdInOriginDatabase", "INTEGER", 0, "", 0);
         ++iter;
-        validate_no_more(iter, end, "table_info", "HistorylistTrackList");
+        validate_no_more(iter, end);
     }
     {
         index_list indices{db, "music", "HistorylistTrackList"};
         auto iter = indices.begin(), end = indices.end();
-        validate_no_more(iter, end, "index_list", "HistorylistTrackList");
+        validate_no_more(iter, end);
     }
 }
 
@@ -221,7 +221,7 @@ void schema_1_9_1::verify_list(sqlite::database& db) const
         ++iter;
         validate(iter, end, "type", "INTEGER", 0, "", 2);
         ++iter;
-        validate_no_more(iter, end, "table_info", "List");
+        validate_no_more(iter, end);
     }
     {
         index_list indices{db, "music", "List"};
@@ -234,28 +234,28 @@ void schema_1_9_1::verify_list(sqlite::database& db) const
         ++iter;
         validate(iter, end, "sqlite_autoindex_List_1", 1, "pk", 0);
         ++iter;
-        validate_no_more(iter, end, "index_list", "List");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_List_path"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "path");
         ++iter;
-        validate_no_more(iter, end, "index_info", "index_List_path");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_List_type"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "type");
         ++iter;
-        validate_no_more(iter, end, "index_info", "index_List_type");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_List_id"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "id");
         ++iter;
-        validate_no_more(iter, end, "index_info", "index_List_id");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "sqlite_autoindex_List_1"};
@@ -264,7 +264,7 @@ void schema_1_9_1::verify_list(sqlite::database& db) const
         ++iter;
         validate(iter, end, 1, "type");
         ++iter;
-        validate_no_more(iter, end, "index_info", "sqlite_autoindex_List_1");
+        validate_no_more(iter, end);
     }
 }
 
@@ -281,7 +281,7 @@ void schema_1_9_1::verify_list_hierarchy(sqlite::database& db) const
         ++iter;
         validate(iter, end, "listTypeChild", "INTEGER", 0, "", 0);
         ++iter;
-        validate_no_more(iter, end, "table_info", "ListHierarchy");
+        validate_no_more(iter, end);
     }
     {
         index_list indices{db, "music", "ListHierarchy"};
@@ -294,38 +294,35 @@ void schema_1_9_1::verify_list_hierarchy(sqlite::database& db) const
         ++iter;
         validate(iter, end, "index_ListHierarchy_listTypeChild", 0, "c", 0);
         ++iter;
-        validate_no_more(iter, end, "index_list", "ListHierarchy");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_ListHierarchy_listId"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "listId");
         ++iter;
-        validate_no_more(iter, end, "index_info", "index_ListHierarchy_listId");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_ListHierarchy_listIdChild"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "listIdChild");
         ++iter;
-        validate_no_more(
-            iter, end, "index_info", "index_ListHierarchy_listIdChild");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_ListHierarchy_listType"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "listType");
         ++iter;
-        validate_no_more(
-            iter, end, "index_info", "index_ListHierarchy_listType");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_ListHierarchy_listTypeChild"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "listTypeChild");
         ++iter;
-        validate_no_more(
-            iter, end, "index_info", "index_ListHierarchy_listTypeChild");
+        validate_no_more(iter, end);
     }
 }
 
@@ -342,7 +339,7 @@ void schema_1_9_1::verify_list_parent_list(sqlite::database& db) const
         ++iter;
         validate(iter, end, "listParentType", "INTEGER", 0, "", 0);
         ++iter;
-        validate_no_more(iter, end, "table_info", "ListParentList");
+        validate_no_more(iter, end);
     }
     {
         index_list indices{db, "music", "ListParentList"};
@@ -355,39 +352,35 @@ void schema_1_9_1::verify_list_parent_list(sqlite::database& db) const
         ++iter;
         validate(iter, end, "index_ListParentList_listParentType", 0, "c", 0);
         ++iter;
-        validate_no_more(iter, end, "index_list", "ListParentList");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_ListParentList_listOriginId"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "listOriginId");
         ++iter;
-        validate_no_more(
-            iter, end, "index_info", "index_ListParentList_listOriginId");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_ListParentList_listOriginType"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "listOriginType");
         ++iter;
-        validate_no_more(
-            iter, end, "index_info", "index_ListParentList_listOriginType");
+        validate_no_more(iter ,end);
     }
     {
         index_info ii{db, "music", "index_ListParentList_listParentId"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "listParentId");
         ++iter;
-        validate_no_more(
-            iter, end, "index_info", "index_ListParentList_listParentId");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_ListParentList_listParentType"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "listParentType");
         ++iter;
-        validate_no_more(
-            iter, end, "index_info", "index_ListParentList_listParentType");
+        validate_no_more(iter, end);
     }
 }
 
@@ -410,7 +403,7 @@ void schema_1_9_1::verify_list_track_list(sqlite::database& db) const
         ++iter;
         validate(iter, end, "trackNumber", "INTEGER", 0, "", 0);
         ++iter;
-        validate_no_more(iter, end, "table_info", "ListTrackList");
+        validate_no_more(iter, end);
     }
     {
         index_list indices{db, "music", "ListTrackList"};
@@ -421,30 +414,28 @@ void schema_1_9_1::verify_list_track_list(sqlite::database& db) const
         ++iter;
         validate(iter, end, "index_ListTrackList_trackId", 0, "c", 0);
         ++iter;
-        validate_no_more(iter, end, "index_list", "ListTrackList");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_ListTrackList_listId"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "listId");
         ++iter;
-        validate_no_more(iter, end, "index_info", "index_ListTrackList_listId");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_ListTrackList_listType"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "listType");
         ++iter;
-        validate_no_more(
-            iter, end, "index_info", "index_ListTrackList_listType");
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_ListTrackList_trackId"};
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "trackId");
         ++iter;
-        validate_no_more(
-            iter, end, "index_info", "index_ListTrackList_trackId");
+        validate_no_more(iter, end);
     }
 }
 
@@ -457,12 +448,12 @@ void schema_1_9_1::verify_playlist(sqlite::database& db) const
         ++iter;
         validate(iter, end, "title", "TEXT", 0, "", 0);
         ++iter;
-        validate_no_more(iter, end, "table_info", "Playlist");
+        validate_no_more(iter, end);
     }
     {
         index_list indices{db, "music", "Playlist"};
         auto iter = indices.begin(), end = indices.end();
-        validate_no_more(iter, end, "index_list", "Playlist");
+        validate_no_more(iter, end);
     }
 }
 
@@ -481,12 +472,12 @@ void schema_1_9_1::verify_playlist_track_list(sqlite::database& db) const
         ++iter;
         validate(iter, end, "trackNumber", "INTEGER", 0, "", 0);
         ++iter;
-        validate_no_more(iter, end, "table_info", "PlaylistTrackList");
+        validate_no_more(iter, end);
     }
     {
         index_list indices{db, "music", "PlaylistTrackList"};
         auto iter = indices.begin(), end = indices.end();
-        validate_no_more(iter, end, "index_list", "PlaylistTrackList");
+        validate_no_more(iter, end);
     }
 }
 
@@ -499,12 +490,12 @@ void schema_1_9_1::verify_preparelist(sqlite::database& db) const
         ++iter;
         validate(iter, end, "title", "TEXT", 0, "", 0);
         ++iter;
-        validate_no_more(iter, end, "table_info", "Preparelist");
+        validate_no_more(iter, end);
     }
     {
         index_list indices{db, "music", "Preparelist"};
         auto iter = indices.begin(), end = indices.end();
-        validate_no_more(iter, end, "index_list", "Preparelist");
+        validate_no_more(iter, end);
     }
 }
 
@@ -523,12 +514,12 @@ void schema_1_9_1::verify_preparelist_track_list(sqlite::database& db) const
         ++iter;
         validate(iter, end, "trackNumber", "INTEGER", 0, "", 0);
         ++iter;
-        validate_no_more(iter, end, "table_info", "PreparelistTrackList");
+        validate_no_more(iter, end);
     }
     {
         index_list indices{db, "music", "PreparelistTrackList"};
         auto iter = indices.begin(), end = indices.end();
-        validate_no_more(iter, end, "index_list", "PreparelistTrackList");
+        validate_no_more(iter, end);
     }
 }
 
