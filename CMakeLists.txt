@@ -70,9 +70,9 @@ add_library(
     src/djinterop/engine/v1/engine_track_impl.cpp
     src/djinterop/engine/v1/engine_transaction_guard_impl.cpp
     src/djinterop/engine/v1/performance_data_format.cpp
-    src/djinterop/engine/v2/engine_database_impl.cpp
+    src/djinterop/engine/v2/database_impl.cpp
     src/djinterop/engine/v2/engine_storage.cpp
-    src/djinterop/engine/v2/engine_track_impl.cpp
+    src/djinterop/engine/v2/track_impl.cpp
     src/djinterop/crate.cpp
     src/djinterop/database.cpp
     src/djinterop/track.cpp

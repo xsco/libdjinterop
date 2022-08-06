@@ -24,10 +24,10 @@
 
 namespace djinterop::engine::v2
 {
-class engine_database_impl : public database_impl
+class database_impl : public djinterop::database_impl
 {
 public:
-    engine_database_impl(std::shared_ptr<engine_storage> storage);
+    explicit database_impl(std::shared_ptr<engine_storage> storage);
 
     transaction_guard begin_transaction() override;
     stdx::optional<djinterop::crate> crate_by_id(int64_t id) override;
