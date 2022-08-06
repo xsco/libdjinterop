@@ -26,7 +26,7 @@
 #include "track_utils.hpp"
 #include "v1/engine_database_impl.hpp"
 #include "v1/engine_transaction_guard_impl.hpp"
-#include "v2/engine_database_impl.hpp"
+#include "v2/database_impl.hpp"
 
 namespace djinterop::engine
 {
@@ -112,7 +112,7 @@ database create_database(
     if (version.version.maj >= 2)
     {
         auto storage = v2::engine_storage::create(directory, version);
-        return database{std::make_shared<v2::engine_database_impl>(storage)};
+        return database{std::make_shared<v2::database_impl>(storage)};
     }
 
     auto storage = v1::engine_storage::create(directory, version);
@@ -124,7 +124,7 @@ database create_temporary_database(const engine_version& version)
     if (version.version.maj >= 2)
     {
         auto storage = v2::engine_storage::create_temporary(version);
-        return database{std::make_shared<v2::engine_database_impl>(storage)};
+        return database{std::make_shared<v2::database_impl>(storage)};
     }
 
     auto storage = v1::engine_storage::create_temporary(version);
@@ -191,7 +191,7 @@ database load_database(const std::string& directory)
     if (version.version.maj >= 2)
     {
         auto storage = std::make_shared<v2::engine_storage>(directory, version);
-        return database{std::make_shared<v2::engine_database_impl>(storage)};
+        return database{std::make_shared<v2::database_impl>(storage)};
     }
 
     auto storage = std::make_shared<v1::engine_storage>(directory, version);

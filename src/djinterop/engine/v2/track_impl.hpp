@@ -38,10 +38,10 @@ enum class musical_key;
 
 namespace engine::v2
 {
-class engine_track_impl : public djinterop::track_impl
+class track_impl : public djinterop::track_impl
 {
 public:
-    engine_track_impl(std::shared_ptr<engine_storage> storage, int64_t id);
+    track_impl(std::shared_ptr<engine_storage> storage, int64_t id);
 
     track_snapshot snapshot() const override;
 

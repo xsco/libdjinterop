@@ -14,7 +14,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "engine_database_impl.hpp"
+#include "database_impl.hpp"
 
 #include <stdexcept>
 
@@ -27,94 +27,94 @@
 
 namespace djinterop::engine::v2
 {
-engine_database_impl::engine_database_impl(std::shared_ptr<engine_storage> storage) :
+database_impl::database_impl(std::shared_ptr<engine_storage> storage) :
     storage_{std::move(storage)}
 {
 }
 
-transaction_guard engine_database_impl::begin_transaction()
+transaction_guard database_impl::begin_transaction()
 {
     throw std::runtime_error{"Not implemented yet"};
 }
 
-stdx::optional<crate> engine_database_impl::crate_by_id(int64_t id)
+stdx::optional<crate> database_impl::crate_by_id(int64_t id)
 {
     throw std::runtime_error{"Not implemented yet"};
 }
 
-std::vector<crate> engine_database_impl::crates()
+std::vector<crate> database_impl::crates()
 {
     throw std::runtime_error{"Not implemented yet"};
 }
 
-std::vector<crate> engine_database_impl::crates_by_name(const std::string& name)
+std::vector<crate> database_impl::crates_by_name(const std::string& name)
 {
     throw std::runtime_error{"Not implemented yet"};
 }
 
-crate engine_database_impl::create_root_crate(std::string name)
+crate database_impl::create_root_crate(std::string name)
 {
     throw std::runtime_error{"Not implemented yet"};
 }
 
-track engine_database_impl::create_track(const track_snapshot& snapshot)
+track database_impl::create_track(const track_snapshot& snapshot)
 {
     throw std::runtime_error{"Not implemented yet"};
 }
 
-std::string engine_database_impl::directory()
+std::string database_impl::directory()
 {
     return storage_->directory;
 }
 
-void engine_database_impl::verify()
+void database_impl::verify()
 {
     storage_->verify();
 }
 
-void engine_database_impl::remove_crate(crate cr)
+void database_impl::remove_crate(crate cr)
 {
     throw std::runtime_error{"Not implemented yet"};
 }
 
-void engine_database_impl::remove_track(track tr)
+void database_impl::remove_track(track tr)
 {
     throw std::runtime_error{"Not implemented yet"};
 }
 
-std::vector<crate> engine_database_impl::root_crates()
+std::vector<crate> database_impl::root_crates()
 {
     throw std::runtime_error{"Not implemented yet"};
 }
 
-stdx::optional<crate> engine_database_impl::root_crate_by_name(
+stdx::optional<crate> database_impl::root_crate_by_name(
     const std::string& name)
 {
     throw std::runtime_error{"Not implemented yet"};
 }
 
-stdx::optional<track> engine_database_impl::track_by_id(int64_t id)
+stdx::optional<track> database_impl::track_by_id(int64_t id)
 {
     throw std::runtime_error{"Not implemented yet"};
 }
 
-std::vector<track> engine_database_impl::tracks()
+std::vector<track> database_impl::tracks()
 {
     throw std::runtime_error{"Not implemented yet"};
 }
 
-std::vector<track> engine_database_impl::tracks_by_relative_path(
+std::vector<track> database_impl::tracks_by_relative_path(
     const std::string& relative_path)
 {
     throw std::runtime_error{"Not implemented yet"};
 }
 
-std::string engine_database_impl::uuid()
+std::string database_impl::uuid()
 {
     throw std::runtime_error{"Not implemented yet"};
 }
 
-std::string engine_database_impl::version_name()
+std::string database_impl::version_name()
 {
     return storage_->version.name;
 }
