@@ -45,5 +45,4 @@ inline int64_t required_waveform_samples_per_entry(double sample_rate)
     return waveform_quantisation_number(sample_rate);
 }
 
-
 }  // namespace djinterop::engine::util

@@ -17,17 +17,20 @@
 
 #pragma once
 
+#include <memory>
+
 #include <sqlite_modern_cpp.h>
 
+#include <djinterop/engine/v2/engine_library.hpp>
+
 #include "../../impl/database_impl.hpp"
-#include "engine_storage.hpp"
 
 namespace djinterop::engine::v2
 {
 class database_impl : public djinterop::database_impl
 {
 public:
-    explicit database_impl(std::shared_ptr<engine_storage> storage);
+    explicit database_impl(std::shared_ptr<engine_library> library);
 
     transaction_guard begin_transaction() override;
     stdx::optional<djinterop::crate> crate_by_id(int64_t id) override;
@@ -51,7 +54,7 @@ public:
     std::string version_name() override;
 
 private:
-    std::shared_ptr<engine_storage> storage_;
+    std::shared_ptr<engine_library> library_;
 };
 
 }  // namespace djinterop::engine::v2

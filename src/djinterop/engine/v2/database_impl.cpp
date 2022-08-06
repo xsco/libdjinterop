@@ -23,12 +23,12 @@
 
 #include "../../util.hpp"
 #include "../schema/schema.hpp"
-#include "engine_storage.hpp"
+#include "engine_library_context.hpp"
 
 namespace djinterop::engine::v2
 {
-database_impl::database_impl(std::shared_ptr<engine_storage> storage) :
-    storage_{std::move(storage)}
+database_impl::database_impl(std::shared_ptr<engine_library> library) :
+    library_{std::move(library)}
 {
 }
 
@@ -64,12 +64,12 @@ track database_impl::create_track(const track_snapshot& snapshot)
 
 std::string database_impl::directory()
 {
-    return storage_->directory;
+    return library_->directory();
 }
 
 void database_impl::verify()
 {
-    storage_->verify();
+    library_->verify();
 }
 
 void database_impl::remove_crate(crate cr)
@@ -87,8 +87,7 @@ std::vector<crate> database_impl::root_crates()
     throw std::runtime_error{"Not implemented yet"};
 }
 
-stdx::optional<crate> database_impl::root_crate_by_name(
-    const std::string& name)
+stdx::optional<crate> database_impl::root_crate_by_name(const std::string& name)
 {
     throw std::runtime_error{"Not implemented yet"};
 }
@@ -116,7 +115,7 @@ std::string database_impl::uuid()
 
 std::string database_impl::version_name()
 {
-    return storage_->version.name;
+    return library_->version().name;
 }
 
 }  // namespace djinterop::engine::v2

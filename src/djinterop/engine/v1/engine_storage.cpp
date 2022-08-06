@@ -32,7 +32,7 @@ namespace
 {
 sqlite::database make_attached_db(const std::string& directory, bool must_exist)
 {
-    if (!dir_exists(directory))
+    if (!path_exists(directory))
     {
         if (must_exist)
         {

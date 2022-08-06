@@ -29,10 +29,7 @@ namespace djinterop
 {
 /**
  * The `pad_color` struct holds information about the color that a given
- * hot cue / loop / etc. pad on the Denon SC5000 prime deck may be lit up as.
- *
- * Note that the alpha channel is typically not used, and is usually set to
- * full brightness.
+ * hot cue / loop / etc. pad may be lit up as.
  */
 struct pad_color
 {

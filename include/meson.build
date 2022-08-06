@@ -20,6 +20,20 @@ djinterop_engine_header_files = [
     'djinterop/engine/engine.hpp',
     'djinterop/engine/engine_version.hpp',
 ]
+djinterop_engine_v2_header_files = [
+    'djinterop/engine/v2/beat_data_blob.hpp',
+    'djinterop/engine/v2/change_log_table.hpp',
+    'djinterop/engine/v2/engine_library.hpp',
+    'djinterop/engine/v2/information_table.hpp',
+    'djinterop/engine/v2/loops_blob.hpp',
+    'djinterop/engine/v2/overview_waveform_data_blob.hpp',
+    'djinterop/engine/v2/playlist_entity_table.hpp',
+    'djinterop/engine/v2/playlist_table.hpp',
+    'djinterop/engine/v2/quick_cues_blob.hpp',
+    'djinterop/engine/v2/track_data_blob.hpp',
+    'djinterop/engine/v2/track_table.hpp',
+]
 
 install_headers(djinterop_header_files, subdir: 'djinterop')
 install_headers(djinterop_engine_header_files, subdir: 'djinterop/engine')
+install_headers(djinterop_engine_v2_header_files, subdir: 'djinterop/engine/v2')

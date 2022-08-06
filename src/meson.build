@@ -20,8 +20,18 @@ sources = [
     'djinterop/engine/v1/engine_track_impl.cpp',
     'djinterop/engine/v1/engine_transaction_guard_impl.cpp',
     'djinterop/engine/v1/performance_data_format.cpp',
+    'djinterop/engine/v2/beat_data_blob.cpp',
+    'djinterop/engine/v2/change_log_table.cpp',
     'djinterop/engine/v2/database_impl.cpp',
-    'djinterop/engine/v2/engine_storage.cpp',
+    'djinterop/engine/v2/engine_library.cpp',
+    'djinterop/engine/v2/information_table.cpp',
+    'djinterop/engine/v2/loops_blob.cpp',
+    'djinterop/engine/v2/overview_waveform_data_blob.cpp',
+    'djinterop/engine/v2/playlist_table.cpp',
+    'djinterop/engine/v2/playlist_entity_table.cpp',
+    'djinterop/engine/v2/quick_cues_blob.cpp',
+    'djinterop/engine/v2/track_data_blob.cpp',
+    'djinterop/engine/v2/track_table.cpp',
     'djinterop/engine/v2/track_impl.cpp',
     'djinterop/crate.cpp',
     'djinterop/database.cpp',
@@ -35,7 +45,14 @@ sources = [
 ]
 
 # Dependencies required by the main library.
-core_deps = [thread_dep, dl_dep, zlib_dep, sqlite3_dep, sqlite_modern_cpp_dep]
+core_deps = [
+    thread_dep,
+    dl_dep,
+    zlib_dep,
+    sqlite3_dep,
+    sqlite_modern_cpp_dep,
+    date_dep
+]
 
 # Set a compile-time definition that we are building the libdjinterop source.
 # This information is needed in `config.hpp` to determine whether public symbols

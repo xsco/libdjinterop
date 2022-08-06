@@ -34,10 +34,8 @@ using std::chrono::milliseconds;
 using std::chrono::seconds;
 using std::chrono::system_clock;
 
-track_impl::track_impl(
-    std::shared_ptr<engine_storage> storage, int64_t id) :
-    djinterop::track_impl{id},
-    storage_{std::move(storage)}
+track_impl::track_impl(std::shared_ptr<engine_library> library, int64_t id) :
+    djinterop::track_impl{id}, library_{std::move(library)}
 {
 }
 
@@ -45,7 +43,7 @@ track_snapshot track_impl::snapshot() const
 {
     track_snapshot snapshot{id()};
 
-    //TODO
+    // TODO
     throw std::runtime_error{"snapshot() - Not yet implemented"};
 
     return snapshot;
@@ -66,169 +64,169 @@ void track_impl::update(const track_snapshot& snapshot)
             "which is required on any track"};
     }
 
-    //TODO
+    // TODO
     throw std::runtime_error{"update() - Not yet implemented"};
 }
 
 std::vector<beatgrid_marker> track_impl::adjusted_beatgrid()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"adjusted_beatgrid() - Not yet implemented"};
 }
 
 void track_impl::set_adjusted_beatgrid(std::vector<beatgrid_marker> beatgrid)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_adjusted_beatgrid() - Not yet implemented"};
 }
 
 double track_impl::adjusted_main_cue()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"adjusted_main_cue() - Not yet implemented"};
 }
 
 void track_impl::set_adjusted_main_cue(double sample_offset)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_adjusted_main_cue() - Not yet implemented"};
 }
 
 stdx::optional<std::string> track_impl::album()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"album() - Not yet implemented"};
 }
 
 void track_impl::set_album(stdx::optional<std::string> album)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_album() - Not yet implemented"};
 }
 
 stdx::optional<int64_t> track_impl::album_art_id()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"album_art_id() - Not yet implemented"};
 }
 
 void track_impl::set_album_art_id(stdx::optional<int64_t> album_art_id)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_album_art_id() - Not yet implemented"};
 }
 
 stdx::optional<std::string> track_impl::artist()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"artist() - Not yet implemented"};
 }
 
 void track_impl::set_artist(stdx::optional<std::string> artist)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_artist() - Not yet implemented"};
 }
 
 stdx::optional<double> track_impl::average_loudness()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"average_loudness() - Not yet implemented"};
 }
 
-void track_impl::set_average_loudness(
-    stdx::optional<double> average_loudness)
+void track_impl::set_average_loudness(stdx::optional<double> average_loudness)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_average_loudness() - Not yet implemented"};
 }
 
 stdx::optional<int64_t> track_impl::bitrate()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"bitrate() - Not yet implemented"};
 }
 
 void track_impl::set_bitrate(stdx::optional<int64_t> bitrate)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_bitrate() - Not yet implemented"};
 }
 
 stdx::optional<double> track_impl::bpm()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"bpm() - Not yet implemented"};
 }
 
 void track_impl::set_bpm(stdx::optional<double> bpm)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_bpm() - Not yet implemented"};
 }
 
 stdx::optional<std::string> track_impl::comment()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"comment() - Not yet implemented"};
 }
 
 void track_impl::set_comment(stdx::optional<std::string> comment)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_comment() - Not yet implemented"};
 }
 
 stdx::optional<std::string> track_impl::composer()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"composer() - Not yet implemented"};
 }
 
 void track_impl::set_composer(stdx::optional<std::string> composer)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_composer() - Not yet implemented"};
 }
 
 database track_impl::db()
 {
-    return database{std::make_shared<database_impl>(storage_)};
+    // TODO
+    throw std::runtime_error{"db() - Not yet implemented"};
 }
 
 std::vector<crate> track_impl::containing_crates()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"containing_crates() - Not yet implemented"};
 }
 
 std::vector<beatgrid_marker> track_impl::default_beatgrid()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"default_beatgrid() - Not yet implemented"};
 }
 
 void track_impl::set_default_beatgrid(std::vector<beatgrid_marker> beatgrid)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_default_beatgrid() - Not yet implemented"};
 }
 
 double track_impl::default_main_cue()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"default_main_cue() - Not yet implemented"};
 }
 
 void track_impl::set_default_main_cue(double sample_offset)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_default_main_cue() - Not yet implemented"};
 }
 
 stdx::optional<milliseconds> track_impl::duration()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"duration() - Not yet implemented"};
 }
 
@@ -246,233 +244,233 @@ std::string track_impl::filename()
 
 stdx::optional<std::string> track_impl::genre()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"genre() - Not yet implemented"};
 }
 
 void track_impl::set_genre(stdx::optional<std::string> genre)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_genre() - Not yet implemented"};
 }
 
 stdx::optional<hot_cue> track_impl::hot_cue_at(int32_t index)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"hot_cue_at() - Not yet implemented"};
 }
 
 void track_impl::set_hot_cue_at(int32_t index, stdx::optional<hot_cue> cue)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_hot_cue_at() - Not yet implemented"};
 }
 
 std::array<stdx::optional<hot_cue>, 8> track_impl::hot_cues()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"hot_cues() - Not yet implemented"};
 }
 
 void track_impl::set_hot_cues(std::array<stdx::optional<hot_cue>, 8> cues)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_hot_cues() - Not yet implemented"};
 }
 
 stdx::optional<track_import_info> track_impl::import_info()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"import_info() - Not yet implemented"};
 }
 
 void track_impl::set_import_info(
     const stdx::optional<track_import_info>& import_info)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_import_info() - Not yet implemented"};
 }
 
 bool track_impl::is_valid()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"is_valid() - Not yet implemented"};
 }
 
 stdx::optional<musical_key> track_impl::key()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"key() - Not yet implemented"};
 }
 
 void track_impl::set_key(stdx::optional<musical_key> key)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_key() - Not yet implemented"};
 }
 
 stdx::optional<system_clock::time_point> track_impl::last_accessed_at()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"last_accessed_at() - Not yet implemented"};
 }
 
 void track_impl::set_last_accessed_at(
     stdx::optional<system_clock::time_point> accessed_at)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_last_accessed_at() - Not yet implemented"};
 }
 
 stdx::optional<system_clock::time_point> track_impl::last_modified_at()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"last_modified_at() - Not yet implemented"};
 }
 
 void track_impl::set_last_modified_at(
     stdx::optional<system_clock::time_point> modified_at)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_last_modified_at() - Not yet implemented"};
 }
 
 stdx::optional<system_clock::time_point> track_impl::last_played_at()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"last_played_at() - Not yet implemented"};
 }
 
 void track_impl::set_last_played_at(
     stdx::optional<system_clock::time_point> played_at)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_last_played_at() - Not yet implemented"};
 }
 
 stdx::optional<loop> track_impl::loop_at(int32_t index)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"loop_at() - Not yet implemented"};
 }
 
 void track_impl::set_loop_at(int32_t index, stdx::optional<loop> l)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_loop_at() - Not yet implemented"};
 }
 
 std::array<stdx::optional<loop>, 8> track_impl::loops()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"loops() - Not yet implemented"};
 }
 
 void track_impl::set_loops(std::array<stdx::optional<loop>, 8> cues)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_loops() - Not yet implemented"};
 }
 
 std::vector<waveform_entry> track_impl::overview_waveform()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"overview_waveform() - Not yet implemented"};
 }
 
 stdx::optional<std::string> track_impl::publisher()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"publisher() - Not yet implemented"};
 }
 
 void track_impl::set_publisher(stdx::optional<std::string> publisher)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_publisher() - Not yet implemented"};
 }
 
 stdx::optional<int32_t> track_impl::rating()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"rating() - Not yet implemented"};
 }
 
 void track_impl::set_rating(stdx::optional<int32_t> rating)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_rating() - Not yet implemented"};
 }
 
 std::string track_impl::relative_path()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"relative_path() - Not yet implemented"};
 }
 
 void track_impl::set_relative_path(std::string relative_path)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_relative_path() - Not yet implemented"};
 }
 
 stdx::optional<sampling_info> track_impl::sampling()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"sampling() - Not yet implemented"};
 }
 
 void track_impl::set_sampling(stdx::optional<sampling_info> sampling)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_sampling() - Not yet implemented"};
 }
 
 stdx::optional<std::string> track_impl::title()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"title() - Not yet implemented"};
 }
 
 void track_impl::set_title(stdx::optional<std::string> title)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_title() - Not yet implemented"};
 }
 
 stdx::optional<int32_t> track_impl::track_number()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"track_number() - Not yet implemented"};
 }
 
 void track_impl::set_track_number(stdx::optional<int32_t> track_number)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_track_number() - Not yet implemented"};
 }
 
 std::vector<waveform_entry> track_impl::waveform()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"waveform() - Not yet implemented"};
 }
 
 void track_impl::set_waveform(std::vector<waveform_entry> waveform)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_waveform() - Not yet implemented"};
 }
 
 stdx::optional<int32_t> track_impl::year()
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"year() - Not yet implemented"};
 }
 
 void track_impl::set_year(stdx::optional<int32_t> year)
 {
-    //TODO
+    // TODO
     throw std::runtime_error{"set_year() - Not yet implemented"};
 }
 
