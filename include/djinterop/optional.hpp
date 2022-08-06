@@ -19,6 +19,10 @@
 #ifndef DJINTEROP_OPTIONAL_HPP
 #define DJINTEROP_OPTIONAL_HPP
 
+#if __cplusplus < 201703L
+#error This library needs at least a C++17 compliant compiler
+#endif
+
 #include <djinterop/config.hpp>
 
 #if defined DJINTEROP_STD_OPTIONAL

@@ -38,29 +38,6 @@ using std::chrono::system_clock;
 
 namespace
 {
-// TODO (mr-smidge): consider moving anon namespace below into track_utils.hpp
-stdx::optional<system_clock::time_point> to_time_point(
-    stdx::optional<int64_t> timestamp)
-{
-    stdx::optional<system_clock::time_point> result;
-    if (timestamp)
-    {
-        result = system_clock::time_point{seconds(*timestamp)};
-    }
-    return result;
-}
-
-stdx::optional<int64_t> to_timestamp(
-    stdx::optional<system_clock::time_point> time)
-{
-    stdx::optional<int64_t> result;
-    if (time)
-    {
-        result = duration_cast<seconds>(time->time_since_epoch()).count();
-    }
-    return result;
-}
-
 /// Calculate the samples-per-entry in an overview waveform.
 ///
 /// An overview waveform always has 1024 entries, and the number of samples

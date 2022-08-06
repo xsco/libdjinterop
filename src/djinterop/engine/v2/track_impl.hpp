@@ -28,7 +28,7 @@
 #include <djinterop/track_snapshot.hpp>
 
 #include "../../impl/track_impl.hpp"
-#include "engine_storage.hpp"
+#include "engine_library_context.hpp"
 
 namespace djinterop
 {
@@ -41,7 +41,7 @@ namespace engine::v2
 class track_impl : public djinterop::track_impl
 {
 public:
-    track_impl(std::shared_ptr<engine_storage> storage, int64_t id);
+    track_impl(std::shared_ptr<engine_library> library, int64_t id);
 
     track_snapshot snapshot() const override;
 
@@ -126,7 +126,7 @@ public:
     void set_year(stdx::optional<int32_t> year) override;
 
 private:
-    std::shared_ptr<engine_storage> storage_;
+    std::shared_ptr<engine_library> library_;
 };
 
 }  // namespace engine::v1

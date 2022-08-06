@@ -44,6 +44,8 @@ sqlite_modern_cpp_dep = declare_dependency(
     dependencies: [sqlite3_dep],
     include_directories: 'ext/sqlite_modern_cpp')
 
+date_dep = declare_dependency(include_directories: 'ext/date')
+
 inc = include_directories('include')
 
 subdir('include')

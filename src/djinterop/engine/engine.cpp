@@ -15,18 +15,19 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <djinterop/engine/engine.hpp>
+
 #include <cmath>
 #include <fstream>
 #include <string>
 
-#include <djinterop/djinterop.hpp>
+#include <djinterop/engine/v2/engine_library.hpp>
 
 #include "../util.hpp"
 #include "schema/schema.hpp"
 #include "track_utils.hpp"
 #include "v1/engine_database_impl.hpp"
 #include "v1/engine_transaction_guard_impl.hpp"
-#include "v2/database_impl.hpp"
 
 namespace djinterop::engine
 {
@@ -53,7 +54,7 @@ inline djinterop::stdx::optional<std::string> get_column_type(
 
 engine_version detect_version(const std::string& directory)
 {
-    if (!dir_exists(directory))
+    if (!path_exists(directory))
     {
         throw database_not_found{directory};
     }
@@ -111,8 +112,8 @@ database create_database(
 {
     if (version.version.maj >= 2)
     {
-        auto storage = v2::engine_storage::create(directory, version);
-        return database{std::make_shared<v2::database_impl>(storage)};
+        auto library = v2::engine_library::create(directory, version);
+        return library.make_database();
     }
 
     auto storage = v1::engine_storage::create(directory, version);
@@ -123,8 +124,8 @@ database create_temporary_database(const engine_version& version)
 {
     if (version.version.maj >= 2)
     {
-        auto storage = v2::engine_storage::create_temporary(version);
-        return database{std::make_shared<v2::database_impl>(storage)};
+        auto library = v2::engine_library::create_temporary(version);
+        return library.make_database();
     }
 
     auto storage = v1::engine_storage::create_temporary(version);
@@ -190,8 +191,9 @@ database load_database(const std::string& directory)
     auto version = detect_version(directory);
     if (version.version.maj >= 2)
     {
-        auto storage = std::make_shared<v2::engine_storage>(directory, version);
-        return database{std::make_shared<v2::database_impl>(storage)};
+        // TODO(mr-smidge) inefficiency as construction reads the version again.
+        auto library = v2::engine_library{directory};
+        return library.make_database();
     }
 
     auto storage = std::make_shared<v1::engine_storage>(directory, version);

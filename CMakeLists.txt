@@ -70,8 +70,18 @@ add_library(
     src/djinterop/engine/v1/engine_track_impl.cpp
     src/djinterop/engine/v1/engine_transaction_guard_impl.cpp
     src/djinterop/engine/v1/performance_data_format.cpp
+    src/djinterop/engine/v2/beat_data_blob.cpp
+    src/djinterop/engine/v2/change_log_table.cpp
     src/djinterop/engine/v2/database_impl.cpp
-    src/djinterop/engine/v2/engine_storage.cpp
+    src/djinterop/engine/v2/engine_library.cpp
+    src/djinterop/engine/v2/information_table.cpp
+    src/djinterop/engine/v2/loops_blob.cpp
+    src/djinterop/engine/v2/overview_waveform_data_blob.cpp
+    src/djinterop/engine/v2/playlist_table.cpp
+    src/djinterop/engine/v2/playlist_entity_table.cpp
+    src/djinterop/engine/v2/quick_cues_blob.cpp
+    src/djinterop/engine/v2/track_data_blob.cpp
+    src/djinterop/engine/v2/track_table.cpp
     src/djinterop/engine/v2/track_impl.cpp
     src/djinterop/crate.cpp
     src/djinterop/database.cpp
@@ -111,6 +121,7 @@ target_include_directories(
         DjInterop PRIVATE
         ${ZLIB_INCLUDE_DIRS}
         ext/sqlite_modern_cpp
+        ext/date
         src)
 
 target_link_libraries(
@@ -171,6 +182,19 @@ install(FILES
     include/djinterop/engine/engine.hpp
     include/djinterop/engine/engine_version.hpp
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/engine")
+install(FILES
+    include/djinterop/engine/v2/beat_data_blob.hpp
+    include/djinterop/engine/v2/change_log_table.hpp
+    include/djinterop/engine/v2/engine_library.hpp
+    include/djinterop/engine/v2/information_table.hpp
+    include/djinterop/engine/v2/loops_blob.hpp
+    include/djinterop/engine/v2/overview_waveform_data_blob.hpp
+    include/djinterop/engine/v2/playlist_entity_table.hpp
+    include/djinterop/engine/v2/playlist_table.hpp
+    include/djinterop/engine/v2/quick_cues_blob.hpp
+    include/djinterop/engine/v2/track_data_blob.hpp
+    include/djinterop/engine/v2/track_table.hpp
+    DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/engine/v2")
 
 
 if (UNIX)

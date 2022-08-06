@@ -27,6 +27,8 @@
 #include <direct.h>
 #endif
 
+#include <date.h>
+
 #include <djinterop/optional.hpp>
 
 namespace djinterop
@@ -43,10 +45,10 @@ void create_dir(const std::string& directory)
     }
 }
 
-bool dir_exists(const std::string& directory)
+bool path_exists(const std::string& directory)
 {
     struct stat buf;
-    return stat(directory.c_str(), &buf) == 0;
+    return (stat(directory.c_str(), &buf) == 0);
 }
 
 int64_t generate_random_int64()
@@ -104,6 +106,21 @@ stdx::optional<std::string> get_file_extension(const std::string& file_path)
         file_extension = filename.substr(dot_pos + 1);
     }
     return file_extension;
+}
+
+std::chrono::system_clock::time_point parse_iso8601(const std::string& save)
+{
+    std::istringstream in{save};
+    date::sys_time<std::chrono::seconds> tp;
+    in >> date::parse("%FT%TZ", tp);
+    if (in.fail())
+    {
+        in.clear();
+        in.exceptions(std::ios::failbit);
+        in.str(save);
+        in >> date::parse("%FT%T", tp);
+    }
+    return tp;
 }
 
 }  // namespace djinterop

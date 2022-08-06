@@ -106,13 +106,25 @@ constexpr const engine_version os_2_0_0{
     semantic_version{2, 0, 0}, engine_database_type::os,
     "Engine DJ OS 2.0.0", semantic_version{2, 18, 0}};
 
-/// Set of available schemas.
+/// Set of available versions.
 constexpr const std::array<engine_version, 11> all_versions{
     os_1_0_0, os_1_0_3, desktop_1_1_1, os_1_2_0,      os_1_2_2, desktop_1_2_2,
     os_1_3_1, os_1_4_0, os_1_5_1,      desktop_1_5_1, os_1_6_0};
 
+/// Set of available V1 versions.
+constexpr const std::array<engine_version, 11> all_v1_versions{
+    os_1_0_0, os_1_0_3, desktop_1_1_1, os_1_2_0,      os_1_2_2, desktop_1_2_2,
+    os_1_3_1, os_1_4_0, os_1_5_1,      desktop_1_5_1, os_1_6_0};
+
+/// Set of available V2 versions.
+constexpr const std::array<engine_version, 2> all_v2_versions{
+    desktop_2_0_0, os_2_0_0};
+
 /// The most recent version supported by the library.
 constexpr engine_version latest = os_1_6_0;
+
+/// The most recent V2 version supported by the library.
+constexpr engine_version latest_v2 = os_2_0_0;
 
 /// The most recent OS-type version supported by the library.
 constexpr engine_version latest_os = os_1_6_0;
@@ -138,7 +150,7 @@ constexpr const char* default_database_dir_name = "Engine Library";
 /// The `unsupported_engine_database` exception is thrown when an Engine
 /// database schema version is encountered that is not yet supported by this
 /// version of the library.
-class unsupported_engine_database : public unsupported_database
+class DJINTEROP_PUBLIC unsupported_engine_database : public unsupported_database
 {
 public:
     explicit unsupported_engine_database(const semantic_version& version)
