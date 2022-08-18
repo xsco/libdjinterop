@@ -32,7 +32,8 @@ std::vector<char> quick_cues_blob::to_blob() const
         { return x + (quick_cue ? quick_cue->label.length() : 0); });
 
     // Work out total length of all cue labels.
-    std::vector<char> uncompressed(129 + total_label_length);
+    std::vector<char> uncompressed(
+        25 + (13 * quick_cues.size()) + total_label_length);
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();
 

@@ -239,9 +239,9 @@ if (Boost_FOUND)
     set(TESTDATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/testdata")
     add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
 
-    function(add_djinterop_test test_name)
+    function(add_djinterop_test test_dir test_name)
         add_executable(${test_name} EXCLUDE_FROM_ALL
-                test/engine/${test_name}.cpp)
+                test/djinterop/${test_dir}${test_name}.cpp)
         target_compile_definitions(${test_name} PUBLIC
                 -DTESTDATA_DIR=${TESTDATA_DIR})
         target_include_directories(${test_name} PUBLIC
@@ -255,12 +255,13 @@ if (Boost_FOUND)
         add_dependencies(check ${test_name})
     endfunction()
 
-    add_djinterop_test(crate_test)
-    add_djinterop_test(database_test)
-    add_djinterop_test(engine_test)
-    add_djinterop_test(semantic_version_test)
-    add_djinterop_test(track_test)
-    add_djinterop_test(track_snapshot_test)
+    add_djinterop_test("" semantic_version_test)
+    add_djinterop_test(engine/ crate_test)
+    add_djinterop_test(engine/ database_test)
+    add_djinterop_test(engine/ engine_test)
+    add_djinterop_test(engine/ track_test)
+    add_djinterop_test(engine/ track_snapshot_test)
+    add_djinterop_test(engine/v2/ track_table_test)
 
 else()
     message(STATUS "Unit tests not available, as Boost cannot be found")
