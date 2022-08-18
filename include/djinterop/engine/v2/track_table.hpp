@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 
+#include <djinterop/config.hpp>
 #include <djinterop/engine/v2/beat_data_blob.hpp>
 #include <djinterop/engine/v2/loops_blob.hpp>
 #include <djinterop/engine/v2/overview_waveform_data_blob.hpp>
@@ -37,10 +38,24 @@ namespace djinterop::engine::v2
 {
 struct engine_library_context;
 
+/// Thrown when the id on a track row is in an erroneous state for a given
+/// operation.
+struct DJINTEROP_PUBLIC track_row_id_error : public std::runtime_error
+{
+public:
+    explicit track_row_id_error(const std::string& what_arg) noexcept
+        : runtime_error{what_arg}
+    {
+    }
+};
+
 /// Represents a row in the `Track` table.
-struct track_row
+struct DJINTEROP_PUBLIC track_row
 {
     /// Auto-generated id column.
+    ///
+    /// A value of `0` can be used to indicate track row that is not yet
+    /// persisted in the table, e.g. when adding a new row.
     int64_t id;
 
     /// Play order.
@@ -195,7 +210,7 @@ struct track_row
 };
 
 /// Represents the `Track` table in an Engine v2 database.
-class track_table
+class DJINTEROP_PUBLIC track_table
 {
 public:
     /// Construct an instance of the class using an Engine library context.
@@ -203,11 +218,22 @@ public:
     /// \param context Engine library context.
     explicit track_table(std::shared_ptr<engine_library_context> context);
 
+    /// Add a track row to the table.
+    ///
+    /// \param row Track row to add.
+    /// \return Returns the id of the newly-added track row.
+    int64_t add(const track_row& row);
+
     /// Get an entire track row.
     ///
     /// \param id Id of track.
     /// \return Returns a track row, or none if not found.
     djinterop::stdx::optional<track_row> get(int64_t id);
+
+    /// Update an existing track row in the table.
+    ///
+    /// \param row Track row to update.
+    void update(const track_row& row);
 
 private:
     std::shared_ptr<engine_library_context> context_;

@@ -28,11 +28,11 @@ std::vector<char> loops_blob::to_blob() const
 {
     auto total_label_length = std::accumulate(
         loops.begin(), loops.end(), int64_t{0},
-        [](int64_t x, const stdx::optional<loop_blob>& loop) {
-          return x + (loop ? loop->label.length() : 0);
-        });
+        [](int64_t x, const stdx::optional<loop_blob>& loop)
+        { return x + (loop ? loop->label.length() : 0); });
 
-    std::vector<char> uncompressed(192 + total_label_length);
+    std::vector<char> uncompressed(
+        8 + (23 * loops.size()) + total_label_length);
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();
 

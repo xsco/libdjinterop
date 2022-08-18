@@ -30,7 +30,7 @@
 #include <djinterop/track.hpp>
 #include <djinterop/track_snapshot.hpp>
 
-#include "temporary_directory.hpp"
+#include "../temporary_directory.hpp"
 
 #define STRINGIFY(x) STRINGIFY_(x)
 #define STRINGIFY_(x) #x

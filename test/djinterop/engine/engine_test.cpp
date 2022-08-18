@@ -21,7 +21,7 @@
 
 #include <djinterop/engine/engine.hpp>
 
-#include "temporary_directory.hpp"
+#include "../temporary_directory.hpp"
 
 namespace utf = boost::unit_test;
 namespace e = djinterop::engine;

@@ -28,7 +28,7 @@
 #include <djinterop/engine/engine.hpp>
 #include <djinterop/track_snapshot.hpp>
 
-#include "boost_test_utils.hpp"
+#include "../boost_test_utils.hpp"
 #include "example_track_data.hpp"
 
 #define STRINGIFY(x) STRINGIFY_(x)

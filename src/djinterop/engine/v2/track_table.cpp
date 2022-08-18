@@ -32,6 +32,78 @@ track_table::track_table(std::shared_ptr<engine_library_context> context) :
 {
 }
 
+int64_t track_table::add(const track_row& row)
+{
+    if (row.id != 0)
+    {
+        throw track_row_id_error{
+            "The provided track row already pertains to a persisted track, "
+            "and so it cannot be created again"};
+    }
+
+    context_->db << "INSERT INTO Track ("
+                    "playOrder, length, bpm, year, "
+                    "path, filename, bitrate, bpmAnalyzed, "
+                    "albumArtId, fileBytes, title, "
+                    "artist, album, genre, comment, "
+                    "label, composer, remixer, key, "
+                    "rating, albumArt, "
+                    "timeLastPlayed, isPlayed, "
+                    "fileType, isAnalyzed, "
+                    "dateCreated, "
+                    "dateAdded, isAvailable, "
+                    "isMetadataOfPackedTrackChanged, "
+                    "playedIndicator, isMetadataImported, "
+                    "pdbImportKey, streamingSource, uri, "
+                    "isBeatGridLocked, originDatabaseUuid, "
+                    "originTrackId, trackData, "
+                    "overviewWaveFormData, "
+                    "beatData, quickCues, "
+                    "loops, thirdPartySourceId, "
+                    "streamingFlags, explicitLyrics) "
+                    "VALUES ("
+                    "?, ?, ?, ?, "
+                    "?, ?, ?, ?, "
+                    "?, ?, ?, "
+                    "?, ?, ?, ?, "
+                    "?, ?, ?, ?, "
+                    "?, ?, "
+                    "?, ?, "
+                    "?, ?, "
+                    "?, "
+                    "?, ?, "
+                    "?, "
+                    "?, ?, "
+                    "?, ?, ?, "
+                    "?, ?, "
+                    "?, ?, "
+                    "?, "
+                    "?, ?, "
+                    "?, ?, "
+                    "?, ?)"
+                 << row.play_order << row.length << row.bpm << row.year
+                 << row.path << row.filename << row.bitrate << row.bpm_analyzed
+                 << row.album_art_id << row.file_bytes << row.title
+                 << row.artist << row.album << row.genre << row.comment
+                 << row.label << row.composer << row.remixer << row.key
+                 << row.rating << row.album_art
+                 << to_timestamp(row.time_last_played) << row.is_played
+                 << row.file_type << row.is_analyzed
+                 << to_timestamp(row.date_created)
+                 << to_timestamp(row.date_added) << row.is_available
+                 << row.is_metadata_of_packed_track_changed
+                 << row.played_indicator << row.is_metadata_imported
+                 << row.pdb_import_key << row.streaming_source << row.uri
+                 << row.is_beat_grid_locked << row.origin_database_uuid
+                 << row.origin_track_id << row.track_data.to_blob()
+                 << row.overview_waveform_data.to_blob()
+                 << row.beat_data.to_blob() << row.quick_cues.to_blob()
+                 << row.loops.to_blob() << row.third_party_source_id
+                 << row.streaming_flags << row.explicit_lyrics;
+
+    return context_->db.last_insert_rowid();
+}
+
 djinterop::stdx::optional<track_row> track_table::get(int64_t id)
 {
     djinterop::stdx::optional<track_row> result;
@@ -133,6 +205,56 @@ djinterop::stdx::optional<track_row> track_table::get(int64_t id)
     };
 
     return result;
+}
+
+void track_table::update(const track_row& row)
+{
+    if (row.id == 0)
+    {
+        throw track_row_id_error{
+            "The track row to update does not contain a track id"};
+    }
+
+    context_->db << "UPDATE Track SET "
+                    "playOrder = ?, length = ?, bpm = ?, year = ?, "
+                    "path = ?, filename = ?, bitrate = ?, bpmAnalyzed = ?, "
+                    "albumArtId = ?, fileBytes = ?, title = ?, "
+                    "artist = ?, album = ?, genre = ?, comment = ?, "
+                    "label = ?, composer = ?, remixer = ?, key = ?, "
+                    "rating = ?, albumArt = ?, "
+                    "timeLastPlayed = ?, isPlayed = ?, "
+                    "fileType = ?, isAnalyzed = ?, "
+                    "dateCreated = ?, "
+                    "dateAdded = ?, isAvailable = ?, "
+                    "isMetadataOfPackedTrackChanged = ?, "
+                    "playedIndicator = ?, isMetadataImported = ?, "
+                    "pdbImportKey = ?, streamingSource = ?, uri = ?, "
+                    "isBeatGridLocked = ?, originDatabaseUuid = ?, "
+                    "originTrackId = ?, trackData = ?, "
+                    "overviewWaveFormData = ?, "
+                    "beatData = ?, quickCues = ?, "
+                    "loops = ?, thirdPartySourceId = ?, "
+                    "streamingFlags = ?, explicitLyrics = ?, "
+                    "WHERE id = ?"
+                 << row.play_order << row.length << row.bpm << row.year
+                 << row.path << row.filename << row.bitrate << row.bpm_analyzed
+                 << row.album_art_id << row.file_bytes << row.title
+                 << row.artist << row.album << row.genre << row.comment
+                 << row.label << row.composer << row.remixer << row.key
+                 << row.rating << row.album_art
+                 << to_timestamp(row.time_last_played) << row.is_played
+                 << row.file_type << row.is_analyzed
+                 << to_timestamp(row.date_created)
+                 << to_timestamp(row.date_added) << row.is_available
+                 << row.is_metadata_of_packed_track_changed
+                 << row.played_indicator << row.is_metadata_imported
+                 << row.pdb_import_key << row.streaming_source << row.uri
+                 << row.is_beat_grid_locked << row.origin_database_uuid
+                 << row.origin_track_id << row.track_data.to_blob()
+                 << row.overview_waveform_data.to_blob()
+                 << row.beat_data.to_blob() << row.quick_cues.to_blob()
+                 << row.loops.to_blob() << row.third_party_source_id
+                 << row.streaming_flags << row.explicit_lyrics << row.id;
 }
 
 }  // namespace djinterop::engine::v2
