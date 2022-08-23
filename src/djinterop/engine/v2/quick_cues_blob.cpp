@@ -41,32 +41,16 @@ std::vector<char> quick_cues_blob::to_blob() const
 
     for (auto& quick_cue : quick_cues)
     {
-        if (quick_cue)
+        ptr = encode_uint8(quick_cue.label.length(), ptr);
+        for (auto& chr : quick_cue.label)
         {
-            if (quick_cue->label.length() == 0)
-            {
-                throw std::invalid_argument{"Hot cue labels must not be empty"};
-            }
-            ptr = encode_uint8(quick_cue->label.length(), ptr);
-            for (auto& chr : quick_cue->label)
-            {
-                ptr = encode_uint8(static_cast<uint8_t>(chr), ptr);
-            }
-            ptr = encode_double_be(quick_cue->sample_offset, ptr);
-            ptr = encode_uint8(quick_cue->color.a, ptr);
-            ptr = encode_uint8(quick_cue->color.r, ptr);
-            ptr = encode_uint8(quick_cue->color.g, ptr);
-            ptr = encode_uint8(quick_cue->color.b, ptr);
+            ptr = encode_uint8(static_cast<uint8_t>(chr), ptr);
         }
-        else
-        {
-            ptr = encode_uint8(0, ptr);
-            ptr = encode_double_be(-1, ptr);
-            for (int i = 0; i < 4; ++i)
-            {
-                ptr = encode_uint8(0, ptr);
-            }
-        }
+        ptr = encode_double_be(quick_cue.sample_offset, ptr);
+        ptr = encode_uint8(quick_cue.color.a, ptr);
+        ptr = encode_uint8(quick_cue.color.r, ptr);
+        ptr = encode_uint8(quick_cue.color.g, ptr);
+        ptr = encode_uint8(quick_cue.color.b, ptr);
     }
 
     ptr = encode_double_be(adjusted_main_cue, ptr);
@@ -83,26 +67,20 @@ quick_cues_blob quick_cues_blob::from_blob(const std::vector<char>& blob)
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();
 
-    if (uncompressed.size() < 129)
+    if (uncompressed.size() < 8)
     {
         throw std::invalid_argument{
-            "Quick cues data has less than the minimum length of 129 bytes"};
+            "Quick cues data has less than the minimum length of 8 bytes"};
     }
 
-    {
-        // Check that there are exactly 8 loops
-        int64_t num_hot_cues;
-        std::tie(num_hot_cues, ptr) = decode_int64_be(ptr);
-        if (num_hot_cues != 8)
-        {
-            throw std::invalid_argument{
-                "Quick cues data has an unsupported number of cues"};
-        }
-    }
+    int64_t num_hot_cues;
+    std::tie(num_hot_cues, ptr) = decode_int64_be(ptr);
 
     quick_cues_blob result;
-    for (auto& quick_cue : result.quick_cues)
+    for (auto i = 0; i < num_hot_cues; ++i)
     {
+        quick_cue_blob quick_cue;
+
         uint8_t label_length;
         std::tie(label_length, ptr) = decode_uint8(ptr);
         if (end - ptr < 29 + label_length)  // 12 (here) + 17 (after the loop)
@@ -110,21 +88,18 @@ quick_cues_blob quick_cues_blob::from_blob(const std::vector<char>& blob)
             throw std::invalid_argument{
                 "Quick cues data has quick cue with missing data"};
         }
+
         if (label_length > 0)
         {
-            quick_cue.emplace();
-            quick_cue->label.assign(ptr, label_length);
+            quick_cue.label.assign(ptr, label_length);
             ptr += label_length;
-            std::tie(quick_cue->sample_offset, ptr) = decode_double_be(ptr);
-            std::tie(quick_cue->color.a, ptr) = decode_uint8(ptr);
-            std::tie(quick_cue->color.r, ptr) = decode_uint8(ptr);
-            std::tie(quick_cue->color.g, ptr) = decode_uint8(ptr);
-            std::tie(quick_cue->color.b, ptr) = decode_uint8(ptr);
         }
-        else
-        {
-            ptr += 12;
-        }
+
+        std::tie(quick_cue.sample_offset, ptr) = decode_double_be(ptr);
+        std::tie(quick_cue.color.a, ptr) = decode_uint8(ptr);
+        std::tie(quick_cue.color.r, ptr) = decode_uint8(ptr);
+        std::tie(quick_cue.color.g, ptr) = decode_uint8(ptr);
+        std::tie(quick_cue.color.b, ptr) = decode_uint8(ptr);
     }
 
     std::tie(result.adjusted_main_cue, ptr) = decode_double_be(ptr);

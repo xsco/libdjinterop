@@ -56,4 +56,15 @@ struct DJINTEROP_PUBLIC track_data_blob
         const std::vector<char>& blob);
 };
 
+inline bool operator==(const track_data_blob& x, const track_data_blob& y)
+{
+    return x.sample_rate == y.sample_rate && x.samples == y.samples &&
+           x.average_loudness == y.average_loudness && x.key == y.key;
+}
+
+inline bool operator!=(const track_data_blob& x, const track_data_blob& y)
+{
+    return !(x == y);
+}
+
 }  // namespace djinterop::engine::v2

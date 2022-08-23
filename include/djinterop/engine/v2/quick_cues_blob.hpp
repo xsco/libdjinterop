@@ -36,7 +36,7 @@ struct DJINTEROP_PUBLIC quick_cue_blob
     /// Label.
     std::string label;
 
-    /// Sample offset within the track.
+    /// Sample offset of cue within the track, or -1 if not set.
     double sample_offset = 0;
 
     /// Pad color.
@@ -44,13 +44,21 @@ struct DJINTEROP_PUBLIC quick_cue_blob
     /// Note that the alpha channel is typically not used, and is usually set to
     /// full brightness.
     pad_color color;
+
+    /// Create an empty quick cue blob.
+    ///
+    /// \return Returns a quick cue blob.
+    [[nodiscard]] static const quick_cue_blob empty()
+    {
+        return quick_cue_blob{"", -1, pad_color{0,0,0,0}};
+    }
 };
 
 /// Represents the quick cues blob.
 struct DJINTEROP_PUBLIC quick_cues_blob
 {
     /// List of quick cues.
-    std::vector<stdx::optional<quick_cue_blob> > quick_cues;
+    std::vector<quick_cue_blob> quick_cues;
 
     /// Adjusted main cue point.
     double adjusted_main_cue;
@@ -74,5 +82,29 @@ struct DJINTEROP_PUBLIC quick_cues_blob
     [[nodiscard]] static quick_cues_blob from_blob(
         const std::vector<char>& blob);
 };
+
+inline bool operator==(const quick_cue_blob& x, const quick_cue_blob& y)
+{
+    return x.label == y.label && x.sample_offset == y.sample_offset &&
+           x.color == y.color;
+}
+
+inline bool operator!=(const quick_cue_blob& x, const quick_cue_blob& y)
+{
+    return !(x == y);
+}
+
+inline bool operator==(const quick_cues_blob& x, const quick_cues_blob& y)
+{
+    return x.quick_cues == y.quick_cues &&
+           x.adjusted_main_cue == y.adjusted_main_cue &&
+           x.is_main_cue_adjusted == y.is_main_cue_adjusted &&
+           x.default_main_cue == y.default_main_cue;
+}
+
+inline bool operator!=(const quick_cues_blob& x, const quick_cues_blob& y)
+{
+    return !(x == y);
+}
 
 }  // namespace djinterop::engine::v2

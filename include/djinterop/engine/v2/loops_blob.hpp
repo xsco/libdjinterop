@@ -37,10 +37,10 @@ struct DJINTEROP_PUBLIC loop_blob
     /// Label.
     std::string label;
 
-    /// Sample offset of the start of the loop.
+    /// Sample offset of the start of the loop, or -1 if the loop is not set.
     double start_sample_offset;
 
-    /// Sample offset of end of the loop.
+    /// Sample offset of end of the loop, or -1 if the loop is not set.
     double end_sample_offset;
 
     /// Flag indicating whether the start of the loop is set.
@@ -51,13 +51,21 @@ struct DJINTEROP_PUBLIC loop_blob
 
     /// Pad color.
     pad_color color;
+
+    /// Create an empty loop blob.
+    ///
+    /// \return Returns a loop blob.
+    [[nodiscard]] static const loop_blob empty()
+    {
+        return loop_blob{"", -1, -1, 0, 0, pad_color{0, 0, 0, 0}};
+    }
 };
 
 /// Represents the loops blob.
 struct DJINTEROP_PUBLIC loops_blob
 {
     /// List of loops.
-    std::vector<stdx::optional<loop_blob> > loops;
+    std::vector<loop_blob> loops;
 
     /// Encode this struct into binary blob form.
     ///
@@ -68,8 +76,31 @@ struct DJINTEROP_PUBLIC loops_blob
     ///
     /// \param blob Binary blob.
     /// \return Returns a decoded instance of this struct.
-    [[nodiscard]] static loops_blob from_blob(
-            const std::vector<char>& blob);
+    [[nodiscard]] static loops_blob from_blob(const std::vector<char>& blob);
 };
+
+inline bool operator==(const loop_blob& x, const loop_blob& y)
+{
+    return x.label == y.label &&
+           x.start_sample_offset == y.start_sample_offset &&
+           x.end_sample_offset == y.end_sample_offset &&
+           x.is_start_set == y.is_start_set && x.is_end_set == y.is_end_set &&
+           x.color == y.color;
+}
+
+inline bool operator!=(const loop_blob& x, const loop_blob& y)
+{
+    return !(x == y);
+}
+
+inline bool operator==(const loops_blob& x, const loops_blob& y)
+{
+    return x.loops == y.loops;
+}
+
+inline bool operator!=(const loops_blob& x, const loops_blob& y)
+{
+    return !(x == y);
+}
 
 }  // namespace djinterop::engine::v2

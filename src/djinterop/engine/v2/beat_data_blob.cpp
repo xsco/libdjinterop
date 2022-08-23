@@ -18,6 +18,7 @@
 #include <djinterop/engine/v2/beat_data_blob.hpp>
 
 #include <cassert>
+#include <stdexcept>
 
 #include "../encode_decode_utils.hpp"
 
@@ -26,23 +27,17 @@ namespace djinterop::engine::v2
 namespace
 {
 char* encode_beatgrid(
-    const std::vector<beat_grid_marker_blob>& beatgrid, char* ptr)
+    const std::vector<beat_grid_marker_blob>& beat_grid, char* ptr)
 {
-    typedef std::vector<beat_grid_marker_blob>::size_type vec_size_t;
-    ptr = encode_int64_be(static_cast<int64_t>(beatgrid.size()), ptr);
-    for (vec_size_t i = 0; i < beatgrid.size(); ++i)
+    ptr = encode_int64_be(static_cast<int64_t>(beat_grid.size()), ptr);
+    for (auto&& marker : beat_grid)
     {
-        ptr = encode_double_le(beatgrid[i].sample_offset, ptr);
-        ptr = encode_int64_le(beatgrid[i].beat_number, ptr);
-        int32_t diff = 0;
-        if (i < beatgrid.size() - 1)
-        {
-            diff = static_cast<int32_t>(
-                beatgrid[i + 1].beat_number - beatgrid[i].beat_number);
-        }
-        ptr = encode_int32_le(diff, ptr);
-        ptr = encode_int32_le(0, ptr);  // unknown field
+        ptr = encode_double_le(marker.sample_offset, ptr);
+        ptr = encode_int64_le(marker.beat_number, ptr);
+        ptr = encode_int32_le(marker.number_of_beats, ptr);
+        ptr = encode_int32_le(marker.unknown_value_1, ptr);
     }
+
     return ptr;
 }
 
@@ -51,62 +46,21 @@ std::pair<std::vector<beat_grid_marker_blob>, const char*> decode_beatgrid(
 {
     int64_t count;
     std::tie(count, ptr) = decode_int64_be(ptr);
+    std::vector<beat_grid_marker_blob> result;
 
-    if (count == 0)
-    {
-        return {{}, ptr};
-    }
-    if (count < 2)
-    {
-        throw std::invalid_argument{
-            "Beat data grid has an invalid number of markers"};
-    }
-    if (count > 32768)
-    {
-        throw std::invalid_argument{
-            "Beat data grid has more markers than is supported"};
-    }
     if (end - ptr < 24 * count)
     {
         throw std::invalid_argument{"Beat data grid is missing data"};
     }
 
-    std::vector<beat_grid_marker_blob> result(count);
-    int32_t beats_until_next_marker;
-    typedef std::vector<beat_grid_marker_blob>::size_type vec_size_t;
-    for (vec_size_t i = 0; i < result.size(); ++i)
+    for (auto i = 0; i < count; ++i)
     {
-        std::tie(result[i].sample_offset, ptr) = decode_double_le(ptr);
-        std::tie(result[i].beat_number, ptr) = decode_int64_le(ptr);
-        if (i != 0)
-        {
-            if (result[i].beat_number <= result[i - 1].beat_number)
-            {
-                throw std::invalid_argument{
-                    "Beat data grid has unsorted indices"};
-            }
-            if (result[i].sample_offset <= result[i - 1].sample_offset)
-            {
-                throw std::invalid_argument{
-                    "Beat data grid has unsorted sample offsets"};
-            }
-            if (result[i].beat_number - result[i - 1].beat_number !=
-                beats_until_next_marker)
-            {
-                throw std::invalid_argument{
-                    "Beat data grid has conflicting markers"};
-            }
-        }
-        std::tie(result[i].number_of_beats, ptr) = decode_int32_le(ptr);
-        std::tie(result[i].unknown_value_1, ptr) = decode_int32_le(ptr);
-
-        beats_until_next_marker = result[i].number_of_beats;
-    }
-
-    if (beats_until_next_marker != 0)
-    {
-        throw std::invalid_argument{
-            "Beat data grid promised non-existent marker"};
+        beat_grid_marker_blob marker;
+        std::tie(marker.sample_offset, ptr) = decode_double_le(ptr);
+        std::tie(marker.beat_number, ptr) = decode_int64_le(ptr);
+        std::tie(marker.number_of_beats, ptr) = decode_int32_le(ptr);
+        std::tie(marker.unknown_value_1, ptr) = decode_int32_le(ptr);
+        result.push_back(marker);
     }
 
     return {std::move(result), ptr};
@@ -148,9 +102,6 @@ beat_data_blob beat_data_blob::from_blob(const std::vector<char>& blob)
     std::tie(result.sample_rate, ptr) = decode_double_be(ptr);
     std::tie(result.samples, ptr) = decode_double_be(ptr);
     std::tie(result.is_beatgrid_set, ptr) = decode_uint8(ptr);
-
-    std::vector<beat_grid_marker_blob> default_beatgrid;
-    std::vector<beat_grid_marker_blob> adjusted_beatgrid;
     std::tie(result.default_beat_grid, ptr) = decode_beatgrid(ptr, end);
     std::tie(result.adjusted_beat_grid, ptr) = decode_beatgrid(ptr, end);
 
