@@ -40,38 +40,19 @@ std::vector<char> loops_blob::to_blob() const
 
     for (auto& loop : loops)
     {
-        if (loop)
+        ptr = encode_uint8(loop.label.length(), ptr);
+        for (auto& chr : loop.label)
         {
-            if (loop->label.length() == 0)
-            {
-                throw std::logic_error{"Loop labels must not be empty"};
-            }
-            ptr = encode_uint8(loop->label.length(), ptr);
-            for (auto& chr : loop->label)
-            {
-                ptr = encode_uint8(static_cast<uint8_t>(chr), ptr);
-            }
-            ptr = encode_double_le(loop->start_sample_offset, ptr);
-            ptr = encode_double_le(loop->end_sample_offset, ptr);
-            ptr = encode_uint8(loop->is_start_set, ptr);
-            ptr = encode_uint8(loop->is_end_set, ptr);
-            ptr = encode_uint8(loop->color.a, ptr);
-            ptr = encode_uint8(loop->color.r, ptr);
-            ptr = encode_uint8(loop->color.g, ptr);
-            ptr = encode_uint8(loop->color.b, ptr);
+            ptr = encode_uint8(static_cast<uint8_t>(chr), ptr);
         }
-        else
-        {
-            ptr = encode_uint8(0, ptr);
-            ptr = encode_double_le(-1, ptr);
-            ptr = encode_double_le(-1, ptr);
-            ptr = encode_uint8(0, ptr);
-            ptr = encode_uint8(0, ptr);
-            ptr = encode_uint8(0, ptr);
-            ptr = encode_uint8(0, ptr);
-            ptr = encode_uint8(0, ptr);
-            ptr = encode_uint8(0, ptr);
-        }
+        ptr = encode_double_le(loop.start_sample_offset, ptr);
+        ptr = encode_double_le(loop.end_sample_offset, ptr);
+        ptr = encode_uint8(loop.is_start_set, ptr);
+        ptr = encode_uint8(loop.is_end_set, ptr);
+        ptr = encode_uint8(loop.color.a, ptr);
+        ptr = encode_uint8(loop.color.r, ptr);
+        ptr = encode_uint8(loop.color.g, ptr);
+        ptr = encode_uint8(loop.color.b, ptr);
     }
 
     assert(ptr == end);
@@ -86,50 +67,43 @@ loops_blob loops_blob::from_blob(const std::vector<char>& blob)
     auto ptr = blob.data();
     const auto end = ptr + blob.size();
 
-    if (blob.size() < 192)
+    if (blob.size() < 8)
     {
         throw std::invalid_argument{
-            "Loops data has less than the minimum length of 192 bytes"};
+            "Loops data has less than the minimum length of 8 bytes"};
     }
 
-    {
-        // Check that there are exactly 8 loops.
-        int64_t num_loops;
-        std::tie(num_loops, ptr) = decode_int64_le(ptr);
-        if (num_loops != 8)
-        {
-            throw std::invalid_argument{
-                "Loops data has an unsupported number of loops"};
-        }
-    }
+    int64_t num_loops;
+    std::tie(num_loops, ptr) = decode_int64_le(ptr);
 
     loops_blob result;
-    for (auto& loop : result.loops)
+    for (auto i = 0; i < num_loops; ++i)
     {
+        loop_blob loop;
+
         uint8_t label_length;
         std::tie(label_length, ptr) = decode_uint8(ptr);
         if (end - ptr < 22 + label_length)
         {
             throw std::invalid_argument{"Loop data has loop with missing data"};
         }
+
         if (label_length > 0)
         {
-            loop.emplace();
-            loop->label.assign(ptr, label_length);
+            loop.label.assign(ptr, label_length);
             ptr += label_length;
-            std::tie(loop->start_sample_offset, ptr) = decode_double_le(ptr);
-            std::tie(loop->end_sample_offset, ptr) = decode_double_le(ptr);
-            std::tie(loop->is_start_set, ptr) = decode_uint8(ptr);
-            std::tie(loop->is_end_set, ptr) = decode_uint8(ptr);
-            std::tie(loop->color.a, ptr) = decode_uint8(ptr);
-            std::tie(loop->color.r, ptr) = decode_uint8(ptr);
-            std::tie(loop->color.g, ptr) = decode_uint8(ptr);
-            std::tie(loop->color.b, ptr) = decode_uint8(ptr);
         }
-        else
-        {
-            ptr += 22;
-        }
+
+        std::tie(loop.start_sample_offset, ptr) = decode_double_le(ptr);
+        std::tie(loop.end_sample_offset, ptr) = decode_double_le(ptr);
+        std::tie(loop.is_start_set, ptr) = decode_uint8(ptr);
+        std::tie(loop.is_end_set, ptr) = decode_uint8(ptr);
+        std::tie(loop.color.a, ptr) = decode_uint8(ptr);
+        std::tie(loop.color.r, ptr) = decode_uint8(ptr);
+        std::tie(loop.color.g, ptr) = decode_uint8(ptr);
+        std::tie(loop.color.b, ptr) = decode_uint8(ptr);
+
+        result.loops.push_back(loop);
     }
 
     assert(ptr == end);

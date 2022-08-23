@@ -84,7 +84,35 @@ struct DJINTEROP_PUBLIC beat_data_blob
     /// \param blob Binary blob.
     /// \return Returns a decoded instance of this struct.
     [[nodiscard]] static beat_data_blob from_blob(
-            const std::vector<char>& blob);
+        const std::vector<char>& blob);
 };
+
+inline bool operator==(
+    const beat_grid_marker_blob& x, const beat_grid_marker_blob& y)
+{
+    return x.sample_offset == y.sample_offset &&
+           x.beat_number == y.beat_number &&
+           x.number_of_beats == y.number_of_beats &&
+           x.unknown_value_1 == y.unknown_value_1;
+}
+
+inline bool operator!=(
+    const beat_grid_marker_blob& x, const beat_grid_marker_blob& y)
+{
+    return !(x == y);
+}
+
+inline bool operator==(const beat_data_blob& x, const beat_data_blob& y)
+{
+    return x.sample_rate == y.sample_rate && x.samples == y.samples &&
+           x.is_beatgrid_set == y.is_beatgrid_set &&
+           x.default_beat_grid == y.default_beat_grid &&
+           x.adjusted_beat_grid == y.adjusted_beat_grid;
+}
+
+inline bool operator!=(const beat_data_blob& x, const beat_data_blob& y)
+{
+    return !(x == y);
+}
 
 }  // namespace djinterop::engine::v2

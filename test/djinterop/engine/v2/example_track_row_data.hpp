@@ -56,10 +56,10 @@ inline void populate_track_row(
     switch (row_type)
     {
         case example_track_row_type::minimal_1:
-            r.path = "../path/to/file.mp3";
-            r.filename = "file.mp3";
+            r.path = "../path/to/minimal_file.mp3";
+            r.filename = "minimal_file.mp3";
             r.album_art_id = 0;
-            r.file_bytes = 1048576;
+            r.file_bytes = 1024;
             r.is_played = false;
             r.is_analyzed = false;
             r.is_available = true;

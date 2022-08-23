@@ -39,7 +39,20 @@ struct DJINTEROP_PUBLIC overview_waveform_data_blob
     /// \param blob Binary blob.
     /// \return Returns a decoded instance of this struct.
     [[nodiscard]] static overview_waveform_data_blob from_blob(
-            const std::vector<char>& blob);
+        const std::vector<char>& blob);
 };
+
+inline bool operator==(
+    const overview_waveform_data_blob& x, const overview_waveform_data_blob& y)
+{
+    // TODO (mr-smidge): Not yet implemented.
+    return true;
+}
+
+inline bool operator!=(
+    const overview_waveform_data_blob& x, const overview_waveform_data_blob& y)
+{
+    return !(x == y);
+}
 
 }  // namespace djinterop::engine::v2
