@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 
+#include <djinterop/engine/v2/track_table.hpp>
 #include <djinterop/exceptions.hpp>
 #include <djinterop/optional.hpp>
 #include <djinterop/track_snapshot.hpp>
@@ -106,7 +107,7 @@ public:
     stdx::optional<loop> loop_at(int32_t index) override;
     void set_loop_at(int32_t index, stdx::optional<loop> l) override;
     std::array<stdx::optional<loop>, 8> loops() override;
-    void set_loops(std::array<stdx::optional<loop>, 8> cues) override;
+    void set_loops(std::array<stdx::optional<loop>, 8> loops) override;
     std::vector<waveform_entry> overview_waveform() override;
     stdx::optional<std::string> publisher() override;
     void set_publisher(stdx::optional<std::string> publisher) override;
@@ -127,7 +128,12 @@ public:
 
 private:
     std::shared_ptr<engine_library> library_;
+    track_table track_;
 };
 
-}  // namespace engine::v1
+track create_track(
+    const std::shared_ptr<engine_library>& library,
+    const track_snapshot& snapshot);
+
+}  // namespace engine::v2
 }  // namespace djinterop

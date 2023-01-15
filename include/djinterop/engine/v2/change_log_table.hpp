@@ -47,6 +47,16 @@ struct DJINTEROP_PUBLIC change_log_row
     int64_t track_id;
 };
 
+inline bool operator==(const change_log_row& lhs, const change_log_row& rhs)
+{
+    return std::tie(lhs.id, lhs.track_id) == std::tie(rhs.id, rhs.track_id);
+}
+
+inline bool operator!=(const change_log_row& lhs, const change_log_row& rhs)
+{
+    return !(rhs == lhs);
+}
+
 /// Represents the `ChangeLog` table in an Engine v2 database.
 class DJINTEROP_PUBLIC change_log_table
 {

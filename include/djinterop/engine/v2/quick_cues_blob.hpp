@@ -27,9 +27,14 @@
 #include <djinterop/config.hpp>
 #include <djinterop/optional.hpp>
 #include <djinterop/pad_color.hpp>
+#include <djinterop/performance_data.hpp>
 
 namespace djinterop::engine::v2
 {
+/// Sentinel value for a quick cue sample offset indicating that the quick cue
+/// is not set.
+static const double QUICK_CUE_SAMPLE_OFFSET_EMPTY = -1;
+
 /// Represents a quick cue in the quick cues blob.
 struct DJINTEROP_PUBLIC quick_cue_blob
 {
@@ -48,17 +53,32 @@ struct DJINTEROP_PUBLIC quick_cue_blob
     /// Create an empty quick cue blob.
     ///
     /// \return Returns a quick cue blob.
-    [[nodiscard]] static const quick_cue_blob empty()
+    [[nodiscard]] static quick_cue_blob empty()
     {
-        return quick_cue_blob{"", -1, pad_color{0,0,0,0}};
+        return quick_cue_blob{
+            "", QUICK_CUE_SAMPLE_OFFSET_EMPTY, pad_color{0, 0, 0, 0}};
     }
 };
+
+inline bool operator==(const quick_cue_blob& x, const quick_cue_blob& y)
+{
+    return x.label == y.label && x.sample_offset == y.sample_offset &&
+           x.color == y.color;
+}
+
+inline bool operator!=(const quick_cue_blob& x, const quick_cue_blob& y)
+{
+    return !(x == y);
+}
 
 /// Represents the quick cues blob.
 struct DJINTEROP_PUBLIC quick_cues_blob
 {
+    /// Type of collection of quick cues.
+    typedef std::vector<quick_cue_blob> quick_cue_blobs_type;
+
     /// List of quick cues.
-    std::vector<quick_cue_blob> quick_cues;
+    quick_cue_blobs_type quick_cues;
 
     /// Adjusted main cue point.
     double adjusted_main_cue;
@@ -82,17 +102,6 @@ struct DJINTEROP_PUBLIC quick_cues_blob
     [[nodiscard]] static quick_cues_blob from_blob(
         const std::vector<char>& blob);
 };
-
-inline bool operator==(const quick_cue_blob& x, const quick_cue_blob& y)
-{
-    return x.label == y.label && x.sample_offset == y.sample_offset &&
-           x.color == y.color;
-}
-
-inline bool operator!=(const quick_cue_blob& x, const quick_cue_blob& y)
-{
-    return !(x == y);
-}
 
 inline bool operator==(const quick_cues_blob& x, const quick_cues_blob& y)
 {

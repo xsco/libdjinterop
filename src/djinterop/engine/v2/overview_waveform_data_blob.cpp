@@ -17,21 +17,87 @@
 
 #include <djinterop/engine/v2/overview_waveform_data_blob.hpp>
 
+#include <cassert>
+#include <stdexcept>
+
 #include "../encode_decode_utils.hpp"
 
 namespace djinterop::engine::v2
 {
 std::vector<char> overview_waveform_data_blob::to_blob() const
 {
-    // TODO(mr-smidge) - waveforms for Engine v2 not yet implemented.
-    return {};
+    std::vector<char> uncompressed(27 + 3 * waveform_points.size());
+    auto ptr = uncompressed.data();
+    const auto end = ptr + uncompressed.size();
+
+    // Encode
+    ptr = encode_int64_be(waveform_points.size(), ptr);
+    ptr = encode_int64_be(waveform_points.size(), ptr);
+    ptr = encode_double_be(samples_per_waveform_point, ptr);
+
+    for (auto& entry : waveform_points)
+    {
+        ptr = encode_uint8(entry.low_value, ptr);
+        ptr = encode_uint8(entry.mid_value, ptr);
+        ptr = encode_uint8(entry.high_value, ptr);
+    }
+
+    ptr = encode_uint8(maximum_point.low_value, ptr);
+    ptr = encode_uint8(maximum_point.mid_value, ptr);
+    ptr = encode_uint8(maximum_point.high_value, ptr);
+    assert(ptr == end);
+
+    return zlib_compress(uncompressed);
 }
 
 overview_waveform_data_blob overview_waveform_data_blob::from_blob(
     const std::vector<char>& blob)
 {
-    // TODO(mr-smidge) - waveforms for Engine v2 not yet implemented.
-    return {};
+    const auto raw_data = zlib_uncompress(blob);
+    auto ptr = raw_data.data();
+    const auto end = ptr + raw_data.size();
+
+    if (raw_data.size() < 27)
+    {
+        throw std::invalid_argument{
+            "Overview waveform data has less than the minimum length of "
+            "27 bytes"};
+    }
+
+    // Work out how many entries we have
+    overview_waveform_data_blob result;
+    int64_t num_entries_1, num_entries_2;
+    std::tie(num_entries_1, ptr) = decode_int64_be(ptr);
+    std::tie(num_entries_2, ptr) = decode_int64_be(ptr);
+    std::tie(result.samples_per_waveform_point, ptr) = decode_double_be(ptr);
+
+    if (num_entries_1 != num_entries_2)
+    {
+        throw std::invalid_argument{
+            "Overview waveform data has conflicting length fields"};
+    }
+
+    if (end - ptr != 3 * (num_entries_1 + 1))
+    {
+        throw std::invalid_argument{
+            "High-resolution waveform data has incorrect length"};
+    }
+
+    result.waveform_points.resize(num_entries_1);
+
+    for (auto& entry : result.waveform_points)
+    {
+        std::tie(entry.low_value, ptr) = decode_uint8(ptr);
+        std::tie(entry.mid_value, ptr) = decode_uint8(ptr);
+        std::tie(entry.high_value, ptr) = decode_uint8(ptr);
+    }
+
+    std::tie(result.maximum_point.low_value, ptr) = decode_uint8(ptr);
+    std::tie(result.maximum_point.mid_value, ptr) = decode_uint8(ptr);
+    std::tie(result.maximum_point.high_value, ptr) = decode_uint8(ptr);
+    assert(ptr == end);
+
+    return result;
 }
 
 }  // namespace djinterop::engine::v2

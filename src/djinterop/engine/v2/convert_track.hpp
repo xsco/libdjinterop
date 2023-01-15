@@ -1,0 +1,157 @@
+/*
+    This file is part of libdjinterop.
+
+    libdjinterop is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    libdjinterop is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#pragma once
+
+#include <array>
+#include <chrono>
+#include <cstdint>
+
+#include <djinterop/engine/v2/track_table.hpp>
+#include <djinterop/optional.hpp>
+#include <djinterop/performance_data.hpp>
+
+namespace djinterop::engine::v2::convert
+{
+namespace read
+{
+inline stdx::optional<int64_t> album_art_id(int64_t album_art_id)
+{
+    return album_art_id != ALBUM_ART_ID_NONE
+               ? stdx::make_optional<int64_t>(album_art_id)
+               : stdx::nullopt;
+}
+
+inline stdx::optional<double> average_loudness(
+    const track_data_blob& track_data)
+{
+    return track_data.average_loudness != 0
+               ? stdx::make_optional(track_data.average_loudness)
+               : stdx::nullopt;
+}
+
+inline stdx::optional<double> bpm(
+    stdx::optional<double> bpm_analyzed, stdx::optional<int64_t> bpm)
+{
+    // Prefer the analysed BPM on account of typically being more accurate, if
+    // it is available.
+    return bpm_analyzed ? bpm_analyzed
+                        : static_cast<stdx::optional<double> >(bpm);
+}
+
+inline stdx::optional<std::chrono::milliseconds> duration(int64_t length)
+{
+    if (length == 0)
+        return stdx::nullopt;
+
+    return std::chrono::milliseconds{length * 1000};
+}
+
+inline stdx::optional<djinterop::musical_key> key(stdx::optional<int32_t> key)
+{
+    stdx::optional<djinterop::musical_key> converted;
+    if (key)
+        converted = static_cast<djinterop::musical_key>(key.value());
+
+    return converted;
+}
+
+inline stdx::optional<int32_t> rating(int64_t rating)
+{
+    return rating != RATING_NONE ? stdx::make_optional(rating) : stdx::nullopt;
+}
+
+inline stdx::optional<sampling_info> sampling(const track_data_blob& track_data)
+{
+    if (track_data.sample_rate == 0)
+        return stdx::nullopt;
+
+    return sampling_info{track_data.sample_rate, track_data.samples};
+}
+}  // namespace read
+
+namespace write
+{
+inline int64_t album_art_id(stdx::optional<int64_t> album_art_id)
+{
+    return album_art_id.value_or(ALBUM_ART_ID_NONE);
+}
+
+inline double average_loudness(stdx::optional<double> average_loudness)
+{
+    return average_loudness.value_or(0);
+}
+
+struct converted_bpm_fields
+{
+    stdx::optional<double> bpm_analyzed;
+    stdx::optional<int64_t> bpm;
+};
+
+inline converted_bpm_fields bpm(stdx::optional<double> bpm)
+{
+    // Deliberate choice to override the BPM as determined by analysis.  This
+    // results in the 'least astonishment' for a caller if they set then get the
+    // BPM of a track.
+    return {bpm, static_cast<stdx::optional<int64_t> >(bpm)};
+}
+
+inline int64_t duration(stdx::optional<std::chrono::milliseconds> duration)
+{
+    return duration.value_or(std::chrono::milliseconds{}).count() / 1000;
+}
+
+struct converted_key_fields
+{
+    stdx::optional<int32_t> key;
+    int32_t track_data_key;
+};
+
+inline converted_key_fields key(stdx::optional<djinterop::musical_key> key)
+{
+    if (key)
+    {
+        auto converted = static_cast<int32_t>(*key);
+        return {stdx::make_optional(converted), converted};
+    }
+
+    return {stdx::nullopt, 0};
+}
+
+inline int64_t rating(stdx::optional<int32_t> rating)
+{
+    return static_cast<int64_t>(
+        std::clamp(rating.value_or(RATING_NONE), 0, 100));
+}
+
+struct converted_sampling_fields
+{
+    double track_data_sample_rate;
+    int64_t track_data_samples;
+    double beat_data_sample_rate;
+    double beat_data_samples;
+};
+
+inline converted_sampling_fields sampling(
+    const stdx::optional<sampling_info>& sampling)
+{
+    auto s = sampling.value_or(sampling_info{0, 0});
+    return {
+        s.sample_rate, s.sample_count, s.sample_rate, (double)s.sample_count};
+}
+}  // namespace write
+}  // namespace djinterop::engine::v2::convert

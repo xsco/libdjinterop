@@ -21,6 +21,7 @@
 #include <utility>
 
 #include <djinterop/engine/v2/engine_library_context.hpp>
+#include <djinterop/exceptions.hpp>
 
 #include "../../util.hpp"
 
@@ -83,7 +84,7 @@ track_table::track_table(std::shared_ptr<engine_library_context> context) :
 
 int64_t track_table::add(const track_row& row)
 {
-    if (row.id != 0)
+    if (row.id != TRACK_ROW_ID_NONE)
     {
         throw track_row_id_error{
             "The provided track row already pertains to a persisted track, "
@@ -166,7 +167,26 @@ std::vector<int64_t> track_table::all_ids() const
     return results;
 }
 
-stdx::optional<track_row> track_table::get(int64_t id)
+bool track_table::exists(int64_t id) const
+{
+    bool result = false;
+    context_->db << "SELECT COUNT(*) FROM Track WHERE id = ?" << id >>
+        [&](int64_t count)
+    {
+        if (count == 1)
+        {
+            result = true;
+        }
+        else if (count > 1)
+        {
+            throw track_database_inconsistency{
+                "More than one track with the same ID", id};
+        }
+    };
+    return result;
+}
+
+stdx::optional<track_row> track_table::get(int64_t id) const
 {
     stdx::optional<track_row> result;
 
@@ -184,10 +204,12 @@ stdx::optional<track_row> track_table::get(int64_t id)
                     "thirdPartySourceId, streamingFlags, explicitLyrics "
                     "FROM Track WHERE id = ?"
                  << id >>
-        [&](int64_t id, int64_t play_order, int64_t length, int64_t bpm,
-            stdx::optional<int64_t> year, std::string path,
-            std::string filename, int64_t bitrate, double bpm_analyzed,
-            int64_t album_art_id, int64_t file_bytes,
+        [&](int64_t id, stdx::optional<int64_t> play_order, int64_t length,
+            stdx::optional<int64_t> bpm, stdx::optional<int64_t> year,
+            std::string path, std::string filename,
+            stdx::optional<int64_t> bitrate,
+            stdx::optional<double> bpm_analyzed, int64_t album_art_id,
+            stdx::optional<int64_t> file_bytes,
             stdx::optional<std::string> title,
             stdx::optional<std::string> artist,
             stdx::optional<std::string> album,
@@ -195,8 +217,8 @@ stdx::optional<track_row> track_table::get(int64_t id)
             stdx::optional<std::string> comment,
             stdx::optional<std::string> label,
             stdx::optional<std::string> composer,
-            stdx::optional<std::string> remixer, int64_t key, int64_t rating,
-            stdx::optional<std::string> album_art,
+            stdx::optional<std::string> remixer, stdx::optional<int64_t> key,
+            int64_t rating, stdx::optional<std::string> album_art,
             stdx::optional<int64_t> time_last_played, bool is_played,
             std::string file_type, bool is_analyzed,
             stdx::optional<int64_t> date_created,
@@ -272,7 +294,7 @@ stdx::optional<track_row> track_table::get(int64_t id)
 
 void track_table::update(const track_row& row)
 {
-    if (row.id == 0)
+    if (row.id == TRACK_ROW_ID_NONE)
     {
         throw track_row_id_error{
             "The track row to update does not contain a track id"};
@@ -298,7 +320,7 @@ void track_table::update(const track_row& row)
                     "overviewWaveFormData = ?, "
                     "beatData = ?, quickCues = ?, "
                     "loops = ?, thirdPartySourceId = ?, "
-                    "streamingFlags = ?, explicitLyrics = ?, "
+                    "streamingFlags = ?, explicitLyrics = ? "
                     "WHERE id = ?"
                  << row.play_order << row.length << row.bpm << row.year
                  << row.path << row.filename << row.bitrate << row.bpm_analyzed
@@ -322,14 +344,15 @@ void track_table::update(const track_row& row)
                  << row.streaming_flags << row.explicit_lyrics << row.id;
 }
 
-int64_t track_table::get_play_order(int64_t id)
+stdx::optional<int64_t> track_table::get_play_order(int64_t id)
 {
-    return get_column<int64_t>(context_->db, id, "playOrder");
+    return get_column<stdx::optional<int64_t> >(context_->db, id, "playOrder");
 }
 
-void track_table::set_play_order(int64_t id, int64_t play_order)
+void track_table::set_play_order(int64_t id, stdx::optional<int64_t> play_order)
 {
-    set_column<int64_t>(context_->db, id, "playOrder", play_order);
+    set_column<stdx::optional<int64_t> >(
+        context_->db, id, "playOrder", play_order);
 }
 
 int64_t track_table::get_length(int64_t id)
@@ -342,14 +365,14 @@ void track_table::set_length(int64_t id, int64_t length)
     set_column<int64_t>(context_->db, id, "length", length);
 }
 
-int64_t track_table::get_bpm(int64_t id)
+stdx::optional<int64_t> track_table::get_bpm(int64_t id)
 {
-    return get_column<int64_t>(context_->db, id, "bpm");
+    return get_column<stdx::optional<int64_t> >(context_->db, id, "bpm");
 }
 
-void track_table::set_bpm(int64_t id, int64_t bpm)
+void track_table::set_bpm(int64_t id, stdx::optional<int64_t> bpm)
 {
-    set_column<int64_t>(context_->db, id, "bpm", bpm);
+    set_column<stdx::optional<int64_t> >(context_->db, id, "bpm", bpm);
 }
 
 stdx::optional<int64_t> track_table::get_year(int64_t id)
@@ -382,24 +405,26 @@ void track_table::set_filename(int64_t id, const std::string& filename)
     set_column<std::string>(context_->db, id, "filename", filename);
 }
 
-int64_t track_table::get_bitrate(int64_t id)
+stdx::optional<int64_t> track_table::get_bitrate(int64_t id)
 {
-    return get_column<int64_t>(context_->db, id, "bitrate");
+    return get_column<stdx::optional<int64_t> >(context_->db, id, "bitrate");
 }
 
-void track_table::set_bitrate(int64_t id, int64_t bitrate)
+void track_table::set_bitrate(int64_t id, stdx::optional<int64_t> bitrate)
 {
-    set_column<int64_t>(context_->db, id, "bitrate", bitrate);
+    set_column<stdx::optional<int64_t> >(context_->db, id, "bitrate", bitrate);
 }
 
-double track_table::get_bpm_analyzed(int64_t id)
+stdx::optional<double> track_table::get_bpm_analyzed(int64_t id)
 {
-    return get_column<double>(context_->db, id, "bpmAnalyzed");
+    return get_column<stdx::optional<double> >(context_->db, id, "bpmAnalyzed");
 }
 
-void track_table::set_bpm_analyzed(int64_t id, double bpm_analyzed)
+void track_table::set_bpm_analyzed(
+    int64_t id, stdx::optional<double> bpm_analyzed)
 {
-    set_column<double>(context_->db, id, "bpmAnalyzed", bpm_analyzed);
+    set_column<stdx::optional<double> >(
+        context_->db, id, "bpmAnalyzed", bpm_analyzed);
 }
 
 int64_t track_table::get_album_art_id(int64_t id)
@@ -412,14 +437,15 @@ void track_table::set_album_art_id(int64_t id, int64_t album_art_id)
     set_column<int64_t>(context_->db, id, "albumArtId", album_art_id);
 }
 
-int64_t track_table::get_file_bytes(int64_t id)
+stdx::optional<int64_t> track_table::get_file_bytes(int64_t id)
 {
-    return get_column<int64_t>(context_->db, id, "fileBytes");
+    return get_column<stdx::optional<int64_t> >(context_->db, id, "fileBytes");
 }
 
-void track_table::set_file_bytes(int64_t id, int64_t file_bytes)
+void track_table::set_file_bytes(int64_t id, stdx::optional<int64_t> file_bytes)
 {
-    set_column<int64_t>(context_->db, id, "fileBytes", file_bytes);
+    set_column<stdx::optional<int64_t> >(
+        context_->db, id, "fileBytes", file_bytes);
 }
 
 stdx::optional<std::string> track_table::get_title(int64_t id)
@@ -517,14 +543,14 @@ void track_table::set_remixer(
         context_->db, id, "remixer", remixer);
 }
 
-int64_t track_table::get_key(int64_t id)
+stdx::optional<int32_t> track_table::get_key(int64_t id)
 {
-    return get_column<int64_t>(context_->db, id, "key");
+    return get_column<stdx::optional<int32_t> >(context_->db, id, "key");
 }
 
-void track_table::set_key(int64_t id, int64_t key)
+void track_table::set_key(int64_t id, stdx::optional<int32_t> key)
 {
-    set_column<int64_t>(context_->db, id, "key", key);
+    set_column<stdx::optional<int32_t> >(context_->db, id, "key", key);
 }
 
 int64_t track_table::get_rating(int64_t id)

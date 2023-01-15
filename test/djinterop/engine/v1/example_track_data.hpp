@@ -21,11 +21,10 @@
 #include <cstdint>
 #include <ostream>
 
-#include <boost/test/included/unit_test.hpp>
 #include <djinterop/engine/engine.hpp>
 #include <djinterop/track_snapshot.hpp>
 
-#include "../boost_test_utils.hpp"
+#include "../../boost_test_utils.hpp"
 
 enum class example_track_type
 {

@@ -21,14 +21,51 @@
 #error This library needs at least a C++17 compliant compiler
 #endif
 
+#include <cstdint>
 #include <vector>
 
 #include <djinterop/config.hpp>
 
 namespace djinterop::engine::v2
 {
+/// Represents a point on the overview waveform.
+struct DJINTEROP_PUBLIC overview_waveform_point
+{
+    /// Low-frequency waveform point value.
+    uint8_t low_value;
+
+    /// Mid-frequency waveform point value.
+    uint8_t mid_value;
+
+    /// High-frequency waveform point value.
+    uint8_t high_value;
+};
+
+inline bool operator==(
+    const overview_waveform_point& x, const overview_waveform_point& y)
+{
+    return x.low_value == y.low_value && x.mid_value == y.mid_value &&
+           x.high_value == y.high_value;
+}
+
+inline bool operator!=(
+    const overview_waveform_point& x, const overview_waveform_point& y)
+{
+    return !(x == y);
+}
+
+/// Represents the overview waveform data blob.
 struct DJINTEROP_PUBLIC overview_waveform_data_blob
 {
+    /// Number of samples per waveform data point.  May be fractional.
+    double samples_per_waveform_point;
+
+    /// Waveform points.
+    std::vector<overview_waveform_point> waveform_points;
+
+    /// Maximum values across all waveform points.
+    overview_waveform_point maximum_point;
+
     /// Encode this struct into binary blob form.
     ///
     /// \return Returns a byte array.
@@ -45,8 +82,9 @@ struct DJINTEROP_PUBLIC overview_waveform_data_blob
 inline bool operator==(
     const overview_waveform_data_blob& x, const overview_waveform_data_blob& y)
 {
-    // TODO (mr-smidge): Not yet implemented.
-    return true;
+    return x.samples_per_waveform_point == y.samples_per_waveform_point &&
+           x.waveform_points == y.waveform_points &&
+           x.maximum_point == y.maximum_point;
 }
 
 inline bool operator!=(

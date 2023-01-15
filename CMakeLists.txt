@@ -252,27 +252,31 @@ if (Boost_FOUND)
     set(TESTDATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/testdata")
 
     function(add_djinterop_test test_dir test_name)
-        add_executable(${test_name}
+        string(REPLACE "/" "_" test_executable_name ${test_dir}${test_name})
+        add_executable(${test_executable_name}
                 test/djinterop/${test_dir}${test_name}.cpp)
-        target_compile_definitions(${test_name} PUBLIC
+        target_compile_definitions(${test_executable_name} PUBLIC
                 -DTESTDATA_DIR=${TESTDATA_DIR})
-        target_include_directories(${test_name} PUBLIC
+        target_include_directories(${test_executable_name} PUBLIC
                 ${Boost_INCLUDE_DIRS}
                 ${CMAKE_CURRENT_BINARY_DIR}/include
                 include)
-        target_link_libraries(${test_name} PUBLIC
+        target_link_libraries(${test_executable_name} PUBLIC
                 DjInterop
                 ${Boost_LIBRARIES})
-        add_test(NAME ${test_name} COMMAND ${test_name})
+        add_test(NAME ${test_executable_name} COMMAND ${test_executable_name})
     endfunction()
 
     add_djinterop_test("" semantic_version_test)
-    add_djinterop_test(engine/ crate_test)
-    add_djinterop_test(engine/ database_test)
+    add_djinterop_test("" track_snapshot_test)
     add_djinterop_test(engine/ engine_test)
-    add_djinterop_test(engine/ track_test)
-    add_djinterop_test(engine/ track_snapshot_test)
+    add_djinterop_test(engine/v1/ crate_test)
+    add_djinterop_test(engine/v1/ database_test)
+    add_djinterop_test(engine/v1/ engine_test)
+    add_djinterop_test(engine/v1/ track_test)
+    add_djinterop_test(engine/v2/ engine_test)
     add_djinterop_test(engine/v2/ track_table_test)
+    add_djinterop_test(engine/v2/ track_test)
 
 else()
     message(STATUS "Unit tests not available, as Boost cannot be found")

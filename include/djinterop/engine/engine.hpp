@@ -107,9 +107,10 @@ constexpr const engine_version os_2_0_0{
     "Engine DJ OS 2.0.0", semantic_version{2, 18, 0}};
 
 /// Set of available versions.
-constexpr const std::array<engine_version, 11> all_versions{
+constexpr const std::array<engine_version, 13> all_versions{
     os_1_0_0, os_1_0_3, desktop_1_1_1, os_1_2_0,      os_1_2_2, desktop_1_2_2,
-    os_1_3_1, os_1_4_0, os_1_5_1,      desktop_1_5_1, os_1_6_0};
+    os_1_3_1, os_1_4_0, os_1_5_1,      desktop_1_5_1, os_1_6_0, desktop_2_0_0,
+    os_2_0_0};
 
 /// Set of available V1 versions.
 constexpr const std::array<engine_version, 11> all_v1_versions{
@@ -211,13 +212,6 @@ bool DJINTEROP_PUBLIC database_exists(const std::string& directory);
 /// Loads an Engine Library database from a given directory.
 database DJINTEROP_PUBLIC load_database(const std::string& directory);
 
-/// Given an Engine Library database, returns the path to its m.db sqlite
-/// database file
-///
-/// If the given database is not an enginelibrary, then the behaviour of this
-/// function is undefined.
-std::string DJINTEROP_PUBLIC music_db_path(const database& db);
-
 /// Normalizes a beat-grid, so that the beat indexes are in the form normally
 /// expected by Engine Prime.
 ///
@@ -239,13 +233,6 @@ normalize_beatgrid(std::vector<beatgrid_marker> beatgrid, int64_t sample_count);
 /// be understood when constructing or reading waveforms in Engine Prime format.
 int64_t DJINTEROP_PUBLIC
 required_waveform_samples_per_entry(double sample_rate);
-
-/// Given an enginelibrary database, returns the path to its p.db sqlite
-/// database file
-///
-/// If the given database is not an enginelibrary, then the behaviour of this
-/// function is undefined.
-std::string DJINTEROP_PUBLIC perfdata_db_path(const database& db);
 
 }  // namespace engine
 }  // namespace djinterop

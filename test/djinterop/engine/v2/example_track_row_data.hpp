@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <ostream>
 
+#include <djinterop/engine/engine.hpp>
 #include <djinterop/engine/v2/track_table.hpp>
 
 #include "../../boost_test_utils.hpp"
@@ -52,6 +53,7 @@ inline std::ostream& operator<<(std::ostream& o, example_track_row_type v)
 inline void populate_track_row(
     example_track_row_type row_type, djinterop::engine::v2::track_row& r)
 {
+    namespace ev = djinterop::engine;
     namespace ev2 = djinterop::engine::v2;
     switch (row_type)
     {
@@ -157,7 +159,9 @@ inline void populate_track_row(
             beatgrid.push_back(ev2::beat_grid_marker_blob{313600, 16, 0, 0});
             r.beat_data =
                 ev2::beat_data_blob{41000, 5424300, 1, beatgrid, beatgrid};
-            r.quick_cues = ev2::quick_cues_blob{};
+            std::vector<ev2::quick_cue_blob> quick_cues_list{};
+            quick_cues_list.push_back(ev2::quick_cue_blob{"First cue", 12345, ev::standard_pad_colors::pad_1});
+            r.quick_cues = ev2::quick_cues_blob{quick_cues_list, 11111, true, 22222};
             r.loops = ev2::loops_blob{};
             r.streaming_flags = 0;
             r.explicit_lyrics = false;
