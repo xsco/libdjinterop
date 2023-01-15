@@ -233,14 +233,26 @@ install(FILES
         cmake/FindSQLite3.cmake
         DESTINATION "${DJINTEROP_INSTALL_CMAKEDIR}")
 
+# Example programs demonstrating usage.
+function(add_djinterop_example example_name)
+    add_executable(example_${example_name} example/${example_name}.cpp)
+    target_include_directories(example_${example_name} PUBLIC
+            ${CMAKE_CURRENT_BINARY_DIR}/include
+            include)
+    target_link_libraries(example_${example_name} PUBLIC DjInterop)
+endfunction()
+
+add_djinterop_example(engine_prime)
+add_djinterop_example(engine_library_v2_low_level)
+
+# Unit tests.
 include(CTest)
 find_package(Boost 1.65.1 QUIET COMPONENTS filesystem system)
 if (Boost_FOUND)
     set(TESTDATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/testdata")
-    add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
 
     function(add_djinterop_test test_dir test_name)
-        add_executable(${test_name} EXCLUDE_FROM_ALL
+        add_executable(${test_name}
                 test/djinterop/${test_dir}${test_name}.cpp)
         target_compile_definitions(${test_name} PUBLIC
                 -DTESTDATA_DIR=${TESTDATA_DIR})
@@ -252,7 +264,6 @@ if (Boost_FOUND)
                 DjInterop
                 ${Boost_LIBRARIES})
         add_test(NAME ${test_name} COMMAND ${test_name})
-        add_dependencies(check ${test_name})
     endfunction()
 
     add_djinterop_test("" semantic_version_test)

@@ -35,7 +35,7 @@ stdenv.mkDerivation {
   src = nix-gitignore.gitignoreSource [ ".git*" ] ./.;
   nativeBuildInputs = [
     git-clang-format
-    meson
+    cmake
     ninja
     pkg-config
   ];

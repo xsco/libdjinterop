@@ -41,8 +41,7 @@ How Do I Use It?
 ================
 
 The library is not ready for prime-time yet, but if you are willing to read
-source code, an example application can be found in the [example](example)
-directory.
+source code, example applications can be found in the `example` directory.
 
 How Do I Build It?
 ============================
@@ -51,17 +50,21 @@ How Do I Build It?
 
 * [SQLite3](https://sqlite.org)
 * [zlib](http://zlib.net)
-* [Boost](https://boost.org) (only needed for unit tests, not the main library)
 
-`libdjinterop` uses the [Meson build system](https://mesonbuild.com).  Assuming
-you have the above dependencies in place, and the build tools, you can issue
-the following commands:
+To run unit tests, the following are required:
 
-```
-$ meson build/
-$ ninja -C build/
-$ ninja -C build/ test                (optional, run unit tests)
-# ninja -C build/ install             (as a suitably-privileged user)
+* [Boost](https://boost.org)
+
+`libdjinterop` uses [CMake](https://cmake.org/).  Assuming you have the above
+dependencies in place, and the build tools, you can issue the following
+commands:
+
+```shell
+$ mkdir cmake_build
+$ cd cmake_build
+$ cmake ..
+$ cmake --build .
+$ ctest   # To run unit tests
 ```
 
 ## With Nix
@@ -80,10 +83,7 @@ execute:
 $ nix-shell
 ```
 
-You can then build `libdjinterop` by using Meson as described above.
-
-This is advantageous when developing since it only recompiles sources that it
-needs to.
+You can then build `libdjinterop` by as described above.
 
 Thanks To
 =========
@@ -91,11 +91,11 @@ Thanks To
 `libdjinterop` makes use of a number of software libraries, and is extremely
 grateful for:
 
-* [Boost](https://boost.org)
-* [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html)
 * [SQLite](https://sqlite.org)
 * [SQLite Modern C++ Wrapper](https://github.com/SqliteModernCpp/sqlite_modern_cpp)
 * [zlib](http://zlib.net)
+* [Boost](https://boost.org)
+* [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html)
 
 Interfacing with the Engine Library database format was made a lot easier with
 the help of MixMasterG from ATGR, who is the author of the
