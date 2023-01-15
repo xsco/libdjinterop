@@ -70,16 +70,10 @@ $ ctest   # To run unit tests
 ## With Nix
 
 When [Nix](http://nixos.org/nix) is installed, then you don't need to manually
-install any dependencies.  `libdjinterop` can then simply be built with:
+install any dependencies.  In order to drop into a development environment with
+dependencies available, execute:
 
-```
-$ nix build
-```
-
-In order to drop into a development environment with dependencies available,
-execute:
-
-```
+```shell
 $ nix-shell
 ```
 
