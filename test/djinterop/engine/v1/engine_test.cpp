@@ -21,22 +21,26 @@
 
 #include <djinterop/engine/engine.hpp>
 
-#include "../temporary_directory.hpp"
+#include "../../temporary_directory.hpp"
 
 namespace utf = boost::unit_test;
 namespace e = djinterop::engine;
 
 BOOST_TEST_DECORATOR(
-    *utf::description("load_database() with a non-existent path"))
-BOOST_AUTO_TEST_CASE(load_database__fake_path__throw)
+    *utf::description("create_database() with all supported schema versions"))
+BOOST_DATA_TEST_CASE(
+    create_database__valid_version__creates_verified, e::all_v1_versions,
+    version)
 {
     // Note separate scope to ensure no locks are held on the temporary dir.
     temporary_directory tmp_loc;
 
     {
-        // Arrange/Act/Assert
-        BOOST_CHECK_THROW(
-            auto db = e::load_database(tmp_loc.temp_dir + "/does_not_exist"),
-            djinterop::database_not_found);
+        // Arrange/Act
+        auto db = e::create_database(tmp_loc.temp_dir, version);
+
+        // Assert
+        BOOST_CHECK_NO_THROW(db.verify());
+        BOOST_CHECK_EQUAL(db.directory(), tmp_loc.temp_dir);
     }
 }

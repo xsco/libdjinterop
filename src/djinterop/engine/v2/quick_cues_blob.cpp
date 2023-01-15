@@ -27,12 +27,12 @@ namespace djinterop::engine::v2
 {
 std::vector<char> quick_cues_blob::to_blob() const
 {
+    // Work out total length of all cue labels in order to size the buffer.
     auto total_label_length = std::accumulate(
         quick_cues.begin(), quick_cues.end(), int64_t{0},
-        [](int64_t x, const stdx::optional<quick_cue_blob>& quick_cue)
-        { return x + (quick_cue ? quick_cue->label.length() : 0); });
+        [](int64_t x, const quick_cue_blob& quick_cue)
+        { return x + quick_cue.label.length(); });
 
-    // Work out total length of all cue labels.
     std::vector<char> uncompressed(
         25 + (13 * quick_cues.size()) + total_label_length);
     auto ptr = uncompressed.data();
@@ -101,6 +101,8 @@ quick_cues_blob quick_cues_blob::from_blob(const std::vector<char>& blob)
         std::tie(quick_cue.color.r, ptr) = decode_uint8(ptr);
         std::tie(quick_cue.color.g, ptr) = decode_uint8(ptr);
         std::tie(quick_cue.color.b, ptr) = decode_uint8(ptr);
+
+        result.quick_cues.push_back(quick_cue);
     }
 
     std::tie(result.adjusted_main_cue, ptr) = decode_double_be(ptr);

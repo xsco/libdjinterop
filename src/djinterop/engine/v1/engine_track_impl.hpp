@@ -121,7 +121,7 @@ public:
     stdx::optional<loop> loop_at(int32_t index) override;
     void set_loop_at(int32_t index, stdx::optional<loop> l) override;
     std::array<stdx::optional<loop>, 8> loops() override;
-    void set_loops(std::array<stdx::optional<loop>, 8> cues) override;
+    void set_loops(std::array<stdx::optional<loop>, 8> loops) override;
     std::vector<waveform_entry> overview_waveform() override;
     stdx::optional<std::string> publisher() override;
     void set_publisher(stdx::optional<std::string> publisher) override;

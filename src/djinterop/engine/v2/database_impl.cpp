@@ -24,6 +24,7 @@
 #include "../../util.hpp"
 #include "../schema/schema.hpp"
 #include "engine_library_context.hpp"
+#include "track_impl.hpp"
 
 namespace djinterop::engine::v2
 {
@@ -35,37 +36,36 @@ database_impl::database_impl(std::shared_ptr<engine_library> library) :
 transaction_guard database_impl::begin_transaction()
 {
     // TODO
-    throw std::runtime_error{"Not implemented yet"};
+    throw std::runtime_error{"database_impl::begin_transaction() - Not implemented yet"};
 }
 
 stdx::optional<crate> database_impl::crate_by_id(int64_t id)
 {
     // TODO
-    throw std::runtime_error{"Not implemented yet"};
+    throw std::runtime_error{"database_impl::crate_by_id() - Not implemented yet"};
 }
 
 std::vector<crate> database_impl::crates()
 {
     // TODO
-    throw std::runtime_error{"Not implemented yet"};
+    throw std::runtime_error{"database_impl::crates() - Not implemented yet"};
 }
 
 std::vector<crate> database_impl::crates_by_name(const std::string& name)
 {
     // TODO
-    throw std::runtime_error{"Not implemented yet"};
+    throw std::runtime_error{"database_impl::crates_by_name() - Not implemented yet"};
 }
 
 crate database_impl::create_root_crate(std::string name)
 {
     // TODO
-    throw std::runtime_error{"Not implemented yet"};
+    throw std::runtime_error{"database_impl::create_root_crate() - Not implemented yet"};
 }
 
 track database_impl::create_track(const track_snapshot& snapshot)
 {
-    // TODO
-    throw std::runtime_error{"Not implemented yet"};
+    return djinterop::engine::v2::create_track(library_, snapshot);
 }
 
 std::string database_impl::directory()
@@ -81,50 +81,61 @@ void database_impl::verify()
 void database_impl::remove_crate(crate cr)
 {
     // TODO
-    throw std::runtime_error{"Not implemented yet"};
+    throw std::runtime_error{"database_impl::remove_crate() - Not implemented yet"};
 }
 
 void database_impl::remove_track(track tr)
 {
     // TODO
-    throw std::runtime_error{"Not implemented yet"};
+    throw std::runtime_error{"database_impl::remove_track() - Not implemented yet"};
 }
 
 std::vector<crate> database_impl::root_crates()
 {
     // TODO
-    throw std::runtime_error{"Not implemented yet"};
+    throw std::runtime_error{"database_impl::root_crates() - Not implemented yet"};
 }
 
 stdx::optional<crate> database_impl::root_crate_by_name(const std::string& name)
 {
     // TODO
-    throw std::runtime_error{"Not implemented yet"};
+    throw std::runtime_error{"database_impl::root_crate_by_name() - Not implemented yet"};
 }
 
 stdx::optional<track> database_impl::track_by_id(int64_t id)
 {
-    // TODO
-    throw std::runtime_error{"Not implemented yet"};
+    auto track_table = library_->track();
+    if (track_table.exists(id))
+    {
+        return stdx::make_optional<track>(
+                std::make_shared<track_impl>(library_, id));
+    }
+
+    return stdx::nullopt;
 }
 
 std::vector<track> database_impl::tracks()
 {
-    // TODO
-    throw std::runtime_error{"Not implemented yet"};
+    std::vector<track> results;
+    auto track_table = library_->track();
+    for (auto&& id : track_table.all_ids())
+    {
+        results.emplace_back(std::make_shared<track_impl>(library_, id));
+    }
+
+    return results;
 }
 
 std::vector<track> database_impl::tracks_by_relative_path(
     const std::string& relative_path)
 {
     // TODO
-    throw std::runtime_error{"Not implemented yet"};
+    throw std::runtime_error{"database_impl::tracks_by_relative_path() - Not implemented yet"};
 }
 
 std::string database_impl::uuid()
 {
-    // TODO
-    throw std::runtime_error{"Not implemented yet"};
+    return library_->information().get().uuid;
 }
 
 std::string database_impl::version_name()

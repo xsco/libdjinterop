@@ -30,6 +30,8 @@ inline void assert_track_snapshot_equal(
     const djinterop::track_snapshot& expected,
     const djinterop::track_snapshot& actual, bool check_id = true)
 {
+    // TODO: (mr-smidge) implement this as operator== on the main object,
+    //  but without the check_id option (i.e. always check id).
     if (check_id)
     {
         BOOST_CHECK_EQUAL(pr(expected.id), pr(actual.id));
@@ -59,6 +61,7 @@ inline void assert_track_snapshot_equal(
     BOOST_TEST(
         expected.hot_cues == actual.hot_cues, boost::test_tools::per_element());
     BOOST_CHECK_EQUAL(pr(expected.key), pr(actual.key));
+
     BOOST_CHECK_EQUAL(
         pr(expected.last_accessed_at), pr(actual.last_accessed_at));
     BOOST_CHECK_EQUAL(

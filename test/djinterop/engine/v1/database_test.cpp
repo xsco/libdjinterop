@@ -30,7 +30,7 @@
 #include <djinterop/track.hpp>
 #include <djinterop/track_snapshot.hpp>
 
-#include "../temporary_directory.hpp"
+#include "../../temporary_directory.hpp"
 
 #define STRINGIFY(x) STRINGIFY_(x)
 #define STRINGIFY_(x) #x
@@ -101,7 +101,7 @@ const std::string sample_path{STRINGIFY(TESTDATA_DIR) "/el2"};
 BOOST_TEST_DECORATOR(* utf::description(
     "database::create_root_crate() for all supported schema versions"))
 BOOST_DATA_TEST_CASE(
-    create_root_crate__supported_version__creates, e::all_versions, version)
+    create_root_crate__supported_version__creates, e::all_v1_versions, version)
 {
     // Note separate scope to ensure no locks are held on the temporary dir.
     temporary_directory tmp_loc;
@@ -125,7 +125,7 @@ BOOST_DATA_TEST_CASE(
 BOOST_TEST_DECORATOR(* utf::description(
     "database::create_track() for all supported schema versions"))
 BOOST_DATA_TEST_CASE(
-    create_track__supported_version__creates, e::all_versions * valid_files,
+    create_track__supported_version__creates, e::all_v1_versions * valid_files,
     version, file)
 {
     // Note separate scope to ensure no locks are held on the temporary dir.
@@ -170,9 +170,6 @@ BOOST_DATA_TEST_CASE(
 
         // Assert
         BOOST_CHECK_EQUAL(db.directory(), tmp_loc.temp_dir);
-        BOOST_CHECK_EQUAL(e::music_db_path(db), (tmp_loc.temp_dir + "/m.db"));
-        BOOST_CHECK_EQUAL(
-            e::perfdata_db_path(db), (tmp_loc.temp_dir + "/p.db"));
     }
 }
 

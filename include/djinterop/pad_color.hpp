@@ -27,10 +27,8 @@
 
 namespace djinterop
 {
-/**
- * The `pad_color` struct holds information about the color that a given
- * hot cue / loop / etc. pad may be lit up as.
- */
+/// The `pad_color` struct holds information about the color that a given
+/// hot cue/loop/etc. pad may be lit up as.
 struct pad_color
 {
     /**
@@ -51,26 +49,18 @@ struct pad_color
     {
     }
 
-    /**
-     * \brief The red component of this pad color, from 0 to 255
-     */
+    /// The red component of this pad color, from 0 to 255.
     uint_least8_t r;
 
-    /**
-     * \brief The green component of this pad color, from 0 to 255
-     */
+    /// The green component of this pad color, from 0 to 255.
     uint_least8_t g;
 
-    /**
-     * \brief The blue component of this pad color, from 0 to 255
-     */
+    /// The blue component of this pad color, from 0 to 255.
     uint_least8_t b;
 
-    /**
-     * \brief The alpha component of this pad color, from 0 to 255
-     *
-     * For most pad colors, this is usually set to full opaqueness, 255.
-     */
+    /// The alpha component of this pad color, from 0 to 255.
+    ///
+    /// For most pad colors, this is usually set to full opaqueness, 255.
     uint_least8_t a;
 };
 

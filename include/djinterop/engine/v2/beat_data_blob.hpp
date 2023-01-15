@@ -28,6 +28,7 @@
 #include <djinterop/config.hpp>
 #include <djinterop/optional.hpp>
 #include <djinterop/pad_color.hpp>
+#include <djinterop/performance_data.hpp>
 
 namespace djinterop::engine::v2
 {
@@ -56,37 +57,6 @@ struct DJINTEROP_PUBLIC beat_grid_marker_blob
     int32_t unknown_value_1;
 };
 
-/// Represents the beat data blob.
-struct DJINTEROP_PUBLIC beat_data_blob
-{
-    /// Sample rate, in hertz.
-    double sample_rate;
-
-    /// Number of samples in the track.
-    double samples;
-
-    /// Flag indicating if the beat grid is set.
-    uint8_t is_beatgrid_set;
-
-    /// List of markers making up the default beat grid.
-    std::vector<beat_grid_marker_blob> default_beat_grid;
-
-    /// List of markers making up the adjusted beat grid.
-    std::vector<beat_grid_marker_blob> adjusted_beat_grid;
-
-    /// Encode this struct into binary blob form.
-    ///
-    /// \return Returns a byte array.
-    [[nodiscard]] std::vector<char> to_blob() const;
-
-    /// Decode an instance of this struct from binary blob form.
-    ///
-    /// \param blob Binary blob.
-    /// \return Returns a decoded instance of this struct.
-    [[nodiscard]] static beat_data_blob from_blob(
-        const std::vector<char>& blob);
-};
-
 inline bool operator==(
     const beat_grid_marker_blob& x, const beat_grid_marker_blob& y)
 {
@@ -102,6 +72,40 @@ inline bool operator!=(
     return !(x == y);
 }
 
+/// Represents the beat data blob.
+struct DJINTEROP_PUBLIC beat_data_blob
+{
+    /// Type of collection of beat grid markers.
+    typedef std::vector<beat_grid_marker_blob> beat_grid_marker_blobs_type;
+
+    /// Sample rate, in hertz.
+    double sample_rate;
+
+    /// Number of samples in the track.
+    double samples;
+
+    /// Flag indicating if the beat grid is set.
+    uint8_t is_beatgrid_set;
+
+    /// List of markers making up the default beat grid.
+    beat_grid_marker_blobs_type default_beat_grid;
+
+    /// List of markers making up the adjusted beat grid.
+    beat_grid_marker_blobs_type adjusted_beat_grid;
+
+    /// Encode this struct into binary blob form.
+    ///
+    /// \return Returns a byte array.
+    [[nodiscard]] std::vector<char> to_blob() const;
+
+    /// Decode an instance of this struct from binary blob form.
+    ///
+    /// \param blob Binary blob.
+    /// \return Returns a decoded instance of this struct.
+    [[nodiscard]] static beat_data_blob from_blob(
+        const std::vector<char>& blob);
+};
+
 inline bool operator==(const beat_data_blob& x, const beat_data_blob& y)
 {
     return x.sample_rate == y.sample_rate && x.samples == y.samples &&
@@ -114,5 +118,4 @@ inline bool operator!=(const beat_data_blob& x, const beat_data_blob& y)
 {
     return !(x == y);
 }
-
 }  // namespace djinterop::engine::v2

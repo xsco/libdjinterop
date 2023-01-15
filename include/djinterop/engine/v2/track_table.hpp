@@ -22,6 +22,7 @@
 #endif
 
 #include <chrono>
+#include <cstdint>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -33,6 +34,7 @@
 #include <djinterop/engine/v2/overview_waveform_data_blob.hpp>
 #include <djinterop/engine/v2/quick_cues_blob.hpp>
 #include <djinterop/engine/v2/track_data_blob.hpp>
+#include <djinterop/musical_key.hpp>
 #include <djinterop/optional.hpp>
 
 namespace djinterop::engine::v2
@@ -50,23 +52,35 @@ public:
     }
 };
 
+/// Special value for id to indicate that a given row is not currently persisted
+/// in the database.
+constexpr const int64_t TRACK_ROW_ID_NONE = 0;
+
+/// Special value for the `album_art_id` track table column that indicates that
+/// no album art is present for a given track.
+constexpr const int64_t ALBUM_ART_ID_NONE = 0;
+
+/// Special value for the `rating` track table column that indicates that no
+/// rating is present for a given track.
+constexpr const int64_t RATING_NONE = 0;
+
 /// Represents a row in the `Track` table.
 struct DJINTEROP_PUBLIC track_row
 {
     /// Auto-generated id column.
     ///
-    /// A value of `0` can be used to indicate a track row that is not yet
-    /// persisted in the table, e.g. when adding a new row.
+    /// A value of `TRACK_ROW_ID_NONE` can be used to indicate a track row that
+    /// is not yet persisted in the table, e.g. when adding a new row.
     int64_t id;
 
     /// `playOrder` column.
-    int64_t play_order;
+    stdx::optional<int64_t> play_order;
 
     /// `length` column, representing the approximate length, in seconds.
     int64_t length;
 
     /// `bpm` column, representing the approximate BPM.
-    int64_t bpm;
+    stdx::optional<int64_t> bpm;
 
     /// `year` column.
     stdx::optional<int64_t> year;
@@ -82,11 +96,11 @@ struct DJINTEROP_PUBLIC track_row
     std::string filename;
 
     /// `bitrate` column.
-    int64_t bitrate;
+    stdx::optional<int64_t> bitrate;
 
     /// `bpmAnalyzed` column, representing the BPM as determined from track
     /// analysis.
-    double bpm_analyzed;
+    stdx::optional<double> bpm_analyzed;
 
     /// `albumArtId` column.
     ///
@@ -95,7 +109,7 @@ struct DJINTEROP_PUBLIC track_row
 
     /// `file_bytes` column, representing the size of the file underlying the
     /// track on disk, in bytes.
-    int64_t file_bytes;
+    stdx::optional<int64_t> file_bytes;
 
     /// `title` column.
     stdx::optional<std::string> title;
@@ -122,9 +136,7 @@ struct DJINTEROP_PUBLIC track_row
     stdx::optional<std::string> remixer;
 
     /// `key` column, as an integer between 0 and 23.
-    ///
-    /// The values align with those in the `djinterop::musical_key` enum.
-    int64_t key;
+    stdx::optional<int32_t> key;
 
     /// `rating` column.
     ///
@@ -226,6 +238,47 @@ struct DJINTEROP_PUBLIC track_row
     bool explicit_lyrics;
 };
 
+inline bool operator==(const track_row& lhs, const track_row& rhs)
+{
+    return std::tie(
+               lhs.id, lhs.play_order, lhs.length, lhs.bpm, lhs.year, lhs.path,
+               lhs.filename, lhs.bitrate, lhs.bpm_analyzed, lhs.album_art_id,
+               lhs.file_bytes, lhs.title, lhs.artist, lhs.album, lhs.genre,
+               lhs.comment, lhs.label, lhs.composer, lhs.remixer, lhs.key,
+               lhs.rating, lhs.album_art, lhs.time_last_played, lhs.is_played,
+               lhs.file_type, lhs.is_analyzed, lhs.date_created, lhs.date_added,
+               lhs.is_available, lhs.is_metadata_of_packed_track_changed,
+               lhs.is_performance_data_of_packed_track_changed,
+               lhs.played_indicator, lhs.is_metadata_imported,
+               lhs.pdb_import_key, lhs.streaming_source, lhs.uri,
+               lhs.is_beat_grid_locked, lhs.origin_database_uuid,
+               lhs.origin_track_id, lhs.track_data, lhs.overview_waveform_data,
+               lhs.beat_data, lhs.quick_cues, lhs.loops,
+               lhs.third_party_source_id, lhs.streaming_flags,
+               lhs.explicit_lyrics) ==
+           std::tie(
+               rhs.id, rhs.play_order, rhs.length, rhs.bpm, rhs.year, rhs.path,
+               rhs.filename, rhs.bitrate, rhs.bpm_analyzed, rhs.album_art_id,
+               rhs.file_bytes, rhs.title, rhs.artist, rhs.album, rhs.genre,
+               rhs.comment, rhs.label, rhs.composer, rhs.remixer, rhs.key,
+               rhs.rating, rhs.album_art, rhs.time_last_played, rhs.is_played,
+               rhs.file_type, rhs.is_analyzed, rhs.date_created, rhs.date_added,
+               rhs.is_available, rhs.is_metadata_of_packed_track_changed,
+               rhs.is_performance_data_of_packed_track_changed,
+               rhs.played_indicator, rhs.is_metadata_imported,
+               rhs.pdb_import_key, rhs.streaming_source, rhs.uri,
+               rhs.is_beat_grid_locked, rhs.origin_database_uuid,
+               rhs.origin_track_id, rhs.track_data, rhs.overview_waveform_data,
+               rhs.beat_data, rhs.quick_cues, rhs.loops,
+               rhs.third_party_source_id, rhs.streaming_flags,
+               rhs.explicit_lyrics);
+}
+
+inline bool operator!=(const track_row& lhs, const track_row& rhs)
+{
+    return !(rhs == lhs);
+}
+
 /// Represents the `Track` table in an Engine v2 database.
 class DJINTEROP_PUBLIC track_table
 {
@@ -247,17 +300,23 @@ public:
     /// \return Returns a list of all ids.
     [[nodiscard]] std::vector<int64_t> all_ids() const;
 
+    /// Check whether a given track exists.
+    ///
+    /// \param id Id of track to check.
+    /// \return Returns `true` if the track exists, or `false` if not.
+    [[nodiscard]] bool exists(int64_t id) const;
+
     /// Get an entire track row.
     ///
     /// \param id Id of track.
     /// \return Returns a track row, or none if not found.
-    stdx::optional<track_row> get(int64_t id);
+    stdx::optional<track_row> get(int64_t id) const;
 
     /// Get the `playOrder` column for a given track.
-    int64_t get_play_order(int64_t id);
+    stdx::optional<int64_t> get_play_order(int64_t id);
 
     /// Set the `playOrder` column for a given track.
-    void set_play_order(int64_t id, int64_t play_order);
+    void set_play_order(int64_t id, stdx::optional<int64_t> play_order);
 
     /// Get the `length` column for a given track, representing the approximate
     /// length, in seconds.
@@ -269,11 +328,11 @@ public:
 
     /// Get the `bpm` column for a given track, representing the approximate
     /// BPM.
-    int64_t get_bpm(int64_t id);
+    stdx::optional<int64_t> get_bpm(int64_t id);
 
     /// Set the `bpm` column for a given track, representing the approximate
     /// BPM.
-    void set_bpm(int64_t id, int64_t bpm);
+    void set_bpm(int64_t id, stdx::optional<int64_t> bpm);
 
     /// Get the `year` column for a given track.
     stdx::optional<int64_t> get_year(int64_t id);
@@ -302,18 +361,18 @@ public:
     void set_filename(int64_t id, const std::string& filename);
 
     /// Get the `bitrate` column for a given track.
-    int64_t get_bitrate(int64_t id);
+    stdx::optional<int64_t> get_bitrate(int64_t id);
 
     /// Set the `bitrate` column for a given track.
-    void set_bitrate(int64_t id, int64_t bitrate);
+    void set_bitrate(int64_t id, stdx::optional<int64_t> bitrate);
 
     /// Get the `bpmAnalyzed` column for a given track, representing the BPM as
     /// determined from track analysis.
-    double get_bpm_analyzed(int64_t id);
+    stdx::optional<double> get_bpm_analyzed(int64_t id);
 
     /// Set the `bpmAnalyzed` column for a given track, representing the BPM as
     /// determined from track analysis.
-    void set_bpm_analyzed(int64_t id, double bpm_analyzed);
+    void set_bpm_analyzed(int64_t id, stdx::optional<double> bpm_analyzed);
 
     /// Get the `albumArtId` column for a given track.
     ///
@@ -327,11 +386,11 @@ public:
 
     /// Get the `file_bytes` column for a given track, representing the size of
     /// the file underlying the track on disk, in bytes.
-    int64_t get_file_bytes(int64_t id);
+    stdx::optional<int64_t> get_file_bytes(int64_t id);
 
     /// Set the `file_bytes` column for a given track, representing the size of
     /// the file underlying the track on disk, in bytes.
-    void set_file_bytes(int64_t id, int64_t file_bytes);
+    void set_file_bytes(int64_t id, stdx::optional<int64_t> file_bytes);
 
     /// Get the `title` column for a given track.
     stdx::optional<std::string> get_title(int64_t id);
@@ -382,14 +441,12 @@ public:
     void set_remixer(int64_t id, const stdx::optional<std::string>& remixer);
 
     /// Get the `key` column for a given track, as an integer between 0 and 23.
-    ///
-    /// The values align with those in the `djinterop::musical_key` enum.
-    int64_t get_key(int64_t id);
+    stdx::optional<int32_t> get_key(int64_t id);
 
     /// Set the `key` column for a given track, as an integer between 0 and 23.
     ///
     /// The values align with those in the `djinterop::musical_key` enum.
-    void set_key(int64_t id, int64_t key);
+    void set_key(int64_t id, stdx::optional<int32_t> key);
 
     /// Get the `rating` column for a given track.
     ///

@@ -20,6 +20,7 @@
 #include <cassert>
 #include <stdexcept>
 
+#include "../../util.hpp"
 #include "../encode_decode_utils.hpp"
 
 namespace djinterop::engine::v2
@@ -65,7 +66,6 @@ std::pair<std::vector<beat_grid_marker_blob>, const char*> decode_beatgrid(
 
     return {std::move(result), ptr};
 }
-
 }  // anonymous namespace
 
 std::vector<char> beat_data_blob::to_blob() const
@@ -123,5 +123,4 @@ beat_data_blob beat_data_blob::from_blob(const std::vector<char>& blob)
 
     return result;
 }
-
 }  // namespace djinterop::engine::v2

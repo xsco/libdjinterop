@@ -88,10 +88,12 @@ public:
     /// Update the track with the contents of the provided snapshot.
     void update(const track_snapshot& snapshot);
 
+    // TODO (mr-smidge): Expose just one beatgrid on the normalised interface.
     std::vector<beatgrid_marker> adjusted_beatgrid() const;
 
     void set_adjusted_beatgrid(std::vector<beatgrid_marker> beatgrid) const;
 
+    // TODO (mr-smidge): Expose just one main cue on the normalised interface.
     double adjusted_main_cue() const;
 
     void set_adjusted_main_cue(double sample_offset) const;
@@ -172,6 +174,8 @@ public:
     /// Returns the duration (metadata) of the track
     stdx::optional<std::chrono::milliseconds> duration() const;
 
+    // TODO (mr-smidge): Add `set_duration()` method.
+
     // TODO (mr-smidge): Add `file_bytes()` and `set_file_bytes()` methods.
 
     /// Returns the file extension part of `track::relative_path()`
@@ -195,6 +199,7 @@ public:
     void set_hot_cue_at(int32_t index, stdx::optional<hot_cue> cue) const;
     void set_hot_cue_at(int32_t index, hot_cue cue) const;
 
+    // TODO (mr-smidge): Expose as variable-size collection, e.g. vector.
     std::array<stdx::optional<hot_cue>, 8> hot_cues() const;
 
     void set_hot_cues(std::array<stdx::optional<hot_cue>, 8> cues) const;

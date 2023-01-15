@@ -63,6 +63,22 @@ struct DJINTEROP_PUBLIC information_row
     int64_t last_rekord_box_library_import_read_counter;
 };
 
+inline bool operator==(const information_row& x, const information_row& y)
+{
+    return x.id == y.id && x.uuid == y.uuid &&
+           x.schema_version_major == y.schema_version_major &&
+           x.schema_version_minor == y.schema_version_minor &&
+           x.schema_version_patch == y.schema_version_patch &&
+           x.current_played_indicator == y.current_played_indicator &&
+           x.last_rekord_box_library_import_read_counter ==
+               y.last_rekord_box_library_import_read_counter;
+}
+
+inline bool operator!=(const information_row& x, const information_row& y)
+{
+    return !(x == y);
+}
+
 /// Represents the `Information` table in an Engine v2 database.
 ///
 /// Note that the `Information` table in a valid database always has exactly

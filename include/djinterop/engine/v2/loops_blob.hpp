@@ -28,6 +28,7 @@
 #include <djinterop/config.hpp>
 #include <djinterop/optional.hpp>
 #include <djinterop/pad_color.hpp>
+#include <djinterop/performance_data.hpp>
 
 namespace djinterop::engine::v2
 {
@@ -61,6 +62,20 @@ struct DJINTEROP_PUBLIC loop_blob
     }
 };
 
+inline bool operator==(const loop_blob& x, const loop_blob& y)
+{
+    return x.label == y.label &&
+           x.start_sample_offset == y.start_sample_offset &&
+           x.end_sample_offset == y.end_sample_offset &&
+           x.is_start_set == y.is_start_set && x.is_end_set == y.is_end_set &&
+           x.color == y.color;
+}
+
+inline bool operator!=(const loop_blob& x, const loop_blob& y)
+{
+    return !(x == y);
+}
+
 /// Represents the loops blob.
 struct DJINTEROP_PUBLIC loops_blob
 {
@@ -78,20 +93,6 @@ struct DJINTEROP_PUBLIC loops_blob
     /// \return Returns a decoded instance of this struct.
     [[nodiscard]] static loops_blob from_blob(const std::vector<char>& blob);
 };
-
-inline bool operator==(const loop_blob& x, const loop_blob& y)
-{
-    return x.label == y.label &&
-           x.start_sample_offset == y.start_sample_offset &&
-           x.end_sample_offset == y.end_sample_offset &&
-           x.is_start_set == y.is_start_set && x.is_end_set == y.is_end_set &&
-           x.color == y.color;
-}
-
-inline bool operator!=(const loop_blob& x, const loop_blob& y)
-{
-    return !(x == y);
-}
 
 inline bool operator==(const loops_blob& x, const loops_blob& y)
 {

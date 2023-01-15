@@ -1021,11 +1021,11 @@ std::array<stdx::optional<loop>, 8> engine_track_impl::loops()
     return std::move(loops_d.loops);
 }
 
-void engine_track_impl::set_loops(std::array<stdx::optional<loop>, 8> cues)
+void engine_track_impl::set_loops(std::array<stdx::optional<loop>, 8> loops)
 {
     engine_transaction_guard_impl trans{storage_};
     loops_data loops_d;
-    loops_d.loops = std::move(cues);
+    loops_d.loops = std::move(loops);
     set_loops_data(std::move(loops_d));
     trans.commit();
 }

@@ -22,6 +22,7 @@
 #include <djinterop/engine/engine.hpp>
 #include <djinterop/engine/v2/engine_library.hpp>
 
+#include "../../boost_test_printable.hpp"
 #include "../../boost_test_utils.hpp"
 #include "../../temporary_directory.hpp"
 #include "example_track_row_data.hpp"
@@ -69,25 +70,107 @@ BOOST_DATA_TEST_CASE(add__existing_id__throws, e::all_v2_versions, version)
     BOOST_CHECK_THROW(track_tbl.add(row), ev2::track_row_id_error);
 }
 
+BOOST_TEST_DECORATOR(*utf::description("get() with a valid id"))
+BOOST_DATA_TEST_CASE(
+    get__valid__gets, e::all_v2_versions* all_example_track_row_types, version,
+    row_type)
+{
+    // Arrange
+    BOOST_TEST_CHECKPOINT(
+        "(" << version << ", " << row_type
+            << ") Creating temporary database...");
+    auto library = ev2::engine_library::create_temporary(version);
+
+    auto track_tbl = library.track();
+    ev2::track_row expected{0};
+    populate_track_row(row_type, expected);
+
+    BOOST_TEST_CHECKPOINT(
+        "(" << version << ", " << row_type << ") Creating track...");
+    auto id = track_tbl.add(expected);
+    expected.id = id;
+
+    if (expected.origin_database_uuid == "" || expected.origin_track_id == 0)
+    {
+        // A DB trigger will update the origin UUID and id if not set.
+        expected.origin_database_uuid = library.information().get().uuid;
+        expected.origin_track_id = id;
+    }
+
+    // Act
+    BOOST_TEST_CHECKPOINT(
+        "(" << version << ", " << row_type << ") Fetching track...");
+    auto actual = track_tbl.get(id);
+
+    // Assert
+    BOOST_CHECK_EQUAL(expected, actual);
+}
+
+BOOST_TEST_DECORATOR(*utf::description("update() with valid data"))
+BOOST_DATA_TEST_CASE(
+    update__valid__updates,
+    e::all_v2_versions* all_example_track_row_types*
+        all_example_track_row_types,
+    version, initial_row_type, update_row_type)
+{
+    // Arrange
+    BOOST_TEST_CHECKPOINT(
+        "(" << version << ", " << initial_row_type << ", " << update_row_type
+            << ") Creating temporary database...");
+    auto library = ev2::engine_library::create_temporary(version);
+
+    auto track_tbl = library.track();
+    ev2::track_row initial{0};
+    populate_track_row(initial_row_type, initial);
+
+    BOOST_TEST_CHECKPOINT(
+        "(" << version << ", " << initial_row_type << ", " << update_row_type
+            << ") Creating initial track...");
+    auto id = track_tbl.add(initial);
+
+    ev2::track_row expected{id};
+    populate_track_row(update_row_type, expected);
+
+    // Act
+    BOOST_TEST_CHECKPOINT(
+        "(" << version << ", " << initial_row_type << ", " << update_row_type
+            << ") Updating track...");
+    track_tbl.update(expected);
+
+    // Assert
+    if (expected.origin_database_uuid == "" || expected.origin_track_id == 0)
+    {
+        // A DB trigger will update the origin UUID and id if not set.
+        expected.origin_database_uuid = library.information().get().uuid;
+        expected.origin_track_id = id;
+    }
+
+    BOOST_TEST_CHECKPOINT(
+        "(" << version << ", " << initial_row_type << ", " << update_row_type
+            << ") Fetching track...");
+    auto actual = track_tbl.get(id);
+    BOOST_CHECK_EQUAL(expected, actual);
+}
+
 // The act of defining very similar test cases for all the getters and setters
 // on the track table is highly tedious.  As such, some macros to generate these
-// more efficiently make for more a succinct way to define tests.
-#define DEFINE_GETTER_VALID_TEST_CASE(engine_column)                       \
-    BOOST_TEST_DECORATOR(                                                  \
-        *utf::description("get_" #engine_column "() with valid track"))    \
-    BOOST_DATA_TEST_CASE(                                                  \
-        get_##engine_column##__expected, e::all_v2_versions, version)      \
-    {                                                                      \
-        auto library = ev2::engine_library::create_temporary(version);     \
-        auto track_tbl = library.track();                                  \
-        ev2::track_row row{0};                                             \
-        populate_track_row(example_track_row_type::fully_analysed_1, row); \
-        auto id = track_tbl.add(row);                                      \
-        auto expected = row.engine_column;                                 \
-                                                                           \
-        auto actual = track_tbl.get_##engine_column(id);                   \
-                                                                           \
-        BOOST_CHECK(expected == actual);                                   \
+// more efficiently make for a more succinct way to define tests.
+#define DEFINE_GETTER_VALID_TEST_CASE(engine_column)                         \
+    BOOST_TEST_DECORATOR(                                                    \
+        *utf::description("get_" #engine_column "() with valid track"))      \
+    BOOST_DATA_TEST_CASE(                                                    \
+        get_##engine_column##__expected, e::all_v2_versions, version)        \
+    {                                                                        \
+        auto library = ev2::engine_library::create_temporary(version);       \
+        auto track_tbl = library.track();                                    \
+        ev2::track_row row{0};                                               \
+        populate_track_row(example_track_row_type::fully_analysed_1, row);   \
+        auto id = track_tbl.add(row);                                        \
+        auto expected = row.engine_column;                                   \
+                                                                             \
+        auto actual = track_tbl.get_##engine_column(id);                     \
+                                                                             \
+        BOOST_CHECK_EQUAL(make_printable(expected), make_printable(actual)); \
     }
 
 #define DEFINE_SETTER_VALID_TEST_CASE(engine_column)                         \
@@ -108,7 +191,7 @@ BOOST_DATA_TEST_CASE(add__existing_id__throws, e::all_v2_versions, version)
         track_tbl.set_##engine_column(id, expected);                         \
                                                                              \
         auto actual = track_tbl.get_##engine_column(id);                     \
-        BOOST_CHECK(expected == actual);                                     \
+        BOOST_CHECK_EQUAL(make_printable(expected), make_printable(actual)); \
     }
 
 #define DEFINE_GETTER_INVALID_TEST_CASE(engine_column)                       \
