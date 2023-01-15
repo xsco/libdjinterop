@@ -19,6 +19,7 @@
 
 #include <cassert>
 #include <numeric>
+#include <stdexcept>
 
 #include "../encode_decode_utils.hpp"
 

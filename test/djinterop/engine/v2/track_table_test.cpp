@@ -21,7 +21,6 @@
 
 #include <djinterop/engine/engine.hpp>
 #include <djinterop/engine/v2/engine_library.hpp>
-#include <djinterop/engine/v2/track_table.hpp>
 
 #include "../../boost_test_utils.hpp"
 #include "../../temporary_directory.hpp"

@@ -18,6 +18,7 @@
 #include <djinterop/engine/v2/track_data_blob.hpp>
 
 #include <cassert>
+#include <stdexcept>
 #include <tuple>
 
 #include "../encode_decode_utils.hpp"
