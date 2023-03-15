@@ -19,6 +19,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <ostream>
 #include <string>
 
 #include <djinterop/optional.hpp>
@@ -52,8 +53,8 @@ inline stdx::optional<int64_t> to_timestamp(
     if (time)
     {
         result = std::chrono::duration_cast<std::chrono::seconds>(
-            time->time_since_epoch())
-            .count();
+                     time->time_since_epoch())
+                     .count();
     }
     return result;
 }

@@ -20,7 +20,6 @@
 #include <cassert>
 #include <stdexcept>
 
-#include "../../util.hpp"
 #include "../encode_decode_utils.hpp"
 
 namespace djinterop::engine::v2

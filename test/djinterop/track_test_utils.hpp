@@ -76,7 +76,9 @@ void do_snapshot_test(
     auto actual = track.snapshot();
 
     // Assert
-    assert_track_snapshot_equal(expected, actual, false);
+    auto expected_with_id = expected;
+    expected_with_id.id = track.id();
+    BOOST_CHECK_EQUAL(expected_with_id, actual);
 }
 
 template <typename TVersion, typename TSnapshot>
@@ -99,6 +101,8 @@ void do_update_test(
     track.update(expected);
 
     // Assert
+    auto expected_with_id = expected;
+    expected_with_id.id = track.id();
     auto actual = track.snapshot();
-    assert_track_snapshot_equal(expected, actual, false);
+    BOOST_CHECK_EQUAL(expected_with_id, actual);
 }

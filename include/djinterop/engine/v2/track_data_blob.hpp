@@ -22,6 +22,7 @@
 #endif
 
 #include <cstdint>
+#include <ostream>
 #include <vector>
 
 #include <djinterop/config.hpp>
@@ -54,17 +55,31 @@ struct DJINTEROP_PUBLIC track_data_blob
     /// \return Returns a decoded instance of this struct.
     [[nodiscard]] static track_data_blob from_blob(
         const std::vector<char>& blob);
+
+    friend bool operator==(
+        const track_data_blob& lhs, const track_data_blob& rhs) noexcept
+    {
+        return lhs.sample_rate == rhs.sample_rate &&
+               lhs.samples == rhs.samples &&
+               lhs.average_loudness == rhs.average_loudness &&
+               lhs.key == rhs.key;
+    }
+
+    friend bool operator!=(
+        const track_data_blob& lhs, const track_data_blob& rhs) noexcept
+    {
+        return !(lhs == rhs);
+    }
+
+    friend std::ostream& operator<<(
+        std::ostream& os, const track_data_blob& obj) noexcept
+    {
+        os << "track_data_blob{sample_rate=" << obj.sample_rate
+           << ", samples=" << obj.samples
+           << ", average_loudness=" << obj.average_loudness
+           << ", key=" << obj.key << "}";
+        return os;
+    }
 };
-
-inline bool operator==(const track_data_blob& x, const track_data_blob& y)
-{
-    return x.sample_rate == y.sample_rate && x.samples == y.samples &&
-           x.average_loudness == y.average_loudness && x.key == y.key;
-}
-
-inline bool operator!=(const track_data_blob& x, const track_data_blob& y)
-{
-    return !(x == y);
-}
 
 }  // namespace djinterop::engine::v2

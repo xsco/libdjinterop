@@ -19,6 +19,8 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/included/unit_test.hpp>
 
+#include <sstream>
+
 #include <djinterop/engine/engine.hpp>
 #include <djinterop/engine/v2/engine_library.hpp>
 
@@ -103,7 +105,8 @@ BOOST_DATA_TEST_CASE(
     auto actual = track_tbl.get(id);
 
     // Assert
-    BOOST_CHECK_EQUAL(expected, actual);
+    BOOST_CHECK(actual != djinterop::stdx::nullopt);
+    BOOST_CHECK_EQUAL(expected, *actual);
 }
 
 BOOST_TEST_DECORATOR(*utf::description("update() with valid data"))
@@ -149,7 +152,8 @@ BOOST_DATA_TEST_CASE(
         "(" << version << ", " << initial_row_type << ", " << update_row_type
             << ") Fetching track...");
     auto actual = track_tbl.get(id);
-    BOOST_CHECK_EQUAL(expected, actual);
+    BOOST_CHECK(actual != djinterop::stdx::nullopt);
+    BOOST_CHECK_EQUAL(expected, *actual);
 }
 
 // The act of defining very similar test cases for all the getters and setters
@@ -281,3 +285,21 @@ DEFINE_GETTER_SETTER_TEST_CASES(explicit_lyrics)
 #undef DEFINE_SETTER_VALID_TEST_CASE
 #undef DEFINE_GETTER_INVALID_TEST_CASE
 #undef DEFINE_GETTER_VALID_TEST_CASE
+
+BOOST_TEST_DECORATOR(*utf::description("operator<<() with valid track row"))
+BOOST_DATA_TEST_CASE(
+    operator_stream_output__valid__outputs, e::all_v2_versions* all_example_track_row_types, version,
+    row_type)
+{
+    // Arrange
+    ev2::track_row row{0};
+    populate_track_row(row_type, row);
+    std::stringstream ss;
+
+    // Act
+    ss << row;
+
+    // Assert
+    BOOST_CHECK_NE(ss.str(), "");
+}
+

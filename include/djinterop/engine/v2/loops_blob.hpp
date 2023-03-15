@@ -22,6 +22,7 @@
 #endif
 
 #include <cstdint>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -56,25 +57,37 @@ struct DJINTEROP_PUBLIC loop_blob
     /// Create an empty loop blob.
     ///
     /// \return Returns a loop blob.
-    [[nodiscard]] static const loop_blob empty()
+    [[nodiscard]] static loop_blob empty()
     {
         return loop_blob{"", -1, -1, 0, 0, pad_color{0, 0, 0, 0}};
     }
+
+    friend bool operator==(const loop_blob& lhs, const loop_blob& rhs) noexcept
+    {
+        return lhs.label == rhs.label &&
+               lhs.start_sample_offset == rhs.start_sample_offset &&
+               lhs.end_sample_offset == rhs.end_sample_offset &&
+               lhs.is_start_set == rhs.is_start_set &&
+               lhs.is_end_set == rhs.is_end_set && lhs.color == rhs.color;
+    }
+
+    friend bool operator!=(const loop_blob& lhs, const loop_blob& rhs) noexcept
+    {
+        return !(lhs == rhs);
+    }
+
+    friend std::ostream& operator<<(
+        std::ostream& os, const loop_blob& obj) noexcept
+    {
+        os << "loop_blob{label=" << obj.label
+           << ", start_sample_offset=" << obj.start_sample_offset
+           << ", end_sample_offset=" << obj.end_sample_offset
+           << ", is_start_set=" << (int)obj.is_start_set
+           << ", is_end_set=" << (int)obj.is_end_set << ", color=" << obj.color
+           << "}";
+        return os;
+    }
 };
-
-inline bool operator==(const loop_blob& x, const loop_blob& y)
-{
-    return x.label == y.label &&
-           x.start_sample_offset == y.start_sample_offset &&
-           x.end_sample_offset == y.end_sample_offset &&
-           x.is_start_set == y.is_start_set && x.is_end_set == y.is_end_set &&
-           x.color == y.color;
-}
-
-inline bool operator!=(const loop_blob& x, const loop_blob& y)
-{
-    return !(x == y);
-}
 
 /// Represents the loops blob.
 struct DJINTEROP_PUBLIC loops_blob
@@ -92,16 +105,32 @@ struct DJINTEROP_PUBLIC loops_blob
     /// \param blob Binary blob.
     /// \return Returns a decoded instance of this struct.
     [[nodiscard]] static loops_blob from_blob(const std::vector<char>& blob);
+
+    friend bool operator==(
+        const loops_blob& lhs, const loops_blob& rhs) noexcept
+    {
+        return lhs.loops == rhs.loops;
+    }
+
+    friend bool operator!=(
+        const loops_blob& lhs, const loops_blob& rhs) noexcept
+    {
+        return !(lhs == rhs);
+    }
+
+    friend std::ostream& operator<<(
+        std::ostream& os, const loops_blob& obj) noexcept
+    {
+        os << "loops_blob{loops=[";
+        for (auto iter = obj.loops.begin(); iter != obj.loops.end(); ++iter)
+        {
+            if (iter != obj.loops.begin())
+                os << ", ";
+
+            os << *iter;
+        }
+        os << "]}";
+        return os;
+    }
 };
-
-inline bool operator==(const loops_blob& x, const loops_blob& y)
-{
-    return x.loops == y.loops;
-}
-
-inline bool operator!=(const loops_blob& x, const loops_blob& y)
-{
-    return !(x == y);
-}
-
 }  // namespace djinterop::engine::v2

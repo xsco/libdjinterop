@@ -22,6 +22,7 @@
 #endif
 
 #include <cstdint>
+#include <ostream>
 #include <vector>
 
 #include <djinterop/config.hpp>
@@ -39,20 +40,32 @@ struct DJINTEROP_PUBLIC overview_waveform_point
 
     /// High-frequency waveform point value.
     uint8_t high_value;
+
+    friend bool operator==(
+        const overview_waveform_point& lhs,
+        const overview_waveform_point& rhs) noexcept
+    {
+        return lhs.low_value == rhs.low_value &&
+               lhs.mid_value == rhs.mid_value &&
+               lhs.high_value == rhs.high_value;
+    }
+
+    friend bool operator!=(
+        const overview_waveform_point& lhs,
+        const overview_waveform_point& rhs) noexcept
+    {
+        return !(lhs == rhs);
+    }
+
+    friend std::ostream& operator<<(
+        std::ostream& os, const overview_waveform_point& obj) noexcept
+    {
+        os << "overview_waveform_point{low_value=" << obj.low_value
+           << ", mid_value=" << obj.mid_value
+           << ", high_value=" << obj.high_value << "}";
+        return os;
+    }
 };
-
-inline bool operator==(
-    const overview_waveform_point& x, const overview_waveform_point& y)
-{
-    return x.low_value == y.low_value && x.mid_value == y.mid_value &&
-           x.high_value == y.high_value;
-}
-
-inline bool operator!=(
-    const overview_waveform_point& x, const overview_waveform_point& y)
-{
-    return !(x == y);
-}
 
 /// Represents the overview waveform data blob.
 struct DJINTEROP_PUBLIC overview_waveform_data_blob
@@ -77,20 +90,32 @@ struct DJINTEROP_PUBLIC overview_waveform_data_blob
     /// \return Returns a decoded instance of this struct.
     [[nodiscard]] static overview_waveform_data_blob from_blob(
         const std::vector<char>& blob);
+
+    friend bool operator==(
+        const overview_waveform_data_blob& lhs,
+        const overview_waveform_data_blob& rhs) noexcept
+    {
+        return lhs.samples_per_waveform_point ==
+                   rhs.samples_per_waveform_point &&
+               lhs.waveform_points == rhs.waveform_points &&
+               lhs.maximum_point == rhs.maximum_point;
+    }
+
+    friend bool operator!=(
+        const overview_waveform_data_blob& lhs,
+        const overview_waveform_data_blob& rhs) noexcept
+    {
+        return !(lhs == rhs);
+    }
+
+    friend std::ostream& operator<<(
+        std::ostream& os, const overview_waveform_data_blob& obj) noexcept
+    {
+        os << "overview_waveform_data_blob{samples_per_waveform_point="
+           << obj.samples_per_waveform_point << ", waveform_points=[#"
+           << obj.waveform_points.size()
+           << "], maximum_point=" << obj.maximum_point << "}";
+        return os;
+    }
 };
-
-inline bool operator==(
-    const overview_waveform_data_blob& x, const overview_waveform_data_blob& y)
-{
-    return x.samples_per_waveform_point == y.samples_per_waveform_point &&
-           x.waveform_points == y.waveform_points &&
-           x.maximum_point == y.maximum_point;
-}
-
-inline bool operator!=(
-    const overview_waveform_data_blob& x, const overview_waveform_data_blob& y)
-{
-    return !(x == y);
-}
-
 }  // namespace djinterop::engine::v2

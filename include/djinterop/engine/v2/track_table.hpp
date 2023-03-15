@@ -36,6 +36,7 @@
 #include <djinterop/engine/v2/track_data_blob.hpp>
 #include <djinterop/musical_key.hpp>
 #include <djinterop/optional.hpp>
+#include <djinterop/stream_helper.hpp>
 
 namespace djinterop::engine::v2
 {
@@ -236,48 +237,106 @@ struct DJINTEROP_PUBLIC track_row
 
     /// `explicitLyrics` column.
     bool explicit_lyrics;
+
+    friend bool operator==(const track_row& lhs, const track_row& rhs) noexcept
+    {
+        return std::tie(
+                   lhs.id, lhs.play_order, lhs.length, lhs.bpm, lhs.year,
+                   lhs.path, lhs.filename, lhs.bitrate, lhs.bpm_analyzed,
+                   lhs.album_art_id, lhs.file_bytes, lhs.title, lhs.artist,
+                   lhs.album, lhs.genre, lhs.comment, lhs.label, lhs.composer,
+                   lhs.remixer, lhs.key, lhs.rating, lhs.album_art,
+                   lhs.time_last_played, lhs.is_played, lhs.file_type,
+                   lhs.is_analyzed, lhs.date_created, lhs.date_added,
+                   lhs.is_available, lhs.is_metadata_of_packed_track_changed,
+                   lhs.is_performance_data_of_packed_track_changed,
+                   lhs.played_indicator, lhs.is_metadata_imported,
+                   lhs.pdb_import_key, lhs.streaming_source, lhs.uri,
+                   lhs.is_beat_grid_locked, lhs.origin_database_uuid,
+                   lhs.origin_track_id, lhs.track_data,
+                   lhs.overview_waveform_data, lhs.beat_data, lhs.quick_cues,
+                   lhs.loops, lhs.third_party_source_id, lhs.streaming_flags,
+                   lhs.explicit_lyrics) ==
+               std::tie(
+                   rhs.id, rhs.play_order, rhs.length, rhs.bpm, rhs.year,
+                   rhs.path, rhs.filename, rhs.bitrate, rhs.bpm_analyzed,
+                   rhs.album_art_id, rhs.file_bytes, rhs.title, rhs.artist,
+                   rhs.album, rhs.genre, rhs.comment, rhs.label, rhs.composer,
+                   rhs.remixer, rhs.key, rhs.rating, rhs.album_art,
+                   rhs.time_last_played, rhs.is_played, rhs.file_type,
+                   rhs.is_analyzed, rhs.date_created, rhs.date_added,
+                   rhs.is_available, rhs.is_metadata_of_packed_track_changed,
+                   rhs.is_performance_data_of_packed_track_changed,
+                   rhs.played_indicator, rhs.is_metadata_imported,
+                   rhs.pdb_import_key, rhs.streaming_source, rhs.uri,
+                   rhs.is_beat_grid_locked, rhs.origin_database_uuid,
+                   rhs.origin_track_id, rhs.track_data,
+                   rhs.overview_waveform_data, rhs.beat_data, rhs.quick_cues,
+                   rhs.loops, rhs.third_party_source_id, rhs.streaming_flags,
+                   rhs.explicit_lyrics);
+    }
+
+    friend bool operator!=(const track_row& lhs, const track_row& rhs) noexcept
+    {
+        return !(rhs == lhs);
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const track_row& obj)
+    {
+#define PRINT_FIELD(field) \
+        os << ", " #field "="; \
+        stream_helper::print(os, obj.field)
+
+        os << "track_row{id=" << obj.id;
+        PRINT_FIELD(play_order);
+        PRINT_FIELD(length);
+        PRINT_FIELD(bpm);
+        PRINT_FIELD(year);
+        PRINT_FIELD(path);
+        PRINT_FIELD(filename);
+        PRINT_FIELD(bitrate);
+        PRINT_FIELD(bpm_analyzed);
+        PRINT_FIELD(album_art_id);
+        PRINT_FIELD(file_bytes);
+        PRINT_FIELD(title);
+        PRINT_FIELD(artist);
+        PRINT_FIELD(album);
+        PRINT_FIELD(genre);
+        PRINT_FIELD(label);
+        PRINT_FIELD(remixer);
+        PRINT_FIELD(key);
+        PRINT_FIELD(rating);
+        PRINT_FIELD(album_art);
+        PRINT_FIELD(time_last_played);
+        PRINT_FIELD(is_played);
+        PRINT_FIELD(file_type);
+        PRINT_FIELD(is_analyzed);
+        PRINT_FIELD(date_created);
+        PRINT_FIELD(date_added);
+        PRINT_FIELD(is_available);
+        PRINT_FIELD(is_metadata_of_packed_track_changed);
+        PRINT_FIELD(is_performance_data_of_packed_track_changed);
+        PRINT_FIELD(played_indicator);
+        PRINT_FIELD(is_metadata_imported);
+        PRINT_FIELD(pdb_import_key);
+        PRINT_FIELD(streaming_source);
+        PRINT_FIELD(uri);
+        PRINT_FIELD(is_beat_grid_locked);
+        PRINT_FIELD(origin_database_uuid);
+        PRINT_FIELD(origin_track_id);
+        PRINT_FIELD(track_data);
+        PRINT_FIELD(overview_waveform_data);
+        PRINT_FIELD(beat_data);
+        PRINT_FIELD(quick_cues);
+        PRINT_FIELD(loops);
+        PRINT_FIELD(third_party_source_id);
+        PRINT_FIELD(streaming_flags);
+        PRINT_FIELD(explicit_lyrics);
+        os << "}";
+        return os;
+#undef PRINT_FIELD
+    }
 };
-
-inline bool operator==(const track_row& lhs, const track_row& rhs)
-{
-    return std::tie(
-               lhs.id, lhs.play_order, lhs.length, lhs.bpm, lhs.year, lhs.path,
-               lhs.filename, lhs.bitrate, lhs.bpm_analyzed, lhs.album_art_id,
-               lhs.file_bytes, lhs.title, lhs.artist, lhs.album, lhs.genre,
-               lhs.comment, lhs.label, lhs.composer, lhs.remixer, lhs.key,
-               lhs.rating, lhs.album_art, lhs.time_last_played, lhs.is_played,
-               lhs.file_type, lhs.is_analyzed, lhs.date_created, lhs.date_added,
-               lhs.is_available, lhs.is_metadata_of_packed_track_changed,
-               lhs.is_performance_data_of_packed_track_changed,
-               lhs.played_indicator, lhs.is_metadata_imported,
-               lhs.pdb_import_key, lhs.streaming_source, lhs.uri,
-               lhs.is_beat_grid_locked, lhs.origin_database_uuid,
-               lhs.origin_track_id, lhs.track_data, lhs.overview_waveform_data,
-               lhs.beat_data, lhs.quick_cues, lhs.loops,
-               lhs.third_party_source_id, lhs.streaming_flags,
-               lhs.explicit_lyrics) ==
-           std::tie(
-               rhs.id, rhs.play_order, rhs.length, rhs.bpm, rhs.year, rhs.path,
-               rhs.filename, rhs.bitrate, rhs.bpm_analyzed, rhs.album_art_id,
-               rhs.file_bytes, rhs.title, rhs.artist, rhs.album, rhs.genre,
-               rhs.comment, rhs.label, rhs.composer, rhs.remixer, rhs.key,
-               rhs.rating, rhs.album_art, rhs.time_last_played, rhs.is_played,
-               rhs.file_type, rhs.is_analyzed, rhs.date_created, rhs.date_added,
-               rhs.is_available, rhs.is_metadata_of_packed_track_changed,
-               rhs.is_performance_data_of_packed_track_changed,
-               rhs.played_indicator, rhs.is_metadata_imported,
-               rhs.pdb_import_key, rhs.streaming_source, rhs.uri,
-               rhs.is_beat_grid_locked, rhs.origin_database_uuid,
-               rhs.origin_track_id, rhs.track_data, rhs.overview_waveform_data,
-               rhs.beat_data, rhs.quick_cues, rhs.loops,
-               rhs.third_party_source_id, rhs.streaming_flags,
-               rhs.explicit_lyrics);
-}
-
-inline bool operator!=(const track_row& lhs, const track_row& rhs)
-{
-    return !(rhs == lhs);
-}
 
 /// Represents the `Track` table in an Engine v2 database.
 class DJINTEROP_PUBLIC track_table
