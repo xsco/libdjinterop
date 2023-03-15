@@ -21,6 +21,7 @@
 #error This library needs at least a C++17 compliant compiler
 #endif
 
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -58,18 +59,29 @@ struct DJINTEROP_PUBLIC quick_cue_blob
         return quick_cue_blob{
             "", QUICK_CUE_SAMPLE_OFFSET_EMPTY, pad_color{0, 0, 0, 0}};
     }
+
+    friend bool operator==(
+        const quick_cue_blob& lhs, const quick_cue_blob& rhs) noexcept
+    {
+        return lhs.label == rhs.label &&
+               lhs.sample_offset == rhs.sample_offset && lhs.color == rhs.color;
+    }
+
+    friend bool operator!=(
+        const quick_cue_blob& lhs, const quick_cue_blob& rhs) noexcept
+    {
+        return !(lhs == rhs);
+    }
+
+    friend std::ostream& operator<<(
+        std::ostream& os, const quick_cue_blob& obj) noexcept
+    {
+        os << "quick_cue_blob{label=" << obj.label
+           << ", sample_offset=" << obj.sample_offset << ", color=" << obj.color
+           << "}";
+        return os;
+    }
 };
-
-inline bool operator==(const quick_cue_blob& x, const quick_cue_blob& y)
-{
-    return x.label == y.label && x.sample_offset == y.sample_offset &&
-           x.color == y.color;
-}
-
-inline bool operator!=(const quick_cue_blob& x, const quick_cue_blob& y)
-{
-    return !(x == y);
-}
 
 /// Represents the quick cues blob.
 struct DJINTEROP_PUBLIC quick_cues_blob
@@ -101,19 +113,38 @@ struct DJINTEROP_PUBLIC quick_cues_blob
     /// \return Returns a decoded instance of this struct.
     [[nodiscard]] static quick_cues_blob from_blob(
         const std::vector<char>& blob);
+
+    friend bool operator==(
+        const quick_cues_blob& lhs, const quick_cues_blob& rhs) noexcept
+    {
+        return lhs.quick_cues == rhs.quick_cues &&
+               lhs.adjusted_main_cue == rhs.adjusted_main_cue &&
+               lhs.is_main_cue_adjusted == rhs.is_main_cue_adjusted &&
+               lhs.default_main_cue == rhs.default_main_cue;
+    }
+
+    friend bool operator!=(
+        const quick_cues_blob& lhs, const quick_cues_blob& rhs) noexcept
+    {
+        return !(lhs == rhs);
+    }
+
+    friend std::ostream& operator<<(
+        std::ostream& os, const quick_cues_blob& obj) noexcept
+    {
+        os << "quick_cues_blob{quick_cues=[";
+        for (auto iter = obj.quick_cues.begin(); iter != obj.quick_cues.end();
+             ++iter)
+        {
+            if (iter != obj.quick_cues.begin())
+                os << ", ";
+
+            os << *iter;
+        }
+        os << "], adjusted_main_cue=" << obj.adjusted_main_cue
+           << ", is_main_cue_adjusted=" << obj.is_main_cue_adjusted
+           << ", default_main_cue=" << obj.default_main_cue << "}";
+        return os;
+    }
 };
-
-inline bool operator==(const quick_cues_blob& x, const quick_cues_blob& y)
-{
-    return x.quick_cues == y.quick_cues &&
-           x.adjusted_main_cue == y.adjusted_main_cue &&
-           x.is_main_cue_adjusted == y.is_main_cue_adjusted &&
-           x.default_main_cue == y.default_main_cue;
-}
-
-inline bool operator!=(const quick_cues_blob& x, const quick_cues_blob& y)
-{
-    return !(x == y);
-}
-
 }  // namespace djinterop::engine::v2

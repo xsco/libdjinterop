@@ -22,6 +22,7 @@
 #endif
 
 #include <cstdint>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -55,22 +56,34 @@ struct DJINTEROP_PUBLIC beat_grid_marker_blob
 
     /// Unknown value, can seemingly be set to 0.
     int32_t unknown_value_1;
+
+    friend bool operator==(
+        const beat_grid_marker_blob& lhs,
+        const beat_grid_marker_blob& rhs) noexcept
+    {
+        return lhs.sample_offset == rhs.sample_offset &&
+               lhs.beat_number == rhs.beat_number &&
+               lhs.number_of_beats == rhs.number_of_beats &&
+               lhs.unknown_value_1 == rhs.unknown_value_1;
+    }
+
+    friend bool operator!=(
+        const beat_grid_marker_blob& lhs,
+        const beat_grid_marker_blob& rhs) noexcept
+    {
+        return !(lhs == rhs);
+    }
+
+    friend std::ostream& operator<<(
+        std::ostream& os, const beat_grid_marker_blob& obj) noexcept
+    {
+        os << "beat_grid_marker{sample_offset=" << obj.sample_offset
+           << ", beat_number=" << obj.beat_number
+           << ", number_of_beats=" << obj.number_of_beats
+           << ", unknown_value_1=" << obj.unknown_value_1 << "}";
+        return os;
+    }
 };
-
-inline bool operator==(
-    const beat_grid_marker_blob& x, const beat_grid_marker_blob& y)
-{
-    return x.sample_offset == y.sample_offset &&
-           x.beat_number == y.beat_number &&
-           x.number_of_beats == y.number_of_beats &&
-           x.unknown_value_1 == y.unknown_value_1;
-}
-
-inline bool operator!=(
-    const beat_grid_marker_blob& x, const beat_grid_marker_blob& y)
-{
-    return !(x == y);
-}
 
 /// Represents the beat data blob.
 struct DJINTEROP_PUBLIC beat_data_blob
@@ -104,18 +117,49 @@ struct DJINTEROP_PUBLIC beat_data_blob
     /// \return Returns a decoded instance of this struct.
     [[nodiscard]] static beat_data_blob from_blob(
         const std::vector<char>& blob);
+
+    friend bool operator==(
+        const beat_data_blob& lhs, const beat_data_blob& rhs) noexcept
+    {
+        return lhs.sample_rate == rhs.sample_rate &&
+               lhs.samples == rhs.samples &&
+               lhs.is_beatgrid_set == rhs.is_beatgrid_set &&
+               lhs.default_beat_grid == rhs.default_beat_grid &&
+               lhs.adjusted_beat_grid == rhs.adjusted_beat_grid;
+    }
+
+    friend bool operator!=(
+        const beat_data_blob& lhs, const beat_data_blob& rhs) noexcept
+    {
+        return !(lhs == rhs);
+    }
+
+    friend std::ostream& operator<<(
+        std::ostream& os, const beat_data_blob& obj) noexcept
+    {
+        os << "beat_data_blob{sample_rate=" << obj.sample_rate
+           << ", samples=" << obj.samples
+           << ", is_beatgrid_set=" << (int)obj.is_beatgrid_set
+           << ", default_beat_grid=[";
+        for (auto iter = obj.default_beat_grid.begin();
+             iter != obj.default_beat_grid.end(); ++iter)
+        {
+            if (iter != obj.default_beat_grid.begin())
+                os << ", ";
+
+            os << *iter;
+        }
+        os << "], adjusted_beat_grid=[";
+        for (auto iter = obj.adjusted_beat_grid.begin();
+             iter != obj.adjusted_beat_grid.end(); ++iter)
+        {
+            if (iter != obj.adjusted_beat_grid.begin())
+                os << ", ";
+
+            os << *iter;
+        }
+        os << "]}";
+        return os;
+    }
 };
-
-inline bool operator==(const beat_data_blob& x, const beat_data_blob& y)
-{
-    return x.sample_rate == y.sample_rate && x.samples == y.samples &&
-           x.is_beatgrid_set == y.is_beatgrid_set &&
-           x.default_beat_grid == y.default_beat_grid &&
-           x.adjusted_beat_grid == y.adjusted_beat_grid;
-}
-
-inline bool operator!=(const beat_data_blob& x, const beat_data_blob& y)
-{
-    return !(x == y);
-}
 }  // namespace djinterop::engine::v2

@@ -174,6 +174,7 @@ install(FILES
     include/djinterop/pad_color.hpp
     include/djinterop/performance_data.hpp
     include/djinterop/semantic_version.hpp
+    include/djinterop/stream_helper.hpp
     include/djinterop/track.hpp
     include/djinterop/track_snapshot.hpp
     include/djinterop/transaction_guard.hpp

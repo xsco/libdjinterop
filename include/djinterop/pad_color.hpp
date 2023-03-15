@@ -24,6 +24,7 @@
 #endif
 
 #include <cstdint>
+#include <ostream>
 
 namespace djinterop
 {
@@ -69,6 +70,17 @@ inline bool operator==(const pad_color& x, const pad_color& y)
     return x.r == y.r && x.g == y.g && x.b == y.b && x.a == y.a;
 }
 
+inline bool operator!=(const pad_color& x, const pad_color& y)
+{
+    return !(x == y);
+}
+
+inline std::ostream& operator<<(std::ostream& o, const djinterop::pad_color& v)
+{
+    o << "pad_color{r=" << (int)v.r << ", g=" << (int)v.g << ", b=" << (int)v.b
+      << ", a=" << (int)v.a;
+    return o;
+}
 }  // namespace djinterop
 
 #endif  // DJINTEROP_PAD_COLOR_HPP

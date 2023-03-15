@@ -27,11 +27,13 @@
 #include <chrono>
 #include <cstdint>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include <djinterop/musical_key.hpp>
 #include <djinterop/optional.hpp>
 #include <djinterop/performance_data.hpp>
+#include <djinterop/stream_helper.hpp>
 
 namespace djinterop
 {
@@ -47,13 +49,8 @@ class database;
 /// persist the changes.
 struct track_snapshot
 {
-    /// Create a new instance of `track_snapshot` to assemble a new track.
-    track_snapshot() : id{stdx::nullopt} {}
-
-    /// Create new instance of `track_snapshot` to edit an existing track.
-    explicit track_snapshot(int64_t id) : id{id} {}
-
-    const stdx::optional<int64_t> id;
+    /// The track id, if persisted.
+    stdx::optional<int64_t> id;
 
     /// The adjusted beatgrid.
     std::vector<beatgrid_marker> adjusted_beatgrid;
@@ -140,6 +137,78 @@ struct track_snapshot
 
     /// The recording year metadata.
     stdx::optional<int32_t> year;
+
+    friend bool operator==(
+        const track_snapshot& lhs, const track_snapshot& rhs) noexcept
+    {
+        return std::tie(
+                   lhs.id, lhs.adjusted_beatgrid, lhs.adjusted_main_cue,
+                   lhs.album, lhs.artist, lhs.average_loudness, lhs.bitrate,
+                   lhs.bpm, lhs.comment, lhs.composer, lhs.default_beatgrid,
+                   lhs.default_main_cue, lhs.duration, lhs.file_bytes,
+                   lhs.genre, lhs.hot_cues, lhs.key, lhs.last_accessed_at,
+                   lhs.last_modified_at, lhs.last_played_at, lhs.loops,
+                   lhs.publisher, lhs.rating, lhs.relative_path, lhs.sampling,
+                   lhs.title, lhs.track_number, lhs.waveform, lhs.year) ==
+               std::tie(
+                   rhs.id, rhs.adjusted_beatgrid, rhs.adjusted_main_cue,
+                   rhs.album, rhs.artist, rhs.average_loudness, rhs.bitrate,
+                   rhs.bpm, rhs.comment, rhs.composer, rhs.default_beatgrid,
+                   rhs.default_main_cue, rhs.duration, rhs.file_bytes,
+                   rhs.genre, rhs.hot_cues, rhs.key, rhs.last_accessed_at,
+                   rhs.last_modified_at, rhs.last_played_at, rhs.loops,
+                   rhs.publisher, rhs.rating, rhs.relative_path, rhs.sampling,
+                   rhs.title, rhs.track_number, rhs.waveform, rhs.year);
+    }
+
+    friend bool operator!=(
+        const track_snapshot& lhs, const track_snapshot& rhs) noexcept
+    {
+        return !(rhs == lhs);
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const track_snapshot& obj) noexcept
+    {
+#define PRINT_FIELD(field) \
+        os << ", " #field "="; \
+        stream_helper::print(os, obj.field)
+
+        os << "track_snapshot{id=";
+        stream_helper::print(os, obj.id);
+
+        PRINT_FIELD(adjusted_beatgrid);
+        PRINT_FIELD(adjusted_main_cue);
+        PRINT_FIELD(album);
+        PRINT_FIELD(artist);
+        PRINT_FIELD(average_loudness);
+        PRINT_FIELD(bitrate);
+        PRINT_FIELD(bpm);
+        PRINT_FIELD(comment);
+        PRINT_FIELD(composer);
+        PRINT_FIELD(default_beatgrid);
+        PRINT_FIELD(default_main_cue);
+        PRINT_FIELD(duration);
+        PRINT_FIELD(file_bytes);
+        PRINT_FIELD(genre);
+        PRINT_FIELD(hot_cues);
+        PRINT_FIELD(key);
+        PRINT_FIELD(last_accessed_at);
+        PRINT_FIELD(last_modified_at);
+        PRINT_FIELD(last_played_at);
+        PRINT_FIELD(loops);
+        PRINT_FIELD(publisher);
+        PRINT_FIELD(rating);
+        PRINT_FIELD(relative_path);
+        PRINT_FIELD(sampling);
+        PRINT_FIELD(title);
+        PRINT_FIELD(track_number);
+        os << ", waveform=[#" << obj.waveform.size() << "]";
+        PRINT_FIELD(year);
+
+        os << "}";
+        return os;
+#undef PRINT_FIELD
+    }
 };
 
 }  // namespace djinterop

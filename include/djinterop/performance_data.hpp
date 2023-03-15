@@ -24,6 +24,7 @@
 #endif
 
 #include <cstdint>
+#include <ostream>
 #include <string>
 
 #include <djinterop/config.hpp>
@@ -37,10 +38,24 @@ struct sampling_info
     int64_t sample_count = 0;
 
     friend bool operator==(
-        const sampling_info& first, const sampling_info& second) noexcept
+        const sampling_info& lhs, const sampling_info& rhs) noexcept
     {
-        return first.sample_rate == second.sample_rate &&
-               first.sample_count == second.sample_count;
+        return lhs.sample_rate == rhs.sample_rate &&
+               lhs.sample_count == rhs.sample_count;
+    }
+
+    friend bool operator!=(
+        const sampling_info& lhs, const sampling_info& rhs) noexcept
+    {
+        return !(rhs == lhs);
+    }
+
+    friend std::ostream& operator<<(
+        std::ostream& os, const djinterop::sampling_info& obj) noexcept
+    {
+        os << "sampling_info{sample_rate=" << obj.sample_rate
+          << ", sample_count=" << obj.sample_count << "}";
+        return os;
     }
 };
 
@@ -50,10 +65,23 @@ struct beatgrid_marker
     double sample_offset = 0;
 
     friend bool operator==(
-        const beatgrid_marker& first, const beatgrid_marker& second) noexcept
+        const beatgrid_marker& lhs, const beatgrid_marker& rhs) noexcept
     {
-        return first.index == second.index &&
-               first.sample_offset == second.sample_offset;
+        return lhs.index == rhs.index && lhs.sample_offset == rhs.sample_offset;
+    }
+
+    friend bool operator!=(
+        const beatgrid_marker& lhs, const beatgrid_marker& rhs) noexcept
+    {
+        return !(lhs == rhs);
+    }
+
+    friend std::ostream& operator<<(
+        std::ostream& os, const djinterop::beatgrid_marker& obj) noexcept
+    {
+        os << "beatgrid_marker{index=" << obj.index
+          << ", sample_offset=" << obj.sample_offset << "}";
+        return os;
     }
 };
 
@@ -63,11 +91,24 @@ struct hot_cue
     double sample_offset = 0;
     pad_color color;
 
-    friend bool operator==(const hot_cue& first, const hot_cue& second) noexcept
+    friend bool operator==(const hot_cue& lhs, const hot_cue& rhs) noexcept
     {
-        return first.label == second.label &&
-               first.sample_offset == second.sample_offset &&
-               first.color == second.color;
+        return lhs.label == rhs.label &&
+               lhs.sample_offset == rhs.sample_offset && lhs.color == rhs.color;
+    }
+
+    friend bool operator!=(const hot_cue& lhs, const hot_cue& rhs) noexcept
+    {
+        return !(lhs == rhs);
+    }
+
+    friend std::ostream& operator<<(
+        std::ostream& os, const djinterop::hot_cue& obj) noexcept
+    {
+        os << "loop{label=" << obj.label
+          << ", sample_offset=" << obj.sample_offset << ", color=" << obj.color
+          << "}";
+        return os;
     }
 };
 
@@ -78,12 +119,27 @@ struct loop
     double end_sample_offset = 0;
     pad_color color;
 
-    friend bool operator==(const loop& first, const loop& second) noexcept
+    friend bool operator==(const loop& lhs, const loop& rhs) noexcept
     {
-        return first.label == second.label &&
-               first.start_sample_offset == second.start_sample_offset &&
-               first.end_sample_offset == second.end_sample_offset &&
-               first.color == second.color;
+        return lhs.label == rhs.label &&
+               lhs.start_sample_offset == rhs.start_sample_offset &&
+               lhs.end_sample_offset == rhs.end_sample_offset &&
+               lhs.color == rhs.color;
+    }
+
+    friend bool operator!=(const loop& lhs, const loop& rhs) noexcept
+    {
+        return !(lhs == rhs);
+    }
+
+    friend std::ostream& operator<<(
+        std::ostream& os, const djinterop::loop& obj) noexcept
+    {
+        os << "loop{label=" << obj.label
+          << ", start_sample_offset=" << obj.start_sample_offset
+          << ", end_sample_offset=" << obj.end_sample_offset
+          << ", color=" << obj.color << "}";
+        return os;
     }
 };
 
@@ -93,9 +149,23 @@ struct waveform_point
     uint8_t opacity = 255;
 
     friend bool operator==(
-        const waveform_point& first, const waveform_point& second) noexcept
+        const waveform_point& lhs, const waveform_point& rhs) noexcept
     {
-        return first.value == second.value && first.opacity == second.opacity;
+        return lhs.value == rhs.value && lhs.opacity == rhs.opacity;
+    }
+
+    friend bool operator!=(
+        const waveform_point& lhs, const waveform_point& rhs) noexcept
+    {
+        return !(lhs == rhs);
+    }
+
+    friend std::ostream& operator<<(
+        std::ostream& os, const djinterop::waveform_point& obj) noexcept
+    {
+        os << "waveform_point{value=" << (int)obj.value
+          << ", opacity=" << (int)obj.opacity;
+        return os;
     }
 };
 
@@ -119,10 +189,23 @@ struct waveform_entry
     waveform_point high;
 
     friend bool operator==(
-        const waveform_entry& first, const waveform_entry& second) noexcept
+        const waveform_entry& lhs, const waveform_entry& rhs) noexcept
     {
-        return first.low == second.low && first.mid == second.mid &&
-               first.high == second.high;
+        return lhs.low == rhs.low && lhs.mid == rhs.mid && lhs.high == rhs.high;
+    }
+
+    friend bool operator!=(
+        const waveform_entry& lhs, const waveform_entry& rhs) noexcept
+    {
+        return !(lhs == rhs);
+    }
+
+    friend std::ostream& operator<<(
+        std::ostream& os, const djinterop::waveform_entry& obj) noexcept
+    {
+        os << "waveform_entry{low=" << obj.low << ", mid=" << obj.mid
+          << ", high=" << obj.high << "}";
+        return os;
     }
 };
 
