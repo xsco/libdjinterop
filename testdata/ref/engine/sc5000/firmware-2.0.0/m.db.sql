@@ -12,7 +12,7 @@ CREATE TABLE Playlist ( id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, parent
 CREATE TABLE PreparelistEntity ( id INTEGER PRIMARY KEY AUTOINCREMENT, trackId INTEGER, trackNumber INTEGER, FOREIGN KEY (trackId) REFERENCES Track (id) ON DELETE CASCADE );
 DELETE FROM sqlite_sequence;
 INSERT INTO sqlite_sequence VALUES('Information',1);
-INSERT INTO sqlite_sequence VALUES('AlbumArt',4);
+INSERT INTO sqlite_sequence VALUES('AlbumArt',1);
 CREATE INDEX index_Track_filename ON Track (filename);
 CREATE INDEX index_Track_albumArtId ON Track (albumArtId);
 CREATE INDEX index_Track_uri ON Track (uri);
