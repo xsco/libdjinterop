@@ -19,6 +19,7 @@
 
 #include <cmath>
 #include <fstream>
+#include <stdexcept>
 #include <string>
 
 #include <djinterop/engine/v2/engine_library.hpp>
@@ -62,7 +63,17 @@ engine_version detect_version(const std::string& directory)
     // Assume that all versions of engine libraries have a database called
     // "m.db", containing a table called "Information", containing the schema
     // version in some of its columns.
-    sqlite::database db{directory + "/m.db"};
+    auto v1_m_db_path = directory + "/m.db";
+    auto v2_m_db_path = directory + "/Database2/m.db";
+    auto v1_m_db_path_exists = path_exists(v1_m_db_path);
+    auto v2_m_db_path_exists = path_exists(v2_m_db_path);
+    auto m_db_path = v1_m_db_path_exists ? v1_m_db_path : v2_m_db_path;
+    if (!v1_m_db_path_exists && !v2_m_db_path_exists)
+    {
+        throw database_not_found{"Neither m.db nor Database2/m.db was found"};
+    }
+
+    sqlite::database db{m_db_path};
 
     // Check that the `Information` table has been created.
     std::string sql =
@@ -105,6 +116,18 @@ engine_version detect_version(const std::string& directory)
     throw unsupported_engine_database{schema_version};
 }
 
+inline void hydrate_database(
+    const std::string& db_path, const std::string& script_path)
+{
+    std::string stmt;
+
+    std::ifstream script{script_path};
+    sqlite::database m_db{db_path};
+    while (std::getline(script, stmt))
+    {
+        m_db << stmt;
+    }
+}
 } // anonymous namespace
 
 database create_database(
@@ -113,7 +136,7 @@ database create_database(
     if (version.version.maj >= 2)
     {
         auto library = v2::engine_library::create(directory, version);
-        return library.make_database();
+        return library.database();
     }
 
     auto storage = v1::engine_storage::create(directory, version);
@@ -125,7 +148,7 @@ database create_temporary_database(const engine_version& version)
     if (version.version.maj >= 2)
     {
         auto library = v2::engine_library::create_temporary(version);
-        return library.make_database();
+        return library.database();
     }
 
     auto storage = v1::engine_storage::create_temporary(version);
@@ -135,22 +158,41 @@ database create_temporary_database(const engine_version& version)
 database create_database_from_scripts(
     const std::string& db_directory, const std::string& script_directory)
 {
-    std::string stmt;
-
-    std::ifstream m_db_script{script_directory + "/m.db.sql"};
-    sqlite::database m_db{db_directory + "/m.db"};
-    while (std::getline(m_db_script, stmt))
+    if (!path_exists(db_directory))
     {
-        m_db << stmt;
+        throw std::runtime_error{"DB directory does not exist"};
     }
 
-    // Note: there may not be a separate performance database, if the database
-    // is >= version 2.
-    std::ifstream p_db_script{script_directory + "/p.db.sql"};
-    sqlite::database p_db{db_directory + "/p.db"};
-    while (std::getline(p_db_script, stmt))
+    if (!path_exists(script_directory))
     {
-        p_db << stmt;
+        throw std::runtime_error{"Script directory does not exist"};
+    }
+
+    auto v1_m_db_path = db_directory + "/m.db";
+    auto v1_m_db_sql_path = script_directory + "/m.db.sql";
+    auto v1_p_db_path = db_directory + "/p.db";
+    auto v1_p_db_sql_path = script_directory + "/p.db.sql";
+    auto database2_db_dir = db_directory + "/Database2";
+    auto database2_script_dir = script_directory + "/Database2";
+    auto v2_m_db_path = database2_db_dir + "/m.db";
+    auto v2_m_db_sql_path = database2_script_dir + "/m.db.sql";
+
+    if (path_exists(v1_m_db_sql_path))
+    {
+        hydrate_database(v1_m_db_path, v1_m_db_sql_path);
+    }
+
+    if (path_exists(v1_p_db_sql_path))
+    {
+        hydrate_database(v1_p_db_path, v1_p_db_sql_path);
+    }
+
+    if (path_exists(v2_m_db_sql_path))
+    {
+        if (!path_exists(database2_db_dir))
+            create_dir(database2_db_dir);
+
+        hydrate_database(v2_m_db_path, v2_m_db_sql_path);
     }
 
     return load_database(db_directory);
@@ -193,7 +235,7 @@ database load_database(const std::string& directory)
     {
         // TODO(mr-smidge) inefficiency as construction reads the version again.
         auto library = v2::engine_library{directory};
-        return library.make_database();
+        return library.database();
     }
 
     auto storage = std::make_shared<v1::engine_storage>(directory, version);

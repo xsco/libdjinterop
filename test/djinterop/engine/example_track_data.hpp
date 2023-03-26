@@ -24,7 +24,7 @@
 #include <djinterop/engine/engine.hpp>
 #include <djinterop/track_snapshot.hpp>
 
-#include "../../boost_test_utils.hpp"
+#include "../boost_test_utils.hpp"
 
 enum class example_track_type
 {
@@ -135,12 +135,21 @@ inline void populate_track_snapshot(
             s.genre = "Genre";
             s.hot_cues.fill(djinterop::stdx::nullopt);
             s.key = djinterop::musical_key::a_minor;
-            s.last_modified_at = std::chrono::system_clock::time_point{
-                std::chrono::seconds{1509371790}};
             s.last_played_at = std::chrono::system_clock::time_point{
                 std::chrono::seconds{1509321800}};
-            s.last_accessed_at = std::chrono::system_clock::time_point{
-                std::chrono::seconds{1509321600}};
+            if (version.schema_version.maj < 2)
+            {
+                s.last_modified_at = std::chrono::system_clock::time_point{
+                    std::chrono::seconds{1509371790}};
+                s.last_accessed_at = std::chrono::system_clock::time_point{
+                    std::chrono::seconds{1509321600}};
+            }
+            else
+            {
+                s.last_modified_at = djinterop::stdx::nullopt;
+                s.last_accessed_at = djinterop::stdx::nullopt;
+            }
+
             s.loops.fill(djinterop::stdx::nullopt);
             s.publisher = "Publisher";
             s.relative_path = "../01 - Some Artist - Some Track.mp3";
@@ -183,12 +192,21 @@ inline void populate_track_snapshot(
                 "Example other cue", 185375,
                 djinterop::engine::standard_pad_colors::pad_6};
             s.key = djinterop::musical_key::d_minor;
-            s.last_modified_at = std::chrono::system_clock::time_point{
-                std::chrono::seconds{1617659524}};
             s.last_played_at = std::chrono::system_clock::time_point{
                 std::chrono::seconds{1616548524}};
-            s.last_accessed_at = std::chrono::system_clock::time_point{
-                std::chrono::seconds{1615420800}};
+            if (version.schema_version.maj < 2)
+            {
+                s.last_modified_at = std::chrono::system_clock::time_point{
+                    std::chrono::seconds{1617659524}};
+                s.last_accessed_at = std::chrono::system_clock::time_point{
+                    std::chrono::seconds{1615420800}};
+            }
+            else
+            {
+                s.last_modified_at = djinterop::stdx::nullopt;
+                s.last_accessed_at = djinterop::stdx::nullopt;
+            }
+
             s.loops.fill(djinterop::stdx::nullopt);
             s.loops[7] = djinterop::loop{
                 "Example loop", 102687.5, 185375,
@@ -208,13 +226,24 @@ inline void populate_track_snapshot(
             s.waveform.reserve(waveform_size);
             for (int64_t i = 0; i < waveform_size; ++i)
             {
-                s.waveform.push_back(
-                    {{(uint8_t)(i * 255 / waveform_size),
-                      (uint8_t)(i * 255 / waveform_size)},
-                     {(uint8_t)(i * 127 / waveform_size),
-                      (uint8_t)(i * 127 / waveform_size)},
-                     {(uint8_t)(i * 63 / waveform_size),
-                      (uint8_t)(i * 63 / waveform_size)}});
+                if (version.schema_version.maj < 2)
+                {
+                    s.waveform.push_back(
+                        {{(uint8_t)(i * 255 / waveform_size),
+                          (uint8_t)(i * 255 / waveform_size)},
+                         {(uint8_t)(i * 127 / waveform_size),
+                          (uint8_t)(i * 127 / waveform_size)},
+                         {(uint8_t)(i * 63 / waveform_size),
+                          (uint8_t)(i * 63 / waveform_size)}});
+                }
+                else
+                {
+                    // Opacity not supported in later versions.
+                    s.waveform.push_back(
+                        {{(uint8_t)(i * 255 / waveform_size)},
+                         {(uint8_t)(i * 127 / waveform_size)},
+                         {(uint8_t)(i * 63 / waveform_size)}});
+                }
             }
 
             s.year = 2021;

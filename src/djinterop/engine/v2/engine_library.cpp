@@ -154,11 +154,11 @@ void engine_library::verify() const
     validator->verify(context_->db);
 }
 
-database engine_library::make_database() const
+database engine_library::database() const
 {
     auto library = std::make_shared<engine_library>(*this);
     auto pimpl = std::make_shared<database_impl>(library);
-    return database{pimpl};
+    return djinterop::database{pimpl};
 }
 
 std::string engine_library::directory() const

@@ -83,8 +83,8 @@ public:
     /// stated version.
     void verify() const;
 
-    /// Make a unified database interface for this Engine library.
-    [[nodiscard]] database make_database() const;
+    /// Get the unified database interface for this Engine library.
+    [[nodiscard]] djinterop::database database() const;
 
     /// Get the Engine library top-level directory.
     ///

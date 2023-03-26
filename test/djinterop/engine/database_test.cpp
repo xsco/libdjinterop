@@ -30,7 +30,7 @@
 #include <djinterop/track.hpp>
 #include <djinterop/track_snapshot.hpp>
 
-#include "../../temporary_directory.hpp"
+#include "../temporary_directory.hpp"
 
 #define STRINGIFY(x) STRINGIFY_(x)
 #define STRINGIFY_(x) #x
@@ -68,11 +68,8 @@ const std::vector<reference_script> reference_db_scripts{
     reference_script{"/ref/engine/ep/ep-1.6.1", e::desktop_1_5_1},
     reference_script{"/ref/engine/sc5000/firmware-1.6.1", e::os_1_6_0},
     reference_script{"/ref/engine/sc5000/firmware-1.6.2", e::os_1_6_0},
-    // TODO enable 2.x test cases
-    /*
     reference_script{"/ref/engine/desktop/desktop-2.0.0", e::desktop_2_0_0},
     reference_script{"/ref/engine/sc5000/firmware-2.0.0", e::os_2_0_0},
-    */
 };
 
 struct example_file
@@ -161,11 +158,14 @@ BOOST_DATA_TEST_CASE(
         // Arrange
         auto script_path = std::string{STRINGIFY(TESTDATA_DIR) "/"} +
                            reference_script.path;
+
+        BOOST_TEST_CHECKPOINT("(" << reference_script << ") Creating DB...");
         auto db =
             e::create_database_from_scripts(
             tmp_loc.temp_dir, script_path);
 
         // Act
+        BOOST_TEST_CHECKPOINT("(" << reference_script << ") Verifying DB...");
         db.verify();
 
         // Assert
@@ -176,6 +176,7 @@ BOOST_DATA_TEST_CASE(
 BOOST_AUTO_TEST_CASE(tracks__sample_db__expected_ids)
 {
     // Arrange
+    // TODO (mr-smidge) Replace with DB constructed in the test.
     auto db = e::load_database(sample_path);
 
     // Act
@@ -189,6 +190,7 @@ BOOST_AUTO_TEST_CASE(tracks__sample_db__expected_ids)
 BOOST_AUTO_TEST_CASE(tracks_by_relative_path__valid_path__expected_id)
 {
     // Arrange
+    // TODO (mr-smidge) Replace with DB constructed in the test.
     auto db = e::load_database(sample_path);
 
     // Act
@@ -203,6 +205,7 @@ BOOST_AUTO_TEST_CASE(tracks_by_relative_path__valid_path__expected_id)
 BOOST_AUTO_TEST_CASE(tracks_by_relative_path__invalid_path__no_ids)
 {
     // Arrange
+    // TODO (mr-smidge) Replace with DB constructed in the test.
     auto db = e::load_database(sample_path);
 
     // Act
@@ -215,6 +218,7 @@ BOOST_AUTO_TEST_CASE(tracks_by_relative_path__invalid_path__no_ids)
 BOOST_AUTO_TEST_CASE(track_by_id__invalid_id__nullopt)
 {
     // Arrange
+    // TODO (mr-smidge) Replace with DB constructed in the test.
     auto db = e::load_database(sample_path);
 
     // Act / Assert
