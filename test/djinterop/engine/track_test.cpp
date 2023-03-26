@@ -28,8 +28,7 @@
 #include <djinterop/engine/engine.hpp>
 #include <djinterop/track_snapshot.hpp>
 
-#include "../../boost_test_utils.hpp"
-#include "../../track_test_utils.hpp"
+#include "../boost_test_utils.hpp"
 #include "example_track_data.hpp"
 
 #define STRINGIFY(x) STRINGIFY_(x)
@@ -83,21 +82,7 @@ const std::vector<snapshot_type_pair> updatable_snapshot_type_pairs{
 
 BOOST_TEST_DECORATOR(*utf::description("copy constructor, all schema versions"))
 BOOST_DATA_TEST_CASE(
-    ctor__supported_version_copy__copies, e::all_v2_versions, version)
-{
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-
-    djinterop::track_snapshot snapshot{};
-    populate_track_snapshot(
-        example_track_type::fully_analysed_1, version, snapshot);
-
-    do_ctor_copy_test(version, db, snapshot);
-}
-
-BOOST_TEST_DECORATOR(*utf::description("copy assignment, all schema versions"))
-BOOST_DATA_TEST_CASE(
-    op_copy_assign__supported_version_copy__copies, e::all_v2_versions, version)
+    ctor__supported_version_copy__copies, e::all_versions, version)
 {
     // Arrange
     BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
@@ -107,7 +92,38 @@ BOOST_DATA_TEST_CASE(
     populate_track_snapshot(
         example_track_type::fully_analysed_1, version, snapshot);
 
-    do_op_copy_assign_test(version, db, snapshot);
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
+    auto track = db.create_track(snapshot);
+
+    // Act
+    BOOST_TEST_CHECKPOINT("(" << version << ") Copying track...");
+    djinterop::track copy{track};
+
+    // Assert
+    BOOST_CHECK_EQUAL(track.id(), copy.id());
+}
+
+BOOST_TEST_DECORATOR(*utf::description("copy assignment, all schema versions"))
+BOOST_DATA_TEST_CASE(
+    op_copy_assign__supported_version_copy__copies, e::all_versions, version)
+{
+    // Arrange
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
+    auto db = e::create_temporary_database(version);
+
+    djinterop::track_snapshot snapshot{};
+    populate_track_snapshot(
+        example_track_type::fully_analysed_1, version, snapshot);
+
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
+    auto track = db.create_track(snapshot);
+
+    // Act
+    BOOST_TEST_CHECKPOINT("(" << version << ") Copying track...");
+    djinterop::track copy = track;
+
+    // Assert
+    BOOST_CHECK_EQUAL(track.id(), copy.id());
 }
 
 BOOST_TEST_DECORATOR(
@@ -115,8 +131,9 @@ BOOST_TEST_DECORATOR(
                       "versions, all snapshots"))
 BOOST_DATA_TEST_CASE(
     snapshot__supported_version__same,
-    e::all_v2_versions* creatable_snapshot_types, version, snapshot_type)
+    e::all_versions* creatable_snapshot_types, version, snapshot_type)
 {
+    // Arrange
     BOOST_TEST_CHECKPOINT(
         "(" << version << ", " << snapshot_type
             << ") Creating temporary database...");
@@ -125,7 +142,20 @@ BOOST_DATA_TEST_CASE(
     djinterop::track_snapshot expected{};
     populate_track_snapshot(snapshot_type, version, expected);
 
-    do_snapshot_test(version, snapshot_type, db, expected);
+    BOOST_TEST_CHECKPOINT(
+        "(" << version << ", " << snapshot_type << ") Creating track...");
+    auto track = db.create_track(expected);
+
+    // Act
+    BOOST_TEST_CHECKPOINT(
+        "(" << version << ", " << snapshot_type
+            << ") Fetching track snapshot...");
+    auto actual = track.snapshot();
+
+    // Assert
+    auto expected_with_id = expected;
+    expected_with_id.id = track.id();
+    BOOST_CHECK_EQUAL(expected_with_id, actual);
 }
 
 BOOST_TEST_DECORATOR(
@@ -133,9 +163,10 @@ BOOST_TEST_DECORATOR(
                       "all schema versions, all snapshot combinations"))
 BOOST_DATA_TEST_CASE(
     update__supported_version__updates,
-    e::all_v2_versions* updatable_snapshot_type_pairs, version,
+    e::all_versions* updatable_snapshot_type_pairs, version,
     snapshot_type_pair)
 {
+    // Arrange
     BOOST_TEST_CHECKPOINT(
         "(" << version << ", " << snapshot_type_pair
             << ") Creating temporary database...");
@@ -145,9 +176,72 @@ BOOST_DATA_TEST_CASE(
     populate_track_snapshot(snapshot_type_pair.initial, version, initial);
     populate_track_snapshot(snapshot_type_pair.updated, version, expected);
 
-    do_update_test(
-        version, snapshot_type_pair.initial, snapshot_type_pair.updated, db,
-        initial, expected);
+    BOOST_TEST_CHECKPOINT(
+        "(" << version << ", " << snapshot_type_pair.initial << ", "
+            << snapshot_type_pair.updated << ") Creating track...");
+    auto track = db.create_track(initial);
+
+    // Act
+    BOOST_TEST_CHECKPOINT(
+        "(" << version << ", " << snapshot_type_pair.initial << ", "
+            << snapshot_type_pair.updated << ") Updating track...");
+    track.update(expected);
+
+    // Assert
+    auto expected_with_id = expected;
+    expected_with_id.id = track.id();
+    auto actual = track.snapshot();
+    BOOST_CHECK_EQUAL(expected_with_id, actual);
 }
 
 // TODO (mr-smidge): Add tests for each getter/setter
+//  Note that some fields should only be tested on certain schema versions!
+
+BOOST_TEST_DECORATOR(
+    *utf::description("set zero average loudness, all schema versions"))
+BOOST_DATA_TEST_CASE(
+    set_average_loudness__zero__no_loudness, e::all_versions, version)
+{
+    // Arrange
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
+    auto db = e::create_temporary_database(version);
+
+    djinterop::track_snapshot snapshot{};
+    populate_track_snapshot(
+        example_track_type::fully_analysed_1, version, snapshot);
+
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
+    auto track = db.create_track(snapshot);
+
+    // Act
+    BOOST_TEST_CHECKPOINT(
+        "(" << version << ") Setting zero average loudness...");
+    track.set_average_loudness(0);
+
+    // Assert
+    BOOST_CHECK(track.average_loudness() == djinterop::stdx::nullopt);
+}
+
+BOOST_TEST_DECORATOR(
+    *utf::description("set zero sampling rate, all schema versions"))
+BOOST_DATA_TEST_CASE(
+    set_sampling__zero_rate__no_sampling, e::all_versions, version)
+{
+    // Arrange
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
+    auto db = e::create_temporary_database(version);
+
+    djinterop::track_snapshot snapshot{};
+    populate_track_snapshot(
+        example_track_type::fully_analysed_1, version, snapshot);
+
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
+    auto track = db.create_track(snapshot);
+
+    // Act
+    BOOST_TEST_CHECKPOINT("(" << version << ") Removing sampling info...");
+    track.set_sampling(djinterop::sampling_info{});
+
+    // Assert
+    BOOST_CHECK(track.sampling() == djinterop::stdx::nullopt);
+}
