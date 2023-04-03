@@ -1,3 +1,9 @@
+libdjinterop (0.16.1-0ubuntu1) bionic; urgency=medium
+
+  * Int type missing include fix
+
+ -- Adam Szmigin <smidge@xsco.net>  Mon, 03 Apr 2023 11:53:50 +0100
+
 libdjinterop (0.16.0-0ubuntu1) bionic; urgency=medium
 
   * Unused hotcues must use -1 sample offset, not zero
