@@ -292,6 +292,33 @@ stdx::optional<track_row> track_table::get(int64_t id) const
     return result;
 }
 
+stdx::optional<int64_t> track_table::find_id_by_path(
+    const std::string& path) const
+{
+    stdx::optional<int64_t> result;
+
+    context_->db << "SELECT id FROM Track WHERE path = ?" << path >>
+        [&](int64_t id)
+    {
+        assert(!result);
+        result = id;
+    };
+
+    return result;
+}
+
+void track_table::remove(int64_t id)
+{
+    // All other references to the track should automatically be cleared by
+    // "ON DELETE CASCADE"
+    context_->db << "DELETE FROM Track WHERE id = ?" << id;
+
+    if (context_->db.rows_modified() == 0)
+    {
+        throw std::invalid_argument{"Track id not found to remove"};
+    }
+}
+
 void track_table::update(const track_row& row)
 {
     if (row.id == TRACK_ROW_ID_NONE)

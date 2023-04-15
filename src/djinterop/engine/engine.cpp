@@ -233,7 +233,7 @@ database load_database(const std::string& directory)
     auto version = detect_version(directory);
     if (version.version.maj >= 2)
     {
-        // TODO(mr-smidge) inefficiency as construction reads the version again.
+        // TODO (mr-smidge): inefficient as ctor reads the version again.
         auto library = v2::engine_library{directory};
         return library.database();
     }

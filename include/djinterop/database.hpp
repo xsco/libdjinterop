@@ -34,6 +34,8 @@
 
 namespace djinterop
 {
+// TODO (mr-smidge): Review use of fwd decls here.  A user should be able to
+//  include any public header and get to work!
 class crate;
 class database_impl;
 class track;
@@ -120,6 +122,7 @@ public:
 
     /// Returns all tracks whose `relative_path` attribute in the database
     /// matches the given string
+    // TODO (mr-smidge): Change to optional<track>, not vector.
     std::vector<track> tracks_by_relative_path(
         const std::string& relative_path) const;
 

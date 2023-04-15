@@ -371,6 +371,12 @@ public:
     /// \return Returns a track row, or none if not found.
     stdx::optional<track_row> get(int64_t id) const;
 
+    /// Find whether a track exists, given its unique path.
+    ///
+    /// \param path Path of track.
+    /// \return Returns a track id if found, or none if not found.
+    stdx::optional<int64_t> find_id_by_path(const std::string& path) const;
+
     /// Get the `playOrder` column for a given track.
     stdx::optional<int64_t> get_play_order(int64_t id);
 
@@ -723,6 +729,11 @@ public:
 
     /// Set the `explicitLyrics` column for a given track.
     void set_explicit_lyrics(int64_t id, bool explicit_lyrics);
+
+    /// Remove an entry from the track table.
+    ///
+    /// \param id Id of track to remove.
+    void remove(int64_t id);
 
     /// Update an existing track row in the table.
     ///

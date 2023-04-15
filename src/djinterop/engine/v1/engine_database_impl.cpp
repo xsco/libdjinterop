@@ -158,9 +158,9 @@ void engine_database_impl::remove_crate(crate cr)
 
 void engine_database_impl::remove_track(track tr)
 {
-    storage_->db << "DELETE FROM Track WHERE id = ?" << tr.id();
     // All other references to the track should automatically be cleared by
     // "ON DELETE CASCADE"
+    storage_->db << "DELETE FROM Track WHERE id = ?" << tr.id();
 }
 
 std::vector<crate> engine_database_impl::root_crates()
@@ -213,8 +213,15 @@ stdx::optional<track> engine_database_impl::track_by_id(int64_t id)
 std::vector<track> engine_database_impl::tracks()
 {
     std::vector<track> results;
-    storage_->db << "SELECT id FROM Track ORDER BY id" >> [&](int64_t id) {
-        results.push_back(track{std::make_shared<engine_track_impl>(storage_, id)});
+
+    // Note that some schema versions have a trigger that will create a NULL row
+    // in the track table after a row is deleted.  As such, we look for only
+    // rows with valid paths.
+    storage_->db << "SELECT id FROM Track WHERE path IS NOT NULL ORDER BY id" >>
+        [&](int64_t id)
+    {
+        results.push_back(
+            track{std::make_shared<engine_track_impl>(storage_, id)});
     };
     return results;
 }
