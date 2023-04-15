@@ -86,8 +86,7 @@ void database_impl::remove_crate(crate cr)
 
 void database_impl::remove_track(track tr)
 {
-    // TODO
-    throw std::runtime_error{"database_impl::remove_track() - Not implemented yet"};
+    library_->track().remove(tr.id());
 }
 
 std::vector<crate> database_impl::root_crates()
@@ -129,8 +128,15 @@ std::vector<track> database_impl::tracks()
 std::vector<track> database_impl::tracks_by_relative_path(
     const std::string& relative_path)
 {
-    // TODO
-    throw std::runtime_error{"database_impl::tracks_by_relative_path() - Not implemented yet"};
+    std::vector<track> results;
+    auto track_table = library_->track();
+    auto id_maybe = track_table.find_id_by_path(relative_path);
+    if (id_maybe)
+    {
+        results.emplace_back(std::make_shared<track_impl>(library_, *id_maybe));
+    }
+
+    return results;
 }
 
 std::string database_impl::uuid()

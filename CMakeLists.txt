@@ -270,6 +270,7 @@ if (Boost_FOUND)
 
     add_djinterop_test("" semantic_version_test)
     add_djinterop_test("" track_snapshot_test)
+    add_djinterop_test(engine/ database_reference_test)
     add_djinterop_test(engine/ database_test)
     add_djinterop_test(engine/ engine_test)
     add_djinterop_test(engine/ track_test)

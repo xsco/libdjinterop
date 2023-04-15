@@ -20,17 +20,15 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/included/unit_test.hpp>
 
-#include <ostream>
 #include <string>
+#include <vector>
 
 #include <djinterop/crate.hpp>
 #include <djinterop/engine/engine.hpp>
-#include <djinterop/optional.hpp>
-#include <djinterop/semantic_version.hpp>
 #include <djinterop/track.hpp>
 #include <djinterop/track_snapshot.hpp>
 
-#include "../temporary_directory.hpp"
+#include "example_track_data.hpp"
 
 #define STRINGIFY(x) STRINGIFY_(x)
 #define STRINGIFY_(x) #x
@@ -38,189 +36,178 @@
 namespace utf = boost::unit_test;
 namespace e = djinterop::engine;
 
-namespace
-{
-struct reference_script
-{
-    std::string path;
-    e::engine_version expected_version;
-};
-
-std::ostream& operator<<(std::ostream& os, const reference_script& rs)
-{
-    os << rs.path;
-    return os;
-}
-
-const std::vector<reference_script> reference_db_scripts{
-    reference_script{"/ref/engine/sc5000/firmware-1.0.3", e::os_1_0_3},
-    reference_script{"/ref/engine/ep/ep-1.1.1", e::desktop_1_1_1},
-    reference_script{"/ref/engine/sc5000/firmware-1.2.0", e::os_1_2_0},
-    reference_script{"/ref/engine/sc5000/firmware-1.2.2", e::os_1_2_2},
-    reference_script{"/ref/engine/ep/ep-1.2.2", e::desktop_1_2_2},
-    reference_script{"/ref/engine/sc5000/firmware-1.3.1", e::os_1_3_1},
-    reference_script{"/ref/engine/sc5000/firmware-1.4.0", e::os_1_4_0},
-    reference_script{"/ref/engine/sc5000/firmware-1.5.1", e::os_1_5_1},
-    reference_script{"/ref/engine/ep/ep-1.5.1", e::desktop_1_5_1},
-    reference_script{"/ref/engine/sc5000/firmware-1.5.2", e::os_1_5_1},
-    reference_script{"/ref/engine/ep/ep-1.6.0", e::desktop_1_5_1},
-    reference_script{"/ref/engine/sc5000/firmware-1.6.0", e::os_1_6_0},
-    reference_script{"/ref/engine/ep/ep-1.6.1", e::desktop_1_5_1},
-    reference_script{"/ref/engine/sc5000/firmware-1.6.1", e::os_1_6_0},
-    reference_script{"/ref/engine/sc5000/firmware-1.6.2", e::os_1_6_0},
-    reference_script{"/ref/engine/desktop/desktop-2.0.0", e::desktop_2_0_0},
-    reference_script{"/ref/engine/sc5000/firmware-2.0.0", e::os_2_0_0},
-};
-
-struct example_file
-{
-    std::string relative_path;
-    std::string filename;
-    std::string file_extension;
-};
-
-std::ostream& operator<<(std::ostream& os, const example_file& ef)
-{
-    os << ef.relative_path;
-    return os;
-}
-
-const std::vector<example_file> valid_files{
-    example_file{
-        "../path/to/file_in_other_dir.mp3", "file_in_other_dir.mp3", "mp3"},
-    example_file{"local_file.flac", "local_file.flac", "flac"},
-};
-
-const std::string sample_path{STRINGIFY(TESTDATA_DIR) "/el2"};
-}  // anonymous namespace
-
 
 BOOST_TEST_DECORATOR(* utf::description(
     "database::create_root_crate() for all supported schema versions"))
 BOOST_DATA_TEST_CASE(
     create_root_crate__supported_version__creates, e::all_v1_versions, version)
 {
-    // Note separate scope to ensure no locks are held on the temporary dir.
-    temporary_directory tmp_loc;
+    // Arrange
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
+    auto db = e::create_temporary_database(version);
 
-    {
-        // Arrange
-        auto db = e::create_database(tmp_loc.temp_dir, version);
-        std::string crate_name = "Example Root Crate";
+    // Act
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating root crate...");
+    auto crate = db.create_root_crate("Example Root Crate");
 
-        // Act
-        auto crate = db.create_root_crate(crate_name);
-
-        // Assert
-        BOOST_CHECK_NE(crate.id(), 0);
-        BOOST_CHECK_EQUAL(crate.db().uuid(), db.uuid());
-        BOOST_CHECK_EQUAL(crate.name(), crate_name);
-        BOOST_CHECK(crate.parent() == djinterop::stdx::nullopt);
-    }
+    // Assert
+    BOOST_CHECK_NE(crate.id(), 0);
+    BOOST_CHECK(crate.parent() == djinterop::stdx::nullopt);
 }
 
 BOOST_TEST_DECORATOR(* utf::description(
     "database::create_track() for all supported schema versions"))
 BOOST_DATA_TEST_CASE(
-    create_track__supported_version__creates, e::all_v1_versions * valid_files,
-    version, file)
+    create_track__supported_version__creates, e::all_versions, version)
 {
-    // Note separate scope to ensure no locks are held on the temporary dir.
-    temporary_directory tmp_loc;
+    // Arrange
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
+    auto db = e::create_temporary_database(version);
 
-    {
-        // Arrange
-        djinterop::track_snapshot track_data;
-        track_data.relative_path = file.relative_path;
-        auto db = e::create_database(tmp_loc.temp_dir, version);
+    djinterop::track_snapshot snapshot{};
+    populate_track_snapshot(
+        example_track_type::minimal_1, version, snapshot);
 
-        // Act
-        auto track = db.create_track(track_data);
+    // Act
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
+    auto track = db.create_track(snapshot);
 
-        // Assert
-        BOOST_CHECK_NE(track.id(), 0);
-        BOOST_CHECK_EQUAL(track.db().uuid(), db.uuid());
-        BOOST_CHECK_EQUAL(track.filename(), file.filename);
-        BOOST_CHECK_EQUAL(track.file_extension(), file.file_extension);
-        BOOST_CHECK_EQUAL(track.relative_path(), file.relative_path);
-    }
+    // Assert
+    BOOST_CHECK_NE(track.id(), 0);
 }
 
 BOOST_TEST_DECORATOR(* utf::description(
-    "database::verify() with 'reference scripts' for all supported versions"))
+    "database::remove_track() for all supported schema versions"))
 BOOST_DATA_TEST_CASE(
-    verify__reference_scripts__no_throw, reference_db_scripts, reference_script)
-{
-    // Note separate scope to ensure no locks are held on the temporary dir.
-    temporary_directory tmp_loc;
-
-    {
-        // Arrange
-        auto script_path = std::string{STRINGIFY(TESTDATA_DIR) "/"} +
-                           reference_script.path;
-
-        BOOST_TEST_CHECKPOINT("(" << reference_script << ") Creating DB...");
-        auto db =
-            e::create_database_from_scripts(
-            tmp_loc.temp_dir, script_path);
-
-        // Act
-        BOOST_TEST_CHECKPOINT("(" << reference_script << ") Verifying DB...");
-        db.verify();
-
-        // Assert
-        BOOST_CHECK_EQUAL(db.directory(), tmp_loc.temp_dir);
-    }
-}
-
-BOOST_AUTO_TEST_CASE(tracks__sample_db__expected_ids)
+    remove_track__supported_version__removes, e::all_versions, version)
 {
     // Arrange
-    // TODO (mr-smidge) Replace with DB constructed in the test.
-    auto db = e::load_database(sample_path);
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
+    auto db = e::create_temporary_database(version);
+
+    djinterop::track_snapshot snapshot{};
+    populate_track_snapshot(
+        example_track_type::minimal_1, version, snapshot);
+
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
+    auto track = db.create_track(snapshot);
 
     // Act
+    db.remove_track(track);
+
+    // Assert
+    auto tracks = db.tracks();
+    BOOST_CHECK_EQUAL(tracks.size(), 0);
+}
+
+BOOST_TEST_DECORATOR(* utf::description(
+    "database::verify() for all supported versions"))
+BOOST_DATA_TEST_CASE(verify__no_throw, e::all_versions, version)
+{
+    // Arrange
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
+    auto db = e::create_temporary_database(version);
+
+    // Act/Assert
+    BOOST_TEST_CHECKPOINT("(" << version << ") Verifying DB...");
+    db.verify();
+}
+
+BOOST_TEST_DECORATOR(*utf::description("database::tracks(), all schema versions"))
+BOOST_DATA_TEST_CASE(tracks__expected_ids, e::all_versions, version)
+{
+    // Arrange
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
+    auto db = e::create_temporary_database(version);
+
+    djinterop::track_snapshot snapshot{};
+    populate_track_snapshot(
+        example_track_type::minimal_1, version, snapshot);
+
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
+    auto track = db.create_track(snapshot);
+
+    // Act
+    BOOST_TEST_CHECKPOINT("(" << version << ") Fetching tracks...");
     auto results = db.tracks();
 
     // Assert
     BOOST_CHECK_EQUAL(results.size(), 1);
-    BOOST_CHECK_EQUAL(results[0].id(), 1);
+    BOOST_CHECK_EQUAL(results[0].id(), track.id());
 }
 
-BOOST_AUTO_TEST_CASE(tracks_by_relative_path__valid_path__expected_id)
+BOOST_TEST_DECORATOR(*utf::description("database::tracks_by_relative_path(), valid path, all schema versions"))
+BOOST_DATA_TEST_CASE(tracks_by_relative_path__valid_path__expected_ids, e::all_versions, version)
 {
     // Arrange
-    // TODO (mr-smidge) Replace with DB constructed in the test.
-    auto db = e::load_database(sample_path);
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
+    auto db = e::create_temporary_database(version);
+
+    djinterop::track_snapshot snapshot{};
+    populate_track_snapshot(
+        example_track_type::minimal_1, version, snapshot);
+
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
+    auto track = db.create_track(snapshot);
 
     // Act
-    auto results = db.tracks_by_relative_path(
-        "../01 - Dennis Cruz - Mad (Original Mix).mp3");
+    BOOST_TEST_CHECKPOINT("(" << version << ") Fetching tracks...");
+    auto results = db.tracks_by_relative_path(*snapshot.relative_path);
 
     // Assert
     BOOST_CHECK_EQUAL(results.size(), 1);
-    BOOST_CHECK_EQUAL(results[0].id(), 1);
+    BOOST_CHECK_EQUAL(results[0].id(), track.id());
 }
 
-BOOST_AUTO_TEST_CASE(tracks_by_relative_path__invalid_path__no_ids)
+BOOST_TEST_DECORATOR(*utf::description("database::tracks_by_relative_path(), invalid path, all schema versions"))
+BOOST_DATA_TEST_CASE(tracks_by_relative_path__invalid_path__no_ids, e::all_versions, version)
 {
     // Arrange
-    // TODO (mr-smidge) Replace with DB constructed in the test.
-    auto db = e::load_database(sample_path);
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
+    auto db = e::create_temporary_database(version);
 
     // Act
+    BOOST_TEST_CHECKPOINT("(" << version << ") Fetching tracks...");
     auto results = db.tracks_by_relative_path("Does Not Exist.mp3");
 
     // Assert
     BOOST_CHECK_EQUAL(results.size(), 0);
 }
 
-BOOST_AUTO_TEST_CASE(track_by_id__invalid_id__nullopt)
+BOOST_TEST_DECORATOR(*utf::description("database::track_by_id(), valid id, all schema versions"))
+BOOST_DATA_TEST_CASE(track_by_id__valid_id__expected_ids, e::all_versions, version)
 {
     // Arrange
-    // TODO (mr-smidge) Replace with DB constructed in the test.
-    auto db = e::load_database(sample_path);
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
+    auto db = e::create_temporary_database(version);
 
-    // Act / Assert
-    BOOST_CHECK(!db.track_by_id(123));
+    djinterop::track_snapshot snapshot{};
+    populate_track_snapshot(
+        example_track_type::minimal_1, version, snapshot);
+
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
+    auto track = db.create_track(snapshot);
+
+    // Act
+    BOOST_TEST_CHECKPOINT("(" << version << ") Fetching tracks...");
+    auto result = db.track_by_id(track.id());
+
+    // Assert
+    BOOST_CHECK(result);
+    BOOST_CHECK_EQUAL(result->id(), track.id());
+}
+
+BOOST_TEST_DECORATOR(*utf::description("database::track_by_id(), invalid id, all schema versions"))
+BOOST_DATA_TEST_CASE(track_by_id__invalid_id__no_ids, e::all_versions, version)
+{
+    // Arrange
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
+    auto db = e::create_temporary_database(version);
+
+    // Act
+    BOOST_TEST_CHECKPOINT("(" << version << ") Fetching tracks...");
+    auto result = db.track_by_id(123);
+
+    // Assert
+    BOOST_CHECK(!result);
 }
