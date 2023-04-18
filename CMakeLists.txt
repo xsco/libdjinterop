@@ -72,6 +72,7 @@ add_library(
     src/djinterop/engine/v1/performance_data_format.cpp
     src/djinterop/engine/v2/beat_data_blob.cpp
     src/djinterop/engine/v2/change_log_table.cpp
+    src/djinterop/engine/v2/crate_impl.cpp
     src/djinterop/engine/v2/database_impl.cpp
     src/djinterop/engine/v2/engine_library.cpp
     src/djinterop/engine/v2/information_table.cpp
@@ -270,12 +271,13 @@ if (Boost_FOUND)
 
     add_djinterop_test("" semantic_version_test)
     add_djinterop_test("" track_snapshot_test)
+    add_djinterop_test(engine/ crate_test)
     add_djinterop_test(engine/ database_reference_test)
     add_djinterop_test(engine/ database_test)
     add_djinterop_test(engine/ engine_test)
     add_djinterop_test(engine/ track_test)
-    add_djinterop_test(engine/v1/ crate_test)
     add_djinterop_test(engine/v2/ track_table_test)
+    add_djinterop_test(engine/v2/ playlist_entity_table_test)
 
 else()
     message(STATUS "Unit tests not available, as Boost cannot be found")

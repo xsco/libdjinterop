@@ -16,6 +16,7 @@
  */
 #include "database_impl.hpp"
 
+#include <chrono>
 #include <stdexcept>
 
 #include <djinterop/djinterop.hpp>
@@ -23,6 +24,7 @@
 
 #include "../../util.hpp"
 #include "../schema/schema.hpp"
+#include "crate_impl.hpp"
 #include "engine_library_context.hpp"
 #include "track_impl.hpp"
 
@@ -35,32 +37,63 @@ database_impl::database_impl(std::shared_ptr<engine_library> library) :
 
 transaction_guard database_impl::begin_transaction()
 {
-    // TODO
-    throw std::runtime_error{"database_impl::begin_transaction() - Not implemented yet"};
+    // TODO - database_impl::begin_transaction() not implemented yet
+    throw std::runtime_error{
+        "database_impl::begin_transaction() - Not implemented yet"};
 }
 
 stdx::optional<crate> database_impl::crate_by_id(int64_t id)
 {
-    // TODO
-    throw std::runtime_error{"database_impl::crate_by_id() - Not implemented yet"};
+    auto exists = library_->playlist().exists(id);
+    if (!exists)
+    {
+        return stdx::nullopt;
+    }
+
+    return std::make_optional<crate>(
+        std::make_shared<crate_impl>(library_, id));
 }
 
 std::vector<crate> database_impl::crates()
 {
-    // TODO
-    throw std::runtime_error{"database_impl::crates() - Not implemented yet"};
+    auto ids = library_->playlist().all_ids();
+    std::vector<crate> results;
+
+    for (auto&& id : ids)
+    {
+        results.emplace_back(std::make_shared<crate_impl>(library_, id));
+    }
+
+    return results;
 }
 
 std::vector<crate> database_impl::crates_by_name(const std::string& name)
 {
-    // TODO
-    throw std::runtime_error{"database_impl::crates_by_name() - Not implemented yet"};
+    auto ids = library_->playlist().find(name);
+    std::vector<crate> results;
+
+    for (auto&& id : ids)
+    {
+        results.emplace_back(std::make_shared<crate_impl>(library_, id));
+    }
+
+    return results;
 }
 
 crate database_impl::create_root_crate(std::string name)
 {
-    // TODO
-    throw std::runtime_error{"database_impl::create_root_crate() - Not implemented yet"};
+    playlist_row row{
+        PLAYLIST_ROW_ID_NONE,
+        name,
+        PARENT_LIST_ID_NONE,
+        true,
+        0,
+        std::chrono::system_clock::now(),
+        false
+    };
+
+    auto id = library_->playlist().add(row);
+    return crate{std::make_shared<crate_impl>(library_, id)};
 }
 
 track database_impl::create_track(const track_snapshot& snapshot)
@@ -80,8 +113,7 @@ void database_impl::verify()
 
 void database_impl::remove_crate(crate cr)
 {
-    // TODO
-    throw std::runtime_error{"database_impl::remove_crate() - Not implemented yet"};
+    library_->playlist().remove(cr.id());
 }
 
 void database_impl::remove_track(track tr)
@@ -91,14 +123,27 @@ void database_impl::remove_track(track tr)
 
 std::vector<crate> database_impl::root_crates()
 {
-    // TODO
-    throw std::runtime_error{"database_impl::root_crates() - Not implemented yet"};
+    auto ids = library_->playlist().all_root_ids();
+    std::vector<crate> results;
+
+    for (auto&& id : ids)
+    {
+        results.emplace_back(std::make_shared<crate_impl>(library_, id));
+    }
+
+    return results;
 }
 
 stdx::optional<crate> database_impl::root_crate_by_name(const std::string& name)
 {
-    // TODO
-    throw std::runtime_error{"database_impl::root_crate_by_name() - Not implemented yet"};
+    auto id_maybe = library_->playlist().find_root(name);
+    if (!id_maybe)
+    {
+        return stdx::nullopt;
+    }
+
+    return std::make_optional<crate>(
+        std::make_shared<crate_impl>(library_, *id_maybe));
 }
 
 stdx::optional<track> database_impl::track_by_id(int64_t id)
@@ -107,7 +152,7 @@ stdx::optional<track> database_impl::track_by_id(int64_t id)
     if (track_table.exists(id))
     {
         return stdx::make_optional<track>(
-                std::make_shared<track_impl>(library_, id));
+            std::make_shared<track_impl>(library_, id));
     }
 
     return stdx::nullopt;

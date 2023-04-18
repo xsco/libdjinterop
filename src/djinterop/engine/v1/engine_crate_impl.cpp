@@ -310,6 +310,11 @@ void engine_crate_impl::set_name(std::string name)
 
 void engine_crate_impl::set_parent(stdx::optional<crate> parent)
 {
+    if (parent && parent->id() == id())
+    {
+        throw crate_invalid_parent{"Cannot set crate parent to self"};
+    }
+
     engine_transaction_guard_impl trans{storage_};
 
     storage_->db << "DELETE FROM CrateParentList WHERE crateOriginId = ?"

@@ -1,0 +1,62 @@
+/*
+    This file is part of libdjinterop.
+
+    libdjinterop is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    libdjinterop is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#pragma once
+
+#include <string>
+#include <vector>
+
+#include <djinterop/engine/v2/engine_library.hpp>
+#include <djinterop/engine/v2/playlist_entity_table.hpp>
+#include <djinterop/engine/v2/playlist_table.hpp>
+
+#include "../../impl/crate_impl.hpp"
+
+namespace djinterop
+{
+class track;
+
+namespace engine::v2
+{
+class crate_impl : public djinterop::crate_impl
+{
+public:
+    crate_impl(std::shared_ptr<engine_library> library, int64_t id);
+
+    void add_track(int64_t track_id) override;
+    void add_track(track tr) override;
+    std::vector<crate> children() override;
+    void clear_tracks() override;
+    crate create_sub_crate(std::string name) override;
+    database db() override;
+    std::vector<crate> descendants() override;
+    bool is_valid() override;
+    std::string name() override;
+    stdx::optional<crate> parent() override;
+    void remove_track(track tr) override;
+    void set_name(std::string name) override;
+    void set_parent(stdx::optional<crate> parent) override;
+    stdx::optional<crate> sub_crate_by_name(const std::string& name) override;
+    std::vector<track> tracks() override;
+private:
+    std::shared_ptr<engine_library> library_;
+    playlist_entity_table playlist_entity_;
+    playlist_table playlist_;
+};
+
+}  // namespace engine::v1
+}  // namespace djinterop
