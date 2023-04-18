@@ -60,6 +60,7 @@ public:
     crate& operator=(const crate& other) noexcept;
 
     /// Adds a track to the crate.
+    // TODO (mr-smidge): Remove method, don't expose format-specific ids.
     void add_track(int64_t track_id) const;
 
     /// Adds a track to the crate.
@@ -93,6 +94,7 @@ public:
     /// Returns the descendants of this crate
     ///
     /// A descendant is a direct or indirect child of this crate.
+    // TODO (mr-smidge): Remove method, unnecessary complication.
     std::vector<crate> descendants() const;
 
     /// Returns the ID of this crate
@@ -102,6 +104,7 @@ public:
     int64_t id() const;
 
     /// Returns `true` iff `*this` is valid as described in the class comment
+    // TODO (mr-smidge): Remove method, not necessary.
     bool is_valid() const;
 
     /// Returns the crate's name
@@ -130,10 +133,18 @@ public:
 
     /// Gets the sub-crate of this one with a given name.
     ///
+    /// Note that descendants of sub-crates are not found by this method, i.e.
+    /// the search does not recurse into the immediate sub-crates of this crate.
+    ///
     /// If no such crate is found, then `djinterop::nullopt` is returned.
     stdx::optional<crate> sub_crate_by_name(const std::string& name) const;
 
-    /// Returns the crate's contained tracks
+    /// Returns the crate's contained tracks.
+    ///
+    /// Note that there is no guarantee on the ordering of tracks within the
+    /// crate.
+    ///
+    /// \return Returns a vector of tracks.
     std::vector<track> tracks() const;
 
     // TODO (haslersn): non public?

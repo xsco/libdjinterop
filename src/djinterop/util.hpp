@@ -33,6 +33,7 @@ std::string generate_random_uuid();
 std::string get_filename(const std::string& file_path);
 stdx::optional<std::string> get_file_extension(const std::string& file_path);
 std::chrono::system_clock::time_point parse_iso8601(const std::string& str);
+std::string to_iso8601(const std::chrono::system_clock::time_point& time);
 
 inline stdx::optional<std::chrono::system_clock::time_point> to_time_point(
     stdx::optional<int64_t> timestamp)

@@ -24,6 +24,7 @@
 #include <chrono>
 #include <cstdint>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -33,6 +34,25 @@
 namespace djinterop::engine::v2
 {
 struct engine_library_context;
+
+/// Thrown when the id on a playlist row is in an erroneous state for a given
+/// operation.
+struct DJINTEROP_PUBLIC playlist_row_id_error : public std::runtime_error
+{
+public:
+    explicit playlist_row_id_error(const std::string& what_arg) noexcept
+        : runtime_error{what_arg}
+    {
+    }
+};
+
+/// Special value for id to indicate that a given row is not currently persisted
+/// in the database.
+constexpr const int64_t PLAYLIST_ROW_ID_NONE = 0;
+
+/// Special value for parent id to indicate that a given row is at the root
+/// level, and does not have any parent playlist.
+constexpr const int64_t PARENT_LIST_ID_NONE = 0;
 
 /// Represents a row in the `PlayList` table.
 struct DJINTEROP_PUBLIC playlist_row
@@ -71,16 +91,79 @@ public:
     /// \param context Engine library context.
     explicit playlist_table(std::shared_ptr<engine_library_context> context);
 
-    /// Get all playlists.
+    /// Add a playlist row to the table.
     ///
-    /// \return Returns a vector of playlist rows.
-    [[nodiscard]] std::vector<playlist_row> all() const;
+    /// \param row Playlist row to add.
+    /// \return Returns the id of the newly-added playlist row.
+    /// \throws playlist_row_id_error If the row already has an id.
+    int64_t add(const playlist_row& row);
+
+    /// Get all playlist ids.
+    ///
+    /// \return Returns a vector of playlist ids.
+    [[nodiscard]] std::vector<int64_t> all_ids() const;
+
+    /// Get all root playlist ids, i.e. those not part of a parent playlist.
+    ///
+    /// \return Returns a vector of playlist ids.
+    [[nodiscard]] std::vector<int64_t> all_root_ids() const;
+
+    /// Get the ids of all child playlists of a given parent playlist.
+    ///
+    /// \param id Parent playlist id.
+    /// \return Returns a list of playlist ids.
+    std::vector<int64_t> children(int64_t id) const;
+
+    /// Get the ids of all descendant playlists of a given parent playlist, i.e.
+    /// those sub-playlists which have the given playlist as any parent,
+    /// grandparent, great-grandparent, and so on.
+    ///
+    /// \param id Parent playlist id.
+    /// \return Returns a list of playlist ids.
+    std::vector<int64_t> descendants(int64_t id) const;
+
+    /// Test whether a given playlist id exists.
+    ///
+    /// \param id Id of playlist to test.
+    /// \return Returns `true` if the playlist exists, or `false` if not.
+    [[nodiscard]] bool exists(int64_t id) const;
+
+    /// Find all playlists with the given title.
+    ///
+    /// \param title Title of playlists to find.
+    /// \return Returns a vector of playlist ids.
+    [[nodiscard]] std::vector<int64_t> find(const std::string& title) const;
+
+    /// Find a playlist, given its parent playlist and title.
+    ///
+    /// \param parent_id Id of parent playlist.
+    /// \param title Title of playlist to find.
+    /// \return Returns the id of the playlist, or none if not found.
+    [[nodiscard]] stdx::optional<int64_t> find(
+        int64_t parent_id, const std::string& title) const;
+
+    /// Find a root playlist, given its title.
+    ///
+    /// \param title Title of playlist to find.
+    /// \return Returns the id of the playlist, or none if not found.
+    [[nodiscard]] stdx::optional<int64_t> find_root(
+        const std::string& title) const;
 
     /// Get a playlist by id.
     ///
     /// \param id Id of playlist.
     /// \return Returns an optional playlist row.
     [[nodiscard]] djinterop::stdx::optional<playlist_row> get(int64_t id) const;
+
+    /// Remove an entry from the table.
+    ///
+    /// \param id Id of playlist to remove.
+    void remove(int64_t id);
+
+    /// Update an entry in the table.
+    ///
+    /// \param row Row to update (the `id` field must be populated).
+    void update(const playlist_row& row);
 
 private:
     std::shared_ptr<engine_library_context> context_;

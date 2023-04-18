@@ -102,8 +102,20 @@ private:
     int64_t id_;
 };
 
-/// The `crate_database_inconsistency` exception is thrown when a database
-/// inconsistency is found that correlates to a crate.
+/// The `crate_invalid_parent` exception is thrown when a crate parent is found
+/// to be invalid.
+class crate_invalid_parent : public std::runtime_error
+{
+public:
+    /// Construct the exception for a given crate name
+    explicit crate_invalid_parent(const std::string& what_arg) noexcept
+        : runtime_error{what_arg.c_str()}
+    {
+    }
+};
+
+/// The `crate_invalid_name` exception is thrown when a crate name is found to
+/// be invalid.
 class crate_invalid_name : public std::runtime_error
 {
 public:

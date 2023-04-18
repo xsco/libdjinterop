@@ -123,4 +123,9 @@ std::chrono::system_clock::time_point parse_iso8601(const std::string& save)
     return tp;
 }
 
+std::string to_iso8601(const std::chrono::system_clock::time_point& time)
+{
+    return date::format("%FT%TZ", time);
+}
+
 }  // namespace djinterop

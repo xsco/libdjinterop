@@ -17,6 +17,7 @@
 
 #include <djinterop/engine/v2/playlist_entity_table.hpp>
 
+#include <unordered_map>
 #include <utility>
 
 #include "engine_library_context.hpp"
@@ -29,23 +30,121 @@ playlist_entity_table::playlist_entity_table(
     context_{std::move(context)}
 {
 }
-std::vector<playlist_entity_row> playlist_entity_table::in_list(
+
+int64_t playlist_entity_table::add_back(const playlist_entity_row& row)
+{
+    if (row.id != PLAYLIST_ENTITY_ROW_ID_NONE)
+    {
+        throw playlist_entity_row_id_error{
+            "The provided playlist entity row already pertains to a persisted "
+            "playlist entity, and so it cannot be created again"};
+    }
+
+    // The last entity in a playlist always has next entity id zero.
+    int64_t next_entity_id = 0;
+
+    context_->db << "BEGIN TRANSACTION";
+    context_->db
+        << "INSERT INTO PlaylistEntity ("
+           "listId, trackId, databaseUuid, nextEntityId, membershipReference)"
+           "VALUES (?, ?, ?, ?, ?)"
+        << row.list_id << row.track_id << row.database_uuid << next_entity_id
+        << row.membership_reference;
+
+    auto id = context_->db.last_insert_rowid();
+
+    // The entity that was previously last in the playlist must now point to
+    // the new entity as its 'next entity'.
+    context_->db << "UPDATE PlaylistEntity SET nextEntityId = ? WHERE listId = "
+                    "? AND nextEntityId = 0 AND id <> ?"
+                 << id << row.list_id << id;
+    context_->db << "COMMIT TRANSACTION";
+
+    return id;
+}
+
+void playlist_entity_table::clear(int64_t list_id)
+{
+    context_->db << "DELETE FROM PlaylistEntity WHERE listId = ?" << list_id;
+}
+
+djinterop::stdx::optional<playlist_entity_row> playlist_entity_table::get(
+    int64_t list_id, int64_t track_id) const
+{
+    djinterop::stdx::optional<playlist_entity_row> result;
+    context_->db << "SELECT id, listId, trackId, databaseUuid, nextEntityId, "
+                    "membershipReference FROM PlaylistEntity WHERE listId = ? "
+                    "AND trackId = ?"
+                 << list_id << track_id >>
+        [&](int64_t id, int64_t list_id, int64_t track_id,
+            std::string database_uuid, int64_t next_entity_id,
+            int64_t membership_reference)
+    {
+        assert(!result);
+        result = playlist_entity_row{
+            id,
+            list_id,
+            track_id,
+            std::move(database_uuid),
+            next_entity_id,
+            membership_reference};
+    };
+
+    return result;
+}
+
+std::list<playlist_entity_row> playlist_entity_table::get_for_list(
     int64_t list_id) const
 {
-    std::vector<playlist_entity_row> results;
+    std::unordered_map<int64_t, playlist_entity_row> next_entity_id_map;
     context_->db << "SELECT id, listId, trackId, databaseUuid, nextEntityId, "
-                    "membershipReference FROM PlaylistEntity WHERE listId = ?"
+                    "membershipReference FROM PlaylistEntity WHERE listId = ? "
                  << list_id >>
         [&](int64_t id, int64_t list_id, int64_t track_id,
             std::string database_uuid, int64_t next_entity_id,
             int64_t membership_reference)
     {
-        results.push_back(playlist_entity_row{
-            id, list_id, track_id, std::move(database_uuid), next_entity_id,
-            membership_reference});
+        next_entity_id_map[next_entity_id] = playlist_entity_row{
+            id,
+            list_id,
+            track_id,
+            std::move(database_uuid),
+            next_entity_id,
+            membership_reference};
     };
 
+    std::list<playlist_entity_row> results;
+    if (next_entity_id_map.empty())
+        return results;
+
+    auto curr = next_entity_id_map.find(PLAYLIST_ENTITY_NO_NEXT_ENTITY_ID);
+    assert(curr != next_entity_id_map.end());
+
+    do
+    {
+        auto id = curr->second.id;
+        results.push_front(std::move(curr->second));
+        curr = next_entity_id_map.find(id);
+    } while (curr != next_entity_id_map.end());
+
     return results;
+}
+
+std::vector<int64_t> playlist_entity_table::track_ids(int64_t list_id) const
+{
+    std::vector<int64_t> results;
+
+    auto entities = get_for_list(list_id);
+    for (auto&& entity : entities)
+        results.push_back(entity.track_id);
+
+    return results;
+}
+
+void playlist_entity_table::remove(int64_t list_id, int64_t entity_id)
+{
+    context_->db << "DELETE FROM PlaylistEntity WHERE listId = ? AND id = ?"
+                 << list_id << entity_id;
 }
 
 }  // namespace djinterop::engine::v2
