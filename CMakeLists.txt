@@ -259,8 +259,14 @@ if (Boost_FOUND)
         string(REPLACE "/" "_" test_executable_name ${test_dir}${test_name})
         add_executable(${test_executable_name}
                 test/djinterop/${test_dir}${test_name}.cpp)
+
         target_compile_definitions(${test_executable_name} PUBLIC
                 -DTESTDATA_DIR=${TESTDATA_DIR})
+        if (MSVC)
+            # Some unit tests are rather large and exceed max sections on VC++.
+            target_compile_options(${test_executable_name} PRIVATE /bigobj)
+        endif()
+
         target_include_directories(${test_executable_name} PUBLIC
                 ${Boost_INCLUDE_DIRS}
                 ${CMAKE_CURRENT_BINARY_DIR}/include
