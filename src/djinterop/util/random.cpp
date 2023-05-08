@@ -15,42 +15,14 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <djinterop/util.hpp>
+#include "random.hpp"
 
 #include <ios>
 #include <random>
 #include <sstream>
-#include <string>
 
-#include <sys/stat.h>
-#if defined(_WIN32)
-#include <direct.h>
-#endif
-
-#include <date.h>
-
-#include <djinterop/optional.hpp>
-
-namespace djinterop
+namespace djinterop::util
 {
-void create_dir(const std::string& directory)
-{
-#if defined(_WIN32)
-    if (_mkdir(directory.c_str()) != 0)
-#else
-    if (mkdir(directory.c_str(), 0755) != 0)
-#endif
-    {
-        throw std::runtime_error{"Failed to create directory"};
-    }
-}
-
-bool path_exists(const std::string& directory)
-{
-    struct stat buf;
-    return (stat(directory.c_str(), &buf) == 0);
-}
-
 int64_t generate_random_int64()
 {
     static std::random_device rng;
@@ -89,43 +61,4 @@ std::string generate_random_uuid()
     return ss.str();
 }
 
-std::string get_filename(const std::string& file_path)
-{
-    // TODO (haslersn): How to handle Windows path separator?
-    auto slash_pos = file_path.rfind('/');  // returns -1 in case of no match
-    return file_path.substr(slash_pos + 1);
-}
-
-stdx::optional<std::string> get_file_extension(const std::string& file_path)
-{
-    auto filename = get_filename(file_path);
-    stdx::optional<std::string> file_extension;
-    auto dot_pos = filename.rfind('.');
-    if (dot_pos != std::string::npos)
-    {
-        file_extension = filename.substr(dot_pos + 1);
-    }
-    return file_extension;
-}
-
-std::chrono::system_clock::time_point parse_iso8601(const std::string& save)
-{
-    std::istringstream in{save};
-    date::sys_time<std::chrono::seconds> tp;
-    in >> date::parse("%FT%TZ", tp);
-    if (in.fail())
-    {
-        in.clear();
-        in.exceptions(std::ios::failbit);
-        in.str(save);
-        in >> date::parse("%FT%T", tp);
-    }
-    return tp;
-}
-
-std::string to_iso8601(const std::chrono::system_clock::time_point& time)
-{
-    return date::format("%FT%TZ", time);
-}
-
-}  // namespace djinterop
+}  // namespace djinterop::util

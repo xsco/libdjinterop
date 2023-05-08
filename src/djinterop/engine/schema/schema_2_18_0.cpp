@@ -17,7 +17,7 @@
 
 #include <sqlite_modern_cpp.h>
 
-#include "djinterop/util.hpp"
+#include "../../util/random.hpp"
 #include "schema_2_18_0.hpp"
 #include "schema_validate_utils.hpp"
 
@@ -624,7 +624,7 @@ void schema_2_18_0::create(sqlite::database& db)
           "= NULL WHERE Track.id = OLD.trackId; END;";
 
     // Generate UUID for the Information table.
-    auto uuid_str = generate_random_uuid();
+    auto uuid_str = djinterop::util::generate_random_uuid();
 
     // Not yet sure how the "currentPlayedIndiciator" (typo deliberate) value
     // is formed.

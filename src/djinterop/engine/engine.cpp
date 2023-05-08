@@ -24,7 +24,7 @@
 
 #include <djinterop/engine/v2/engine_library.hpp>
 
-#include "../util.hpp"
+#include "../util/filesystem.hpp"
 #include "schema/schema.hpp"
 #include "track_utils.hpp"
 #include "v1/engine_database_impl.hpp"
@@ -55,7 +55,7 @@ inline djinterop::stdx::optional<std::string> get_column_type(
 
 engine_version detect_version(const std::string& directory)
 {
-    if (!path_exists(directory))
+    if (!djinterop::util::path_exists(directory))
     {
         throw database_not_found{directory};
     }
@@ -65,8 +65,8 @@ engine_version detect_version(const std::string& directory)
     // version in some of its columns.
     auto v1_m_db_path = directory + "/m.db";
     auto v2_m_db_path = directory + "/Database2/m.db";
-    auto v1_m_db_path_exists = path_exists(v1_m_db_path);
-    auto v2_m_db_path_exists = path_exists(v2_m_db_path);
+    auto v1_m_db_path_exists = djinterop::util::path_exists(v1_m_db_path);
+    auto v2_m_db_path_exists = djinterop::util::path_exists(v2_m_db_path);
     auto m_db_path = v1_m_db_path_exists ? v1_m_db_path : v2_m_db_path;
     if (!v1_m_db_path_exists && !v2_m_db_path_exists)
     {
@@ -128,7 +128,7 @@ inline void hydrate_database(
         m_db << stmt;
     }
 }
-} // anonymous namespace
+}  // anonymous namespace
 
 database create_database(
     const std::string& directory, const engine_version& version)
@@ -158,12 +158,12 @@ database create_temporary_database(const engine_version& version)
 database create_database_from_scripts(
     const std::string& db_directory, const std::string& script_directory)
 {
-    if (!path_exists(db_directory))
+    if (!djinterop::util::path_exists(db_directory))
     {
         throw std::runtime_error{"DB directory does not exist"};
     }
 
-    if (!path_exists(script_directory))
+    if (!djinterop::util::path_exists(script_directory))
     {
         throw std::runtime_error{"Script directory does not exist"};
     }
@@ -177,20 +177,20 @@ database create_database_from_scripts(
     auto v2_m_db_path = database2_db_dir + "/m.db";
     auto v2_m_db_sql_path = database2_script_dir + "/m.db.sql";
 
-    if (path_exists(v1_m_db_sql_path))
+    if (djinterop::util::path_exists(v1_m_db_sql_path))
     {
         hydrate_database(v1_m_db_path, v1_m_db_sql_path);
     }
 
-    if (path_exists(v1_p_db_sql_path))
+    if (djinterop::util::path_exists(v1_p_db_sql_path))
     {
         hydrate_database(v1_p_db_path, v1_p_db_sql_path);
     }
 
-    if (path_exists(v2_m_db_sql_path))
+    if (djinterop::util::path_exists(v2_m_db_sql_path))
     {
-        if (!path_exists(database2_db_dir))
-            create_dir(database2_db_dir);
+        if (!djinterop::util::path_exists(database2_db_dir))
+            djinterop::util::create_dir(database2_db_dir);
 
         hydrate_database(v2_m_db_path, v2_m_db_sql_path);
     }
@@ -199,8 +199,7 @@ database create_database_from_scripts(
 }
 
 database create_or_load_database(
-    const std::string& directory, const engine_version& version,
-    bool& created)
+    const std::string& directory, const engine_version& version, bool& created)
 {
     try
     {
@@ -253,9 +252,8 @@ std::vector<beatgrid_marker> normalize_beatgrid(
     {
         auto last_marker_iter = std::find_if(
             beatgrid.begin(), beatgrid.end(),
-            [sample_count](const beatgrid_marker& marker) {
-                return marker.sample_offset > sample_count;
-            });
+            [sample_count](const beatgrid_marker& marker)
+            { return marker.sample_offset > sample_count; });
         if (last_marker_iter != beatgrid.end())
         {
             beatgrid.erase(last_marker_iter + 1, beatgrid.end());
@@ -265,9 +263,8 @@ std::vector<beatgrid_marker> normalize_beatgrid(
     {
         auto after_first_marker_iter = std::find_if(
             beatgrid.begin(), beatgrid.end(),
-            [](const beatgrid_marker& marker) {
-                return marker.sample_offset > 0;
-            });
+            [](const beatgrid_marker& marker)
+            { return marker.sample_offset > 0; });
         if (after_first_marker_iter != beatgrid.begin())
         {
             beatgrid.erase(beatgrid.begin(), after_first_marker_iter - 1);
@@ -307,4 +304,4 @@ int64_t required_waveform_samples_per_entry(double sample_rate)
     return util::required_waveform_samples_per_entry(sample_rate);
 }
 
-}  // namespace djinterop::enginelibrary
+}  // namespace djinterop::engine

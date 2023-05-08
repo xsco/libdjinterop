@@ -21,7 +21,6 @@
 #include <djinterop/djinterop.hpp>
 
 #include "impl/crate_impl.hpp"
-#include "util.hpp"
 
 namespace djinterop
 {

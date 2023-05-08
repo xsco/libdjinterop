@@ -22,7 +22,8 @@
 
 #include <djinterop/djinterop.hpp>
 
-#include "../../util.hpp"
+#include "../../util/chrono.hpp"
+#include "../../util/filesystem.hpp"
 #include "djinterop/engine/track_utils.hpp"
 #include "engine_crate_impl.hpp"
 #include "engine_database_impl.hpp"
@@ -167,8 +168,8 @@ timestamp_field_data to_timestamp_fields(
     stdx::optional<std::chrono::system_clock::time_point> last_modified_at,
     stdx::optional<std::chrono::system_clock::time_point> last_accessed_at)
 {
-    auto last_played_at_ts = to_timestamp(last_played_at);
-    auto last_modified_at_ts = to_timestamp(last_modified_at);
+    auto last_played_at_ts = djinterop::util::to_timestamp(last_played_at);
+    auto last_modified_at_ts = djinterop::util::to_timestamp(last_modified_at);
 
     stdx::optional<int64_t> last_accessed_at_ts;
     if (last_accessed_at)
@@ -182,7 +183,7 @@ timestamp_field_data to_timestamp_fields(
         // leave the decision whether to ceil it to the library user. Also, it
         // would make `el_track_impl::last_accessed_at()` consistent with the
         // value that has been set using this method.
-        auto timestamp = *to_timestamp(last_accessed_at);
+        auto timestamp = *djinterop::util::to_timestamp(last_accessed_at);
         auto secs_per_day = 86400;
         timestamp += secs_per_day - 1;
         timestamp -= timestamp % secs_per_day;
@@ -462,13 +463,16 @@ track_snapshot engine_track_impl::snapshot() const
         switch (row.type)
         {
             case metadata_int_type::last_played_ts:
-                snapshot.last_played_at = to_time_point(row.value);
+                snapshot.last_played_at =
+                    djinterop::util::to_time_point(row.value);
                 break;
             case metadata_int_type::last_modified_ts:
-                snapshot.last_modified_at = to_time_point(row.value);
+                snapshot.last_modified_at =
+                    djinterop::util::to_time_point(row.value);
                 break;
             case metadata_int_type::last_accessed_ts:
-                snapshot.last_accessed_at = to_time_point(row.value);
+                snapshot.last_accessed_at =
+                    djinterop::util::to_time_point(row.value);
                 break;
             case metadata_int_type::musical_key:
                 if (!snapshot.key)
@@ -503,8 +507,8 @@ void engine_track_impl::update(const track_snapshot& snapshot)
     auto length_fields = to_length_fields(snapshot.duration, snapshot.sampling);
     auto bpm_fields = to_bpm_fields(
         snapshot.bpm, snapshot.sampling, snapshot.adjusted_beatgrid);
-    auto filename = get_filename(*snapshot.relative_path);
-    auto extension = get_file_extension(filename);
+    auto filename = djinterop::util::get_filename(*snapshot.relative_path);
+    auto extension = djinterop::util::get_file_extension(filename);
     auto track_number =
         snapshot.track_number
             ? stdx::make_optional(static_cast<int64_t>(*snapshot.track_number))
@@ -794,13 +798,13 @@ stdx::optional<milliseconds> engine_track_impl::duration()
 std::string engine_track_impl::file_extension()
 {
     auto rel_path = relative_path();
-    return get_file_extension(rel_path).value_or(std::string{});
+    return djinterop::util::get_file_extension(rel_path).value_or(std::string{});
 }
 
 std::string engine_track_impl::filename()
 {
     auto rel_path = relative_path();
-    return get_filename(rel_path);
+    return djinterop::util::get_filename(rel_path);
 }
 
 stdx::optional<std::string> engine_track_impl::genre()
@@ -931,7 +935,7 @@ stdx::optional<system_clock::time_point> engine_track_impl::last_accessed_at()
     // `el_track_impl::last_accessed_at()` and
     // `el_track_impl::last_played_at()`, except for the ceiling of the
     // timestamp?
-    return to_time_point(storage_->get_meta_data_integer(
+    return djinterop::util::to_time_point(storage_->get_meta_data_integer(
         id(), metadata_int_type::last_accessed_ts));
 }
 
@@ -947,7 +951,7 @@ void engine_track_impl::set_last_accessed_at(
         // leave the decision whether to ceil it to the library user. Also, it
         // would make `el_track_impl::last_accessed_at()` consistent with the
         // value that has been set using this method.
-        auto timestamp = *to_timestamp(accessed_at);
+        auto timestamp = *djinterop::util::to_timestamp(accessed_at);
         auto secs_per_day = 86400;
         timestamp += secs_per_day - 1;
         timestamp -= timestamp % secs_per_day;
@@ -963,7 +967,7 @@ void engine_track_impl::set_last_accessed_at(
 
 stdx::optional<system_clock::time_point> engine_track_impl::last_modified_at()
 {
-    return to_time_point(storage_->get_meta_data_integer(
+    return djinterop::util::to_time_point(storage_->get_meta_data_integer(
         id(), metadata_int_type::last_modified_ts));
 }
 
@@ -971,12 +975,13 @@ void engine_track_impl::set_last_modified_at(
     stdx::optional<system_clock::time_point> modified_at)
 {
     storage_->set_meta_data_integer(
-        id(), metadata_int_type::last_modified_ts, to_timestamp(modified_at));
+        id(), metadata_int_type::last_modified_ts,
+        djinterop::util::to_timestamp(modified_at));
 }
 
 stdx::optional<system_clock::time_point> engine_track_impl::last_played_at()
 {
-    return to_time_point(storage_->get_meta_data_integer(
+    return djinterop::util::to_time_point(storage_->get_meta_data_integer(
         id(), metadata_int_type::last_played_ts));
 }
 
@@ -988,7 +993,8 @@ void engine_track_impl::set_last_played_at(
     storage_->set_meta_data(
         id(), metadata_str_type::ever_played, played_at ? one : zero);
     storage_->set_meta_data_integer(
-        id(), metadata_int_type::last_played_ts, to_timestamp(played_at));
+        id(), metadata_int_type::last_played_ts,
+        djinterop::util::to_timestamp(played_at));
     if (played_at)
     {
         // TODO (haslersn): Add entry to HistorylistTrackList
@@ -1072,9 +1078,9 @@ void engine_track_impl::set_relative_path(std::string relative_path)
 {
     // TODO (haslersn): Should we check the path?
     storage_->set_track_column(id(), "path", std::string{relative_path});
-    auto filename = get_filename(relative_path);
+    auto filename = djinterop::util::get_filename(relative_path);
     storage_->set_track_column(id(), "filename", std::string{filename});
-    auto extension = get_file_extension(filename);
+    auto extension = djinterop::util::get_file_extension(filename);
     storage_->set_meta_data(id(), metadata_str_type::file_extension, extension);
 }
 
@@ -1250,8 +1256,8 @@ track create_track(
     auto length_fields = to_length_fields(snapshot.duration, snapshot.sampling);
     auto bpm_fields = to_bpm_fields(
         snapshot.bpm, snapshot.sampling, snapshot.adjusted_beatgrid);
-    auto filename = get_filename(*snapshot.relative_path);
-    auto extension = get_file_extension(filename);
+    auto filename = djinterop::util::get_filename(*snapshot.relative_path);
+    auto extension = djinterop::util::get_file_extension(filename);
     auto track_number =
         snapshot.track_number
             ? stdx::make_optional(static_cast<int64_t>(*snapshot.track_number))
