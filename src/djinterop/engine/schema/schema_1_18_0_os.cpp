@@ -19,7 +19,7 @@
 
 #include <djinterop/djinterop.hpp>
 
-#include "djinterop/util.hpp"
+#include "../../util/random.hpp"
 #include "schema_1_18_0_os.hpp"
 #include "schema_validate_utils.hpp"
 
@@ -606,7 +606,7 @@ void schema_1_18_0_os::create_music_schema(sqlite::database& db)
           "ChangeLog (itemId) VALUES(NEW.id); END;";
 
     // Generate UUID for the Information table.
-    auto uuid_str = generate_random_uuid();
+    auto uuid_str = djinterop::util::generate_random_uuid();
 
     // Not yet sure how the "currentPlayedIndiciator" (typo deliberate) value
     // is formed.
@@ -653,7 +653,7 @@ void schema_1_18_0_os::create_performance_schema(sqlite::database& db)
           "(itemId) VALUES(NEW.id); END;";
 
     // Generate UUID for the Information table
-    auto uuid_str = generate_random_uuid();
+    auto uuid_str = djinterop::util::generate_random_uuid();
 
     // Insert row into Information
     db << "INSERT INTO perfdata.Information ([uuid], [schemaVersionMajor], "

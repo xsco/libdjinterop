@@ -88,7 +88,9 @@ add_library(
     src/djinterop/database.cpp
     src/djinterop/track.cpp
     src/djinterop/transaction_guard.cpp
-    src/djinterop/util.cpp)
+    src/djinterop/util/chrono.cpp
+    src/djinterop/util/filesystem.cpp
+    src/djinterop/util/random.cpp)
 
 set_target_properties(DjInterop PROPERTIES
     OUTPUT_NAME "djinterop"

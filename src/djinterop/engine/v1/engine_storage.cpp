@@ -23,8 +23,8 @@
 #include <djinterop/engine/engine.hpp>
 #include <djinterop/exceptions.hpp>
 
+#include "../../util/filesystem.hpp"
 #include "../schema/schema.hpp"
-#include "../../util.hpp"
 
 namespace djinterop::engine::v1
 {
@@ -32,7 +32,7 @@ namespace
 {
 sqlite::database make_attached_db(const std::string& directory, bool must_exist)
 {
-    if (!path_exists(directory))
+    if (!djinterop::util::path_exists(directory))
     {
         if (must_exist)
         {
@@ -41,7 +41,7 @@ sqlite::database make_attached_db(const std::string& directory, bool must_exist)
         else
         {
             // Note: only creates leaf directory, not entire tree.
-            create_dir(directory);
+            djinterop::util::create_dir(directory);
         }
     }
 

@@ -20,6 +20,7 @@
 
 namespace djinterop::engine::v1
 {
+// TODO (mr-smidge): Move entire class to be an internal utility, not part of the high-level API.
 engine_transaction_guard_impl::engine_transaction_guard_impl(
     std::shared_ptr<engine_storage> storage)
     : storage_{std::move(storage)}, savepoint_{++storage_->last_savepoint}

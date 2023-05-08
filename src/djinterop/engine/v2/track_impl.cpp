@@ -22,7 +22,7 @@
 #include <djinterop/exceptions.hpp>
 #include <djinterop/track.hpp>
 
-#include "../../util.hpp"
+#include "../../util/filesystem.hpp"
 #include "convert_beatgrid.hpp"
 #include "convert_hot_cues.hpp"
 #include "convert_loops.hpp"
@@ -52,14 +52,14 @@ track_row snapshot_to_row(
 
     auto track_id = snapshot.id.value_or(TRACK_ROW_ID_NONE);
 
-    auto filename = get_filename(*snapshot.relative_path);
+    auto filename = djinterop::util::get_filename(*snapshot.relative_path);
     stdx::optional<std::string> remixer;
     auto rating = convert::write::rating(snapshot.rating);
     stdx::optional<std::string> album_art;
     bool is_played = false;
     bool is_analyzed = true;
 
-    auto file_type = get_file_extension(filename);
+    auto file_type = djinterop::util::get_file_extension(filename);
     if (!file_type)
     {
         throw invalid_track_snapshot{
@@ -403,13 +403,13 @@ stdx::optional<milliseconds> track_impl::duration()
 std::string track_impl::file_extension()
 {
     auto rel_path = relative_path();
-    return get_file_extension(rel_path).value_or(std::string{});
+    return djinterop::util::get_file_extension(rel_path).value_or(std::string{});
 }
 
 std::string track_impl::filename()
 {
     auto rel_path = relative_path();
-    return get_filename(rel_path);
+    return djinterop::util::get_filename(rel_path);
 }
 
 stdx::optional<std::string> track_impl::genre()

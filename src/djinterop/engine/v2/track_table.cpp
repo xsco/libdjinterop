@@ -23,7 +23,7 @@
 #include <djinterop/engine/v2/engine_library_context.hpp>
 #include <djinterop/exceptions.hpp>
 
-#include "../../util.hpp"
+#include "../../util/chrono.hpp"
 
 namespace djinterop::engine::v2
 {
@@ -49,7 +49,7 @@ stdx::optional<std::chrono::system_clock::time_point> get_column(
 
 {
     auto timestamp = get_column<stdx::optional<int64_t> >(db, id, column_name);
-    return to_time_point(timestamp);
+    return djinterop::util::to_time_point(timestamp);
 }
 
 template <typename ColumnType>
@@ -71,7 +71,7 @@ void set_column(
     sqlite::database& db, int64_t id, const std::string& column_name,
     const stdx::optional<std::chrono::system_clock::time_point>& value)
 {
-    auto timestamp = to_timestamp(value);
+    auto timestamp = djinterop::util::to_timestamp(value);
     set_column<stdx::optional<int64_t> >(db, id, column_name, timestamp);
 }
 
@@ -139,11 +139,11 @@ int64_t track_table::add(const track_row& row)
                  << row.artist << row.album << row.genre << row.comment
                  << row.label << row.composer << row.remixer << row.key
                  << row.rating << row.album_art
-                 << to_timestamp(row.time_last_played) << row.is_played
-                 << row.file_type << row.is_analyzed
-                 << to_timestamp(row.date_created)
-                 << to_timestamp(row.date_added) << row.is_available
-                 << row.is_metadata_of_packed_track_changed
+                 << djinterop::util::to_timestamp(row.time_last_played)
+                 << row.is_played << row.file_type << row.is_analyzed
+                 << djinterop::util::to_timestamp(row.date_created)
+                 << djinterop::util::to_timestamp(row.date_added)
+                 << row.is_available << row.is_metadata_of_packed_track_changed
                  << row.is_performance_data_of_packed_track_changed
                  << row.played_indicator << row.is_metadata_imported
                  << row.pdb_import_key << row.streaming_source << row.uri
@@ -262,12 +262,12 @@ stdx::optional<track_row> track_table::get(int64_t id) const
             key,
             rating,
             std::move(album_art),
-            to_time_point(time_last_played),
+            djinterop::util::to_time_point(time_last_played),
             is_played,
             std::move(file_type),
             is_analyzed,
-            to_time_point(date_created),
-            to_time_point(date_added),
+            djinterop::util::to_time_point(date_created),
+            djinterop::util::to_time_point(date_added),
             is_available,
             is_metadata_of_packed_track_changed,
             is_performance_data_of_packed_track_changed,
@@ -355,11 +355,11 @@ void track_table::update(const track_row& row)
                  << row.artist << row.album << row.genre << row.comment
                  << row.label << row.composer << row.remixer << row.key
                  << row.rating << row.album_art
-                 << to_timestamp(row.time_last_played) << row.is_played
-                 << row.file_type << row.is_analyzed
-                 << to_timestamp(row.date_created)
-                 << to_timestamp(row.date_added) << row.is_available
-                 << row.is_metadata_of_packed_track_changed
+                 << djinterop::util::to_timestamp(row.time_last_played)
+                 << row.is_played << row.file_type << row.is_analyzed
+                 << djinterop::util::to_timestamp(row.date_created)
+                 << djinterop::util::to_timestamp(row.date_added)
+                 << row.is_available << row.is_metadata_of_packed_track_changed
                  << row.is_performance_data_of_packed_track_changed
                  << row.played_indicator << row.is_metadata_imported
                  << row.pdb_import_key << row.streaming_source << row.uri

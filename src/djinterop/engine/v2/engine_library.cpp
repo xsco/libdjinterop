@@ -24,7 +24,7 @@
 #include <memory>
 #include <utility>
 
-#include "../../util.hpp"
+#include "../../util/filesystem.hpp"
 #include "../schema/schema.hpp"
 #include "database_impl.hpp"
 #include "engine_library_context.hpp"
@@ -47,7 +47,7 @@ std::shared_ptr<engine_library_context> load_existing(
     const std::string& directory)
 {
     auto db_path = make_db_path(directory);
-    if (!path_exists(db_path))
+    if (!djinterop::util::path_exists(db_path))
     {
         throw database_not_found{directory};
     }
@@ -102,20 +102,20 @@ engine_library engine_library::create(
     const std::string& directory, const engine_version& version)
 {
     // Ensure the target directory exists.
-    if (!path_exists(directory))
+    if (!djinterop::util::path_exists(directory))
     {
-        create_dir(directory);
+        djinterop::util::create_dir(directory);
     }
 
     auto db_dir_path = make_db_dir_path(directory);
-    if (!path_exists(db_dir_path))
+    if (!djinterop::util::path_exists(db_dir_path))
     {
-        create_dir(db_dir_path);
+        djinterop::util::create_dir(db_dir_path);
     }
 
     // Target database must not exist.
     auto db_path = make_db_path(directory);
-    if (path_exists(db_path))
+    if (djinterop::util::path_exists(db_path))
     {
         throw database_inconsistency{
             "Cannot create new Engine library, as the database file already "
@@ -145,7 +145,7 @@ engine_library engine_library::create_temporary(const engine_version& version)
 
 bool engine_library::exists(const std::string& directory)
 {
-    return path_exists(make_db_path(directory));
+    return djinterop::util::path_exists(make_db_path(directory));
 }
 
 void engine_library::verify() const

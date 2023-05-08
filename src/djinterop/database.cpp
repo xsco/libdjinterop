@@ -24,7 +24,6 @@
 #include "engine/schema/schema.hpp"
 #include "engine/v1/engine_database_impl.hpp"
 #include "impl/database_impl.hpp"
-#include "util.hpp"
 
 namespace djinterop
 {

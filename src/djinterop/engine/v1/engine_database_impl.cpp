@@ -18,7 +18,6 @@
 
 #include <djinterop/transaction_guard.hpp>
 
-#include "../../util.hpp"
 #include "../schema/schema.hpp"
 #include "engine_crate_impl.hpp"
 #include "engine_storage.hpp"

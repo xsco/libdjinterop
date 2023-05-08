@@ -22,7 +22,7 @@
 
 #include <djinterop/exceptions.hpp>
 
-#include "../../util.hpp"
+#include "../../util/chrono.hpp"
 #include "engine_library_context.hpp"
 
 namespace djinterop::engine::v2
@@ -64,7 +64,7 @@ int64_t playlist_table::add(const playlist_row& row)
     context_->db << "INSERT INTO Playlist (title, parentListId, isPersisted, "
                     "lastEditTime, isExplicitlyExported) VALUES (?, ?, ?, ?, ?)"
                  << row.title << row.parent_list_id << row.is_persisted
-                 << to_iso8601(row.last_edit_time)
+                 << djinterop::util::to_iso8601(row.last_edit_time)
                  << row.is_explicitly_exported;
 
     return context_->db.last_insert_rowid();
@@ -175,7 +175,7 @@ djinterop::stdx::optional<playlist_row> playlist_table::get(int64_t id) const
             parent_list_id,
             is_persisted,
             next_list_id,
-            parse_iso8601(last_edited_time),
+            djinterop::util::parse_iso8601(last_edited_time),
             is_explicitly_exported};
     };
 
@@ -201,8 +201,8 @@ void playlist_table::update(const playlist_row& row)
         << "UPDATE Playlist SET title = ?, parentListId = ?, isPersisted = ?, "
            "lastEditTime = ?, isExplicitlyExported = ? WHERE Id = ?"
         << row.title << row.parent_list_id << row.is_persisted
-        << to_iso8601(row.last_edit_time) << row.is_explicitly_exported
-        << row.id;
+        << djinterop::util::to_iso8601(row.last_edit_time)
+        << row.is_explicitly_exported << row.id;
 }
 
 }  // namespace djinterop::engine::v2
