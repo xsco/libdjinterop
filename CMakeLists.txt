@@ -48,7 +48,6 @@ add_library(
     src/djinterop/impl/crate_impl.cpp
     src/djinterop/impl/database_impl.cpp
     src/djinterop/impl/track_impl.cpp
-    src/djinterop/impl/transaction_guard_impl.cpp
     src/djinterop/engine/encode_decode_utils.cpp
     src/djinterop/engine/engine.cpp
     src/djinterop/engine/schema/schema_1_6_0.cpp
@@ -68,7 +67,6 @@ add_library(
     src/djinterop/engine/v1/engine_database_impl.cpp
     src/djinterop/engine/v1/engine_storage.cpp
     src/djinterop/engine/v1/engine_track_impl.cpp
-    src/djinterop/engine/v1/engine_transaction_guard_impl.cpp
     src/djinterop/engine/v1/performance_data_format.cpp
     src/djinterop/engine/v2/beat_data_blob.cpp
     src/djinterop/engine/v2/change_log_table.cpp
@@ -87,7 +85,6 @@ add_library(
     src/djinterop/crate.cpp
     src/djinterop/database.cpp
     src/djinterop/track.cpp
-    src/djinterop/transaction_guard.cpp
     src/djinterop/util/chrono.cpp
     src/djinterop/util/filesystem.cpp
     src/djinterop/util/random.cpp)
@@ -180,7 +177,6 @@ install(FILES
     include/djinterop/stream_helper.hpp
     include/djinterop/track.hpp
     include/djinterop/track_snapshot.hpp
-    include/djinterop/transaction_guard.hpp
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}")
 install(FILES
     include/djinterop/engine/engine.hpp

@@ -32,7 +32,6 @@ class database_impl : public djinterop::database_impl
 public:
     explicit database_impl(std::shared_ptr<engine_library> library);
 
-    transaction_guard begin_transaction() override;
     stdx::optional<djinterop::crate> crate_by_id(int64_t id) override;
     std::vector<djinterop::crate> crates() override;
     std::vector<djinterop::crate> crates_by_name(

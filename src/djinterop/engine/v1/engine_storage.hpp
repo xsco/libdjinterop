@@ -343,8 +343,7 @@ public:
     /// The directory in which the Engine DB files reside.
     const std::string directory;
 
-    // TODO - don't expose mutable SQLite connection - allow txn guard to be
-    // obtained from el_storage by other EL classes.
+    /// SQLite database handle, with both music and performance DBs attached.
     sqlite::database db;
 
     /// The version of the Engine database.
@@ -353,8 +352,6 @@ public:
     /// Pointer to the schema creator/validator.
     const std::unique_ptr<schema::schema_creator_validator>
         schema_creator_validator;
-
-    int64_t last_savepoint = 0;
 
 private:
     engine_storage(

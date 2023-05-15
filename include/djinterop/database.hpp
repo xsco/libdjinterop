@@ -40,7 +40,6 @@ class crate;
 class database_impl;
 class track;
 struct track_snapshot;
-class transaction_guard;
 
 class DJINTEROP_PUBLIC database
 {
@@ -53,8 +52,6 @@ public:
 
     /// Copy assignment operator
     database& operator=(const database& db);
-
-    transaction_guard begin_transaction() const;
 
     /// Returns the crate with the given ID
     ///

@@ -16,13 +16,11 @@
  */
 #include "engine_database_impl.hpp"
 
-#include <djinterop/transaction_guard.hpp>
-
+#include "../../util/sqlite_transaction.hpp"
 #include "../schema/schema.hpp"
 #include "engine_crate_impl.hpp"
 #include "engine_storage.hpp"
 #include "engine_track_impl.hpp"
-#include "engine_transaction_guard_impl.hpp"
 
 namespace djinterop::engine::v1
 {
@@ -50,12 +48,6 @@ void ensure_valid_crate_name(const std::string& name)
 engine_database_impl::engine_database_impl(std::shared_ptr<engine_storage> storage) :
     storage_{std::move(storage)}
 {
-}
-
-transaction_guard engine_database_impl::begin_transaction()
-{
-    return transaction_guard{
-        std::make_unique<engine_transaction_guard_impl>(storage_)};
 }
 
 stdx::optional<crate> engine_database_impl::crate_by_id(int64_t id)
@@ -100,7 +92,7 @@ std::vector<crate> engine_database_impl::crates_by_name(const std::string& name)
 crate engine_database_impl::create_root_crate(std::string name)
 {
     ensure_valid_crate_name(name);
-    engine_transaction_guard_impl trans{storage_};
+    djinterop::util::sqlite_transaction trans{storage_->db};
 
     int64_t id;
     if (storage_->version.schema_version >= desktop_1_1_1.schema_version)
