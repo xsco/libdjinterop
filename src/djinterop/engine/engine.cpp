@@ -28,7 +28,6 @@
 #include "schema/schema.hpp"
 #include "track_utils.hpp"
 #include "v1/engine_database_impl.hpp"
-#include "v1/engine_transaction_guard_impl.hpp"
 
 namespace djinterop::engine
 {

@@ -19,11 +19,11 @@
 
 #include <djinterop/djinterop.hpp>
 
+#include "../../util/sqlite_transaction.hpp"
 #include "engine_crate_impl.hpp"
 #include "engine_database_impl.hpp"
 #include "engine_storage.hpp"
 #include "engine_track_impl.hpp"
-#include "engine_transaction_guard_impl.hpp"
 
 namespace djinterop::engine::v1
 {
@@ -90,7 +90,7 @@ engine_crate_impl::engine_crate_impl(std::shared_ptr<engine_storage> storage, in
 
 void engine_crate_impl::add_track(int64_t track_id)
 {
-    engine_transaction_guard_impl trans{storage_};
+    util::sqlite_transaction trans{storage_->db};
 
     storage_->db
         << "DELETE FROM CrateTrackList WHERE crateId = ? AND trackId = ?"
@@ -128,7 +128,7 @@ void engine_crate_impl::clear_tracks()
 crate engine_crate_impl::create_sub_crate(std::string name)
 {
     ensure_valid_name(name);
-    engine_transaction_guard_impl trans{storage_};
+    util::sqlite_transaction trans{storage_->db};
 
     std::string path;
     storage_->db << "SELECT path FROM Crate WHERE id = ?" << id() >>
@@ -273,7 +273,7 @@ void engine_crate_impl::remove_track(track tr)
 void engine_crate_impl::set_name(std::string name)
 {
     ensure_valid_name(name);
-    engine_transaction_guard_impl trans{storage_};
+    util::sqlite_transaction trans{storage_->db};
 
     // obtain parent's `path`
     std::string parent_path;
@@ -315,7 +315,7 @@ void engine_crate_impl::set_parent(stdx::optional<crate> parent)
         throw crate_invalid_parent{"Cannot set crate parent to self"};
     }
 
-    engine_transaction_guard_impl trans{storage_};
+    util::sqlite_transaction trans{storage_->db};
 
     storage_->db << "DELETE FROM CrateParentList WHERE crateOriginId = ?"
                  << id();

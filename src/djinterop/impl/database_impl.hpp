@@ -27,14 +27,12 @@ namespace djinterop
 class crate;
 class track;
 struct track_snapshot;
-class transaction_guard;
 
 class database_impl
 {
 public:
     virtual ~database_impl();
 
-    virtual transaction_guard begin_transaction() = 0;
     virtual stdx::optional<crate> crate_by_id(int64_t id) = 0;
     virtual std::vector<crate> crates() = 0;
     virtual std::vector<crate> crates_by_name(const std::string& name) = 0;

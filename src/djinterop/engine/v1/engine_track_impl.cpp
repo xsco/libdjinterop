@@ -24,11 +24,11 @@
 
 #include "../../util/chrono.hpp"
 #include "../../util/filesystem.hpp"
+#include "../../util/sqlite_transaction.hpp"
 #include "djinterop/engine/track_utils.hpp"
 #include "engine_crate_impl.hpp"
 #include "engine_database_impl.hpp"
 #include "engine_track_impl.hpp"
-#include "engine_transaction_guard_impl.hpp"
 
 namespace djinterop::engine::v1
 {
@@ -539,7 +539,7 @@ void engine_track_impl::update(const track_snapshot& snapshot)
         snapshot.default_main_cue);
     auto loops_data = to_loops_data(snapshot.loops);
 
-    engine_transaction_guard_impl trans{storage_};
+    djinterop::util::sqlite_transaction trans{storage_->db};
 
     // Firstly, update the `Track` table entry.
     storage_->update_track(
@@ -599,7 +599,7 @@ std::vector<beatgrid_marker> engine_track_impl::adjusted_beatgrid()
 
 void engine_track_impl::set_adjusted_beatgrid(std::vector<beatgrid_marker> beatgrid)
 {
-    engine_transaction_guard_impl trans{storage_};
+    djinterop::util::sqlite_transaction trans{storage_->db};
     auto beat_d = get_beat_data();
     beat_d.adjusted_beatgrid = std::move(beatgrid);
     set_beat_data(std::move(beat_d));
@@ -613,7 +613,7 @@ double engine_track_impl::adjusted_main_cue()
 
 void engine_track_impl::set_adjusted_main_cue(double sample_offset)
 {
-    engine_transaction_guard_impl trans{storage_};
+    djinterop::util::sqlite_transaction trans{storage_->db};
     auto quick_cues_d = get_quick_cues_data();
     quick_cues_d.adjusted_main_cue = sample_offset;
     set_quick_cues_data(std::move(quick_cues_d));
@@ -673,7 +673,7 @@ stdx::optional<double> engine_track_impl::average_loudness()
 void engine_track_impl::set_average_loudness(
     stdx::optional<double> average_loudness)
 {
-    engine_transaction_guard_impl trans{storage_};
+    djinterop::util::sqlite_transaction trans{storage_->db};
     auto track_d = get_track_data();
 
     // Zero average loudness is interpreted as no average loudness.
@@ -757,7 +757,7 @@ std::vector<beatgrid_marker> engine_track_impl::default_beatgrid()
 
 void engine_track_impl::set_default_beatgrid(std::vector<beatgrid_marker> beatgrid)
 {
-    engine_transaction_guard_impl trans{storage_};
+    djinterop::util::sqlite_transaction trans{storage_->db};
     auto beat_d = get_beat_data();
     beat_d.default_beatgrid = std::move(beatgrid);
     set_beat_data(std::move(beat_d));
@@ -771,7 +771,7 @@ double engine_track_impl::default_main_cue()
 
 void engine_track_impl::set_default_main_cue(double sample_offset)
 {
-    engine_transaction_guard_impl trans{storage_};
+    djinterop::util::sqlite_transaction trans{storage_->db};
     auto quick_cues_d = get_quick_cues_data();
     quick_cues_d.default_main_cue = sample_offset;
     set_quick_cues_data(std::move(quick_cues_d));
@@ -825,7 +825,7 @@ stdx::optional<hot_cue> engine_track_impl::hot_cue_at(int32_t index)
 
 void engine_track_impl::set_hot_cue_at(int32_t index, stdx::optional<hot_cue> cue)
 {
-    engine_transaction_guard_impl trans{storage_};
+    djinterop::util::sqlite_transaction trans{storage_->db};
     auto quick_cues_d = get_quick_cues_data();
     quick_cues_d.hot_cues[index] = std::move(cue);
     set_quick_cues_data(std::move(quick_cues_d));
@@ -840,7 +840,7 @@ std::array<stdx::optional<hot_cue>, 8> engine_track_impl::hot_cues()
 
 void engine_track_impl::set_hot_cues(std::array<stdx::optional<hot_cue>, 8> cues)
 {
-    engine_transaction_guard_impl trans{storage_};
+    djinterop::util::sqlite_transaction trans{storage_->db};
     // TODO (haslersn): The following can be optimized because in this case we
     // overwrite all hot_cues
     auto quick_cues_d = get_quick_cues_data();
@@ -919,7 +919,7 @@ void engine_track_impl::set_key(stdx::optional<musical_key> key)
         key_num = static_cast<int64_t>(*key);
     }
 
-    engine_transaction_guard_impl trans{storage_};
+    djinterop::util::sqlite_transaction trans{storage_->db};
     auto track_d = get_track_data();
     track_d.key = key;
     set_track_data(track_d);
@@ -1014,7 +1014,7 @@ stdx::optional<loop> engine_track_impl::loop_at(int32_t index)
 
 void engine_track_impl::set_loop_at(int32_t index, stdx::optional<loop> l)
 {
-    engine_transaction_guard_impl trans{storage_};
+    djinterop::util::sqlite_transaction trans{storage_->db};
     auto loops_d = get_loops_data();
     loops_d.loops[index] = std::move(l);
     set_loops_data(std::move(loops_d));
@@ -1029,7 +1029,7 @@ std::array<stdx::optional<loop>, 8> engine_track_impl::loops()
 
 void engine_track_impl::set_loops(std::array<stdx::optional<loop>, 8> loops)
 {
-    engine_transaction_guard_impl trans{storage_};
+    djinterop::util::sqlite_transaction trans{storage_->db};
     loops_data loops_d;
     loops_d.loops = std::move(loops);
     set_loops_data(std::move(loops_d));
@@ -1091,7 +1091,7 @@ stdx::optional<sampling_info> engine_track_impl::sampling()
 
 void engine_track_impl::set_sampling(stdx::optional<sampling_info> sampling)
 {
-    engine_transaction_guard_impl trans{storage_};
+    djinterop::util::sqlite_transaction trans{storage_->db};
 
     // A zero sample rate is interpreted as no sample rate.
     if (sampling && sampling->sample_rate == 0)
@@ -1191,7 +1191,7 @@ std::vector<waveform_entry> engine_track_impl::waveform()
 
 void engine_track_impl::set_waveform(std::vector<waveform_entry> waveform)
 {
-    engine_transaction_guard_impl trans{storage_};
+    djinterop::util::sqlite_transaction trans{storage_->db};
 
     overview_waveform_data overview_waveform_d;
     high_res_waveform_data high_res_waveform_d;
@@ -1288,7 +1288,7 @@ track create_track(
         snapshot.default_main_cue);
     auto loops_data = to_loops_data(snapshot.loops);
 
-    engine_transaction_guard_impl trans{storage};
+    djinterop::util::sqlite_transaction trans{storage->db};
 
     // Firstly, create the `Track` table entry.
     auto id = storage->create_track(

@@ -19,10 +19,6 @@
 
 #include <djinterop/djinterop.hpp>
 
-#include <djinterop/transaction_guard.hpp>
-
-#include "engine/schema/schema.hpp"
-#include "engine/v1/engine_database_impl.hpp"
 #include "impl/database_impl.hpp"
 
 namespace djinterop
@@ -32,11 +28,6 @@ database::database(const database& db) = default;
 database::~database() = default;
 
 database& database::operator=(const database& db) = default;
-
-transaction_guard database::begin_transaction() const
-{
-    return pimpl_->begin_transaction();
-}
 
 stdx::optional<crate> database::crate_by_id(int64_t id) const
 {

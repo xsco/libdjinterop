@@ -20,7 +20,6 @@
 #include <stdexcept>
 
 #include <djinterop/djinterop.hpp>
-#include <djinterop/transaction_guard.hpp>
 
 #include "crate_impl.hpp"
 #include "track_impl.hpp"
@@ -30,13 +29,6 @@ namespace djinterop::engine::v2
 database_impl::database_impl(std::shared_ptr<engine_library> library) :
     library_{std::move(library)}
 {
-}
-
-transaction_guard database_impl::begin_transaction()
-{
-    // TODO - database_impl::begin_transaction() not implemented yet
-    throw std::runtime_error{
-        "database_impl::begin_transaction() - Not implemented yet"};
 }
 
 stdx::optional<crate> database_impl::crate_by_id(int64_t id)
