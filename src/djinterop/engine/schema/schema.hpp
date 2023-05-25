@@ -39,15 +39,15 @@ public:
 class schema_v1 : public schema_creator_validator
 {
 public:
-    virtual ~schema_v1() = default;
+    ~schema_v1() override = default;
 
-    virtual void verify(sqlite::database& db) const
+    void verify(sqlite::database& db) const override
     {
         verify_music_schema(db);
         verify_performance_schema(db);
     }
 
-    virtual void create(sqlite::database& db)
+    void create(sqlite::database& db) override
     {
         create_music_schema(db);
         create_performance_schema(db);
@@ -63,7 +63,7 @@ protected:
 class schema_v2 : public schema_creator_validator
 {
 public:
-    virtual ~schema_v2() = default;
+    ~schema_v2() override = default;
 };
 
 std::unique_ptr<schema_creator_validator> make_schema_creator_validator(

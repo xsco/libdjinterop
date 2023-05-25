@@ -63,6 +63,19 @@ public:
     }
 };
 
+/// The `unsupported operation` exception is thrown when an attempt is made to
+/// perform an operation that is not supported by the database, such as a
+/// missing feature on the high-level API, or a feature only available in
+/// certain database versions.
+class unsupported_operation : public std::runtime_error
+{
+public:
+    explicit unsupported_operation(const std::string& what_arg) noexcept
+        : runtime_error{what_arg}
+    {
+    }
+};
+
 /// The `crate_deleted` exception is thrown when an invalid `crate` object is
 /// used, i.e. one that does not exist in the database anymore.
 class crate_deleted : public std::runtime_error

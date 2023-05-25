@@ -1,13 +1,3 @@
-# libdjinterop CMake file
-#
-# This CMake build script is provided for simpler integration with projects
-# that wish to include libdjinterop via CMake's ExternalProject module.
-#
-# It is also automatically-detected as the preferred build system to use when
-# building `.deb` packages for Debian/Ubuntu and derivatives.
-#
-# The meson/ninja build should be preferred in all other cases.
-#
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
         VERSION 0.18.0
@@ -62,6 +52,9 @@ add_library(
     src/djinterop/engine/schema/schema_1_18_0_desktop.cpp
     src/djinterop/engine/schema/schema_1_18_0_os.cpp
     src/djinterop/engine/schema/schema_2_18_0.cpp
+    src/djinterop/engine/schema/schema_2_20_1.cpp
+    src/djinterop/engine/schema/schema_2_20_2.cpp
+    src/djinterop/engine/schema/schema_2_20_3.cpp
     src/djinterop/engine/schema/schema.cpp
     src/djinterop/engine/v1/engine_crate_impl.cpp
     src/djinterop/engine/v1/engine_database_impl.cpp

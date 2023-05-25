@@ -44,6 +44,14 @@ ColumnType get_column(
 }
 
 template <>
+std::chrono::system_clock::time_point get_column(
+    sqlite::database& db, int64_t id, const std::string& column_name)
+{
+    auto timestamp = get_column<int64_t>(db, id, column_name);
+    return djinterop::util::to_time_point(timestamp);
+}
+
+template <>
 stdx::optional<std::chrono::system_clock::time_point> get_column(
     sqlite::database& db, int64_t id, const std::string& column_name)
 
@@ -64,6 +72,15 @@ void set_column(
         return;
 
     throw track_row_id_error{"No row found for given id"};
+}
+
+template <>
+void set_column(
+    sqlite::database& db, int64_t id, const std::string& column_name,
+    const std::chrono::system_clock::time_point& value)
+{
+    auto timestamp = djinterop::util::to_timestamp(value);
+    set_column<int64_t>(db, id, column_name, timestamp);
 }
 
 template <>
@@ -91,68 +108,213 @@ int64_t track_table::add(const track_row& row)
             "and so it cannot be created again"};
     }
 
-    context_->db << "INSERT INTO Track ("
-                    "playOrder, length, bpm, year, "
-                    "path, filename, bitrate, bpmAnalyzed, "
-                    "albumArtId, fileBytes, title, "
-                    "artist, album, genre, comment, "
-                    "label, composer, remixer, key, "
-                    "rating, albumArt, "
-                    "timeLastPlayed, isPlayed, "
-                    "fileType, isAnalyzed, "
-                    "dateCreated, "
-                    "dateAdded, isAvailable, "
-                    "isMetadataOfPackedTrackChanged, "
-                    "isPerfomanceDataOfPackedTrackChanged, "  // sic
-                    "playedIndicator, isMetadataImported, "
-                    "pdbImportKey, streamingSource, uri, "
-                    "isBeatGridLocked, originDatabaseUuid, "
-                    "originTrackId, trackData, "
-                    "overviewWaveFormData, "
-                    "beatData, quickCues, "
-                    "loops, thirdPartySourceId, "
-                    "streamingFlags, explicitLyrics) "
-                    "VALUES ("
-                    "?, ?, ?, ?, "
-                    "?, ?, ?, ?, "
-                    "?, ?, ?, "
-                    "?, ?, ?, ?, "
-                    "?, ?, ?, ?, "
-                    "?, ?, "
-                    "?, ?, "
-                    "?, ?, "
-                    "?, "
-                    "?, ?, "
-                    "?, "
-                    "?, "
-                    "?, ?, "
-                    "?, ?, ?, "
-                    "?, ?, "
-                    "?, ?, "
-                    "?, "
-                    "?, ?, "
-                    "?, ?, "
-                    "?, ?)"
-                 << row.play_order << row.length << row.bpm << row.year
-                 << row.path << row.filename << row.bitrate << row.bpm_analyzed
-                 << row.album_art_id << row.file_bytes << row.title
-                 << row.artist << row.album << row.genre << row.comment
-                 << row.label << row.composer << row.remixer << row.key
-                 << row.rating << row.album_art
-                 << djinterop::util::to_timestamp(row.time_last_played)
-                 << row.is_played << row.file_type << row.is_analyzed
-                 << djinterop::util::to_timestamp(row.date_created)
-                 << djinterop::util::to_timestamp(row.date_added)
-                 << row.is_available << row.is_metadata_of_packed_track_changed
-                 << row.is_performance_data_of_packed_track_changed
-                 << row.played_indicator << row.is_metadata_imported
-                 << row.pdb_import_key << row.streaming_source << row.uri
-                 << row.is_beat_grid_locked << row.origin_database_uuid
-                 << row.origin_track_id << row.track_data.to_blob()
-                 << row.overview_waveform_data.to_blob()
-                 << row.beat_data.to_blob() << row.quick_cues.to_blob()
-                 << row.loops.to_blob() << row.third_party_source_id
-                 << row.streaming_flags << row.explicit_lyrics;
+    if (context_->version.schema_version >= semantic_version{2, 20, 3})
+    {
+        context_->db << "INSERT INTO Track ("
+                        "playOrder, length, bpm, year, "
+                        "path, filename, bitrate, bpmAnalyzed, "
+                        "albumArtId, fileBytes, title, "
+                        "artist, album, genre, comment, "
+                        "label, composer, remixer, key, "
+                        "rating, albumArt, "
+                        "timeLastPlayed, isPlayed, "
+                        "fileType, isAnalyzed, "
+                        "dateCreated, "
+                        "dateAdded, isAvailable, "
+                        "isMetadataOfPackedTrackChanged, "
+                        "isPerfomanceDataOfPackedTrackChanged, "  // sic
+                        "playedIndicator, isMetadataImported, "
+                        "pdbImportKey, streamingSource, uri, "
+                        "isBeatGridLocked, originDatabaseUuid, "
+                        "originTrackId, trackData, "
+                        "overviewWaveFormData, "
+                        "beatData, quickCues, "
+                        "loops, thirdPartySourceId, "
+                        "streamingFlags, explicitLyrics, "
+                        "activeOnLoadLoops, "
+                        "lastEditTime) "
+                        "VALUES ("
+                        "?, ?, ?, ?, "
+                        "?, ?, ?, ?, "
+                        "?, ?, ?, "
+                        "?, ?, ?, ?, "
+                        "?, ?, ?, ?, "
+                        "?, ?, "
+                        "?, ?, "
+                        "?, ?, "
+                        "?, "
+                        "?, ?, "
+                        "?, "
+                        "?, "
+                        "?, ?, "
+                        "?, ?, ?, "
+                        "?, ?, "
+                        "?, ?, "
+                        "?, "
+                        "?, ?, "
+                        "?, ?, "
+                        "?, ?, "
+                        "?,"
+                        "?)"
+                     << row.play_order << row.length << row.bpm << row.year
+                     << row.path << row.filename << row.bitrate
+                     << row.bpm_analyzed << row.album_art_id << row.file_bytes
+                     << row.title << row.artist << row.album << row.genre
+                     << row.comment << row.label << row.composer << row.remixer
+                     << row.key << row.rating << row.album_art
+                     << djinterop::util::to_timestamp(row.time_last_played)
+                     << row.is_played << row.file_type << row.is_analyzed
+                     << djinterop::util::to_timestamp(row.date_created)
+                     << djinterop::util::to_timestamp(row.date_added)
+                     << row.is_available
+                     << row.is_metadata_of_packed_track_changed
+                     << row.is_performance_data_of_packed_track_changed
+                     << row.played_indicator << row.is_metadata_imported
+                     << row.pdb_import_key << row.streaming_source << row.uri
+                     << row.is_beat_grid_locked << row.origin_database_uuid
+                     << row.origin_track_id << row.track_data.to_blob()
+                     << row.overview_waveform_data.to_blob()
+                     << row.beat_data.to_blob() << row.quick_cues.to_blob()
+                     << row.loops.to_blob() << row.third_party_source_id
+                     << row.streaming_flags << row.explicit_lyrics
+                     << row.active_on_load_loops
+                     << djinterop::util::to_timestamp(row.last_edit_time);
+    }
+    else if (context_->version.schema_version >= semantic_version{2, 20, 1})
+    {
+        context_->db << "INSERT INTO Track ("
+                        "playOrder, length, bpm, year, "
+                        "path, filename, bitrate, bpmAnalyzed, "
+                        "albumArtId, fileBytes, title, "
+                        "artist, album, genre, comment, "
+                        "label, composer, remixer, key, "
+                        "rating, albumArt, "
+                        "timeLastPlayed, isPlayed, "
+                        "fileType, isAnalyzed, "
+                        "dateCreated, "
+                        "dateAdded, isAvailable, "
+                        "isMetadataOfPackedTrackChanged, "
+                        "isPerfomanceDataOfPackedTrackChanged, "  // sic
+                        "playedIndicator, isMetadataImported, "
+                        "pdbImportKey, streamingSource, uri, "
+                        "isBeatGridLocked, originDatabaseUuid, "
+                        "originTrackId, trackData, "
+                        "overviewWaveFormData, "
+                        "beatData, quickCues, "
+                        "loops, thirdPartySourceId, "
+                        "streamingFlags, explicitLyrics, "
+                        "activeOnLoadLoops) "
+                        "VALUES ("
+                        "?, ?, ?, ?, "
+                        "?, ?, ?, ?, "
+                        "?, ?, ?, "
+                        "?, ?, ?, ?, "
+                        "?, ?, ?, ?, "
+                        "?, ?, "
+                        "?, ?, "
+                        "?, ?, "
+                        "?, "
+                        "?, ?, "
+                        "?, "
+                        "?, "
+                        "?, ?, "
+                        "?, ?, ?, "
+                        "?, ?, "
+                        "?, ?, "
+                        "?, "
+                        "?, ?, "
+                        "?, ?, "
+                        "?, ?, "
+                        "?)"
+                     << row.play_order << row.length << row.bpm << row.year
+                     << row.path << row.filename << row.bitrate
+                     << row.bpm_analyzed << row.album_art_id << row.file_bytes
+                     << row.title << row.artist << row.album << row.genre
+                     << row.comment << row.label << row.composer << row.remixer
+                     << row.key << row.rating << row.album_art
+                     << djinterop::util::to_timestamp(row.time_last_played)
+                     << row.is_played << row.file_type << row.is_analyzed
+                     << djinterop::util::to_timestamp(row.date_created)
+                     << djinterop::util::to_timestamp(row.date_added)
+                     << row.is_available
+                     << row.is_metadata_of_packed_track_changed
+                     << row.is_performance_data_of_packed_track_changed
+                     << row.played_indicator << row.is_metadata_imported
+                     << row.pdb_import_key << row.streaming_source << row.uri
+                     << row.is_beat_grid_locked << row.origin_database_uuid
+                     << row.origin_track_id << row.track_data.to_blob()
+                     << row.overview_waveform_data.to_blob()
+                     << row.beat_data.to_blob() << row.quick_cues.to_blob()
+                     << row.loops.to_blob() << row.third_party_source_id
+                     << row.streaming_flags << row.explicit_lyrics
+                     << row.active_on_load_loops;
+    }
+    else
+    {
+        context_->db << "INSERT INTO Track ("
+                        "playOrder, length, bpm, year, "
+                        "path, filename, bitrate, bpmAnalyzed, "
+                        "albumArtId, fileBytes, title, "
+                        "artist, album, genre, comment, "
+                        "label, composer, remixer, key, "
+                        "rating, albumArt, "
+                        "timeLastPlayed, isPlayed, "
+                        "fileType, isAnalyzed, "
+                        "dateCreated, "
+                        "dateAdded, isAvailable, "
+                        "isMetadataOfPackedTrackChanged, "
+                        "isPerfomanceDataOfPackedTrackChanged, "  // sic
+                        "playedIndicator, isMetadataImported, "
+                        "pdbImportKey, streamingSource, uri, "
+                        "isBeatGridLocked, originDatabaseUuid, "
+                        "originTrackId, trackData, "
+                        "overviewWaveFormData, "
+                        "beatData, quickCues, "
+                        "loops, thirdPartySourceId, "
+                        "streamingFlags, explicitLyrics) "
+                        "VALUES ("
+                        "?, ?, ?, ?, "
+                        "?, ?, ?, ?, "
+                        "?, ?, ?, "
+                        "?, ?, ?, ?, "
+                        "?, ?, ?, ?, "
+                        "?, ?, "
+                        "?, ?, "
+                        "?, ?, "
+                        "?, "
+                        "?, ?, "
+                        "?, "
+                        "?, "
+                        "?, ?, "
+                        "?, ?, ?, "
+                        "?, ?, "
+                        "?, ?, "
+                        "?, "
+                        "?, ?, "
+                        "?, ?, "
+                        "?, ?)"
+                     << row.play_order << row.length << row.bpm << row.year
+                     << row.path << row.filename << row.bitrate
+                     << row.bpm_analyzed << row.album_art_id << row.file_bytes
+                     << row.title << row.artist << row.album << row.genre
+                     << row.comment << row.label << row.composer << row.remixer
+                     << row.key << row.rating << row.album_art
+                     << djinterop::util::to_timestamp(row.time_last_played)
+                     << row.is_played << row.file_type << row.is_analyzed
+                     << djinterop::util::to_timestamp(row.date_created)
+                     << djinterop::util::to_timestamp(row.date_added)
+                     << row.is_available
+                     << row.is_metadata_of_packed_track_changed
+                     << row.is_performance_data_of_packed_track_changed
+                     << row.played_indicator << row.is_metadata_imported
+                     << row.pdb_import_key << row.streaming_source << row.uri
+                     << row.is_beat_grid_locked << row.origin_database_uuid
+                     << row.origin_track_id << row.track_data.to_blob()
+                     << row.overview_waveform_data.to_blob()
+                     << row.beat_data.to_blob() << row.quick_cues.to_blob()
+                     << row.loops.to_blob() << row.third_party_source_id
+                     << row.streaming_flags << row.explicit_lyrics;
+    }
 
     return context_->db.last_insert_rowid();
 }
@@ -190,104 +352,329 @@ stdx::optional<track_row> track_table::get(int64_t id) const
 {
     stdx::optional<track_row> result;
 
-    context_->db << "SELECT id, playOrder, length, bpm, year, path, filename, "
-                    "bitrate, bpmAnalyzed, albumArtId, fileBytes, title, "
-                    "artist, album, genre, comment, label, composer, remixer, "
-                    "key, rating, albumArt, timeLastPlayed, isPlayed, "
-                    "fileType, isAnalyzed, dateCreated, dateAdded, "
-                    "isAvailable, isMetadataOfPackedTrackChanged, "
-                    "isPerfomanceDataOfPackedTrackChanged, "  // sic
-                    "playedIndicator, isMetadataImported, pdbImportKey, "
-                    "streamingSource, uri, isBeatGridLocked, "
-                    "originDatabaseUuid, originTrackId, trackData, "
-                    "overviewWaveFormData, beatData, quickCues, loops, "
-                    "thirdPartySourceId, streamingFlags, explicitLyrics "
-                    "FROM Track WHERE id = ?"
-                 << id >>
-        [&](int64_t id, stdx::optional<int64_t> play_order, int64_t length,
-            stdx::optional<int64_t> bpm, stdx::optional<int64_t> year,
-            std::string path, std::string filename,
-            stdx::optional<int64_t> bitrate,
-            stdx::optional<double> bpm_analyzed, int64_t album_art_id,
-            stdx::optional<int64_t> file_bytes,
-            stdx::optional<std::string> title,
-            stdx::optional<std::string> artist,
-            stdx::optional<std::string> album,
-            stdx::optional<std::string> genre,
-            stdx::optional<std::string> comment,
-            stdx::optional<std::string> label,
-            stdx::optional<std::string> composer,
-            stdx::optional<std::string> remixer, stdx::optional<int64_t> key,
-            int64_t rating, stdx::optional<std::string> album_art,
-            stdx::optional<int64_t> time_last_played, bool is_played,
-            std::string file_type, bool is_analyzed,
-            stdx::optional<int64_t> date_created,
-            stdx::optional<int64_t> date_added, bool is_available,
-            bool is_metadata_of_packed_track_changed,
-            bool is_performance_data_of_packed_track_changed,
-            stdx::optional<int64_t> played_indicator, bool is_metadata_imported,
-            int64_t pdb_import_key,
-            stdx::optional<std::string> streaming_source,
-            stdx::optional<std::string> uri, bool is_beat_grid_locked,
-            std::string origin_database_uuid, int64_t origin_track_id,
-            const std::vector<char>& track_data,
-            const std::vector<char>& overview_waveform_data,
-            const std::vector<char>& beat_data,
-            const std::vector<char>& quick_cues, const std::vector<char>& loops,
-            stdx::optional<int64_t> third_party_source_id,
-            int64_t streaming_flags, bool explicit_lyrics)
+    if (context_->version.schema_version >= semantic_version{2, 20, 3})
     {
-        assert(!result);
+        context_->db
+                << "SELECT id, playOrder, length, bpm, year, path, filename, "
+                   "bitrate, bpmAnalyzed, albumArtId, fileBytes, title, "
+                   "artist, album, genre, comment, label, composer, remixer, "
+                   "key, rating, albumArt, timeLastPlayed, isPlayed, "
+                   "fileType, isAnalyzed, dateCreated, dateAdded, "
+                   "isAvailable, isMetadataOfPackedTrackChanged, "
+                   "isPerfomanceDataOfPackedTrackChanged, "  // sic
+                   "playedIndicator, isMetadataImported, pdbImportKey, "
+                   "streamingSource, uri, isBeatGridLocked, "
+                   "originDatabaseUuid, originTrackId, trackData, "
+                   "overviewWaveFormData, beatData, quickCues, loops, "
+                   "thirdPartySourceId, streamingFlags, explicitLyrics, "
+                   "activeOnLoadLoops, lastEditTime "
+                   "FROM Track WHERE id = ?"
+                << id >>
+            [&](int64_t id, stdx::optional<int64_t> play_order, int64_t length,
+                stdx::optional<int64_t> bpm, stdx::optional<int64_t> year,
+                std::string path, std::string filename,
+                stdx::optional<int64_t> bitrate,
+                stdx::optional<double> bpm_analyzed, int64_t album_art_id,
+                stdx::optional<int64_t> file_bytes,
+                stdx::optional<std::string> title,
+                stdx::optional<std::string> artist,
+                stdx::optional<std::string> album,
+                stdx::optional<std::string> genre,
+                stdx::optional<std::string> comment,
+                stdx::optional<std::string> label,
+                stdx::optional<std::string> composer,
+                stdx::optional<std::string> remixer,
+                stdx::optional<int64_t> key, int64_t rating,
+                stdx::optional<std::string> album_art,
+                stdx::optional<int64_t> time_last_played, bool is_played,
+                std::string file_type, bool is_analyzed,
+                stdx::optional<int64_t> date_created,
+                stdx::optional<int64_t> date_added, bool is_available,
+                bool is_metadata_of_packed_track_changed,
+                bool is_performance_data_of_packed_track_changed,
+                stdx::optional<int64_t> played_indicator,
+                bool is_metadata_imported, int64_t pdb_import_key,
+                stdx::optional<std::string> streaming_source,
+                stdx::optional<std::string> uri, bool is_beat_grid_locked,
+                std::string origin_database_uuid, int64_t origin_track_id,
+                const std::vector<char>& track_data,
+                const std::vector<char>& overview_waveform_data,
+                const std::vector<char>& beat_data,
+                const std::vector<char>& quick_cues,
+                const std::vector<char>& loops,
+                stdx::optional<int64_t> third_party_source_id,
+                int64_t streaming_flags, bool explicit_lyrics,
+                stdx::optional<int64_t> active_on_load_loops,
+                int64_t last_edit_time)
+        {
+            assert(!result);
 
-        result = track_row{
-            id,
-            play_order,
-            length,
-            bpm,
-            year,
-            std::move(path),
-            std::move(filename),
-            bitrate,
-            bpm_analyzed,
-            album_art_id,
-            file_bytes,
-            std::move(title),
-            std::move(artist),
-            std::move(album),
-            std::move(genre),
-            std::move(comment),
-            std::move(label),
-            std::move(composer),
-            std::move(remixer),
-            key,
-            rating,
-            std::move(album_art),
-            djinterop::util::to_time_point(time_last_played),
-            is_played,
-            std::move(file_type),
-            is_analyzed,
-            djinterop::util::to_time_point(date_created),
-            djinterop::util::to_time_point(date_added),
-            is_available,
-            is_metadata_of_packed_track_changed,
-            is_performance_data_of_packed_track_changed,
-            played_indicator,
-            is_metadata_imported,
-            pdb_import_key,
-            std::move(streaming_source),
-            std::move(uri),
-            is_beat_grid_locked,
-            std::move(origin_database_uuid),
-            origin_track_id,
-            track_data_blob::from_blob(track_data),
-            overview_waveform_data_blob::from_blob(overview_waveform_data),
-            beat_data_blob::from_blob(beat_data),
-            quick_cues_blob::from_blob(quick_cues),
-            loops_blob::from_blob(loops),
-            third_party_source_id,
-            streaming_flags,
-            explicit_lyrics};
-    };
+            result = track_row{
+                id,
+                play_order,
+                length,
+                bpm,
+                year,
+                std::move(path),
+                std::move(filename),
+                bitrate,
+                bpm_analyzed,
+                album_art_id,
+                file_bytes,
+                std::move(title),
+                std::move(artist),
+                std::move(album),
+                std::move(genre),
+                std::move(comment),
+                std::move(label),
+                std::move(composer),
+                std::move(remixer),
+                key,
+                rating,
+                std::move(album_art),
+                djinterop::util::to_time_point(time_last_played),
+                is_played,
+                std::move(file_type),
+                is_analyzed,
+                djinterop::util::to_time_point(date_created),
+                djinterop::util::to_time_point(date_added),
+                is_available,
+                is_metadata_of_packed_track_changed,
+                is_performance_data_of_packed_track_changed,
+                played_indicator,
+                is_metadata_imported,
+                pdb_import_key,
+                std::move(streaming_source),
+                std::move(uri),
+                is_beat_grid_locked,
+                std::move(origin_database_uuid),
+                origin_track_id,
+                track_data_blob::from_blob(track_data),
+                overview_waveform_data_blob::from_blob(overview_waveform_data),
+                beat_data_blob::from_blob(beat_data),
+                quick_cues_blob::from_blob(quick_cues),
+                loops_blob::from_blob(loops),
+                third_party_source_id,
+                streaming_flags,
+                explicit_lyrics,
+                active_on_load_loops,
+                djinterop::util::to_time_point(last_edit_time)};
+        };
+    }
+    else if (context_->version.schema_version >= semantic_version{2, 20, 1})
+    {
+        context_->db
+                << "SELECT id, playOrder, length, bpm, year, path, filename, "
+                   "bitrate, bpmAnalyzed, albumArtId, fileBytes, title, "
+                   "artist, album, genre, comment, label, composer, remixer, "
+                   "key, rating, albumArt, timeLastPlayed, isPlayed, "
+                   "fileType, isAnalyzed, dateCreated, dateAdded, "
+                   "isAvailable, isMetadataOfPackedTrackChanged, "
+                   "isPerfomanceDataOfPackedTrackChanged, "  // sic
+                   "playedIndicator, isMetadataImported, pdbImportKey, "
+                   "streamingSource, uri, isBeatGridLocked, "
+                   "originDatabaseUuid, originTrackId, trackData, "
+                   "overviewWaveFormData, beatData, quickCues, loops, "
+                   "thirdPartySourceId, streamingFlags, explicitLyrics, "
+                   "activeOnLoadLoops "
+                   "FROM Track WHERE id = ?"
+                << id >>
+            [&](int64_t id, stdx::optional<int64_t> play_order, int64_t length,
+                stdx::optional<int64_t> bpm, stdx::optional<int64_t> year,
+                std::string path, std::string filename,
+                stdx::optional<int64_t> bitrate,
+                stdx::optional<double> bpm_analyzed, int64_t album_art_id,
+                stdx::optional<int64_t> file_bytes,
+                stdx::optional<std::string> title,
+                stdx::optional<std::string> artist,
+                stdx::optional<std::string> album,
+                stdx::optional<std::string> genre,
+                stdx::optional<std::string> comment,
+                stdx::optional<std::string> label,
+                stdx::optional<std::string> composer,
+                stdx::optional<std::string> remixer,
+                stdx::optional<int64_t> key, int64_t rating,
+                stdx::optional<std::string> album_art,
+                stdx::optional<int64_t> time_last_played, bool is_played,
+                std::string file_type, bool is_analyzed,
+                stdx::optional<int64_t> date_created,
+                stdx::optional<int64_t> date_added, bool is_available,
+                bool is_metadata_of_packed_track_changed,
+                bool is_performance_data_of_packed_track_changed,
+                stdx::optional<int64_t> played_indicator,
+                bool is_metadata_imported, int64_t pdb_import_key,
+                stdx::optional<std::string> streaming_source,
+                stdx::optional<std::string> uri, bool is_beat_grid_locked,
+                std::string origin_database_uuid, int64_t origin_track_id,
+                const std::vector<char>& track_data,
+                const std::vector<char>& overview_waveform_data,
+                const std::vector<char>& beat_data,
+                const std::vector<char>& quick_cues,
+                const std::vector<char>& loops,
+                stdx::optional<int64_t> third_party_source_id,
+                int64_t streaming_flags, bool explicit_lyrics,
+                stdx::optional<int64_t> active_on_load_loops)
+        {
+            assert(!result);
+
+            result = track_row{
+                id,
+                play_order,
+                length,
+                bpm,
+                year,
+                std::move(path),
+                std::move(filename),
+                bitrate,
+                bpm_analyzed,
+                album_art_id,
+                file_bytes,
+                std::move(title),
+                std::move(artist),
+                std::move(album),
+                std::move(genre),
+                std::move(comment),
+                std::move(label),
+                std::move(composer),
+                std::move(remixer),
+                key,
+                rating,
+                std::move(album_art),
+                djinterop::util::to_time_point(time_last_played),
+                is_played,
+                std::move(file_type),
+                is_analyzed,
+                djinterop::util::to_time_point(date_created),
+                djinterop::util::to_time_point(date_added),
+                is_available,
+                is_metadata_of_packed_track_changed,
+                is_performance_data_of_packed_track_changed,
+                played_indicator,
+                is_metadata_imported,
+                pdb_import_key,
+                std::move(streaming_source),
+                std::move(uri),
+                is_beat_grid_locked,
+                std::move(origin_database_uuid),
+                origin_track_id,
+                track_data_blob::from_blob(track_data),
+                overview_waveform_data_blob::from_blob(overview_waveform_data),
+                beat_data_blob::from_blob(beat_data),
+                quick_cues_blob::from_blob(quick_cues),
+                loops_blob::from_blob(loops),
+                third_party_source_id,
+                streaming_flags,
+                explicit_lyrics,
+                active_on_load_loops,
+                LAST_EDIT_TIME_NONE};
+        };
+    }
+    else
+    {
+        context_->db
+                << "SELECT id, playOrder, length, bpm, year, path, filename, "
+                   "bitrate, bpmAnalyzed, albumArtId, fileBytes, title, "
+                   "artist, album, genre, comment, label, composer, remixer, "
+                   "key, rating, albumArt, timeLastPlayed, isPlayed, "
+                   "fileType, isAnalyzed, dateCreated, dateAdded, "
+                   "isAvailable, isMetadataOfPackedTrackChanged, "
+                   "isPerfomanceDataOfPackedTrackChanged, "  // sic
+                   "playedIndicator, isMetadataImported, pdbImportKey, "
+                   "streamingSource, uri, isBeatGridLocked, "
+                   "originDatabaseUuid, originTrackId, trackData, "
+                   "overviewWaveFormData, beatData, quickCues, loops, "
+                   "thirdPartySourceId, streamingFlags, explicitLyrics "
+                   "FROM Track WHERE id = ?"
+                << id >>
+            [&](int64_t id, stdx::optional<int64_t> play_order, int64_t length,
+                stdx::optional<int64_t> bpm, stdx::optional<int64_t> year,
+                std::string path, std::string filename,
+                stdx::optional<int64_t> bitrate,
+                stdx::optional<double> bpm_analyzed, int64_t album_art_id,
+                stdx::optional<int64_t> file_bytes,
+                stdx::optional<std::string> title,
+                stdx::optional<std::string> artist,
+                stdx::optional<std::string> album,
+                stdx::optional<std::string> genre,
+                stdx::optional<std::string> comment,
+                stdx::optional<std::string> label,
+                stdx::optional<std::string> composer,
+                stdx::optional<std::string> remixer,
+                stdx::optional<int64_t> key, int64_t rating,
+                stdx::optional<std::string> album_art,
+                stdx::optional<int64_t> time_last_played, bool is_played,
+                std::string file_type, bool is_analyzed,
+                stdx::optional<int64_t> date_created,
+                stdx::optional<int64_t> date_added, bool is_available,
+                bool is_metadata_of_packed_track_changed,
+                bool is_performance_data_of_packed_track_changed,
+                stdx::optional<int64_t> played_indicator,
+                bool is_metadata_imported, int64_t pdb_import_key,
+                stdx::optional<std::string> streaming_source,
+                stdx::optional<std::string> uri, bool is_beat_grid_locked,
+                std::string origin_database_uuid, int64_t origin_track_id,
+                const std::vector<char>& track_data,
+                const std::vector<char>& overview_waveform_data,
+                const std::vector<char>& beat_data,
+                const std::vector<char>& quick_cues,
+                const std::vector<char>& loops,
+                stdx::optional<int64_t> third_party_source_id,
+                int64_t streaming_flags, bool explicit_lyrics)
+        {
+            assert(!result);
+
+            result = track_row{
+                id,
+                play_order,
+                length,
+                bpm,
+                year,
+                std::move(path),
+                std::move(filename),
+                bitrate,
+                bpm_analyzed,
+                album_art_id,
+                file_bytes,
+                std::move(title),
+                std::move(artist),
+                std::move(album),
+                std::move(genre),
+                std::move(comment),
+                std::move(label),
+                std::move(composer),
+                std::move(remixer),
+                key,
+                rating,
+                std::move(album_art),
+                djinterop::util::to_time_point(time_last_played),
+                is_played,
+                std::move(file_type),
+                is_analyzed,
+                djinterop::util::to_time_point(date_created),
+                djinterop::util::to_time_point(date_added),
+                is_available,
+                is_metadata_of_packed_track_changed,
+                is_performance_data_of_packed_track_changed,
+                played_indicator,
+                is_metadata_imported,
+                pdb_import_key,
+                std::move(streaming_source),
+                std::move(uri),
+                is_beat_grid_locked,
+                std::move(origin_database_uuid),
+                origin_track_id,
+                track_data_blob::from_blob(track_data),
+                overview_waveform_data_blob::from_blob(overview_waveform_data),
+                beat_data_blob::from_blob(beat_data),
+                quick_cues_blob::from_blob(quick_cues),
+                loops_blob::from_blob(loops),
+                third_party_source_id,
+                streaming_flags,
+                explicit_lyrics,
+                stdx::nullopt,
+                LAST_EDIT_TIME_NONE};
+        };
+    }
 
     return result;
 }
@@ -327,48 +714,150 @@ void track_table::update(const track_row& row)
             "The track row to update does not contain a track id"};
     }
 
-    context_->db << "UPDATE Track SET "
-                    "playOrder = ?, length = ?, bpm = ?, year = ?, "
-                    "path = ?, filename = ?, bitrate = ?, bpmAnalyzed = ?, "
-                    "albumArtId = ?, fileBytes = ?, title = ?, "
-                    "artist = ?, album = ?, genre = ?, comment = ?, "
-                    "label = ?, composer = ?, remixer = ?, key = ?, "
-                    "rating = ?, albumArt = ?, "
-                    "timeLastPlayed = ?, isPlayed = ?, "
-                    "fileType = ?, isAnalyzed = ?, "
-                    "dateCreated = ?, "
-                    "dateAdded = ?, isAvailable = ?, "
-                    "isMetadataOfPackedTrackChanged = ?, "
-                    "isPerfomanceDataOfPackedTrackChanged = ?, "  // sic
-                    "playedIndicator = ?, isMetadataImported = ?, "
-                    "pdbImportKey = ?, streamingSource = ?, uri = ?, "
-                    "isBeatGridLocked = ?, originDatabaseUuid = ?, "
-                    "originTrackId = ?, trackData = ?, "
-                    "overviewWaveFormData = ?, "
-                    "beatData = ?, quickCues = ?, "
-                    "loops = ?, thirdPartySourceId = ?, "
-                    "streamingFlags = ?, explicitLyrics = ? "
-                    "WHERE id = ?"
-                 << row.play_order << row.length << row.bpm << row.year
-                 << row.path << row.filename << row.bitrate << row.bpm_analyzed
-                 << row.album_art_id << row.file_bytes << row.title
-                 << row.artist << row.album << row.genre << row.comment
-                 << row.label << row.composer << row.remixer << row.key
-                 << row.rating << row.album_art
-                 << djinterop::util::to_timestamp(row.time_last_played)
-                 << row.is_played << row.file_type << row.is_analyzed
-                 << djinterop::util::to_timestamp(row.date_created)
-                 << djinterop::util::to_timestamp(row.date_added)
-                 << row.is_available << row.is_metadata_of_packed_track_changed
-                 << row.is_performance_data_of_packed_track_changed
-                 << row.played_indicator << row.is_metadata_imported
-                 << row.pdb_import_key << row.streaming_source << row.uri
-                 << row.is_beat_grid_locked << row.origin_database_uuid
-                 << row.origin_track_id << row.track_data.to_blob()
-                 << row.overview_waveform_data.to_blob()
-                 << row.beat_data.to_blob() << row.quick_cues.to_blob()
-                 << row.loops.to_blob() << row.third_party_source_id
-                 << row.streaming_flags << row.explicit_lyrics << row.id;
+    if (context_->version.schema_version >= semantic_version{2, 20, 3})
+    {
+        context_->db << "UPDATE Track SET "
+                        "playOrder = ?, length = ?, bpm = ?, year = ?, "
+                        "path = ?, filename = ?, bitrate = ?, bpmAnalyzed = ?, "
+                        "albumArtId = ?, fileBytes = ?, title = ?, "
+                        "artist = ?, album = ?, genre = ?, comment = ?, "
+                        "label = ?, composer = ?, remixer = ?, key = ?, "
+                        "rating = ?, albumArt = ?, "
+                        "timeLastPlayed = ?, isPlayed = ?, "
+                        "fileType = ?, isAnalyzed = ?, "
+                        "dateCreated = ?, "
+                        "dateAdded = ?, isAvailable = ?, "
+                        "isMetadataOfPackedTrackChanged = ?, "
+                        "isPerfomanceDataOfPackedTrackChanged = ?, "  // sic
+                        "playedIndicator = ?, isMetadataImported = ?, "
+                        "pdbImportKey = ?, streamingSource = ?, uri = ?, "
+                        "isBeatGridLocked = ?, originDatabaseUuid = ?, "
+                        "originTrackId = ?, trackData = ?, "
+                        "overviewWaveFormData = ?, "
+                        "beatData = ?, quickCues = ?, "
+                        "loops = ?, thirdPartySourceId = ?, "
+                        "streamingFlags = ?, explicitLyrics = ?, "
+                        "activeOnLoadLoops = ?, lastEditTime = ?"
+                        "WHERE id = ?"
+                     << row.play_order << row.length << row.bpm << row.year
+                     << row.path << row.filename << row.bitrate
+                     << row.bpm_analyzed << row.album_art_id << row.file_bytes
+                     << row.title << row.artist << row.album << row.genre
+                     << row.comment << row.label << row.composer << row.remixer
+                     << row.key << row.rating << row.album_art
+                     << djinterop::util::to_timestamp(row.time_last_played)
+                     << row.is_played << row.file_type << row.is_analyzed
+                     << djinterop::util::to_timestamp(row.date_created)
+                     << djinterop::util::to_timestamp(row.date_added)
+                     << row.is_available
+                     << row.is_metadata_of_packed_track_changed
+                     << row.is_performance_data_of_packed_track_changed
+                     << row.played_indicator << row.is_metadata_imported
+                     << row.pdb_import_key << row.streaming_source << row.uri
+                     << row.is_beat_grid_locked << row.origin_database_uuid
+                     << row.origin_track_id << row.track_data.to_blob()
+                     << row.overview_waveform_data.to_blob()
+                     << row.beat_data.to_blob() << row.quick_cues.to_blob()
+                     << row.loops.to_blob() << row.third_party_source_id
+                     << row.streaming_flags << row.explicit_lyrics
+                     << row.active_on_load_loops
+                     << djinterop::util::to_timestamp(row.last_edit_time)
+                     << row.id;
+    }
+    else if (context_->version.schema_version >= semantic_version{2, 20, 1})
+    {
+        context_->db << "UPDATE Track SET "
+                        "playOrder = ?, length = ?, bpm = ?, year = ?, "
+                        "path = ?, filename = ?, bitrate = ?, bpmAnalyzed = ?, "
+                        "albumArtId = ?, fileBytes = ?, title = ?, "
+                        "artist = ?, album = ?, genre = ?, comment = ?, "
+                        "label = ?, composer = ?, remixer = ?, key = ?, "
+                        "rating = ?, albumArt = ?, "
+                        "timeLastPlayed = ?, isPlayed = ?, "
+                        "fileType = ?, isAnalyzed = ?, "
+                        "dateCreated = ?, "
+                        "dateAdded = ?, isAvailable = ?, "
+                        "isMetadataOfPackedTrackChanged = ?, "
+                        "isPerfomanceDataOfPackedTrackChanged = ?, "  // sic
+                        "playedIndicator = ?, isMetadataImported = ?, "
+                        "pdbImportKey = ?, streamingSource = ?, uri = ?, "
+                        "isBeatGridLocked = ?, originDatabaseUuid = ?, "
+                        "originTrackId = ?, trackData = ?, "
+                        "overviewWaveFormData = ?, "
+                        "beatData = ?, quickCues = ?, "
+                        "loops = ?, thirdPartySourceId = ?, "
+                        "streamingFlags = ?, explicitLyrics = ?, "
+                        "activeOnLoadLoops = ?"
+                        "WHERE id = ?"
+                     << row.play_order << row.length << row.bpm << row.year
+                     << row.path << row.filename << row.bitrate
+                     << row.bpm_analyzed << row.album_art_id << row.file_bytes
+                     << row.title << row.artist << row.album << row.genre
+                     << row.comment << row.label << row.composer << row.remixer
+                     << row.key << row.rating << row.album_art
+                     << djinterop::util::to_timestamp(row.time_last_played)
+                     << row.is_played << row.file_type << row.is_analyzed
+                     << djinterop::util::to_timestamp(row.date_created)
+                     << djinterop::util::to_timestamp(row.date_added)
+                     << row.is_available
+                     << row.is_metadata_of_packed_track_changed
+                     << row.is_performance_data_of_packed_track_changed
+                     << row.played_indicator << row.is_metadata_imported
+                     << row.pdb_import_key << row.streaming_source << row.uri
+                     << row.is_beat_grid_locked << row.origin_database_uuid
+                     << row.origin_track_id << row.track_data.to_blob()
+                     << row.overview_waveform_data.to_blob()
+                     << row.beat_data.to_blob() << row.quick_cues.to_blob()
+                     << row.loops.to_blob() << row.third_party_source_id
+                     << row.streaming_flags << row.explicit_lyrics
+                     << row.active_on_load_loops << row.id;
+    }
+    else
+    {
+        context_->db << "UPDATE Track SET "
+                        "playOrder = ?, length = ?, bpm = ?, year = ?, "
+                        "path = ?, filename = ?, bitrate = ?, bpmAnalyzed = ?, "
+                        "albumArtId = ?, fileBytes = ?, title = ?, "
+                        "artist = ?, album = ?, genre = ?, comment = ?, "
+                        "label = ?, composer = ?, remixer = ?, key = ?, "
+                        "rating = ?, albumArt = ?, "
+                        "timeLastPlayed = ?, isPlayed = ?, "
+                        "fileType = ?, isAnalyzed = ?, "
+                        "dateCreated = ?, "
+                        "dateAdded = ?, isAvailable = ?, "
+                        "isMetadataOfPackedTrackChanged = ?, "
+                        "isPerfomanceDataOfPackedTrackChanged = ?, "  // sic
+                        "playedIndicator = ?, isMetadataImported = ?, "
+                        "pdbImportKey = ?, streamingSource = ?, uri = ?, "
+                        "isBeatGridLocked = ?, originDatabaseUuid = ?, "
+                        "originTrackId = ?, trackData = ?, "
+                        "overviewWaveFormData = ?, "
+                        "beatData = ?, quickCues = ?, "
+                        "loops = ?, thirdPartySourceId = ?, "
+                        "streamingFlags = ?, explicitLyrics = ? "
+                        "WHERE id = ?"
+                     << row.play_order << row.length << row.bpm << row.year
+                     << row.path << row.filename << row.bitrate
+                     << row.bpm_analyzed << row.album_art_id << row.file_bytes
+                     << row.title << row.artist << row.album << row.genre
+                     << row.comment << row.label << row.composer << row.remixer
+                     << row.key << row.rating << row.album_art
+                     << djinterop::util::to_timestamp(row.time_last_played)
+                     << row.is_played << row.file_type << row.is_analyzed
+                     << djinterop::util::to_timestamp(row.date_created)
+                     << djinterop::util::to_timestamp(row.date_added)
+                     << row.is_available
+                     << row.is_metadata_of_packed_track_changed
+                     << row.is_performance_data_of_packed_track_changed
+                     << row.played_indicator << row.is_metadata_imported
+                     << row.pdb_import_key << row.streaming_source << row.uri
+                     << row.is_beat_grid_locked << row.origin_database_uuid
+                     << row.origin_track_id << row.track_data.to_blob()
+                     << row.overview_waveform_data.to_blob()
+                     << row.beat_data.to_blob() << row.quick_cues.to_blob()
+                     << row.loops.to_blob() << row.third_party_source_id
+                     << row.streaming_flags << row.explicit_lyrics << row.id;
+    }
 }
 
 stdx::optional<int64_t> track_table::get_play_order(int64_t id)
@@ -898,6 +1387,53 @@ bool track_table::get_explicit_lyrics(int64_t id)
 void track_table::set_explicit_lyrics(int64_t id, bool explicit_lyrics)
 {
     set_column<bool>(context_->db, id, "explicitLyrics", explicit_lyrics);
+}
+
+stdx::optional<int64_t> track_table::get_active_on_load_loops(int64_t id)
+{
+    if (context_->version.schema_version < semantic_version{2, 20, 1})
+        throw djinterop::unsupported_operation{
+            "The `activeOnLoadLoops` column is not available for this "
+            "database version"};
+
+    return get_column<stdx::optional<int64_t> >(
+        context_->db, id, "activeOnLoadLoops");
+}
+
+void track_table::set_active_on_load_loops(
+    int64_t id, stdx::optional<int64_t> active_on_load_loops)
+{
+    if (context_->version.schema_version < semantic_version{2, 20, 1})
+        throw djinterop::unsupported_operation{
+            "The `activeOnLoadLoops` column is not available for this "
+            "database version"};
+
+    set_column<stdx::optional<int64_t> >(
+        context_->db, id, "activeOnLoadLoops", active_on_load_loops);
+}
+
+std::chrono::system_clock::time_point track_table::get_last_edit_time(
+    int64_t id)
+{
+    if (context_->version.schema_version < semantic_version{2, 20, 3})
+        throw djinterop::unsupported_operation{
+            "The `lastEditTime` column is not available for this "
+            "database version"};
+
+    return get_column<std::chrono::system_clock::time_point>(
+        context_->db, id, "lastEditTime");
+}
+
+void track_table::set_last_edit_time(
+    int64_t id, std::chrono::system_clock::time_point last_edit_time)
+{
+    if (context_->version.schema_version < semantic_version{2, 20, 3})
+        throw djinterop::unsupported_operation{
+            "The `lastEditTime` column is not available for this "
+            "database version"};
+
+    set_column<std::chrono::system_clock::time_point>(
+        context_->db, id, "lastEditTime", last_edit_time);
 }
 
 }  // namespace djinterop::engine::v2

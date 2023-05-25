@@ -28,16 +28,27 @@ namespace djinterop::util
 std::chrono::system_clock::time_point parse_iso8601(const std::string& str);
 std::string to_iso8601(const std::chrono::system_clock::time_point& time);
 
+inline std::chrono::system_clock::time_point to_time_point(int64_t timestamp)
+{
+    return std::chrono::system_clock::time_point{
+        std::chrono::seconds(timestamp)};
+}
+
 inline stdx::optional<std::chrono::system_clock::time_point> to_time_point(
     stdx::optional<int64_t> timestamp)
 {
     stdx::optional<std::chrono::system_clock::time_point> result;
     if (timestamp)
-    {
-        result = std::chrono::system_clock::time_point{
-            std::chrono::seconds(*timestamp)};
-    }
+        result = to_time_point(*timestamp);
+
     return result;
+}
+
+inline int64_t to_timestamp(std::chrono::system_clock::time_point time)
+{
+    return std::chrono::duration_cast<std::chrono::seconds>(
+               time.time_since_epoch())
+        .count();
 }
 
 inline stdx::optional<int64_t> to_timestamp(
@@ -45,11 +56,8 @@ inline stdx::optional<int64_t> to_timestamp(
 {
     stdx::optional<int64_t> result;
     if (time)
-    {
-        result = std::chrono::duration_cast<std::chrono::seconds>(
-                     time->time_since_epoch())
-                     .count();
-    }
+        result = to_timestamp(*time);
+
     return result;
 }
 
