@@ -51,7 +51,8 @@ inline std::ostream& operator<<(std::ostream& o, example_track_row_type v)
 }
 
 inline void populate_track_row(
-    example_track_row_type row_type, djinterop::engine::v2::track_row& r)
+    example_track_row_type row_type, djinterop::engine::v2::track_row& r,
+    const djinterop::engine::engine_version& version)
 {
     namespace ev = djinterop::engine;
     namespace ev2 = djinterop::engine::v2;
@@ -65,6 +66,7 @@ inline void populate_track_row(
             r.is_played = false;
             r.is_analyzed = false;
             r.is_available = true;
+            r.last_edit_time = ev2::LAST_EDIT_TIME_NONE;
             break;
 
         case example_track_row_type::basic_metadata_only_1:
@@ -109,6 +111,14 @@ inline void populate_track_row(
             r.origin_track_id = 12345;
             r.streaming_flags = 0;
             r.explicit_lyrics = false;
+
+            if (version.schema_version >= djinterop::semantic_version{2, 20, 1})
+                r.active_on_load_loops = 123;
+            else
+                r.active_on_load_loops = djinterop::stdx::nullopt;
+
+            r.last_edit_time = ev2::LAST_EDIT_TIME_NONE;
+
             break;
         }
 
@@ -160,11 +170,21 @@ inline void populate_track_row(
             r.beat_data =
                 ev2::beat_data_blob{41000, 5424300, 1, beatgrid, beatgrid};
             std::vector<ev2::quick_cue_blob> quick_cues_list{};
-            quick_cues_list.push_back(ev2::quick_cue_blob{"First cue", 12345, ev::standard_pad_colors::pad_1});
-            r.quick_cues = ev2::quick_cues_blob{quick_cues_list, 11111, true, 22222};
+            quick_cues_list.push_back(ev2::quick_cue_blob{
+                "First cue", 12345, ev::standard_pad_colors::pad_1});
+            r.quick_cues =
+                ev2::quick_cues_blob{quick_cues_list, 11111, true, 22222};
             r.loops = ev2::loops_blob{};
             r.streaming_flags = 0;
             r.explicit_lyrics = false;
+
+            if (version.schema_version >= djinterop::semantic_version{2, 20, 1})
+                r.active_on_load_loops = 123;
+            else
+                r.active_on_load_loops = djinterop::stdx::nullopt;
+
+            r.last_edit_time = ev2::LAST_EDIT_TIME_NONE;
+
             break;
         }
 

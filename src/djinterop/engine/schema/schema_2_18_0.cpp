@@ -628,7 +628,8 @@ void schema_2_18_0::create(sqlite::database& db)
 
     // Not yet sure how the "currentPlayedIndiciator" (typo deliberate) value
     // is formed.
-    auto current_played_indicator_fake_value = 5100658837829259927l;
+    auto current_played_indicator_fake_value =
+        djinterop::util::generate_random_int64();
 
     // Insert row into Information
     db << "INSERT INTO Information ([uuid], [schemaVersionMajor], "

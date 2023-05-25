@@ -65,6 +65,11 @@ constexpr const int64_t ALBUM_ART_ID_NONE = 0;
 /// rating is present for a given track.
 constexpr const int64_t RATING_NONE = 0;
 
+/// Special value for the `lastEditTime` track table column that indicates there
+/// is no last edit time for a given track.
+constexpr const std::chrono::system_clock::time_point LAST_EDIT_TIME_NONE =
+    std::chrono::system_clock::time_point{std::chrono::seconds{0}};
+
 /// Represents a row in the `Track` table.
 struct DJINTEROP_PUBLIC track_row
 {
@@ -238,6 +243,15 @@ struct DJINTEROP_PUBLIC track_row
     /// `explicitLyrics` column.
     bool explicit_lyrics;
 
+    /// `activeOnLoadLoops` column.
+    stdx::optional<int64_t> active_on_load_loops;
+
+    /// `lastEditTime` column.
+    ///
+    /// This column is set automatically to the current timestamp via a database
+    /// trigger when certain fields are updated.
+    std::chrono::system_clock::time_point last_edit_time;
+
     friend bool operator==(const track_row& lhs, const track_row& rhs) noexcept
     {
         return std::tie(
@@ -256,7 +270,8 @@ struct DJINTEROP_PUBLIC track_row
                    lhs.origin_track_id, lhs.track_data,
                    lhs.overview_waveform_data, lhs.beat_data, lhs.quick_cues,
                    lhs.loops, lhs.third_party_source_id, lhs.streaming_flags,
-                   lhs.explicit_lyrics) ==
+                   lhs.explicit_lyrics, lhs.active_on_load_loops,
+                   lhs.last_edit_time) ==
                std::tie(
                    rhs.id, rhs.play_order, rhs.length, rhs.bpm, rhs.year,
                    rhs.path, rhs.filename, rhs.bitrate, rhs.bpm_analyzed,
@@ -273,7 +288,8 @@ struct DJINTEROP_PUBLIC track_row
                    rhs.origin_track_id, rhs.track_data,
                    rhs.overview_waveform_data, rhs.beat_data, rhs.quick_cues,
                    rhs.loops, rhs.third_party_source_id, rhs.streaming_flags,
-                   rhs.explicit_lyrics);
+                   rhs.explicit_lyrics, rhs.active_on_load_loops,
+                   rhs.last_edit_time);
     }
 
     friend bool operator!=(const track_row& lhs, const track_row& rhs) noexcept
@@ -284,8 +300,8 @@ struct DJINTEROP_PUBLIC track_row
     friend std::ostream& operator<<(std::ostream& os, const track_row& obj)
     {
 #define PRINT_FIELD(field) \
-        os << ", " #field "="; \
-        stream_helper::print(os, obj.field)
+    os << ", " #field "="; \
+    stream_helper::print(os, obj.field)
 
         os << "track_row{id=" << obj.id;
         PRINT_FIELD(play_order);
@@ -332,6 +348,8 @@ struct DJINTEROP_PUBLIC track_row
         PRINT_FIELD(third_party_source_id);
         PRINT_FIELD(streaming_flags);
         PRINT_FIELD(explicit_lyrics);
+        PRINT_FIELD(active_on_load_loops);
+        PRINT_FIELD(last_edit_time);
         os << "}";
         return os;
 #undef PRINT_FIELD
@@ -729,6 +747,20 @@ public:
 
     /// Set the `explicitLyrics` column for a given track.
     void set_explicit_lyrics(int64_t id, bool explicit_lyrics);
+
+    /// Get the `activeOnLoadLoops` column for a given track.
+    stdx::optional<int64_t> get_active_on_load_loops(int64_t id);
+
+    /// Set the `activeOnLoadLoops` column for a given track.
+    void set_active_on_load_loops(
+        int64_t id, stdx::optional<int64_t> active_on_load_loops);
+
+    /// Get the `lastEditTime` column for a given track.
+    std::chrono::system_clock::time_point get_last_edit_time(int64_t id);
+
+    /// Set the `lastEditTime` column for a given track.
+    void set_last_edit_time(
+        int64_t id, std::chrono::system_clock::time_point last_edit_time);
 
     /// Remove an entry from the track table.
     ///
