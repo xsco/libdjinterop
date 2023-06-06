@@ -39,16 +39,16 @@ namespace utf = boost::unit_test;
 
 namespace
 {
-const std::vector<example_track_type> creatable_snapshot_types{
-    example_track_type::minimal_1,
-    example_track_type::basic_metadata_only_1,
-    example_track_type::fully_analysed_1,
+const std::vector<example_track_data_variation> creatable_snapshot_types{
+    example_track_data_variation::minimal_1,
+    example_track_data_variation::basic_metadata_only_1,
+    example_track_data_variation::fully_analysed_1,
 };
 
 struct snapshot_type_pair
 {
-    example_track_type initial;
-    example_track_type updated;
+    example_track_data_variation initial;
+    example_track_data_variation updated;
 };
 
 std::ostream& operator<<(std::ostream& o, const snapshot_type_pair v)
@@ -60,21 +60,23 @@ std::ostream& operator<<(std::ostream& o, const snapshot_type_pair v)
 
 const std::vector<snapshot_type_pair> updatable_snapshot_type_pairs{
     snapshot_type_pair{
-        example_track_type::minimal_1,
-        example_track_type::basic_metadata_only_1},
+        example_track_data_variation::minimal_1,
+        example_track_data_variation::basic_metadata_only_1},
     snapshot_type_pair{
-        example_track_type::minimal_1, example_track_type::fully_analysed_1},
+        example_track_data_variation::minimal_1,
+        example_track_data_variation::fully_analysed_1},
     snapshot_type_pair{
-        example_track_type::basic_metadata_only_1,
-        example_track_type::minimal_1},
+        example_track_data_variation::basic_metadata_only_1,
+        example_track_data_variation::minimal_1},
     snapshot_type_pair{
-        example_track_type::basic_metadata_only_1,
-        example_track_type::fully_analysed_1},
+        example_track_data_variation::basic_metadata_only_1,
+        example_track_data_variation::fully_analysed_1},
     snapshot_type_pair{
-        example_track_type::fully_analysed_1, example_track_type::minimal_1},
+        example_track_data_variation::fully_analysed_1,
+        example_track_data_variation::minimal_1},
     snapshot_type_pair{
-        example_track_type::fully_analysed_1,
-        example_track_type::basic_metadata_only_1},
+        example_track_data_variation::fully_analysed_1,
+        example_track_data_variation::basic_metadata_only_1},
 };
 
 }  // anonymous namespace
@@ -89,7 +91,8 @@ BOOST_DATA_TEST_CASE(
 
     djinterop::track_snapshot snapshot{};
     populate_track_snapshot(
-        example_track_type::fully_analysed_1, version, snapshot);
+        snapshot, example_track_data_variation::fully_analysed_1,
+        example_track_data_usage::create, version);
 
     BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
     auto track = db.create_track(snapshot);
@@ -112,7 +115,8 @@ BOOST_DATA_TEST_CASE(
 
     djinterop::track_snapshot snapshot{};
     populate_track_snapshot(
-        example_track_type::fully_analysed_1, version, snapshot);
+        snapshot, example_track_data_variation::fully_analysed_1,
+        example_track_data_usage::create, version);
 
     BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
     auto track = db.create_track(snapshot);
@@ -131,6 +135,7 @@ BOOST_TEST_DECORATOR(
 BOOST_DATA_TEST_CASE(
     snapshot__supported_version__same,
     e::all_versions* creatable_snapshot_types, version, snapshot_type)
+    //foo_versions * foo_snap_types, version, snapshot_type)
 {
     // Arrange
     BOOST_TEST_CHECKPOINT(
@@ -138,12 +143,13 @@ BOOST_DATA_TEST_CASE(
             << ") Creating temporary database...");
     auto db = e::create_temporary_database(version);
 
-    djinterop::track_snapshot expected{};
-    populate_track_snapshot(snapshot_type, version, expected);
+    djinterop::track_snapshot snapshot{};
+    populate_track_snapshot(
+        snapshot, snapshot_type, example_track_data_usage::create, version);
 
     BOOST_TEST_CHECKPOINT(
         "(" << version << ", " << snapshot_type << ") Creating track...");
-    auto track = db.create_track(expected);
+    auto track = db.create_track(snapshot);
 
     // Act
     BOOST_TEST_CHECKPOINT(
@@ -152,9 +158,10 @@ BOOST_DATA_TEST_CASE(
     auto actual = track.snapshot();
 
     // Assert
-    auto expected_with_id = expected;
-    expected_with_id.id = track.id();
-    BOOST_CHECK_EQUAL(expected_with_id, actual);
+    djinterop::track_snapshot expected{};
+    populate_track_snapshot(
+        expected, snapshot_type, example_track_data_usage::fetch, version);
+    BOOST_CHECK_EQUAL(expected, actual);
 }
 
 BOOST_TEST_DECORATOR(
@@ -171,26 +178,33 @@ BOOST_DATA_TEST_CASE(
             << ") Creating temporary database...");
     auto db = e::create_temporary_database(version);
 
-    djinterop::track_snapshot initial{}, expected{};
-    populate_track_snapshot(snapshot_type_pair.initial, version, initial);
-    populate_track_snapshot(snapshot_type_pair.updated, version, expected);
-
     BOOST_TEST_CHECKPOINT(
         "(" << version << ", " << snapshot_type_pair.initial << ", "
             << snapshot_type_pair.updated << ") Creating track...");
+    djinterop::track_snapshot initial{};
+    populate_track_snapshot(
+        initial, snapshot_type_pair.initial, example_track_data_usage::create,
+        version);
     auto track = db.create_track(initial);
+
+    djinterop::track_snapshot modified{};
+    populate_track_snapshot(
+        modified, snapshot_type_pair.updated, example_track_data_usage::update,
+        version);
 
     // Act
     BOOST_TEST_CHECKPOINT(
         "(" << version << ", " << snapshot_type_pair.initial << ", "
             << snapshot_type_pair.updated << ") Updating track...");
-    track.update(expected);
+    track.update(modified);
 
     // Assert
-    auto expected_with_id = expected;
-    expected_with_id.id = track.id();
+    djinterop::track_snapshot expected{};
+    populate_track_snapshot(
+        expected, snapshot_type_pair.updated, example_track_data_usage::fetch,
+        version);
     auto actual = track.snapshot();
-    BOOST_CHECK_EQUAL(expected_with_id, actual);
+    BOOST_CHECK_EQUAL(expected, actual);
 }
 
 // TODO (mr-smidge): Add tests for each getter/setter
@@ -207,7 +221,8 @@ BOOST_DATA_TEST_CASE(
 
     djinterop::track_snapshot snapshot{};
     populate_track_snapshot(
-        example_track_type::fully_analysed_1, version, snapshot);
+        snapshot, example_track_data_variation::fully_analysed_1,
+        example_track_data_usage::create, version);
 
     BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
     auto track = db.create_track(snapshot);
@@ -219,28 +234,4 @@ BOOST_DATA_TEST_CASE(
 
     // Assert
     BOOST_CHECK(track.average_loudness() == djinterop::stdx::nullopt);
-}
-
-BOOST_TEST_DECORATOR(
-    *utf::description("set zero sampling rate, all schema versions"))
-BOOST_DATA_TEST_CASE(
-    set_sampling__zero_rate__no_sampling, e::all_versions, version)
-{
-    // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-
-    djinterop::track_snapshot snapshot{};
-    populate_track_snapshot(
-        example_track_type::fully_analysed_1, version, snapshot);
-
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
-    auto track = db.create_track(snapshot);
-
-    // Act
-    BOOST_TEST_CHECKPOINT("(" << version << ") Removing sampling info...");
-    track.set_sampling(djinterop::sampling_info{});
-
-    // Assert
-    BOOST_CHECK(track.sampling() == djinterop::stdx::nullopt);
 }

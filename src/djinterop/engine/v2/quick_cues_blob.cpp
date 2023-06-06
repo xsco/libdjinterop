@@ -68,16 +68,17 @@ quick_cues_blob quick_cues_blob::from_blob(const std::vector<char>& blob)
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();
 
-    if (uncompressed.size() < 8)
+    if (uncompressed.size() < 25)
     {
         throw std::invalid_argument{
-            "Quick cues data has less than the minimum length of 8 bytes"};
+            "Quick cues data has less than the minimum length of 25 bytes"};
     }
 
     int64_t num_hot_cues;
     std::tie(num_hot_cues, ptr) = decode_int64_be(ptr);
 
     quick_cues_blob result;
+    result.quick_cues.reserve(num_hot_cues);
     for (auto i = 0; i < num_hot_cues; ++i)
     {
         quick_cue_blob quick_cue;

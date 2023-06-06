@@ -23,6 +23,7 @@
 #include <djinterop/exceptions.hpp>
 
 #include "../../util/chrono.hpp"
+#include "../../util/sqlite_transaction.hpp"
 #include "engine_library_context.hpp"
 
 namespace djinterop::engine::v2
@@ -62,9 +63,11 @@ int64_t playlist_table::add(const playlist_row& row)
     ensure_valid_name(row.title);
 
     context_->db << "INSERT INTO Playlist (title, parentListId, isPersisted, "
-                    "lastEditTime, isExplicitlyExported) VALUES (?, ?, ?, ?, ?)"
+                    "nextListId, lastEditTime, isExplicitlyExported) "
+                    "VALUES (?, ?, ?, ?, ?, ?)"
                  << row.title << row.parent_list_id << row.is_persisted
-                 << djinterop::util::to_iso8601(row.last_edit_time)
+                 << row.next_list_id
+                 << djinterop::util::to_ft(row.last_edit_time)
                  << row.is_explicitly_exported;
 
     return context_->db.last_insert_rowid();
@@ -175,7 +178,7 @@ djinterop::stdx::optional<playlist_row> playlist_table::get(int64_t id) const
             parent_list_id,
             is_persisted,
             next_list_id,
-            djinterop::util::parse_iso8601(last_edited_time),
+            djinterop::util::parse_ft(last_edited_time),
             is_explicitly_exported};
     };
 
@@ -197,12 +200,63 @@ void playlist_table::update(const playlist_row& row)
 
     ensure_valid_name(row.title);
 
-    context_->db
-        << "UPDATE Playlist SET title = ?, parentListId = ?, isPersisted = ?, "
-           "lastEditTime = ?, isExplicitlyExported = ? WHERE Id = ?"
-        << row.title << row.parent_list_id << row.is_persisted
-        << djinterop::util::to_iso8601(row.last_edit_time)
-        << row.is_explicitly_exported << row.id;
+    util::sqlite_transaction trans{context_->db};
+
+    int64_t old_parent_list_id, old_next_list_id;
+    context_->db << "SELECT parentListId, nextListId FROM Playlist WHERE Id = ?"
+                 << row.id >>
+        std::tie(old_parent_list_id, old_next_list_id);
+
+    if (old_next_list_id == row.next_list_id &&
+        old_parent_list_id == row.parent_list_id)
+    {
+        // When the relative ordering of the playlist is not changing, the
+        // operation is a simple update.
+        context_->db
+            << "UPDATE Playlist SET title = ?, parentListId = ?, "
+               "isPersisted = ?, lastEditTime = ?, isExplicitlyExported = ? "
+               "WHERE Id = ?"
+            << row.title << row.parent_list_id << row.is_persisted
+            << djinterop::util::to_ft(row.last_edit_time)
+            << row.is_explicitly_exported << row.id;
+    }
+    else
+    {
+        // A database trigger ensures that `nextListId` is populated
+        // consistently upon INSERT or DELETE, but there is no such trigger for
+        // an UPDATE operation.  Accordingly, perform actions manually to keep
+        // the sequencing correct, in case the parent list is modified.
+        //
+        // Assume that `row.id` is the subject, `row.next_list_id` is the
+        // target:
+        //
+        // 1. Detach subject from next list using negative inversion trick.
+        // 2. Attach subject's previous list to subject's original next list.
+        // 3. Attach target's original previous list to subject.
+        // 4. Attach subject to target next list, changing other fields
+        //    (potentially including parent) at the same time.
+        context_->db << "UPDATE Playlist SET nextListId = -(1 + nextListId) "
+                        "WHERE id = ?"
+                     << row.id;
+        context_->db << "UPDATE Playlist SET nextListId = ? "
+                        "WHERE nextListId = ? AND parentListId = ?"
+                     << old_next_list_id << row.id << old_parent_list_id;
+
+        context_->db << "UPDATE Playlist SET nextListId = ? "
+                        "WHERE nextListId = ? AND parentListId = ?"
+                     << row.id << row.next_list_id << row.parent_list_id;
+
+        context_->db
+            << "UPDATE Playlist SET title = ?, parentListId = ?, isPersisted = "
+               "?, "
+               "nextListId = ?, lastEditTime = ?, isExplicitlyExported = ? "
+               "WHERE Id = ?"
+            << row.title << row.parent_list_id << row.is_persisted
+            << row.next_list_id << djinterop::util::to_ft(row.last_edit_time)
+            << row.is_explicitly_exported << row.id;
+    }
+
+    trans.commit();
 }
 
 }  // namespace djinterop::engine::v2

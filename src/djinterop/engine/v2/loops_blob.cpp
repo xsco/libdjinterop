@@ -37,7 +37,7 @@ std::vector<char> loops_blob::to_blob() const
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();
 
-    ptr = encode_int64_le(static_cast<int64_t>(loops.size()), ptr);  // 8
+    ptr = encode_int64_le(static_cast<int64_t>(loops.size()), ptr);
 
     for (auto& loop : loops)
     {
@@ -78,6 +78,7 @@ loops_blob loops_blob::from_blob(const std::vector<char>& blob)
     std::tie(num_loops, ptr) = decode_int64_le(ptr);
 
     loops_blob result;
+    result.loops.reserve(num_loops);
     for (auto i = 0; i < num_loops; ++i)
     {
         loop_blob loop;

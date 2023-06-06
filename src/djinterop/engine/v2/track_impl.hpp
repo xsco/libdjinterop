@@ -48,20 +48,16 @@ public:
 
     void update(const track_snapshot& snapshot) override;
 
-    std::vector<beatgrid_marker> adjusted_beatgrid() override;
-    void set_adjusted_beatgrid(std::vector<beatgrid_marker> beatgrid) override;
-    double adjusted_main_cue() override;
-    void set_adjusted_main_cue(double sample_offset) override;
     stdx::optional<std::string> album() override;
     void set_album(stdx::optional<std::string> album) override;
-    stdx::optional<int64_t> album_art_id() override;
-    void set_album_art_id(stdx::optional<int64_t> album_art_id) override;
     stdx::optional<std::string> artist() override;
     void set_artist(stdx::optional<std::string> artist) override;
     stdx::optional<double> average_loudness() override;
     void set_average_loudness(stdx::optional<double> average_loudness) override;
-    stdx::optional<int64_t> bitrate() override;
-    void set_bitrate(stdx::optional<int64_t> bitrate) override;
+    std::vector<beatgrid_marker> beatgrid() override;
+    void set_beatgrid(std::vector<beatgrid_marker> beatgrid) override;
+    stdx::optional<int> bitrate() override;
+    void set_bitrate(stdx::optional<int> bitrate) override;
     stdx::optional<double> bpm() override;
     void set_bpm(stdx::optional<double> bpm) override;
     stdx::optional<std::string> comment() override;
@@ -70,61 +66,50 @@ public:
     void set_composer(stdx::optional<std::string> composer) override;
     std::vector<djinterop::crate> containing_crates() override;
     database db() override;
-    std::vector<beatgrid_marker> default_beatgrid() override;
-    void set_default_beatgrid(std::vector<beatgrid_marker> beatgrid) override;
-    double default_main_cue() override;
-    void set_default_main_cue(double sample_offset) override;
     stdx::optional<std::chrono::milliseconds> duration() override;
+    void set_duration(
+        stdx::optional<std::chrono::milliseconds> duration) override;
     std::string file_extension() override;
     std::string filename() override;
     stdx::optional<std::string> genre() override;
     void set_genre(stdx::optional<std::string> genre) override;
-    stdx::optional<hot_cue> hot_cue_at(int32_t index) override;
-    void set_hot_cue_at(int32_t index, stdx::optional<hot_cue> cue) override;
-    std::array<stdx::optional<hot_cue>, 8> hot_cues() override;
-    void set_hot_cues(std::array<stdx::optional<hot_cue>, 8> cues) override;
-    stdx::optional<track_import_info> import_info() override;
-    void set_import_info(
-        const stdx::optional<track_import_info>& import_info) override;
+    stdx::optional<hot_cue> hot_cue_at(int index) override;
+    void set_hot_cue_at(int index, stdx::optional<hot_cue> cue) override;
+    std::vector<stdx::optional<hot_cue> > hot_cues() override;
+    void set_hot_cues(std::vector<stdx::optional<hot_cue> > cues) override;
     bool is_valid() override;
     stdx::optional<musical_key> key() override;
     void set_key(stdx::optional<musical_key> key) override;
-    stdx::optional<std::chrono::system_clock::time_point> last_accessed_at()
-        override;
-    void set_last_accessed_at(
-        stdx::optional<std::chrono::system_clock::time_point> accessed_at)
-        override;
-    stdx::optional<std::chrono::system_clock::time_point> last_modified_at()
-        override;
-    void set_last_modified_at(
-        stdx::optional<std::chrono::system_clock::time_point> modified_at)
-        override;
     stdx::optional<std::chrono::system_clock::time_point> last_played_at()
         override;
     void set_last_played_at(
         stdx::optional<std::chrono::system_clock::time_point> played_at)
         override;
-    stdx::optional<loop> loop_at(int32_t index) override;
-    void set_loop_at(int32_t index, stdx::optional<loop> l) override;
-    std::array<stdx::optional<loop>, 8> loops() override;
-    void set_loops(std::array<stdx::optional<loop>, 8> loops) override;
-    std::vector<waveform_entry> overview_waveform() override;
+    stdx::optional<loop> loop_at(int index) override;
+    void set_loop_at(int index, stdx::optional<loop> l) override;
+    std::vector<stdx::optional<loop> > loops() override;
+    void set_loops(std::vector<stdx::optional<loop> > loops) override;
+    stdx::optional<double> main_cue() override;
+    void set_main_cue(stdx::optional<double> sample_offset) override;
     stdx::optional<std::string> publisher() override;
     void set_publisher(stdx::optional<std::string> publisher) override;
     stdx::optional<int32_t> rating() override;
     void set_rating(stdx::optional<int32_t> rating) override;
     std::string relative_path() override;
     void set_relative_path(std::string relative_path) override;
-    stdx::optional<sampling_info> sampling() override;
-    void set_sampling(stdx::optional<sampling_info> sampling) override;
+    stdx::optional<unsigned long long> sample_count() override;
+    void set_sample_count(
+        stdx::optional<unsigned long long> sample_count) override;
+    stdx::optional<double> sample_rate() override;
+    void set_sample_rate(stdx::optional<double> sample_rate) override;
     stdx::optional<std::string> title() override;
     void set_title(stdx::optional<std::string> title) override;
-    stdx::optional<int32_t> track_number() override;
-    void set_track_number(stdx::optional<int32_t> track_number) override;
+    stdx::optional<int> track_number() override;
+    void set_track_number(stdx::optional<int> track_number) override;
     std::vector<waveform_entry> waveform() override;
     void set_waveform(std::vector<waveform_entry> waveform) override;
-    stdx::optional<int32_t> year() override;
-    void set_year(stdx::optional<int32_t> year) override;
+    stdx::optional<int> year() override;
+    void set_year(stdx::optional<int> year) override;
 
 private:
     std::shared_ptr<engine_library> library_;

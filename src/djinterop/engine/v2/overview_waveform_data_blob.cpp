@@ -31,8 +31,9 @@ std::vector<char> overview_waveform_data_blob::to_blob() const
     const auto end = ptr + uncompressed.size();
 
     // Encode
-    ptr = encode_int64_be(waveform_points.size(), ptr);
-    ptr = encode_int64_be(waveform_points.size(), ptr);
+    auto waveform_size = static_cast<int64_t>(waveform_points.size());
+    ptr = encode_int64_be(waveform_size, ptr);
+    ptr = encode_int64_be(waveform_size, ptr);
     ptr = encode_double_be(samples_per_waveform_point, ptr);
 
     for (auto& entry : waveform_points)
@@ -80,7 +81,7 @@ overview_waveform_data_blob overview_waveform_data_blob::from_blob(
     if (end - ptr != 3 * (num_entries_1 + 1))
     {
         throw std::invalid_argument{
-            "High-resolution waveform data has incorrect length"};
+            "Overview waveform data has incorrect length"};
     }
 
     result.waveform_points.resize(num_entries_1);

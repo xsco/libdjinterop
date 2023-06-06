@@ -99,8 +99,7 @@ BOOST_DATA_TEST_CASE(
 
         BOOST_TEST_CHECKPOINT("(" << ref_script_dir << ") Creating DB...");
         auto db =
-            e::create_database_from_scripts(
-            tmp_loc.temp_dir, script_path);
+            e::create_database_from_scripts(tmp_loc.temp_dir, script_path);
 
         // Act
         BOOST_TEST_CHECKPOINT("(" << ref_script_dir << ") Verifying DB...");

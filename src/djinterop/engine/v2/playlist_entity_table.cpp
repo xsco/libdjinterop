@@ -17,9 +17,11 @@
 
 #include <djinterop/engine/v2/playlist_entity_table.hpp>
 
+#include <stdexcept>
 #include <unordered_map>
 #include <utility>
 
+#include "../../util/sqlite_transaction.hpp"
 #include "engine_library_context.hpp"
 
 namespace djinterop::engine::v2
@@ -31,7 +33,8 @@ playlist_entity_table::playlist_entity_table(
 {
 }
 
-int64_t playlist_entity_table::add_back(const playlist_entity_row& row)
+int64_t playlist_entity_table::add_back(
+    const playlist_entity_row& row, bool throw_if_duplicate)
 {
     if (row.id != PLAYLIST_ENTITY_ROW_ID_NONE)
     {
@@ -40,10 +43,28 @@ int64_t playlist_entity_table::add_back(const playlist_entity_row& row)
             "playlist entity, and so it cannot be created again"};
     }
 
+    djinterop::stdx::optional<int64_t> existing_id;
+    context_->db << "SELECT id FROM PlaylistEntity WHERE listId = ? AND "
+                    "trackId = ? AND databaseUuid = ?"
+                 << row.list_id << row.track_id << row.database_uuid >>
+        [&](int64_t id) { existing_id = id; };
+
+    if (existing_id)
+    {
+        if (throw_if_duplicate)
+        {
+            throw std::invalid_argument{
+                "The provided playlist entity already exists for the given "
+                "playlist, and duplicate entries are not permitted"};
+        }
+
+        return *existing_id;
+    }
+
     // The last entity in a playlist always has next entity id zero.
     int64_t next_entity_id = 0;
 
-    context_->db << "BEGIN TRANSACTION";
+    util::sqlite_transaction trans{context_->db};
     context_->db
         << "INSERT INTO PlaylistEntity ("
            "listId, trackId, databaseUuid, nextEntityId, membershipReference)"
@@ -58,7 +79,7 @@ int64_t playlist_entity_table::add_back(const playlist_entity_row& row)
     context_->db << "UPDATE PlaylistEntity SET nextEntityId = ? WHERE listId = "
                     "? AND nextEntityId = 0 AND id <> ?"
                  << id << row.list_id << id;
-    context_->db << "COMMIT TRANSACTION";
+    trans.commit();
 
     return id;
 }

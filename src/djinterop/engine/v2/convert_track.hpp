@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <array>
 #include <chrono>
 #include <cstdint>
 
@@ -75,12 +74,18 @@ inline stdx::optional<int32_t> rating(int64_t rating)
     return rating != RATING_NONE ? stdx::make_optional(rating) : stdx::nullopt;
 }
 
-inline stdx::optional<sampling_info> sampling(const track_data_blob& track_data)
+inline stdx::optional<unsigned long long> sample_count(
+    const track_data_blob& track_data)
 {
-    if (track_data.sample_rate == 0)
-        return stdx::nullopt;
+    return track_data.samples != 0 ? stdx::make_optional(track_data.samples)
+                                   : stdx::nullopt;
+}
 
-    return sampling_info{track_data.sample_rate, track_data.samples};
+inline stdx::optional<double> sample_rate(const track_data_blob& track_data)
+{
+    return track_data.sample_rate != 0
+               ? stdx::make_optional(track_data.sample_rate)
+               : stdx::nullopt;
 }
 }  // namespace read
 
@@ -138,20 +143,22 @@ inline int64_t rating(stdx::optional<int32_t> rating)
         std::clamp(rating.value_or(RATING_NONE), 0, 100));
 }
 
-struct converted_sampling_fields
+struct converted_sample_count_fields
 {
-    double track_data_sample_rate;
     int64_t track_data_samples;
-    double beat_data_sample_rate;
     double beat_data_samples;
 };
 
-inline converted_sampling_fields sampling(
-    const stdx::optional<sampling_info>& sampling)
+inline converted_sample_count_fields sample_count(
+    const stdx::optional<unsigned long long>& sample_count)
 {
-    auto s = sampling.value_or(sampling_info{0, 0});
-    return {
-        s.sample_rate, s.sample_count, s.sample_rate, (double)s.sample_count};
+    auto s = sample_count.value_or(0);
+    return {static_cast<int64_t>(s), (double)s};
+}
+
+inline double sample_rate(const stdx::optional<double>& sample_rate)
+{
+    return sample_rate.value_or(0);
 }
 }  // namespace write
 }  // namespace djinterop::engine::v2::convert

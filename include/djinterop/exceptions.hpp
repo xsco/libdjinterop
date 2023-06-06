@@ -89,7 +89,7 @@ public:
     }
 
     /// Returns the crate ID that was deemed non-existent
-    int64_t id() const noexcept { return id_; }
+    [[nodiscard]] int64_t id() const noexcept { return id_; }
 
 private:
     int64_t id_;
@@ -103,16 +103,28 @@ public:
     /// Construct the exception for a given crate ID
     explicit crate_database_inconsistency(
         const std::string& what_arg, int64_t id) noexcept
-        : database_inconsistency{what_arg.c_str()},
+        : database_inconsistency{what_arg},
           id_{id}
     {
     }
 
-    /// Get the crate ID that was deemed inconsistent
-    int64_t id() const noexcept { return id_; }
+    /// The crate ID that was deemed to be inconsistent.
+    [[nodiscard]] int64_t id() const noexcept { return id_; }
 
 private:
     int64_t id_;
+};
+
+/// The `crate_already_exists` exception is thrown when a request is made to
+/// create a crate with a name that already exists.
+class crate_already_exists: public std::runtime_error
+{
+public:
+    /// Construct the exception.
+    explicit crate_already_exists(const std::string& what_arg) noexcept
+        : runtime_error{what_arg.c_str()}
+    {
+    }
 };
 
 /// The `crate_invalid_parent` exception is thrown when a crate parent is found
@@ -120,7 +132,7 @@ private:
 class crate_invalid_parent : public std::runtime_error
 {
 public:
-    /// Construct the exception for a given crate name
+    /// Construct the exception.
     explicit crate_invalid_parent(const std::string& what_arg) noexcept
         : runtime_error{what_arg.c_str()}
     {
@@ -132,15 +144,16 @@ public:
 class crate_invalid_name : public std::runtime_error
 {
 public:
-    /// Construct the exception for a given crate name
-    explicit crate_invalid_name(const std::string& what_arg, std::string name)
-        noexcept : runtime_error{what_arg.c_str()},
-                   name_{name}
+    /// Construct the exception for a given crate name.
+    explicit crate_invalid_name(
+        const std::string& what_arg, const std::string& name) noexcept
+        : runtime_error{what_arg.c_str()},
+          name_{name}
     {
     }
 
-    /// Get the name that was deemed invalid
-    std::string name() const noexcept { return name_; }
+    /// The name that was deemed invalid.
+    [[nodiscard]] std::string name() const noexcept { return name_; }
 
 private:
     std::string name_;
@@ -159,7 +172,7 @@ public:
     }
 
     /// Returns the track ID that was found to be non-existent
-    int64_t id() const noexcept { return id_; }
+    [[nodiscard]] int64_t id() const noexcept { return id_; }
 
 private:
     int64_t id_;
@@ -171,8 +184,8 @@ class invalid_track_snapshot : public std::invalid_argument
 {
 public:
     /// Initialise a new instance of the exception with a custom message.
-    explicit invalid_track_snapshot(const std::string& what_arg)
-    : std::invalid_argument(what_arg)
+    explicit invalid_track_snapshot(const std::string& what_arg) :
+        std::invalid_argument{what_arg}
     {
     }
 };
@@ -191,10 +204,34 @@ public:
     }
 
     /// Get the track ID that is the subject of this exception
-    int64_t id() const noexcept { return id_; }
+    [[nodiscard]] int64_t id() const noexcept { return id_; }
 
 private:
     int64_t id_;
+};
+
+/// The `hot_cues_overflow` exception is thrown when more hot cues are provided
+/// than are supported by the database.
+class hot_cues_overflow : std::invalid_argument
+{
+public:
+    /// Constructs the exception.
+    explicit hot_cues_overflow(const std::string& what_arg) noexcept
+        : std::invalid_argument{what_arg}
+    {
+    }
+};
+
+/// The `loops_overflow` exception is thrown when more loops are provided than
+/// are supported by the database.
+class loops_overflow : std::invalid_argument
+{
+public:
+    /// Constructs the exception.
+    explicit loops_overflow(const std::string& what_arg) noexcept
+        : std::invalid_argument{what_arg}
+    {
+    }
 };
 
 }  // namespace djinterop

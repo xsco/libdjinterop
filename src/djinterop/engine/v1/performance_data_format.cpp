@@ -15,7 +15,6 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <chrono>
 #include <iomanip>
 #include <numeric>
 #include <vector>
@@ -141,16 +140,8 @@ std::vector<char> beat_data::encode() const
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();
 
-    if (sampling)
-    {
-        ptr = encode_double_be(sampling->sample_rate, ptr);
-        ptr = encode_double_be(sampling->sample_count, ptr);
-    }
-    else
-    {
-        ptr = encode_double_be(0, ptr);  // TODO (haslersn): is 0 ok?
-        ptr = encode_double_be(0, ptr);
-    }
+    ptr = encode_double_be(sample_rate.value_or(0), ptr);
+    ptr = encode_double_be(sample_count.value_or(0), ptr);
     ptr = encode_uint8(1, ptr);
     ptr = encode_beatgrid(default_beatgrid, ptr);
     ptr = encode_beatgrid(adjusted_beatgrid, ptr);
@@ -179,11 +170,14 @@ beat_data beat_data::decode(const std::vector<char>& compressed_data)
 
     beat_data result;
 
-    sampling_info sampling;
-    std::tie(sampling.sample_rate, ptr) = decode_double_be(ptr);
-    std::tie(sampling.sample_count, ptr) = decode_double_be(ptr);
-    result.sampling = sampling.sample_rate != 0 ? stdx::make_optional(sampling)
-                                                : stdx::nullopt;
+    double sample_rate;
+    double sample_count;
+    std::tie(sample_rate, ptr) = decode_double_be(ptr);
+    std::tie(sample_count, ptr) = decode_double_be(ptr);
+    result.sample_rate =
+        sample_rate != 0 ? stdx::make_optional(sample_rate) : stdx::nullopt;
+    result.sample_count =
+        sample_count != 0 ? stdx::make_optional(sample_count) : stdx::nullopt;
 
     uint8_t is_beat_data_set;
     std::tie(is_beat_data_set, ptr) = decode_uint8(ptr);
@@ -344,7 +338,8 @@ std::vector<char> loops_data::encode() const
             return x + (loop ? loop->label.length() : 0);
         });
 
-    std::vector<char> uncompressed(192 + total_label_length);
+    std::vector<char> uncompressed(
+        8 + (23 * loops.size()) + total_label_length);
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();
 
@@ -401,66 +396,49 @@ loops_data loops_data::decode(const std::vector<char>& raw_data)
     auto ptr = raw_data.data();
     const auto end = ptr + raw_data.size();
 
-    if (raw_data.size() < 192)
+    if (raw_data.size() < 8)
     {
         throw std::invalid_argument{
-            "Loops data has less than the minimum length of 192 bytes"};
+            "Loops data has less than the minimum length of 8 bytes"};
     }
 
-    {  // Check that there are exactly 8 loops
-        int64_t num_loops;
-        std::tie(num_loops, ptr) = decode_int64_le(ptr);
-        if (num_loops != 8)
-        {
-            throw std::invalid_argument{
-                "Loops data has an unsupported number of loops"};
-        }
-    }
+    int64_t num_loops;
+    std::tie(num_loops, ptr) = decode_int64_le(ptr);
 
     loops_data result;
-    for (auto& loop : result.loops)
+    result.loops.reserve(num_loops);
+    for (auto i = 0; i < num_loops; ++i)
     {
+        loop loop;
+
         uint8_t label_length;
         std::tie(label_length, ptr) = decode_uint8(ptr);
         if (end - ptr < 22 + label_length)
         {
             throw std::invalid_argument{"Loop data has loop with missing data"};
         }
+
         if (label_length > 0)
         {
-            loop.emplace();
-            loop->label.assign(ptr, label_length);
+            loop.label.assign(ptr, label_length);
             ptr += label_length;
-            std::tie(loop->start_sample_offset, ptr) = decode_double_le(ptr);
-            if (loop->start_sample_offset < 0)
-            {
-                // TODO (haslersn): warning
-            }
-            std::tie(loop->end_sample_offset, ptr) = decode_double_le(ptr);
-            if (loop->end_sample_offset < 0)
-            {
-                // TODO (haslersn): warning
-            }
-            uint8_t is_set;
-            std::tie(is_set, ptr) = decode_uint8(ptr);
-            if (!is_set)
-            {
-                // TODO (haslersn): warning
-            }
-            std::tie(is_set, ptr) = decode_uint8(ptr);
-            if (!is_set)
-            {
-                // TODO (haslersn): warning
-            }
-            std::tie(loop->color.a, ptr) = decode_uint8(ptr);
-            std::tie(loop->color.r, ptr) = decode_uint8(ptr);
-            std::tie(loop->color.g, ptr) = decode_uint8(ptr);
-            std::tie(loop->color.b, ptr) = decode_uint8(ptr);
         }
+
+        std::tie(loop.start_sample_offset, ptr) = decode_double_le(ptr);
+        std::tie(loop.end_sample_offset, ptr) = decode_double_le(ptr);
+        uint8_t is_start_set;
+        uint8_t is_end_set;
+        std::tie(is_start_set, ptr) = decode_uint8(ptr);
+        std::tie(is_end_set, ptr) = decode_uint8(ptr);
+        std::tie(loop.color.a, ptr) = decode_uint8(ptr);
+        std::tie(loop.color.r, ptr) = decode_uint8(ptr);
+        std::tie(loop.color.g, ptr) = decode_uint8(ptr);
+        std::tie(loop.color.b, ptr) = decode_uint8(ptr);
+
+        if (loop.start_sample_offset != -1)
+            result.loops.emplace_back(loop);
         else
-        {
-            ptr += 22;
-        }
+            result.loops.emplace_back(stdx::nullopt);
     }
 
     if (ptr != end)
@@ -634,51 +612,45 @@ quick_cues_data quick_cues_data::decode(
     auto ptr = raw_data.data();
     const auto end = ptr + raw_data.size();
 
-    if (raw_data.size() < 129)
+    if (raw_data.size() < 25)
     {
         throw std::invalid_argument{
-            "Quick cues data has less than the minimum length of 129 bytes"};
+            "Quick cues data has less than the minimum length of 25 bytes"};
     }
 
-    {  // Check that there are exactly 8 loops
-        int64_t num_hot_cues;
-        std::tie(num_hot_cues, ptr) = decode_int64_be(ptr);
-        if (num_hot_cues != 8)
-        {
-            throw std::invalid_argument{
-                "Quick cues data has an unsupported number of hot cues"};
-        }
-    }
+    int64_t num_hot_cues;
+    std::tie(num_hot_cues, ptr) = decode_int64_be(ptr);
 
     quick_cues_data result;
-    for (auto& hot_cue : result.hot_cues)
+    result.hot_cues.reserve(num_hot_cues);
+    for (auto i = 0; i < num_hot_cues; ++i)
     {
+        hot_cue quick_cue;
+
         uint8_t label_length;
         std::tie(label_length, ptr) = decode_uint8(ptr);
         if (end - ptr < 29 + label_length)  // 12 (here) + 17 (after the loop)
         {
             throw std::invalid_argument{
-                "Quick cues data has hot cue with missing data"};
+                "Quick cues data has quick cue with missing data"};
         }
+
         if (label_length > 0)
         {
-            hot_cue.emplace();
-            hot_cue->label.assign(ptr, label_length);
+            quick_cue.label.assign(ptr, label_length);
             ptr += label_length;
-            std::tie(hot_cue->sample_offset, ptr) = decode_double_be(ptr);
-            if (hot_cue->sample_offset < 0)
-            {
-                // TODO (haslersn): warning
-            }
-            std::tie(hot_cue->color.a, ptr) = decode_uint8(ptr);
-            std::tie(hot_cue->color.r, ptr) = decode_uint8(ptr);
-            std::tie(hot_cue->color.g, ptr) = decode_uint8(ptr);
-            std::tie(hot_cue->color.b, ptr) = decode_uint8(ptr);
         }
+
+        std::tie(quick_cue.sample_offset, ptr) = decode_double_be(ptr);
+        std::tie(quick_cue.color.a, ptr) = decode_uint8(ptr);
+        std::tie(quick_cue.color.r, ptr) = decode_uint8(ptr);
+        std::tie(quick_cue.color.g, ptr) = decode_uint8(ptr);
+        std::tie(quick_cue.color.b, ptr) = decode_uint8(ptr);
+
+        if (quick_cue.sample_offset != -1)
+            result.hot_cues.emplace_back(quick_cue);
         else
-        {
-            ptr += 12;
-        }
+            result.hot_cues.emplace_back(stdx::nullopt);
     }
 
     std::tie(result.adjusted_main_cue, ptr) = decode_double_be(ptr);
@@ -710,16 +682,8 @@ std::vector<char> track_data::encode() const
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();
 
-    if (sampling)
-    {
-        ptr = encode_double_be(sampling->sample_rate, ptr);
-        ptr = encode_int64_be(sampling->sample_count, ptr);
-    }
-    else
-    {
-        ptr = encode_double_be(0, ptr);  // TODO (haslersn): is 0 ok?
-        ptr = encode_int64_be(0, ptr);
-    }
+    ptr = encode_double_be(sample_rate.value_or(0), ptr);
+    ptr = encode_int64_be(sample_count.value_or(0), ptr);
     ptr = encode_double_be(average_loudness.value_or(0), ptr);
     ptr = encode_int32_be(key ? static_cast<int32_t>(*key) : 0, ptr);
 
@@ -747,11 +711,14 @@ track_data track_data::decode(const std::vector<char>& compressed_track_data)
 
     track_data result;
 
-    sampling_info sampling;
-    std::tie(sampling.sample_rate, ptr) = decode_double_be(ptr);
-    std::tie(sampling.sample_count, ptr) = decode_int64_be(ptr);
-    result.sampling = sampling.sample_rate != 0 ? stdx::make_optional(sampling)
-                                                : stdx::nullopt;
+    double sample_rate;
+    int64_t sample_count;
+    std::tie(sample_rate, ptr) = decode_double_be(ptr);
+    std::tie(sample_count, ptr) = decode_int64_be(ptr);
+    result.sample_rate =
+        sample_rate != 0 ? stdx::make_optional(sample_rate) : stdx::nullopt;
+    result.sample_count =
+        sample_count != 0 ? stdx::make_optional(sample_count) : stdx::nullopt;
 
     double raw_average_loudness;
     std::tie(raw_average_loudness, ptr) = decode_double_be(ptr);

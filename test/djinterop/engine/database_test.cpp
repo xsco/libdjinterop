@@ -66,7 +66,8 @@ BOOST_DATA_TEST_CASE(
 
     djinterop::track_snapshot snapshot{};
     populate_track_snapshot(
-        example_track_type::minimal_1, version, snapshot);
+        snapshot, example_track_data_variation::minimal_1,
+        example_track_data_usage::create, version);
 
     // Act
     BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
@@ -87,7 +88,8 @@ BOOST_DATA_TEST_CASE(
 
     djinterop::track_snapshot snapshot{};
     populate_track_snapshot(
-        example_track_type::minimal_1, version, snapshot);
+        snapshot, example_track_data_variation::minimal_1,
+        example_track_data_usage::create, version);
 
     BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
     auto track = db.create_track(snapshot);
@@ -122,7 +124,8 @@ BOOST_DATA_TEST_CASE(tracks__expected_ids, e::all_versions, version)
 
     djinterop::track_snapshot snapshot{};
     populate_track_snapshot(
-        example_track_type::minimal_1, version, snapshot);
+        snapshot, example_track_data_variation::minimal_1,
+        example_track_data_usage::create, version);
 
     BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
     auto track = db.create_track(snapshot);
@@ -145,7 +148,8 @@ BOOST_DATA_TEST_CASE(tracks_by_relative_path__valid_path__expected_ids, e::all_v
 
     djinterop::track_snapshot snapshot{};
     populate_track_snapshot(
-        example_track_type::minimal_1, version, snapshot);
+        snapshot, example_track_data_variation::minimal_1,
+        example_track_data_usage::create, version);
 
     BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
     auto track = db.create_track(snapshot);
@@ -183,7 +187,8 @@ BOOST_DATA_TEST_CASE(track_by_id__valid_id__expected_ids, e::all_versions, versi
 
     djinterop::track_snapshot snapshot{};
     populate_track_snapshot(
-        example_track_type::minimal_1, version, snapshot);
+        snapshot, example_track_data_variation::minimal_1,
+        example_track_data_usage::create, version);
 
     BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
     auto track = db.create_track(snapshot);

@@ -42,7 +42,7 @@ void crate_impl::add_track(int64_t track_id)
         library_->information()
             .get()
             .uuid,  // TODO (mr-smidge): Avoid repeated DB UUID lookup.
-        0,
+        PLAYLIST_ENTITY_NO_NEXT_ENTITY_ID,
         PLAYLIST_ENTITY_DEFAULT_MEMBERSHIP_REFERENCE};
 
     // Crates have no fixed ordering, so tracks are added arbitrarily to the
@@ -75,14 +75,22 @@ void crate_impl::clear_tracks()
 
 crate crate_impl::create_sub_crate(std::string name)
 {
+    if (library_->playlist().find(id(), name))
+    {
+        throw crate_already_exists{
+            "Cannot create a crate with name '" + name +
+            "' under parent crate '" + this->name() +
+            "', because a crate with that name already exists"};
+    }
+
     playlist_row row{
         PLAYLIST_ROW_ID_NONE,
         name,
         id(),
         true,
-        0,
+        PLAYLIST_NO_NEXT_LIST_ID,
         std::chrono::system_clock::now(),
-        false};
+        true};
 
     auto id = library_->playlist().add(row);
     return crate{std::make_shared<crate_impl>(library_, id)};

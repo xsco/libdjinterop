@@ -24,12 +24,14 @@
 #include <chrono>
 #include <cstdint>
 #include <memory>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 #include <djinterop/config.hpp>
 #include <djinterop/optional.hpp>
+#include <djinterop/stream_helper.hpp>
 
 namespace djinterop::engine::v2
 {
@@ -54,6 +56,9 @@ constexpr const int64_t PLAYLIST_ROW_ID_NONE = 0;
 /// level, and does not have any parent playlist.
 constexpr const int64_t PARENT_LIST_ID_NONE = 0;
 
+/// Special value for next list id to indicate that there is no next list.
+constexpr const int64_t PLAYLIST_NO_NEXT_LIST_ID = 0;
+
 /// Represents a row in the `PlayList` table.
 struct DJINTEROP_PUBLIC playlist_row
 {
@@ -69,10 +74,12 @@ struct DJINTEROP_PUBLIC playlist_row
     /// Flag indicating whether the playlist is persisted or not.
     bool is_persisted;
 
-    /// Id of next playlist, or zero if none.
+    /// Id of next playlist, or `PLAYLIST_NO_NEXT_LIST_ID` if none.
     ///
-    /// A value does not need to be provided for this field when writing data,
-    /// as it will be calculated automatically via database triggers.
+    /// This value acts as a way to place playlists in order, by taking an
+    /// approach similar to a singly-linked list.  When adding new rows to the
+    /// table, there is no need to populate this field, as appropriate values
+    /// will be calculated depending on the desired order.
     int64_t next_list_id;
 
     /// Time at which playlist was last edited.
@@ -80,6 +87,34 @@ struct DJINTEROP_PUBLIC playlist_row
 
     /// Flag indicating whether the playlist has been explicitly exported.
     bool is_explicitly_exported;
+
+    friend bool operator==(const playlist_row& lhs, const playlist_row& rhs)
+    {
+        return std::tie(
+                   lhs.id, lhs.title, lhs.parent_list_id, lhs.is_persisted,
+                   lhs.next_list_id, lhs.last_edit_time,
+                   lhs.is_explicitly_exported) ==
+               std::tie(
+                   rhs.id, rhs.title, rhs.parent_list_id, rhs.is_persisted,
+                   rhs.next_list_id, rhs.last_edit_time,
+                   rhs.is_explicitly_exported);
+    }
+
+    friend bool operator!=(const playlist_row& lhs, const playlist_row& rhs)
+    {
+        return !(rhs == lhs);
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const playlist_row& row)
+    {
+        os << "playlist_row{id=" << row.id << ", title='" << row.title
+           << "', parent_list_id=" << row.parent_list_id
+           << ", is_persisted=" << row.is_persisted
+           << ", next_list_id=" << row.next_list_id << ", last_edit_time='";
+        djinterop::stream_helper::print(os, row.last_edit_time);
+        os << "', is_explicitly_exported=" << row.is_explicitly_exported << "}";
+        return os;
+    }
 };
 
 /// Represents the `Playlist` table in an Engine v2 database.
