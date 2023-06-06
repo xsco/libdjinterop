@@ -76,10 +76,9 @@ crate database_impl::create_root_crate(std::string name)
         name,
         PARENT_LIST_ID_NONE,
         true,
-        0,
+        PLAYLIST_NO_NEXT_LIST_ID,
         std::chrono::system_clock::now(),
-        false
-    };
+        true};
 
     auto id = library_->playlist().add(row);
     return crate{std::make_shared<crate_impl>(library_, id)};

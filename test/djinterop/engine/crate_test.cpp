@@ -89,7 +89,9 @@ BOOST_DATA_TEST_CASE(add_track__to_empty_crate__adds, e::all_versions, version)
     BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
     auto crate = db.create_root_crate("Example Root Crate");
     djinterop::track_snapshot snapshot{};
-    populate_track_snapshot(example_track_type::minimal_1, version, snapshot);
+    populate_track_snapshot(
+        snapshot, example_track_data_variation::minimal_1,
+        example_track_data_usage::create, version);
     BOOST_TEST_CHECKPOINT("(" << version << ") Creating example track...");
     auto track = db.create_track(snapshot);
 
@@ -117,9 +119,12 @@ BOOST_DATA_TEST_CASE(
     auto crate = db.create_root_crate("Example Root Crate");
     djinterop::track_snapshot snapshot1{};
     djinterop::track_snapshot snapshot2{};
-    populate_track_snapshot(example_track_type::minimal_1, version, snapshot1);
     populate_track_snapshot(
-        example_track_type::basic_metadata_only_1, version, snapshot2);
+        snapshot1, example_track_data_variation::minimal_1,
+        example_track_data_usage::create, version);
+    populate_track_snapshot(
+        snapshot2, example_track_data_variation::basic_metadata_only_1,
+        example_track_data_usage::create, version);
     BOOST_TEST_CHECKPOINT("(" << version << ") Creating example tracks...");
     auto track1 = db.create_track(snapshot1);
     auto track2 = db.create_track(snapshot2);
@@ -151,9 +156,12 @@ BOOST_DATA_TEST_CASE(add_tracks__adds, e::all_versions, version)
     auto crate = db.create_root_crate("Example Root Crate");
     djinterop::track_snapshot snapshot1{};
     djinterop::track_snapshot snapshot2{};
-    populate_track_snapshot(example_track_type::minimal_1, version, snapshot1);
     populate_track_snapshot(
-        example_track_type::basic_metadata_only_1, version, snapshot2);
+        snapshot1, example_track_data_variation::minimal_1,
+        example_track_data_usage::create, version);
+    populate_track_snapshot(
+        snapshot2, example_track_data_variation::basic_metadata_only_1,
+        example_track_data_usage::create, version);
     BOOST_TEST_CHECKPOINT("(" << version << ") Creating example tracks...");
     auto track1 = db.create_track(snapshot1);
     auto track2 = db.create_track(snapshot2);
@@ -213,7 +221,9 @@ BOOST_DATA_TEST_CASE(clear_tracks__nonempty__cleared, e::all_versions, version)
     BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
     auto crate = db.create_root_crate("Example Root Crate");
     djinterop::track_snapshot snapshot{};
-    populate_track_snapshot(example_track_type::minimal_1, version, snapshot);
+    populate_track_snapshot(
+        snapshot, example_track_data_variation::minimal_1,
+        example_track_data_usage::create, version);
     BOOST_TEST_CHECKPOINT("(" << version << ") Creating example track...");
     auto track = db.create_track(snapshot);
     BOOST_TEST_CHECKPOINT(
@@ -261,7 +271,9 @@ BOOST_DATA_TEST_CASE(
     BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
     auto crate = db.create_root_crate("Example Root Crate");
     djinterop::track_snapshot snapshot{};
-    populate_track_snapshot(example_track_type::minimal_1, version, snapshot);
+    populate_track_snapshot(
+        snapshot, example_track_data_variation::minimal_1,
+        example_track_data_usage::create, version);
     BOOST_TEST_CHECKPOINT("(" << version << ") Creating example track...");
     auto track = db.create_track(snapshot);
 
@@ -286,7 +298,9 @@ BOOST_DATA_TEST_CASE(remove_track__in_crate__removed, e::all_versions, version)
     BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
     auto crate = db.create_root_crate("Example Root Crate");
     djinterop::track_snapshot snapshot{};
-    populate_track_snapshot(example_track_type::minimal_1, version, snapshot);
+    populate_track_snapshot(
+        snapshot, example_track_data_variation::minimal_1,
+        example_track_data_usage::create, version);
     BOOST_TEST_CHECKPOINT("(" << version << ") Creating example track...");
     auto track = db.create_track(snapshot);
     BOOST_TEST_CHECKPOINT(
@@ -352,6 +366,7 @@ BOOST_DATA_TEST_CASE(
     auto crate = db.create_root_crate("Moveable Crate");
 
     // Act
+    BOOST_TEST_CHECKPOINT("(" << version << ") Setting parent...");
     crate.set_parent(stdx::nullopt);
 
     // Assert
@@ -374,6 +389,7 @@ BOOST_DATA_TEST_CASE(
     auto new_parent_crate = db.create_root_crate("Example Root Crate");
 
     // Act
+    BOOST_TEST_CHECKPOINT("(" << version << ") Setting parent...");
     crate.set_parent(new_parent_crate);
 
     // Assert
@@ -396,6 +412,7 @@ BOOST_DATA_TEST_CASE(
     auto crate = original_parent_crate.create_sub_crate("Moveable Crate");
 
     // Act
+    BOOST_TEST_CHECKPOINT("(" << version << ") Setting parent...");
     crate.set_parent(stdx::nullopt);
 
     // Assert
@@ -420,6 +437,7 @@ BOOST_DATA_TEST_CASE(
     auto crate = original_parent_crate.create_sub_crate("Moveable Crate");
 
     // Act
+    BOOST_TEST_CHECKPOINT("(" << version << ") Setting parent...");
     crate.set_parent(new_parent_crate);
 
     // Assert
@@ -438,6 +456,7 @@ BOOST_DATA_TEST_CASE(set_parent__self__throws, e::all_versions, version)
     auto crate = db.create_root_crate("Example Root Crate");
 
     // Act/Assert
+    BOOST_TEST_CHECKPOINT("(" << version << ") Setting parent...");
     BOOST_CHECK_THROW(crate.set_parent(crate), djinterop::crate_invalid_parent);
 }
 

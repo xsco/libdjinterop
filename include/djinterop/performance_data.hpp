@@ -32,36 +32,18 @@
 
 namespace djinterop
 {
-struct sampling_info
+/// A marker in a beatgrid.
+///
+/// A beatgrid is formed from a set of markers, each of which identify a given
+/// beat at a given sample offset.  Each beat is given a number, which allows
+/// for a pair of beatgrid markers to identify a span of audio with a set of
+/// beats between them of regular intervals.
+struct DJINTEROP_PUBLIC beatgrid_marker
 {
-    double sample_rate = 0;  // usually 44100.0 or 48000.0
-    int64_t sample_count = 0;
+    /// Beat index.
+    int index = 0;
 
-    friend bool operator==(
-        const sampling_info& lhs, const sampling_info& rhs) noexcept
-    {
-        return lhs.sample_rate == rhs.sample_rate &&
-               lhs.sample_count == rhs.sample_count;
-    }
-
-    friend bool operator!=(
-        const sampling_info& lhs, const sampling_info& rhs) noexcept
-    {
-        return !(rhs == lhs);
-    }
-
-    friend std::ostream& operator<<(
-        std::ostream& os, const djinterop::sampling_info& obj) noexcept
-    {
-        os << "sampling_info{sample_rate=" << obj.sample_rate
-          << ", sample_count=" << obj.sample_count << "}";
-        return os;
-    }
-};
-
-struct beatgrid_marker
-{
-    int32_t index = 0;
+    // Sample offset within the track.
     double sample_offset = 0;
 
     friend bool operator==(
@@ -80,15 +62,21 @@ struct beatgrid_marker
         std::ostream& os, const djinterop::beatgrid_marker& obj) noexcept
     {
         os << "beatgrid_marker{index=" << obj.index
-          << ", sample_offset=" << obj.sample_offset << "}";
+           << ", sample_offset=" << obj.sample_offset << "}";
         return os;
     }
 };
 
-struct hot_cue
+/// Hot cue, representing a named stored location within a track.
+struct DJINTEROP_PUBLIC hot_cue
 {
+    /// Label for the hot cue.
     std::string label;
+
+    /// Sample offset of the cue within the track.
     double sample_offset = 0;
+
+    /// Color of the hot cue.
     pad_color color;
 
     friend bool operator==(const hot_cue& lhs, const hot_cue& rhs) noexcept
@@ -105,18 +93,26 @@ struct hot_cue
     friend std::ostream& operator<<(
         std::ostream& os, const djinterop::hot_cue& obj) noexcept
     {
-        os << "loop{label=" << obj.label
-          << ", sample_offset=" << obj.sample_offset << ", color=" << obj.color
-          << "}";
+        os << "hot_cue{label=" << obj.label
+           << ", sample_offset=" << obj.sample_offset << ", color=" << obj.color
+           << "}";
         return os;
     }
 };
 
-struct loop
+/// Loop, representing a named repeatable region within a track.
+struct DJINTEROP_PUBLIC loop
 {
+    /// Label for the loop.
     std::string label;
+
+    /// Starting sample offset of the loop within the track.
     double start_sample_offset = 0;
+
+    /// Ending sample offset of the loop within the track.
     double end_sample_offset = 0;
+
+    /// Color of the loop.
     pad_color color;
 
     friend bool operator==(const loop& lhs, const loop& rhs) noexcept
@@ -136,16 +132,24 @@ struct loop
         std::ostream& os, const djinterop::loop& obj) noexcept
     {
         os << "loop{label=" << obj.label
-          << ", start_sample_offset=" << obj.start_sample_offset
-          << ", end_sample_offset=" << obj.end_sample_offset
-          << ", color=" << obj.color << "}";
+           << ", start_sample_offset=" << obj.start_sample_offset
+           << ", end_sample_offset=" << obj.end_sample_offset
+           << ", color=" << obj.color << "}";
         return os;
     }
 };
 
-struct waveform_point
+/// Waveform point.
+///
+/// Note that waveforms are considered to have a value only in the positive
+/// axis.
+struct DJINTEROP_PUBLIC waveform_point
 {
+    /// Waveform value, representing absolute amplitude, in the range `0`-`255`.
     uint8_t value = 0;
+
+    /// Waveform opacity, in the range `0`-`255`, with `0` being fully
+    /// transparent and `255` being fully opaque.
     uint8_t opacity = 255;
 
     friend bool operator==(
@@ -164,28 +168,25 @@ struct waveform_point
         std::ostream& os, const djinterop::waveform_point& obj) noexcept
     {
         os << "waveform_point{value=" << (int)obj.value
-          << ", opacity=" << (int)obj.opacity;
+           << ", opacity=" << (int)obj.opacity;
         return os;
     }
 };
 
-/**
- * A single high-resolution waveform entry
- *
- * Note that, when rendering the high-resolution waveform, each individual
- * band is scaled so that the largest value across the entire waveform hits the
- * top of the display.  Note also that the mid frequency is always drawn over
- * the low, and the high frequency is always drawn over the low and mid, meaning
- * that very loud high-frequency sounds will hide any low or mid activity on the
- * waveform rendering.
- *
- * A further note is that when the opacity is set to zero, this appears to
- * translate into roughly 50% opacity on a real rendering.
- */
-struct waveform_entry
+/// Waveform entry.
+///
+/// A waveform comprises a set of waveform entries, each of which specifies
+/// points on up to three waves.  The three waves represent low, medium, and
+/// high frequency audio within a track.
+struct DJINTEROP_PUBLIC waveform_entry
 {
+    /// Waveform point for low-frequency audio.
     waveform_point low;
+
+    /// Waveform point for mid-frequency audio.
     waveform_point mid;
+
+    /// Waveform point for high-frequency audio.
     waveform_point high;
 
     friend bool operator==(
@@ -204,7 +205,39 @@ struct waveform_entry
         std::ostream& os, const djinterop::waveform_entry& obj) noexcept
     {
         os << "waveform_entry{low=" << obj.low << ", mid=" << obj.mid
-          << ", high=" << obj.high << "}";
+           << ", high=" << obj.high << "}";
+        return os;
+    }
+};
+
+/// The `waveform_extents` struct describes the size of a waveform and its
+/// relationship to samples of audio.
+struct DJINTEROP_PUBLIC waveform_extents
+{
+    /// The number of entries in the waveform.
+    unsigned long long size;
+
+    /// The number of samples that each entry in the waveform represents.
+    double samples_per_entry;
+
+    friend bool operator==(
+        const waveform_extents& lhs, const waveform_extents& rhs)
+    {
+        return lhs.size == rhs.size &&
+               lhs.samples_per_entry == rhs.samples_per_entry;
+    }
+
+    friend bool operator!=(
+        const waveform_extents& lhs, const waveform_extents& rhs)
+    {
+        return !(rhs == lhs);
+    }
+
+    friend std::ostream& operator<<(
+        std::ostream& os, const waveform_extents& extents)
+    {
+        os << "waveform_extents{size=" << extents.size
+           << ", samples_per_entry=" << extents.samples_per_entry << "}";
         return os;
     }
 };

@@ -39,23 +39,6 @@ using std::chrono::system_clock;
 
 namespace
 {
-/// Calculate the samples-per-entry in an overview waveform.
-///
-/// An overview waveform always has 1024 entries, and the number of samples
-/// that each one represents must be calculated from the true sample count by
-/// rounding the number of samples to the quantisation number first.
-int64_t calculate_overview_waveform_samples_per_entry(
-    int64_t sample_rate, int64_t sample_count)
-{
-    auto qn = util::waveform_quantisation_number(sample_rate);
-    if (qn == 0)
-    {
-        return 0;
-    }
-
-    return ((sample_count / qn) * qn) / 1024;
-}
-
 const int64_t default_track_type = 1;
 
 const int64_t default_is_external_track = 0;
@@ -89,7 +72,8 @@ struct length_field_data
 
 length_field_data to_length_fields(
     stdx::optional<std::chrono::milliseconds> duration,
-    stdx::optional<sampling_info> sampling)
+    stdx::optional<unsigned long long> sample_count,
+    stdx::optional<double> sample_rate)
 {
     stdx::optional<int64_t> length;
     stdx::optional<std::string> length_mm_ss;
@@ -108,16 +92,11 @@ length_field_data to_length_fields(
     }
 
     // A zero sample rate is interpreted as no sample rate.
-    if (sampling && sampling->sample_rate == 0)
-    {
-        sampling = stdx::nullopt;
-    }
-
     stdx::optional<int64_t> length_calculated;
-    if (sampling)
+    if (sample_count && sample_rate && *sample_rate != 0)
     {
-        length_calculated = static_cast<int64_t>(
-            sampling->sample_count / sampling->sample_rate);
+        length_calculated = static_cast<int64_t>(*sample_count) /
+                            static_cast<int64_t>(*sample_rate);
     }
 
     return length_field_data{length, length_calculated, length_mm_ss};
@@ -130,7 +109,7 @@ struct bpm_field_data
 };
 
 bpm_field_data to_bpm_fields(
-    stdx::optional<double> bpm, stdx::optional<sampling_info> sampling,
+    stdx::optional<double> bpm, stdx::optional<double> sample_rate,
     const std::vector<beatgrid_marker>& beatgrid)
 {
     stdx::optional<int64_t> rounded_bpm;
@@ -140,13 +119,13 @@ bpm_field_data to_bpm_fields(
     }
 
     stdx::optional<double> bpm_analyzed;
-    if (sampling && beatgrid.size() >= 2)
+    if (sample_rate && beatgrid.size() >= 2)
     {
         auto marker_1 = beatgrid[0];
         auto marker_2 = beatgrid[1];
         if (marker_1.sample_offset != marker_2.sample_offset)
         {
-            bpm_analyzed = sampling->sample_rate * 60 *
+            bpm_analyzed = *sample_rate * 60 *
                            (marker_2.index - marker_1.index) /
                            (marker_2.sample_offset - marker_1.sample_offset);
         }
@@ -164,38 +143,15 @@ struct timestamp_field_data
 };
 
 timestamp_field_data to_timestamp_fields(
-    stdx::optional<std::chrono::system_clock::time_point> last_played_at,
-    stdx::optional<std::chrono::system_clock::time_point> last_modified_at,
-    stdx::optional<std::chrono::system_clock::time_point> last_accessed_at)
+    stdx::optional<std::chrono::system_clock::time_point> last_played_at)
 {
     auto last_played_at_ts = djinterop::util::to_timestamp(last_played_at);
-    auto last_modified_at_ts = djinterop::util::to_timestamp(last_modified_at);
-
-    stdx::optional<int64_t> last_accessed_at_ts;
-    if (last_accessed_at)
-    {
-        // Field is always ceiled to the midnight at the end of the day the
-        // track is played, it seems.  This is believed to be due to the
-        // hardware players using the VFAT ACCDATE to populate the field, which
-        // is truncated only to a date.
-        //
-        // TODO (haslersn): Shouldn't we just set the unceiled time? This would
-        // leave the decision whether to ceil it to the library user. Also, it
-        // would make `el_track_impl::last_accessed_at()` consistent with the
-        // value that has been set using this method.
-        auto timestamp = *djinterop::util::to_timestamp(last_accessed_at);
-        auto secs_per_day = 86400;
-        timestamp += secs_per_day - 1;
-        timestamp -= timestamp % secs_per_day;
-        last_accessed_at_ts = timestamp;
-    }
 
     stdx::optional<std::string> ever_played =
         last_played_at ? stdx::optional<std::string>{"1"} : stdx::nullopt;
 
     return timestamp_field_data{
-        last_played_at_ts, last_modified_at_ts, last_accessed_at_ts,
-        ever_played};
+        last_played_at_ts, stdx::nullopt, stdx::nullopt, ever_played};
 }
 
 stdx::optional<int64_t> to_key_num(stdx::optional<musical_key> key)
@@ -210,77 +166,90 @@ stdx::optional<int64_t> to_key_num(stdx::optional<musical_key> key)
 }
 
 track_data to_track_data(
-    stdx::optional<sampling_info> sampling,
-    stdx::optional<double> average_loudness, stdx::optional<musical_key> key)
+    stdx::optional<unsigned long long> sample_count,
+    stdx::optional<double> sample_rate, stdx::optional<double> average_loudness,
+    stdx::optional<musical_key> key)
 {
-    return track_data{sampling, average_loudness, key};
+    return track_data{sample_rate, sample_count, average_loudness, key};
 }
 
 quick_cues_data to_cues_data(
-    const std::array<stdx::optional<hot_cue>, 8>& hot_cues,
-    stdx::optional<double> adjusted_main_cue,
-    stdx::optional<double> default_main_cue)
+    const std::vector<stdx::optional<hot_cue> >& hot_cues,
+    stdx::optional<double> main_cue)
 {
-    return quick_cues_data{
-        hot_cues, adjusted_main_cue.value_or(0), default_main_cue.value_or(0)};
+    auto data = quick_cues_data{
+        hot_cues, main_cue.value_or(0), main_cue.value_or(0)};
+    if (data.hot_cues.size() < 8)
+        data.hot_cues.resize(8);
+
+    return data;
 }
 
 beat_data to_beat_data(
-    stdx::optional<sampling_info> sampling,
-    const std::vector<beatgrid_marker>& default_beatgrid,
-    const std::vector<beatgrid_marker>& adjusted_beatgrid)
+    stdx::optional<unsigned long long> sample_count,
+    stdx::optional<double> sample_rate,
+    const std::vector<beatgrid_marker>& beatgrid)
 {
-    return beat_data{sampling, default_beatgrid, adjusted_beatgrid};
+    return beat_data{sample_rate, sample_count, beatgrid, beatgrid};
 }
 
-loops_data to_loops_data(const std::array<stdx::optional<loop>, 8>& loops)
+loops_data to_loops_data(const std::vector<stdx::optional<loop> >& loops)
 {
-    return loops_data{loops};
+    auto data = loops_data{loops};
+    if (data.loops.size() < 8)
+        data.loops.resize(8);
+
+    return data;
 }
 
 overview_waveform_data to_overview_waveform_data(
-    stdx::optional<sampling_info> sampling,
+    stdx::optional<unsigned long long> sample_count,
+    stdx::optional<double> sample_rate,
     const std::vector<waveform_entry>& waveform)
 {
-    auto sample_count = sampling ? sampling->sample_count : 0;
-    auto sample_rate = sampling ? sampling->sample_rate : 0;
-    double samples_per_entry = calculate_overview_waveform_samples_per_entry(
-        sample_rate, sample_count);
+    if (!sample_count || !sample_rate)
+    {
+        return overview_waveform_data{0};
+    }
 
+    auto extents =
+        util::calculate_overview_waveform_extents(*sample_count, *sample_rate);
     std::vector<waveform_entry> overview_waveform;
     if (!waveform.empty())
     {
         // Calculate an overview waveform automatically.
-        // Note that the overview waveform always has 1024 entries in it.
-        overview_waveform.reserve(1024);
-        for (int32_t i = 0; i < 1024; ++i)
+        overview_waveform.reserve(extents.size);
+        for (int32_t i = 0; i < extents.size; ++i)
         {
-            auto entry = waveform[waveform.size() * (2 * i + 1) / 2048];
+            auto entry = waveform
+                [waveform.size() * (2 * i + 1) / (2 * extents.size)];
             overview_waveform.push_back(entry);
         }
     }
 
-    return overview_waveform_data{samples_per_entry, overview_waveform};
+    return overview_waveform_data{extents.samples_per_entry, overview_waveform};
 }
 
 high_res_waveform_data to_high_res_waveform_data(
-    stdx::optional<sampling_info> sampling,
+    stdx::optional<unsigned long long> sample_count,
+    stdx::optional<double> sample_rate,
     const std::vector<waveform_entry>& waveform)
 {
-    auto sample_rate = sampling ? sampling->sample_rate : 0;
-
     // Make the assumption that the client has respected the required number
     // of samples per entry when constructing the waveform.
-    double samples_per_entry = util::waveform_quantisation_number(sample_rate);
+    auto extents = util::calculate_high_resolution_waveform_extents(
+        *sample_count, *sample_rate);
 
     // TODO (mr-smidge) Rework to avoid copying the waveform here.
-    return high_res_waveform_data{samples_per_entry, waveform};
+    return high_res_waveform_data{extents.samples_per_entry, waveform};
 }
 
 }  // namespace
 
-engine_track_impl::engine_track_impl(std::shared_ptr<engine_storage> storage, int64_t id) :
-    track_impl{id}, storage_{std::move(storage)}
+engine_track_impl::engine_track_impl(
+    std::shared_ptr<engine_storage> storage, int64_t id) :
+    track_impl{id},
+    storage_{std::move(storage)}
 {
 }
 
@@ -359,24 +328,19 @@ void engine_track_impl::set_track_data(track_data data)
 
 track_snapshot engine_track_impl::snapshot() const
 {
-    track_snapshot snapshot{id()};
+    track_snapshot snapshot{};
 
     auto track_data = storage_->get_track(id());
     auto meta_data = storage_->get_all_meta_data(id());
     auto meta_data_integer = storage_->get_all_meta_data_integer(id());
     auto perf_data = storage_->get_performance_data(id());
 
-    snapshot.sampling = perf_data.track_performance_data
-                            ? perf_data.track_performance_data->sampling
-                            : stdx::nullopt;
-
     if (perf_data.beats)
     {
-        snapshot.adjusted_beatgrid =
-            std::move(perf_data.beats->adjusted_beatgrid);
+        snapshot.beatgrid = std::move(perf_data.beats->adjusted_beatgrid);
     }
-    snapshot.adjusted_main_cue =
-        perf_data.quick_cues
+    snapshot.main_cue =
+        (perf_data.quick_cues && perf_data.quick_cues->adjusted_main_cue != 0)
             ? stdx::make_optional(perf_data.quick_cues->adjusted_main_cue)
             : stdx::nullopt;
     snapshot.average_loudness =
@@ -385,28 +349,11 @@ track_snapshot engine_track_impl::snapshot() const
             : stdx::nullopt;
     snapshot.bitrate = track_data.bitrate;
     snapshot.bpm =
-        track_data.bpm_analyzed
-            ? track_data.bpm_analyzed
-            : track_data.bpm
-                  ? stdx::make_optional(static_cast<double>(*track_data.bpm))
-                  : stdx::nullopt;
-    if (perf_data.beats)
-    {
-        snapshot.default_beatgrid =
-            std::move(perf_data.beats->default_beatgrid);
-    }
-    snapshot.default_main_cue =
-        perf_data.quick_cues
-            ? stdx::make_optional(perf_data.quick_cues->default_main_cue)
+        track_data.bpm_analyzed ? track_data.bpm_analyzed
+        : track_data.bpm
+            ? stdx::make_optional(static_cast<double>(*track_data.bpm))
             : stdx::nullopt;
-    if (snapshot.sampling)
-    {
-        auto ms = 1000.0 * snapshot.sampling->sample_count /
-                  snapshot.sampling->sample_rate;
-        snapshot.duration =
-            stdx::make_optional(milliseconds{static_cast<int64_t>(ms)});
-    }
-    else if (track_data.length)
+    if (track_data.length)
     {
         auto ms = 1000 * *track_data.length;
         snapshot.duration = stdx::make_optional(milliseconds{ms});
@@ -424,6 +371,16 @@ track_snapshot engine_track_impl::snapshot() const
         snapshot.loops = std::move(perf_data.loops->loops);
     }
     snapshot.relative_path = std::move(track_data.relative_path);
+    if (perf_data.track_performance_data &&
+        perf_data.track_performance_data->sample_count)
+    {
+        snapshot.sample_count = *perf_data.track_performance_data->sample_count;
+    }
+    if (perf_data.track_performance_data &&
+        perf_data.track_performance_data->sample_rate)
+    {
+        snapshot.sample_rate = *perf_data.track_performance_data->sample_rate;
+    }
     snapshot.track_number =
         track_data.play_order
             ? stdx::make_optional(static_cast<int32_t>(*track_data.play_order))
@@ -466,14 +423,6 @@ track_snapshot engine_track_impl::snapshot() const
                 snapshot.last_played_at =
                     djinterop::util::to_time_point(row.value);
                 break;
-            case metadata_int_type::last_modified_ts:
-                snapshot.last_modified_at =
-                    djinterop::util::to_time_point(row.value);
-                break;
-            case metadata_int_type::last_accessed_ts:
-                snapshot.last_accessed_at =
-                    djinterop::util::to_time_point(row.value);
-                break;
             case metadata_int_type::musical_key:
                 if (!snapshot.key)
                 {
@@ -491,22 +440,17 @@ track_snapshot engine_track_impl::snapshot() const
 
 void engine_track_impl::update(const track_snapshot& snapshot)
 {
-    if (snapshot.id && *snapshot.id != id())
-    {
-        throw invalid_track_snapshot{
-            "Snapshot pertains to a different track, and so it cannot be used "
-            "to update this track"};
-    }
-    else if (!snapshot.relative_path)
+    if (!snapshot.relative_path)
     {
         throw invalid_track_snapshot{
             "Snapshot does not contain a populated `relative_path` field, "
             "which is required on any track"};
     }
 
-    auto length_fields = to_length_fields(snapshot.duration, snapshot.sampling);
-    auto bpm_fields = to_bpm_fields(
-        snapshot.bpm, snapshot.sampling, snapshot.adjusted_beatgrid);
+    auto length_fields = to_length_fields(
+        snapshot.duration, snapshot.sample_count, snapshot.sample_rate);
+    auto bpm_fields =
+        to_bpm_fields(snapshot.bpm, snapshot.sample_rate, snapshot.beatgrid);
     auto filename = djinterop::util::get_filename(*snapshot.relative_path);
     auto extension = djinterop::util::get_file_extension(filename);
     auto track_number =
@@ -516,9 +460,7 @@ void engine_track_impl::update(const track_snapshot& snapshot)
     auto year = snapshot.year
                     ? stdx::make_optional(static_cast<int64_t>(*snapshot.year))
                     : stdx::nullopt;
-    auto timestamp_fields = to_timestamp_fields(
-        snapshot.last_played_at, snapshot.last_modified_at,
-        snapshot.last_accessed_at);
+    auto timestamp_fields = to_timestamp_fields(snapshot.last_played_at);
     auto key_num = to_key_num(snapshot.key);
     auto clamped_rating = snapshot.rating
                               ? stdx::make_optional(static_cast<int64_t>(
@@ -526,17 +468,15 @@ void engine_track_impl::update(const track_snapshot& snapshot)
                               : stdx::nullopt;
     stdx::optional<int64_t> last_play_hash;
     auto track_data = to_track_data(
-        snapshot.sampling, snapshot.average_loudness, snapshot.key);
-    auto overview_waveform_data =
-        to_overview_waveform_data(snapshot.sampling, snapshot.waveform);
-    auto high_res_waveform_data =
-        to_high_res_waveform_data(snapshot.sampling, snapshot.waveform);
+        snapshot.sample_count, snapshot.sample_rate, snapshot.average_loudness,
+        snapshot.key);
+    auto overview_waveform_data = to_overview_waveform_data(
+        snapshot.sample_count, snapshot.sample_rate, snapshot.waveform);
+    auto high_res_waveform_data = to_high_res_waveform_data(
+        snapshot.sample_count, snapshot.sample_rate, snapshot.waveform);
     auto beat_data = to_beat_data(
-        snapshot.sampling, snapshot.default_beatgrid,
-        snapshot.adjusted_beatgrid);
-    auto cues_data = to_cues_data(
-        snapshot.hot_cues, snapshot.adjusted_main_cue,
-        snapshot.default_main_cue);
+        snapshot.sample_count, snapshot.sample_rate, snapshot.beatgrid);
+    auto cues_data = to_cues_data(snapshot.hot_cues, snapshot.main_cue);
     auto loops_data = to_loops_data(snapshot.loops);
 
     djinterop::util::sqlite_transaction trans{storage_->db};
@@ -570,10 +510,10 @@ void engine_track_impl::update(const track_snapshot& snapshot)
         [](auto hc) { return hc; });
     auto any_loops = std::any_of(
         snapshot.loops.begin(), snapshot.loops.end(), [](auto l) { return l; });
-    auto has_perf_data = snapshot.sampling || snapshot.average_loudness ||
-                         !snapshot.adjusted_beatgrid.empty() ||
-                         !snapshot.default_beatgrid.empty() || any_hot_cues ||
-                         any_loops;
+    auto has_perf_data =
+        snapshot.sample_count || snapshot.sample_rate ||
+        snapshot.average_loudness || !snapshot.beatgrid.empty() ||
+        !cues_data.hot_cues.empty() || !loops_data.loops.empty();
     auto is_analysed = 1;
     if (has_perf_data)
     {
@@ -591,35 +531,6 @@ void engine_track_impl::update(const track_snapshot& snapshot)
     trans.commit();
 }
 
-std::vector<beatgrid_marker> engine_track_impl::adjusted_beatgrid()
-{
-    auto beat_d = get_beat_data();
-    return std::move(beat_d.adjusted_beatgrid);
-}
-
-void engine_track_impl::set_adjusted_beatgrid(std::vector<beatgrid_marker> beatgrid)
-{
-    djinterop::util::sqlite_transaction trans{storage_->db};
-    auto beat_d = get_beat_data();
-    beat_d.adjusted_beatgrid = std::move(beatgrid);
-    set_beat_data(std::move(beat_d));
-    trans.commit();
-}
-
-double engine_track_impl::adjusted_main_cue()
-{
-    return get_quick_cues_data().adjusted_main_cue;
-}
-
-void engine_track_impl::set_adjusted_main_cue(double sample_offset)
-{
-    djinterop::util::sqlite_transaction trans{storage_->db};
-    auto quick_cues_d = get_quick_cues_data();
-    quick_cues_d.adjusted_main_cue = sample_offset;
-    set_quick_cues_data(std::move(quick_cues_d));
-    trans.commit();
-}
-
 stdx::optional<std::string> engine_track_impl::album()
 {
     return storage_->get_meta_data(id(), metadata_str_type::album);
@@ -628,31 +539,6 @@ stdx::optional<std::string> engine_track_impl::album()
 void engine_track_impl::set_album(stdx::optional<std::string> album)
 {
     storage_->set_meta_data(id(), metadata_str_type::album, album);
-}
-
-stdx::optional<int64_t> engine_track_impl::album_art_id()
-{
-    auto cell = storage_->get_track_column<int64_t>(id(), "idAlbumArt");
-    stdx::optional<int64_t> album_art_id;
-    if (cell < 1)
-    {
-        // TODO (haslersn): Throw something.
-    }
-    else if (cell > 1)
-    {
-        album_art_id = cell;
-    }
-    return album_art_id;
-}
-
-void engine_track_impl::set_album_art_id(stdx::optional<int64_t> album_art_id)
-{
-    if (album_art_id && *album_art_id <= 1)
-    {
-        // TODO (haslersn): Throw something.
-    }
-    storage_->set_track_column(id(), "idAlbumArt", album_art_id.value_or(1));
-    // 1 is the magic number for "no album art"
 }
 
 stdx::optional<std::string> engine_track_impl::artist()
@@ -684,13 +570,29 @@ void engine_track_impl::set_average_loudness(
     trans.commit();
 }
 
-stdx::optional<int64_t> engine_track_impl::bitrate()
+std::vector<beatgrid_marker> engine_track_impl::beatgrid()
+{
+    auto beat_d = get_beat_data();
+    return std::move(beat_d.adjusted_beatgrid);
+}
+
+void engine_track_impl::set_beatgrid(std::vector<beatgrid_marker> beatgrid)
+{
+    djinterop::util::sqlite_transaction trans{storage_->db};
+    auto beat_d = get_beat_data();
+    beat_d.adjusted_beatgrid = std::move(beatgrid);
+    beat_d.default_beatgrid = beat_d.adjusted_beatgrid;
+    set_beat_data(std::move(beat_d));
+    trans.commit();
+}
+
+stdx::optional<int> engine_track_impl::bitrate()
 {
     return storage_->get_track_column<stdx::optional<int64_t> >(
         id(), "bitrate");
 }
 
-void engine_track_impl::set_bitrate(stdx::optional<int64_t> bitrate)
+void engine_track_impl::set_bitrate(stdx::optional<int> bitrate)
 {
     storage_->set_track_column(id(), "bitrate", bitrate);
 }
@@ -742,50 +644,16 @@ std::vector<crate> engine_track_impl::containing_crates()
     std::vector<crate> results;
     storage_->db << "SELECT crateId FROM CrateTrackList WHERE trackId = ?"
                  << id() >>
-        [&](int64_t id) {
-            results.push_back(
-                crate{std::make_shared<engine_crate_impl>(storage_, id)});
-        };
+        [&](int64_t id)
+    {
+        results.push_back(
+            crate{std::make_shared<engine_crate_impl>(storage_, id)});
+    };
     return results;
-}
-
-std::vector<beatgrid_marker> engine_track_impl::default_beatgrid()
-{
-    auto beat_d = get_beat_data();
-    return std::move(beat_d.default_beatgrid);
-}
-
-void engine_track_impl::set_default_beatgrid(std::vector<beatgrid_marker> beatgrid)
-{
-    djinterop::util::sqlite_transaction trans{storage_->db};
-    auto beat_d = get_beat_data();
-    beat_d.default_beatgrid = std::move(beatgrid);
-    set_beat_data(std::move(beat_d));
-    trans.commit();
-}
-
-double engine_track_impl::default_main_cue()
-{
-    return get_quick_cues_data().default_main_cue;
-}
-
-void engine_track_impl::set_default_main_cue(double sample_offset)
-{
-    djinterop::util::sqlite_transaction trans{storage_->db};
-    auto quick_cues_d = get_quick_cues_data();
-    quick_cues_d.default_main_cue = sample_offset;
-    set_quick_cues_data(std::move(quick_cues_d));
-    trans.commit();
 }
 
 stdx::optional<milliseconds> engine_track_impl::duration()
 {
-    auto smp = sampling();
-    if (smp)
-    {
-        double secs = smp->sample_count / smp->sample_rate;
-        return milliseconds{static_cast<int64_t>(1000 * secs)};
-    }
     auto secs =
         storage_->get_track_column<stdx::optional<int64_t> >(id(), "length");
     if (secs)
@@ -795,10 +663,41 @@ stdx::optional<milliseconds> engine_track_impl::duration()
     return stdx::nullopt;
 }
 
+void engine_track_impl::set_duration(
+    stdx::optional<std::chrono::milliseconds> duration)
+{
+    djinterop::util::sqlite_transaction trans{storage_->db};
+    stdx::optional<int64_t> secs =
+        duration ? stdx::make_optional(duration->count() / 1000)
+                 : stdx::nullopt;
+    storage_->set_track_column<stdx::optional<int64_t> >(id(), "length", secs);
+
+    if (secs)
+    {
+        // Set metadata duration_mm_ss as "MM:SS"
+        std::ostringstream oss;
+        oss << std::setw(2) << std::setfill('0');
+        oss << (*secs / 60);
+        oss << ":";
+        oss << (*secs % 60);
+        auto str = oss.str();
+        storage_->set_meta_data(
+            id(), metadata_str_type::duration_mm_ss, std::string{str});
+    }
+    else
+    {
+        storage_->set_meta_data(
+            id(), metadata_str_type::duration_mm_ss, stdx::nullopt);
+    }
+
+    trans.commit();
+}
+
 std::string engine_track_impl::file_extension()
 {
     auto rel_path = relative_path();
-    return djinterop::util::get_file_extension(rel_path).value_or(std::string{});
+    return djinterop::util::get_file_extension(rel_path).value_or(
+        std::string{});
 }
 
 std::string engine_track_impl::filename()
@@ -817,13 +716,13 @@ void engine_track_impl::set_genre(stdx::optional<std::string> genre)
     storage_->set_meta_data(id(), metadata_str_type::genre, genre);
 }
 
-stdx::optional<hot_cue> engine_track_impl::hot_cue_at(int32_t index)
+stdx::optional<hot_cue> engine_track_impl::hot_cue_at(int index)
 {
     auto quick_cues_d = get_quick_cues_data();
     return std::move(quick_cues_d.hot_cues[index]);
 }
 
-void engine_track_impl::set_hot_cue_at(int32_t index, stdx::optional<hot_cue> cue)
+void engine_track_impl::set_hot_cue_at(int index, stdx::optional<hot_cue> cue)
 {
     djinterop::util::sqlite_transaction trans{storage_->db};
     auto quick_cues_d = get_quick_cues_data();
@@ -832,70 +731,42 @@ void engine_track_impl::set_hot_cue_at(int32_t index, stdx::optional<hot_cue> cu
     trans.commit();
 }
 
-std::array<stdx::optional<hot_cue>, 8> engine_track_impl::hot_cues()
+std::vector<stdx::optional<hot_cue> > engine_track_impl::hot_cues()
 {
     auto quick_cues_d = get_quick_cues_data();
     return std::move(quick_cues_d.hot_cues);
 }
 
-void engine_track_impl::set_hot_cues(std::array<stdx::optional<hot_cue>, 8> cues)
+void engine_track_impl::set_hot_cues(std::vector<stdx::optional<hot_cue> > cues)
 {
     djinterop::util::sqlite_transaction trans{storage_->db};
     // TODO (haslersn): The following can be optimized because in this case we
     // overwrite all hot_cues
     auto quick_cues_d = get_quick_cues_data();
     quick_cues_d.hot_cues = std::move(cues);
+    if (quick_cues_d.hot_cues.size() < 8)
+        quick_cues_d.hot_cues.resize(8);
+
     set_quick_cues_data(std::move(quick_cues_d));
     trans.commit();
-}
-
-stdx::optional<track_import_info> engine_track_impl::import_info()
-{
-    if (storage_->get_track_column<int64_t>(id(), "isExternalTrack") == 0)
-    {
-        return stdx::nullopt;
-    }
-    return track_import_info{
-        storage_->get_track_column<std::string>(id(), "uuidOfExternalDatabase"),
-        storage_->get_track_column<int64_t>(id(), "idTrackInExternalDatabase")};
-    // TODO (haslersn): How should we handle cells that unexpectedly don't
-    // contain integral values?
-}
-
-void engine_track_impl::set_import_info(
-    const stdx::optional<track_import_info>& import_info)
-{
-    if (import_info)
-    {
-        storage_->set_track_column(id(), "isExternalTrack", 1);
-        storage_->set_track_column(
-            id(), "uuidOfExternalDatabase", import_info->external_db_uuid);
-        storage_->set_track_column(
-            id(), "idTrackInExternalDatabase", import_info->external_track_id);
-    }
-    else
-    {
-        storage_->set_track_column(id(), "isExternalTrack", 0);
-        storage_->set_track_column(id(), "uuidOfExternalDatabase", nullptr);
-        storage_->set_track_column(id(), "idTrackInExternalDatabase", nullptr);
-    }
 }
 
 bool engine_track_impl::is_valid()
 {
     bool valid = false;
     storage_->db << "SELECT COUNT(*) FROM Track WHERE id = ?" << id() >>
-        [&](int count) {
-            if (count == 1)
-            {
-                valid = true;
-            }
-            else if (count > 1)
-            {
-                throw track_database_inconsistency{
-                    "More than one track with the same ID", id()};
-            }
-        };
+        [&](int count)
+    {
+        if (count == 1)
+        {
+            valid = true;
+        }
+        else if (count > 1)
+        {
+            throw track_database_inconsistency{
+                "More than one track with the same ID", id()};
+        }
+    };
     return valid;
 }
 
@@ -928,57 +799,6 @@ void engine_track_impl::set_key(stdx::optional<musical_key> key)
     trans.commit();
 }
 
-stdx::optional<system_clock::time_point> engine_track_impl::last_accessed_at()
-
-{
-    // TODO (haslersn): Is there a difference between
-    // `el_track_impl::last_accessed_at()` and
-    // `el_track_impl::last_played_at()`, except for the ceiling of the
-    // timestamp?
-    return djinterop::util::to_time_point(storage_->get_meta_data_integer(
-        id(), metadata_int_type::last_accessed_ts));
-}
-
-void engine_track_impl::set_last_accessed_at(
-    stdx::optional<system_clock::time_point> accessed_at)
-{
-    if (accessed_at)
-    {
-        // Field is always ceiled to the midnight at the end of the day the
-        // track is played, it seems.
-        // TODO (haslersn): ^ Why "played" and not "accessed"?
-        // TODO (haslersn): Shouldn't we just set the unceiled time? This would
-        // leave the decision whether to ceil it to the library user. Also, it
-        // would make `el_track_impl::last_accessed_at()` consistent with the
-        // value that has been set using this method.
-        auto timestamp = *djinterop::util::to_timestamp(accessed_at);
-        auto secs_per_day = 86400;
-        timestamp += secs_per_day - 1;
-        timestamp -= timestamp % secs_per_day;
-        storage_->set_meta_data_integer(
-            id(), metadata_int_type::last_accessed_ts, timestamp);
-    }
-    else
-    {
-        storage_->set_meta_data_integer(
-            id(), metadata_int_type::last_accessed_ts, stdx::nullopt);
-    }
-}
-
-stdx::optional<system_clock::time_point> engine_track_impl::last_modified_at()
-{
-    return djinterop::util::to_time_point(storage_->get_meta_data_integer(
-        id(), metadata_int_type::last_modified_ts));
-}
-
-void engine_track_impl::set_last_modified_at(
-    stdx::optional<system_clock::time_point> modified_at)
-{
-    storage_->set_meta_data_integer(
-        id(), metadata_int_type::last_modified_ts,
-        djinterop::util::to_timestamp(modified_at));
-}
-
 stdx::optional<system_clock::time_point> engine_track_impl::last_played_at()
 {
     return djinterop::util::to_time_point(storage_->get_meta_data_integer(
@@ -1006,13 +826,13 @@ void engine_track_impl::set_last_played_at(
     }
 }
 
-stdx::optional<loop> engine_track_impl::loop_at(int32_t index)
+stdx::optional<loop> engine_track_impl::loop_at(int index)
 {
     auto loops_d = get_loops_data();
     return std::move(loops_d.loops[index]);
 }
 
-void engine_track_impl::set_loop_at(int32_t index, stdx::optional<loop> l)
+void engine_track_impl::set_loop_at(int index, stdx::optional<loop> l)
 {
     djinterop::util::sqlite_transaction trans{storage_->db};
     auto loops_d = get_loops_data();
@@ -1021,25 +841,38 @@ void engine_track_impl::set_loop_at(int32_t index, stdx::optional<loop> l)
     trans.commit();
 }
 
-std::array<stdx::optional<loop>, 8> engine_track_impl::loops()
+std::vector<stdx::optional<loop> > engine_track_impl::loops()
 {
     auto loops_d = get_loops_data();
     return std::move(loops_d.loops);
 }
 
-void engine_track_impl::set_loops(std::array<stdx::optional<loop>, 8> loops)
+void engine_track_impl::set_loops(std::vector<stdx::optional<loop> > loops)
 {
     djinterop::util::sqlite_transaction trans{storage_->db};
     loops_data loops_d;
     loops_d.loops = std::move(loops);
+    if (loops_d.loops.size() < 8)
+        loops_d.loops.resize(8);
+
     set_loops_data(std::move(loops_d));
     trans.commit();
 }
 
-std::vector<waveform_entry> engine_track_impl::overview_waveform()
+stdx::optional<double> engine_track_impl::main_cue()
 {
-    auto overview_waveform_d = get_overview_waveform_data();
-    return std::move(overview_waveform_d.waveform);
+    auto cue = get_quick_cues_data().adjusted_main_cue;
+    return cue != 0 ? stdx::make_optional<double>(cue) : stdx::nullopt;
+}
+
+void engine_track_impl::set_main_cue(stdx::optional<double> sample_offset)
+{
+    djinterop::util::sqlite_transaction trans{storage_->db};
+    auto quick_cues_d = get_quick_cues_data();
+    quick_cues_d.adjusted_main_cue = sample_offset.value_or(0);
+    quick_cues_d.default_main_cue = sample_offset.value_or(0);
+    set_quick_cues_data(std::move(quick_cues_d));
+    trans.commit();
 }
 
 stdx::optional<std::string> engine_track_impl::publisher()
@@ -1084,44 +917,15 @@ void engine_track_impl::set_relative_path(std::string relative_path)
     storage_->set_meta_data(id(), metadata_str_type::file_extension, extension);
 }
 
-stdx::optional<sampling_info> engine_track_impl::sampling()
+stdx::optional<unsigned long long> engine_track_impl::sample_count()
 {
-    return get_track_data().sampling;
+    return get_track_data().sample_count;
 }
 
-void engine_track_impl::set_sampling(stdx::optional<sampling_info> sampling)
+void engine_track_impl::set_sample_count(
+    stdx::optional<unsigned long long> sample_count)
 {
     djinterop::util::sqlite_transaction trans{storage_->db};
-
-    // A zero sample rate is interpreted as no sample rate.
-    if (sampling && sampling->sample_rate == 0)
-    {
-        sampling = stdx::nullopt;
-    }
-
-    stdx::optional<int64_t> secs;
-    if (sampling && sampling->sample_rate != 0)
-    {
-        secs = static_cast<int64_t>(
-            sampling->sample_count / sampling->sample_rate);
-
-        // Set metadata duration_mm_ss as "MM:SS"
-        std::ostringstream oss;
-        oss << std::setw(2) << std::setfill('0');
-        oss << (*secs / 60);
-        oss << ":";
-        oss << (*secs % 60);
-        auto str = oss.str();
-        storage_->set_meta_data(
-            id(), metadata_str_type::duration_mm_ss, std::string{str});
-    }
-    else
-    {
-        storage_->set_meta_data(
-            id(), metadata_str_type::duration_mm_ss, stdx::nullopt);
-    }
-    storage_->set_track_column(id(), "length", secs);
-    storage_->set_track_column(id(), "lengthCalculated", secs);
 
     // read old data
     auto track_d = get_track_data();
@@ -1129,23 +933,75 @@ void engine_track_impl::set_sampling(stdx::optional<sampling_info> sampling)
     auto high_res_waveform_d = get_high_res_waveform_data();
     auto overview_waveform_d = get_overview_waveform_data();
 
+    stdx::optional<int64_t> secs;
+    if (sample_count && track_d.sample_rate && *track_d.sample_rate != 0)
+    {
+        secs = *sample_count / static_cast<int64_t>(*track_d.sample_rate);
+    }
+    storage_->set_track_column(id(), "lengthCalculated", secs);
+
+    auto sample_count_or_zero = sample_count.value_or(0);
+    auto sample_rate_or_zero = track_d.sample_rate.value_or(0);
+
     // write new data
-    track_d.sampling = sampling;
-    beat_d.sampling = sampling;
+    track_d.sample_count = sample_count;
+    beat_d.sample_count = sample_count;
     set_beat_data(std::move(beat_d));
     set_track_data(std::move(track_d));
 
-    int64_t sample_rate = sampling ? sampling->sample_rate : 0;
-    int64_t sample_count = sampling ? sampling->sample_count : 0;
+    if (!overview_waveform_d.waveform.empty())
+    {
+        // The overview waveform has a varying number of samples per entry, as
+        // the number of entries is always fixed.
+        auto extents = util::calculate_overview_waveform_extents(
+            sample_count_or_zero, sample_rate_or_zero);
+        overview_waveform_d.samples_per_entry = extents.samples_per_entry;
+        set_overview_waveform_data(std::move(overview_waveform_d));
+    }
+
+    trans.commit();
+}
+
+stdx::optional<double> engine_track_impl::sample_rate()
+{
+    return get_track_data().sample_rate;
+}
+
+void engine_track_impl::set_sample_rate(stdx::optional<double> sample_rate)
+{
+    djinterop::util::sqlite_transaction trans{storage_->db};
+
+    // read old data
+    auto track_d = get_track_data();
+    auto beat_d = get_beat_data();
+    auto high_res_waveform_d = get_high_res_waveform_data();
+    auto overview_waveform_d = get_overview_waveform_data();
+
+    stdx::optional<int64_t> secs;
+    if (track_d.sample_count && sample_rate && *sample_rate != 0)
+    {
+        secs = *track_d.sample_count / static_cast<int64_t>(*sample_rate);
+    }
+    storage_->set_track_column(id(), "lengthCalculated", secs);
+
+    auto sample_count_or_zero = track_d.sample_count.value_or(0);
+    auto sample_rate_or_zero = sample_rate.value_or(0);
+
+    // write new data
+    track_d.sample_rate = sample_rate;
+    beat_d.sample_rate = sample_rate;
+    set_beat_data(std::move(beat_d));
+    set_track_data(std::move(track_d));
 
     if (!high_res_waveform_d.waveform.empty())
     {
         // The high-resolution waveform has a required number of samples per
         // entry that is dependent on the sample rate.  If the sample rate is
         // genuinely changed using this method, note that the waveform is likely
-        // to need to be updated as well afterwards.
-        high_res_waveform_d.samples_per_entry =
-            util::waveform_quantisation_number(sample_rate);
+        // to need to be updated as well.
+        auto extents = util::calculate_high_resolution_waveform_extents(
+            sample_count_or_zero, sample_rate_or_zero);
+        high_res_waveform_d.samples_per_entry = extents.samples_per_entry;
         set_high_res_waveform_data(std::move(high_res_waveform_d));
     }
 
@@ -1153,9 +1009,9 @@ void engine_track_impl::set_sampling(stdx::optional<sampling_info> sampling)
     {
         // The overview waveform has a varying number of samples per entry, as
         // the number of entries is always fixed.
-        overview_waveform_d.samples_per_entry =
-            calculate_overview_waveform_samples_per_entry(
-                sample_rate, sample_count);
+        auto extents = util::calculate_overview_waveform_extents(
+            sample_count_or_zero, sample_rate_or_zero);
+        overview_waveform_d.samples_per_entry = extents.samples_per_entry;
         set_overview_waveform_data(std::move(overview_waveform_d));
     }
 
@@ -1198,26 +1054,31 @@ void engine_track_impl::set_waveform(std::vector<waveform_entry> waveform)
 
     if (!waveform.empty())
     {
-        auto smp = sampling();
-        int64_t sample_count = smp ? smp->sample_count : 0;
-        int64_t sample_rate = smp ? smp->sample_rate : 0;
+        auto track_data = get_track_data();
+        auto sample_count = track_data.sample_count.value_or(0);
+        auto sample_rate = track_data.sample_rate.value_or(0);
 
         // Calculate an overview waveform automatically.
         // Note that the overview waveform always has 1024 entries in it.
+        auto overview_extents = util::calculate_overview_waveform_extents(
+            sample_count, sample_rate);
         overview_waveform_d.samples_per_entry =
-            calculate_overview_waveform_samples_per_entry(
-                sample_rate, sample_count);
-        overview_waveform_d.waveform.reserve(1024);
-        for (int32_t i = 0; i < 1024; ++i)
+            overview_extents.samples_per_entry;
+        overview_waveform_d.waveform.reserve(overview_extents.size);
+        for (int32_t i = 0; i < overview_extents.size; ++i)
         {
-            auto entry = waveform[waveform.size() * (2 * i + 1) / 2048];
+            auto entry = waveform
+                [waveform.size() * (2 * i + 1) / (2 * overview_extents.size)];
             overview_waveform_d.waveform.push_back(entry);
         }
 
         // Make the assumption that the client has respected the required number
         // of samples per entry when constructing the waveform.
+        auto high_res_extents =
+            util::calculate_high_resolution_waveform_extents(
+                sample_count, sample_rate);
         high_res_waveform_d.samples_per_entry =
-            util::waveform_quantisation_number(sample_rate);
+            high_res_extents.samples_per_entry;
         high_res_waveform_d.waveform = std::move(waveform);
     }
 
@@ -1227,12 +1088,12 @@ void engine_track_impl::set_waveform(std::vector<waveform_entry> waveform)
     trans.commit();
 }
 
-stdx::optional<int32_t> engine_track_impl::year()
+stdx::optional<int> engine_track_impl::year()
 {
-    return storage_->get_track_column<stdx::optional<int32_t> >(id(), "year");
+    return storage_->get_track_column<stdx::optional<int> >(id(), "year");
 }
 
-void engine_track_impl::set_year(stdx::optional<int32_t> year)
+void engine_track_impl::set_year(stdx::optional<int> year)
 {
     storage_->set_track_column(id(), "year", year);
 }
@@ -1240,22 +1101,17 @@ void engine_track_impl::set_year(stdx::optional<int32_t> year)
 track create_track(
     std::shared_ptr<engine_storage> storage, const track_snapshot& snapshot)
 {
-    if (snapshot.id)
-    {
-        throw invalid_track_snapshot{
-            "Snapshot already pertains to a persisted track, and so it cannot "
-            "be created again"};
-    }
-    else if (!snapshot.relative_path)
+    if (!snapshot.relative_path)
     {
         throw invalid_track_snapshot{
             "Snapshot does not contain a populated `relative_path` field, "
             "which is required to create a track"};
     }
 
-    auto length_fields = to_length_fields(snapshot.duration, snapshot.sampling);
-    auto bpm_fields = to_bpm_fields(
-        snapshot.bpm, snapshot.sampling, snapshot.adjusted_beatgrid);
+    auto length_fields = to_length_fields(
+        snapshot.duration, snapshot.sample_count, snapshot.sample_rate);
+    auto bpm_fields =
+        to_bpm_fields(snapshot.bpm, snapshot.sample_rate, snapshot.beatgrid);
     auto filename = djinterop::util::get_filename(*snapshot.relative_path);
     auto extension = djinterop::util::get_file_extension(filename);
     auto track_number =
@@ -1265,9 +1121,7 @@ track create_track(
     auto year = snapshot.year
                     ? stdx::make_optional(static_cast<int64_t>(*snapshot.year))
                     : stdx::nullopt;
-    auto timestamp_fields = to_timestamp_fields(
-        snapshot.last_played_at, snapshot.last_modified_at,
-        snapshot.last_accessed_at);
+    auto timestamp_fields = to_timestamp_fields(snapshot.last_played_at);
     auto key_num = to_key_num(snapshot.key);
     auto clamped_rating = snapshot.rating
                               ? stdx::make_optional(static_cast<int64_t>(
@@ -1275,17 +1129,15 @@ track create_track(
                               : stdx::nullopt;
     stdx::optional<int64_t> last_play_hash;
     auto track_data = to_track_data(
-        snapshot.sampling, snapshot.average_loudness, snapshot.key);
-    auto overview_waveform_data =
-        to_overview_waveform_data(snapshot.sampling, snapshot.waveform);
-    auto high_res_waveform_data =
-        to_high_res_waveform_data(snapshot.sampling, snapshot.waveform);
+        snapshot.sample_count, snapshot.sample_rate, snapshot.average_loudness,
+        snapshot.key);
+    auto overview_waveform_data = to_overview_waveform_data(
+        snapshot.sample_count, snapshot.sample_rate, snapshot.waveform);
+    auto high_res_waveform_data = to_high_res_waveform_data(
+        snapshot.sample_count, snapshot.sample_rate, snapshot.waveform);
     auto beat_data = to_beat_data(
-        snapshot.sampling, snapshot.default_beatgrid,
-        snapshot.adjusted_beatgrid);
-    auto cues_data = to_cues_data(
-        snapshot.hot_cues, snapshot.adjusted_main_cue,
-        snapshot.default_main_cue);
+        snapshot.sample_count, snapshot.sample_rate, snapshot.beatgrid);
+    auto cues_data = to_cues_data(snapshot.hot_cues, snapshot.main_cue);
     auto loops_data = to_loops_data(snapshot.loops);
 
     djinterop::util::sqlite_transaction trans{storage->db};
@@ -1313,15 +1165,12 @@ track create_track(
         timestamp_fields.last_accessed_at_ts, last_play_hash);
 
     // Set performance data, if any.
-    auto any_hot_cues = std::any_of(
-        snapshot.hot_cues.begin(), snapshot.hot_cues.end(),
-        [](auto hc) { return hc; });
-    auto any_loops = std::any_of(
-        snapshot.loops.begin(), snapshot.loops.end(), [](auto l) { return l; });
-    auto has_perf_data = snapshot.sampling || snapshot.average_loudness ||
-                         !snapshot.adjusted_beatgrid.empty() ||
-                         !snapshot.default_beatgrid.empty() || any_hot_cues ||
-                         any_loops;
+    // Note that empty sets of hot cues or loops are written as 8 empty entries,
+    // so performance data is in fact always written.
+    auto has_perf_data =
+        snapshot.sample_count || snapshot.sample_rate ||
+        snapshot.average_loudness || !snapshot.beatgrid.empty() ||
+        !cues_data.hot_cues.empty() || !loops_data.loops.empty();
     auto is_analysed = 1;
     if (has_perf_data)
     {

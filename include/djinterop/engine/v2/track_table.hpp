@@ -59,7 +59,7 @@ constexpr const int64_t TRACK_ROW_ID_NONE = 0;
 
 /// Special value for the `album_art_id` track table column that indicates that
 /// no album art is present for a given track.
-constexpr const int64_t ALBUM_ART_ID_NONE = 0;
+constexpr const int64_t ALBUM_ART_ID_NONE = 1;
 
 /// Special value for the `rating` track table column that indicates that no
 /// rating is present for a given track.
@@ -165,12 +165,13 @@ struct DJINTEROP_PUBLIC track_row
     /// `isAnalyzed` column, indicating whether the track has been analysed.
     bool is_analyzed;
 
-    /// `dateCreated` column.
-    stdx::optional<std::chrono::system_clock::time_point> date_created;
+    /// `dateCreated` column, representing the time at which the file underlying
+    /// this track was created.
+    std::chrono::system_clock::time_point date_created;
 
     /// `dateAdded` column, representing the time at which the track was added
     /// to the database.
-    stdx::optional<std::chrono::system_clock::time_point> date_added;
+    std::chrono::system_clock::time_point date_added;
 
     /// `isAvailable` column, indicating if the file underpinning the track
     /// entry is available.

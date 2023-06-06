@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <array>
 #include <cstdint>
 #include <vector>
 
@@ -32,7 +31,8 @@ namespace engine::v1
 {
 struct beat_data
 {
-    stdx::optional<sampling_info> sampling;
+    stdx::optional<double> sample_rate;
+    stdx::optional<double> sample_count;
     std::vector<beatgrid_marker> default_beatgrid;
     std::vector<beatgrid_marker> adjusted_beatgrid;
 
@@ -41,7 +41,8 @@ struct beat_data
     friend bool operator==(
         const beat_data& first, const beat_data& second) noexcept
     {
-        return first.sampling == second.sampling &&
+        return first.sample_rate == second.sample_rate &&
+               first.sample_count == second.sample_count &&
                first.default_beatgrid == second.default_beatgrid &&
                first.adjusted_beatgrid == second.adjusted_beatgrid;
     }
@@ -72,7 +73,7 @@ struct high_res_waveform_data
 
 struct loops_data
 {
-    std::array<stdx::optional<loop>, 8> loops;  // Don't use curly braces here!
+    std::vector<stdx::optional<loop> > loops;
 
     loops_data() noexcept = default;
 
@@ -109,7 +110,7 @@ struct overview_waveform_data
 
 struct quick_cues_data
 {
-    std::array<stdx::optional<hot_cue>, 8> hot_cues;
+    std::vector<stdx::optional<hot_cue> > hot_cues;
     double adjusted_main_cue = 0;
     double default_main_cue = 0;
 
@@ -129,7 +130,8 @@ struct quick_cues_data
 
 struct track_data
 {
-    stdx::optional<sampling_info> sampling;
+    stdx::optional<double> sample_rate;
+    stdx::optional<int64_t> sample_count;
     stdx::optional<double> average_loudness;  // range (0, 1]
     stdx::optional<musical_key> key;
 
@@ -138,7 +140,8 @@ struct track_data
     friend bool operator==(
         const track_data& first, const track_data& second) noexcept
     {
-        return first.sampling == second.sampling &&
+        return first.sample_rate == second.sample_rate &&
+               first.sample_count == second.sample_count &&
                first.average_loudness == second.average_loudness &&
                first.key == second.key;
     }

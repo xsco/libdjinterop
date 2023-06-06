@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.18.0
+        VERSION 0.19.0
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
@@ -267,7 +267,6 @@ if (Boost_FOUND)
     endfunction()
 
     add_djinterop_test("" semantic_version_test)
-    add_djinterop_test("" track_snapshot_test)
     add_djinterop_test(engine/ crate_test)
     add_djinterop_test(engine/ database_reference_test)
     add_djinterop_test(engine/ database_test)

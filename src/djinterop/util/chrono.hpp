@@ -25,8 +25,10 @@
 
 namespace djinterop::util
 {
+std::chrono::system_clock::time_point parse_ft(const std::string& str);
 std::chrono::system_clock::time_point parse_iso8601(const std::string& str);
 std::string to_iso8601(const std::chrono::system_clock::time_point& time);
+std::string to_ft(const std::chrono::system_clock::time_point& time);
 
 inline std::chrono::system_clock::time_point to_time_point(int64_t timestamp)
 {

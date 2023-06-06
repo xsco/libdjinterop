@@ -155,7 +155,8 @@ database create_temporary_database(const engine_version& version)
 }
 
 database create_database_from_scripts(
-    const std::string& db_directory, const std::string& script_directory)
+    const std::string& db_directory, const std::string& script_directory,
+    engine_version& loaded_version)
 {
     if (!djinterop::util::path_exists(db_directory))
     {
@@ -194,16 +195,17 @@ database create_database_from_scripts(
         hydrate_database(v2_m_db_path, v2_m_db_sql_path);
     }
 
-    return load_database(db_directory);
+    return load_database(db_directory, loaded_version);
 }
 
 database create_or_load_database(
-    const std::string& directory, const engine_version& version, bool& created)
+    const std::string& directory, const engine_version& version, bool& created,
+    engine_version& loaded_version)
 {
     try
     {
         created = false;
-        return load_database(directory);
+        return load_database(directory, loaded_version);
     }
     catch (database_not_found& e)
     {
@@ -226,17 +228,19 @@ bool database_exists(const std::string& directory)
     return true;
 }
 
-database load_database(const std::string& directory)
+database load_database(
+    const std::string& directory, engine_version& loaded_version)
 {
-    auto version = detect_version(directory);
-    if (version.version.maj >= 2)
+    loaded_version = detect_version(directory);
+    if (loaded_version.version.maj >= 2)
     {
         // TODO (mr-smidge): inefficient as ctor reads the version again.
         auto library = v2::engine_library{directory};
         return library.database();
     }
 
-    auto storage = std::make_shared<v1::engine_storage>(directory, version);
+    auto storage =
+        std::make_shared<v1::engine_storage>(directory, loaded_version);
     return database{std::make_shared<v1::engine_database_impl>(storage)};
 }
 
@@ -298,9 +302,17 @@ std::vector<beatgrid_marker> normalize_beatgrid(
     return beatgrid;  // Named RVO
 }
 
-int64_t required_waveform_samples_per_entry(double sample_rate)
+waveform_extents calculate_high_resolution_waveform_extents(
+    unsigned long long sample_count, double sample_rate)
 {
-    return util::required_waveform_samples_per_entry(sample_rate);
+    return util::calculate_high_resolution_waveform_extents(
+        sample_count, sample_rate);
+}
+
+waveform_extents calculate_overview_waveform_extents(
+    unsigned long long sample_count, double sample_rate)
+{
+    return util::calculate_overview_waveform_extents(sample_count, sample_rate);
 }
 
 }  // namespace djinterop::engine

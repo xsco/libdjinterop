@@ -33,6 +33,7 @@
 #include <djinterop/engine/engine_version.hpp>
 #include <djinterop/exceptions.hpp>
 #include <djinterop/pad_color.hpp>
+#include <djinterop/performance_data.hpp>
 
 namespace djinterop
 {
@@ -43,13 +44,13 @@ namespace engine
 {
 /// Engine DJ OS 1.0.0.
 constexpr const engine_version os_1_0_0{
-    semantic_version{1, 0, 0}, engine_database_type::os,
-    "Engine DJ OS 1.0.0", semantic_version{1, 6, 0}};
+    semantic_version{1, 0, 0}, engine_database_type::os, "Engine DJ OS 1.0.0",
+    semantic_version{1, 6, 0}};
 
 /// Engine DJ OS 1.0.3.
 constexpr const engine_version os_1_0_3{
-    semantic_version{1, 0, 3}, engine_database_type::os,
-    "Engine DJ OS 1.0.3", semantic_version{1, 7, 1}};
+    semantic_version{1, 0, 3}, engine_database_type::os, "Engine DJ OS 1.0.3",
+    semantic_version{1, 7, 1}};
 
 /// Engine Prime 1.1.1.
 constexpr const engine_version desktop_1_1_1{
@@ -58,13 +59,13 @@ constexpr const engine_version desktop_1_1_1{
 
 /// Engine DJ OS 1.2.0.
 constexpr const engine_version os_1_2_0{
-    semantic_version{1, 2, 0}, engine_database_type::os,
-    "Engine DJ OS 1.2.0", semantic_version{1, 11, 1}};
+    semantic_version{1, 2, 0}, engine_database_type::os, "Engine DJ OS 1.2.0",
+    semantic_version{1, 11, 1}};
 
 /// Engine DJ OS 1.2.2.
 constexpr const engine_version os_1_2_2{
-    semantic_version{1, 2, 2}, engine_database_type::os,
-    "Engine DJ OS 1.2.2", semantic_version{1, 13, 0}};
+    semantic_version{1, 2, 2}, engine_database_type::os, "Engine DJ OS 1.2.2",
+    semantic_version{1, 13, 0}};
 
 /// Engine Prime 1.2.2.
 constexpr const engine_version desktop_1_2_2{
@@ -73,13 +74,13 @@ constexpr const engine_version desktop_1_2_2{
 
 /// Engine DJ OS 1.3.1.
 constexpr const engine_version os_1_3_1{
-    semantic_version{1, 3, 1}, engine_database_type::os,
-    "Engine DJ OS 1.3.1", semantic_version{1, 13, 2}};
+    semantic_version{1, 3, 1}, engine_database_type::os, "Engine DJ OS 1.3.1",
+    semantic_version{1, 13, 2}};
 
 /// Engine DJ OS 1.4.0.
 constexpr const engine_version os_1_4_0{
-    semantic_version{1, 4, 0}, engine_database_type::os,
-    "Engine DJ OS 1.4.0", semantic_version{1, 15, 0}};
+    semantic_version{1, 4, 0}, engine_database_type::os, "Engine DJ OS 1.4.0",
+    semantic_version{1, 15, 0}};
 
 /// Engine DJ OS 1.5.1/1.5.2.
 constexpr const engine_version os_1_5_1{
@@ -123,8 +124,8 @@ constexpr const engine_version desktop_2_4_0{
 
 /// Engine DJ OS 2.4.0
 constexpr const engine_version os_2_4_0{
-    semantic_version{2, 4, 0}, engine_database_type::os,
-    "Engine DJ OS 2.4.0", semantic_version{2, 20, 2}};
+    semantic_version{2, 4, 0}, engine_database_type::os, "Engine DJ OS 2.4.0",
+    semantic_version{2, 20, 2}};
 
 /// Engine DJ Desktop 3.0.0
 constexpr const engine_version desktop_3_0_0{
@@ -133,8 +134,8 @@ constexpr const engine_version desktop_3_0_0{
 
 /// Engine DJ OS 3.0.0
 constexpr const engine_version os_3_0_0{
-    semantic_version{3, 0, 0}, engine_database_type::os,
-    "Engine DJ OS 3.0.0", semantic_version{2, 20, 3}};
+    semantic_version{3, 0, 0}, engine_database_type::os, "Engine DJ OS 3.0.0",
+    semantic_version{2, 20, 3}};
 
 /// Set of available versions.
 constexpr const std::array<engine_version, 19> all_versions{
@@ -209,15 +210,14 @@ public:
 /// a database already exists in the target directory, an exception will be
 /// thrown.
 database DJINTEROP_PUBLIC create_database(
-    const std::string& directory,
-    const engine_version& version = latest);
+    const std::string& directory, const engine_version& version = latest);
 
 /// Creates a new temporary database.
 ///
 /// Any changes made to the database will not be persisted anywhere, and will
 /// be lost upon destruction of the returned variable.
-database DJINTEROP_PUBLIC create_temporary_database(
-    const engine_version& version = latest);
+database DJINTEROP_PUBLIC
+create_temporary_database(const engine_version& version = latest);
 
 /// Creates a new database from a set of SQL scripts.
 ///
@@ -225,24 +225,89 @@ database DJINTEROP_PUBLIC create_temporary_database(
 /// of the form "<dbname>.db.sql", which will be read and used to hydrate
 /// SQLite databases with the name "<dbname>.db".  These hydrated SQLite
 /// databases are then loaded into the returned `database` object.
+///
+/// \param db_directory Directory in which to create database.
+/// \param script_directory Directory containing scripts.
+/// \param loaded_version Output reference parameter indicating the version of
+///                       the created database.
+/// \return Returns the created database.
 database DJINTEROP_PUBLIC create_database_from_scripts(
-    const std::string& db_directory, const std::string& script_directory);
+    const std::string& db_directory, const std::string& script_directory,
+    engine_version& loaded_version);
+
+/// Creates a new database from a set of SQL scripts.
+///
+/// The directory indicated by `script_directory` is expected to contain files
+/// of the form "<dbname>.db.sql", which will be read and used to hydrate
+/// SQLite databases with the name "<dbname>.db".  These hydrated SQLite
+/// databases are then loaded into the returned `database` object.
+///
+/// \param db_directory Directory in which to create database.
+/// \param script_directory Directory containing scripts.
+/// \return Returns the created database.
+inline database DJINTEROP_PUBLIC create_database_from_scripts(
+    const std::string& db_directory, const std::string& script_directory)
+{
+    engine_version unused{};
+    return create_database_from_scripts(db_directory, script_directory, unused);
+}
 
 /// Create or load an Engine Library database in a given directory.
 ///
 /// If a database already exists in the directory, it will be loaded.  If not,
-/// it will be created at the specified schema version.  In both cases, the
-/// database is returned.  The boolean reference parameter `created` can be used
-/// to determine whether the database was created or merely loaded.
+/// it will be created at the specified schema version.
+///
+/// \param directory Directory to create or load in.
+/// \param version Version to create, if the database does not already exist.
+/// \param created Output reference parameter indicating whether a new database
+///                was created or not.
+/// \param loaded_version Output reference parameter indicating the version of
+///                       any existing database that was loaded.  The value is
+///                       not defined if a new database was created.
+/// \return Returns the created or loaded database.
 database DJINTEROP_PUBLIC create_or_load_database(
-    const std::string& directory, const engine_version& version, bool& created);
+    const std::string& directory, const engine_version& version, bool& created,
+    engine_version& loaded_version);
+
+/// Create or load an Engine Library database in a given directory.
+///
+/// If a database already exists in the directory, it will be loaded.  If not,
+/// it will be created at the specified schema version.
+///
+/// \param directory Directory to create or load in.
+/// \param version Version to create, if the database does not already exist.
+/// \param created Output reference parameter indicating whether a new database
+///                was created or not.
+/// \return Returns the created or loaded database.
+inline database DJINTEROP_PUBLIC create_or_load_database(
+    const std::string& directory, const engine_version& version, bool& created)
+{
+    engine_version unused{};
+    return create_or_load_database(directory, version, created, unused);
+}
 
 /// Returns a boolean indicating whether an Engine Library already exists in a
 /// given directory.
 bool DJINTEROP_PUBLIC database_exists(const std::string& directory);
 
 /// Loads an Engine Library database from a given directory.
-database DJINTEROP_PUBLIC load_database(const std::string& directory);
+///
+/// \param directory Directory to load from.
+/// \param loaded_version Output reference parameter indicating the version of
+///                       the loaded database.
+/// \return Returns the loaded database.
+database DJINTEROP_PUBLIC
+load_database(const std::string& directory, engine_version& loaded_version);
+
+/// Loads an Engine Library database from a given directory.
+///
+/// \param directory Directory to load from.
+/// \return Returns the loaded database.
+inline database DJINTEROP_PUBLIC load_database(const std::string& directory)
+{
+    engine_version unused{};
+    return load_database(directory, unused);
+}
 
 /// Normalizes a beat-grid, so that the beat indexes are in the form normally
 /// expected by Engine Prime.
@@ -255,16 +320,55 @@ database DJINTEROP_PUBLIC load_database(const std::string& directory);
 std::vector<beatgrid_marker> DJINTEROP_PUBLIC
 normalize_beatgrid(std::vector<beatgrid_marker> beatgrid, int64_t sample_count);
 
-/// Calculate the required number of samples per waveform entry expected by
+/// Calculate the recommended extents for an overview waveform expected by
 /// Engine Prime.
 ///
 /// The waveform for a track is provided merely as a set of waveform points,
 /// and so the scale of it is only meaningful when a relationship between
 /// the waveform and the samples it represents is known.  This function
-/// provides the required number of samples per waveform entry that should
-/// be understood when constructing or reading waveforms in Engine Prime format.
-int64_t DJINTEROP_PUBLIC
-required_waveform_samples_per_entry(double sample_rate);
+/// provides the recommended size and number of samples per waveform entry that
+/// should be understood when constructing or reading overview waveforms in
+/// Engine Prime format.
+///
+/// Note that Engine v2 allows the user only to specify an overview waveform:
+/// the high-resolution waveform is derived on-the-fly from the audio for v2
+/// firmware/software.
+///
+/// \param sample_count Sample count.
+/// \param sample_rate Sample rate.
+/// \return Returns the calculated waveform extents.
+waveform_extents DJINTEROP_PUBLIC calculate_overview_waveform_extents(
+    unsigned long long sample_count, double sample_rate);
+
+/// Calculate the recommended extents for a high resolution waveform expected
+/// by Engine Prime.
+///
+/// The waveform for a track is provided merely as a set of waveform points,
+/// and so the scale of it is only meaningful when a relationship between
+/// the waveform and the samples it represents is known.  This function
+/// provides the recommended size and number of samples per waveform entry that
+/// should be understood when constructing or reading waveforms in Engine Prime
+/// format.
+///
+/// Note that only Engine v1 allows the user to specify their own
+/// high-resolution waveform for the audio.  Later versions only allow the user
+/// to specify an overview waveform (with the high-resolution waveform being
+/// derived on-the-fly from the audio for v2 firmware/software).
+///
+/// Note further that, when rendering the high-resolution waveform, each
+/// individual band is scaled so that the largest value across the entire
+/// waveform hits the top of the display.  Note also that the mid frequency is
+/// always drawn over the low, and the high frequency is always drawn over the
+/// low and mid, meaning that very loud high-frequency sounds will hide any low
+/// or mid activity on the waveform rendering.  A further note is that when the
+/// opacity is set to zero, this appears to translate into roughly 50% opacity
+/// on a real rendering.
+///
+/// \param sample_count Sample count.
+/// \param sample_rate Sample rate.
+/// \return Returns the calculated waveform extents.
+waveform_extents DJINTEROP_PUBLIC calculate_high_resolution_waveform_extents(
+    unsigned long long sample_count, double sample_rate);
 
 }  // namespace engine
 }  // namespace djinterop

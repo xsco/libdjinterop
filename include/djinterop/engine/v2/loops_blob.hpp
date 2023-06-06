@@ -33,6 +33,9 @@
 
 namespace djinterop::engine::v2
 {
+/// Maximum number of supported loops.
+constexpr const size_t MAX_LOOPS = 8;
+
 /// Represents a loop within the loops blob.
 struct DJINTEROP_PUBLIC loop_blob
 {

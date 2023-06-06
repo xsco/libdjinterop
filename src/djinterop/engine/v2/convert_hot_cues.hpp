@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <array>
 #include <chrono>
 #include <cstdint>
 #include <vector>
@@ -40,14 +39,13 @@ inline stdx::optional<djinterop::hot_cue> hot_cue(
                      quick_cue.color});
 }
 
-inline std::array<stdx::optional<djinterop::hot_cue>, 8> hot_cues(
+inline std::vector<stdx::optional<djinterop::hot_cue> > hot_cues(
     const quick_cues_blob& quick_cues)
 {
-    std::array<stdx::optional<djinterop::hot_cue>, 8> converted;
-    for (auto i = 0; i < quick_cues.quick_cues.size() && i < 8; ++i)
-    {
-        converted[i] = hot_cue(quick_cues.quick_cues[i]);
-    }
+    std::vector<stdx::optional<djinterop::hot_cue> > converted;
+    converted.reserve(quick_cues.quick_cues.size());
+    for (auto&& c : quick_cues.quick_cues)
+        converted.push_back(hot_cue(c));
 
     return converted;
 }
@@ -70,13 +68,22 @@ inline quick_cue_blob hot_cue(const stdx::optional<hot_cue>& hot_cue)
 }
 
 inline std::vector<quick_cue_blob> hot_cues(
-    const std::array<stdx::optional<djinterop::hot_cue>, 8>& cues)
+    const std::vector<stdx::optional<djinterop::hot_cue> >& cues)
 {
+    if (cues.size() > MAX_QUICK_CUES)
+        throw djinterop::hot_cues_overflow{
+            "Number of hot cues to write exceeds maximum"};
+
     std::vector<quick_cue_blob> converted;
+    converted.reserve(cues.size());
     for (auto&& cue : cues)
     {
         converted.push_back(hot_cue(cue));
     }
+
+    // Additional hot cues are written to pad to the maximum potential number.
+    while (converted.size() < MAX_QUICK_CUES)
+        converted.push_back(quick_cue_blob::empty());
 
     return converted;
 }

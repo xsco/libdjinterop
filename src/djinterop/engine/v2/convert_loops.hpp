@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <array>
 #include <chrono>
 #include <cstdint>
 
@@ -38,14 +37,13 @@ inline stdx::optional<djinterop::loop> loop(const loop_blob& l)
                : stdx::nullopt;
 }
 
-inline std::array<stdx::optional<djinterop::loop>, 8> loops(
+inline std::vector<stdx::optional<djinterop::loop> > loops(
     const loops_blob& loops)
 {
-    std::array<stdx::optional<djinterop::loop>, 8> converted;
-    for (auto i = 0; i < loops.loops.size() && i < 8; ++i)
-    {
-        converted[i] = loop(loops.loops[i]);
-    }
+    std::vector<stdx::optional<djinterop::loop> > converted;
+    converted.reserve(loops.loops.size());
+    for (auto&& l : loops.loops)
+        converted.push_back(loop(l));
 
     return converted;
 }
@@ -67,13 +65,20 @@ inline loop_blob loop(stdx::optional<djinterop::loop> loop)
 }
 
 inline loops_blob loops(
-    const std::array<stdx::optional<djinterop::loop>, 8>& loops)
+    const std::vector<stdx::optional<djinterop::loop> >& loops)
 {
+    if (loops.size() > MAX_LOOPS)
+        throw djinterop::loops_overflow{
+            "Number of loops to write exceeds maximum"};
+
     loops_blob converted;
+    converted.loops.reserve(loops.size());
     for (auto&& l : loops)
-    {
         converted.loops.push_back(loop(l));
-    }
+
+    // Additional loops are written to pad to the maximum potential number.
+    while (converted.loops.size() < MAX_LOOPS)
+        converted.loops.push_back(loop_blob::empty());
 
     return converted;
 }

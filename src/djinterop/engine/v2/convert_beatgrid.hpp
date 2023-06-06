@@ -69,7 +69,8 @@ inline beat_data_blob::beat_grid_marker_blobs_type beatgrid_markers(
         if (!converted.empty())
         {
             auto& prev = converted.back();
-            prev.number_of_beats = iter->index - prev.beat_number;
+            prev.number_of_beats =
+                static_cast<int32_t>(iter->index - prev.beat_number);
         }
 
         // Note: the `number_of_beats` field will be corrected in the next
@@ -87,18 +88,6 @@ inline converted_beatgrid_fields beatgrid(
     auto converted_beatgrid = beatgrid_markers(beatgrid);
     uint8_t is_beatgrid_set = converted_beatgrid.empty() ? 0 : 1;
     return {is_beatgrid_set, converted_beatgrid, converted_beatgrid};
-}
-
-inline converted_beatgrid_fields beatgrid(
-    const std::vector<djinterop::beatgrid_marker>& default_beatgrid,
-    const std::vector<djinterop::beatgrid_marker>& adjusted_beatgrid)
-{
-    auto converted_default_beatgrid = beatgrid_markers(default_beatgrid);
-    auto converted_adjusted_beatgrid = beatgrid_markers(adjusted_beatgrid);
-    uint8_t is_beatgrid_set = converted_adjusted_beatgrid.empty() ? 0 : 1;
-    return {
-        is_beatgrid_set, converted_default_beatgrid,
-        converted_adjusted_beatgrid};
 }
 }  // namespace write
 }  // namespace djinterop::engine::v2::convert

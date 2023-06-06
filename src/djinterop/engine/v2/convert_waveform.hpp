@@ -23,6 +23,7 @@
 #include <djinterop/engine/v2/overview_waveform_data_blob.hpp>
 #include <djinterop/optional.hpp>
 #include <djinterop/performance_data.hpp>
+#include "../track_utils.hpp"
 
 namespace djinterop::engine::v2::convert
 {
@@ -61,25 +62,39 @@ inline overview_waveform_point waveform_entry(
 
 inline overview_waveform_data_blob waveform(
     const std::vector<djinterop::waveform_entry>& w,
-    stdx::optional<sampling_info> sampling)
+    stdx::optional<unsigned long long> sample_count,
+    stdx::optional<double> sample_rate)
 {
     overview_waveform_data_blob result;
-    result.waveform_points.reserve(w.size());
+    if (w.empty())
+    {
+        result.maximum_point = overview_waveform_point{0, 0, 0};
+        return result;
+    }
 
-    result.samples_per_waveform_point =
-        (sampling && sampling->sample_count != 0)
-            ? static_cast<double>(sampling->sample_count) / w.size()
-            : 0;
+    auto extents =
+        util::calculate_overview_waveform_extents(*sample_count, *sample_rate);
+
+    result.samples_per_waveform_point = extents.samples_per_entry;
 
     uint8_t max_low = 0;
     uint8_t max_mid = 0;
     uint8_t max_high = 0;
-    for (auto&& entry : w)
+
+    // Convert waveform to required number of entries for an overview waveform.
+    if (!w.empty())
     {
-        max_low = std::max(max_low, entry.low.value);
-        max_mid = std::max(max_mid, entry.mid.value);
-        max_high = std::max(max_high, entry.high.value);
-        result.waveform_points.push_back(waveform_entry(entry));
+        result.waveform_points.reserve(extents.size);
+        for (auto i = 0; i < extents.size; ++i)
+        {
+            auto entry = w[w.size() * (2 * i + 1) / 2048];
+
+            max_low = std::max(max_low, entry.low.value);
+            max_mid = std::max(max_mid, entry.mid.value);
+            max_high = std::max(max_high, entry.high.value);
+
+            result.waveform_points.push_back(waveform_entry(entry));
+        }
     }
 
     result.maximum_point = overview_waveform_point{max_low, max_mid, max_high};

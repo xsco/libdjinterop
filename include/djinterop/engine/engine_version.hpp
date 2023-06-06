@@ -25,6 +25,7 @@
 
 #include <ostream>
 
+#include <djinterop/config.hpp>
 #include <djinterop/semantic_version.hpp>
 
 namespace djinterop::engine
@@ -41,7 +42,7 @@ enum class engine_database_type
 
 /// The `engine_version` struct represents a way to identify the version
 /// of an Engine database.
-struct engine_version
+struct DJINTEROP_PUBLIC engine_version
 {
     /// Headline version.
     semantic_version version;
@@ -54,6 +55,14 @@ struct engine_version
 
     /// Database schema version.
     semantic_version schema_version;
+
+    /// Test whether the version has a version 2 database schema.
+    ///
+    /// \return Returns `true` if the version has v2 schema, or `false` if not.
+    [[nodiscard]] bool is_v2_schema() const noexcept
+    {
+        return schema_version.maj == 2;
+    }
 };
 
 inline std::ostream& operator<<(std::ostream& os, const engine_version& v)

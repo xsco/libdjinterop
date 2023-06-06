@@ -32,6 +32,9 @@
 
 namespace djinterop::engine::v2
 {
+/// Maximum number of supported quick cues.
+constexpr const size_t MAX_QUICK_CUES = 8;
+
 /// Sentinel value for a quick cue sample offset indicating that the quick cue
 /// is not set.
 static const double QUICK_CUE_SAMPLE_OFFSET_EMPTY = -1;

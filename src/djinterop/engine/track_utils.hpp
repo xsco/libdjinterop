@@ -17,32 +17,54 @@
 
 #pragma once
 
+#include <djinterop/performance_data.hpp>
+
 namespace djinterop::engine::util
 {
+constexpr const unsigned long long OVERVIEW_WAVEFORM_SIZE = 1024;
 
-/// Calculate the quantisation number for waveforms, given a sample rate.
-///
-/// A few numbers written to the waveform performance data are rounded
-/// to multiples of a particular "quantisation number", that is equal to
-/// the sample rate divided by 105, and then rounded to the nearest
-/// multiple of two.
-inline int64_t waveform_quantisation_number(int64_t sample_rate)
+inline int64_t waveform_quantisation_number(double sample_rate)
 {
-    return (sample_rate / 210) * 2;
+    // A few numbers written to the waveform performance data are rounded
+    // to multiples of a particular "quantisation number", that is equal to
+    // the sample rate divided by 105, and then rounded to the nearest
+    // multiple of two.
+    return (static_cast<int64_t>(sample_rate) / 210) * 2;
 }
 
-/// Get the required number of samples per waveform entry.
-///
-/// The waveform for a track is provided merely as a set of waveform points,
-/// and so the scale of it is only meaningful when a relationship between
-/// the waveform and the samples it represents is known.  This function
-/// provides the required number of samples per waveform entry that should
-/// be understood when constructing or reading waveforms in Engine Prime format.
-inline int64_t required_waveform_samples_per_entry(double sample_rate)
+inline waveform_extents calculate_high_resolution_waveform_extents(
+    unsigned long long sample_count, double sample_rate)
 {
     // In high-resolution waveforms, the samples-per-entry is the same as
     // the quantisation number.
-    return waveform_quantisation_number(sample_rate);
+    auto qn = waveform_quantisation_number(sample_rate);
+
+    if (sample_count == 0 || qn == 0)
+    {
+        return {0, 0};
+    }
+
+    auto size = (sample_count + qn - 1) / qn;  // Ceiling division
+    return waveform_extents{size, static_cast<double>(qn)};
 }
 
+inline waveform_extents calculate_overview_waveform_extents(
+    unsigned long long sample_count, double sample_rate)
+{
+    // An overview waveform always has a fixed number of entries, and the number
+    // of samples that each one represents must be calculated from the true
+    // sample count by rounding the number of samples to the quantisation number
+    // first.
+    auto qn = waveform_quantisation_number(sample_rate);
+
+    if (sample_count == 0 || qn == 0)
+    {
+        return {0, 0};
+    }
+
+    auto rounded_sample_count = (sample_count / qn) * qn;
+    auto spe =
+        static_cast<double>(rounded_sample_count) / OVERVIEW_WAVEFORM_SIZE;
+    return waveform_extents{OVERVIEW_WAVEFORM_SIZE, spe};
+}
 }  // namespace djinterop::engine::util
