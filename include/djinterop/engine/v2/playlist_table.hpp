@@ -23,6 +23,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <list>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
@@ -135,27 +136,29 @@ public:
 
     /// Get all playlist ids.
     ///
+    /// The results are not sorted in any particular order.
+    ///
     /// \return Returns a vector of playlist ids.
     [[nodiscard]] std::vector<int64_t> all_ids() const;
 
-    /// Get all root playlist ids, i.e. those not part of a parent playlist.
-    ///
-    /// \return Returns a vector of playlist ids.
-    [[nodiscard]] std::vector<int64_t> all_root_ids() const;
-
     /// Get the ids of all child playlists of a given parent playlist.
+    ///
+    /// The results are sorted in the stored order as defined by each playlist's
+    /// `next_list_id` field.
     ///
     /// \param id Parent playlist id.
     /// \return Returns a list of playlist ids.
-    std::vector<int64_t> children(int64_t id) const;
+    [[nodiscard]] std::list<int64_t> child_ids(int64_t id) const;
 
     /// Get the ids of all descendant playlists of a given parent playlist, i.e.
     /// those sub-playlists which have the given playlist as any parent,
     /// grandparent, great-grandparent, and so on.
     ///
+    /// The results are not sorted in any particular order.
+    ///
     /// \param id Parent playlist id.
     /// \return Returns a list of playlist ids.
-    std::vector<int64_t> descendants(int64_t id) const;
+    [[nodiscard]] std::vector<int64_t> descendant_ids(int64_t id) const;
 
     /// Test whether a given playlist id exists.
     ///
@@ -163,25 +166,27 @@ public:
     /// \return Returns `true` if the playlist exists, or `false` if not.
     [[nodiscard]] bool exists(int64_t id) const;
 
-    /// Find all playlists with the given title.
+    /// Find the ids of all playlists with the given title.
+    ///
+    /// The results are not sorted in any particular order.
     ///
     /// \param title Title of playlists to find.
     /// \return Returns a vector of playlist ids.
-    [[nodiscard]] std::vector<int64_t> find(const std::string& title) const;
+    [[nodiscard]] std::vector<int64_t> find_ids(const std::string& title) const;
 
-    /// Find a playlist, given its parent playlist and title.
+    /// Find the id of a playlist, given its parent playlist and title.
     ///
     /// \param parent_id Id of parent playlist.
     /// \param title Title of playlist to find.
     /// \return Returns the id of the playlist, or none if not found.
-    [[nodiscard]] stdx::optional<int64_t> find(
+    [[nodiscard]] stdx::optional<int64_t> find_id(
         int64_t parent_id, const std::string& title) const;
 
-    /// Find a root playlist, given its title.
+    /// Find the id of a root playlist, given its title.
     ///
     /// \param title Title of playlist to find.
     /// \return Returns the id of the playlist, or none if not found.
-    [[nodiscard]] stdx::optional<int64_t> find_root(
+    [[nodiscard]] stdx::optional<int64_t> find_root_id(
         const std::string& title) const;
 
     /// Get a playlist by id.
@@ -194,6 +199,14 @@ public:
     ///
     /// \param id Id of playlist to remove.
     void remove(int64_t id);
+
+    /// Get all root playlist ids, i.e. those not part of a parent playlist.
+    ///
+    /// The results are sorted in the stored order as defined by each playlist's
+    /// `next_list_id` field.
+    ///
+    /// \return Returns a vector of playlist ids.
+    [[nodiscard]] std::list<int64_t> root_ids() const;
 
     /// Update an entry in the table.
     ///

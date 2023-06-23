@@ -274,6 +274,7 @@ if (Boost_FOUND)
     add_djinterop_test(engine/ track_test)
     add_djinterop_test(engine/v2/ track_table_test)
     add_djinterop_test(engine/v2/ playlist_entity_table_test)
+    add_djinterop_test(engine/v2/ playlist_table_test)
 
 else()
     message(STATUS "Unit tests not available, as Boost cannot be found")

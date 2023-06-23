@@ -58,7 +58,7 @@ std::vector<crate> database_impl::crates()
 
 std::vector<crate> database_impl::crates_by_name(const std::string& name)
 {
-    auto ids = library_->playlist().find(name);
+    auto ids = library_->playlist().find_ids(name);
     std::vector<crate> results;
 
     for (auto&& id : ids)
@@ -111,7 +111,7 @@ void database_impl::remove_track(track tr)
 
 std::vector<crate> database_impl::root_crates()
 {
-    auto ids = library_->playlist().all_root_ids();
+    auto ids = library_->playlist().root_ids();
     std::vector<crate> results;
 
     for (auto&& id : ids)
@@ -124,7 +124,7 @@ std::vector<crate> database_impl::root_crates()
 
 stdx::optional<crate> database_impl::root_crate_by_name(const std::string& name)
 {
-    auto id_maybe = library_->playlist().find_root(name);
+    auto id_maybe = library_->playlist().find_root_id(name);
     if (!id_maybe)
     {
         return stdx::nullopt;
