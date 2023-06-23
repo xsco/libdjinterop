@@ -43,6 +43,26 @@ void ensure_valid_name(const std::string& name)
             "Crate names must not contain semicolons", name};
     }
 }
+
+std::list<int64_t> sort_ids(
+    const std::unordered_map<int64_t, int64_t>& next_list_id_to_id_map)
+{
+    std::list<int64_t> results;
+    if (next_list_id_to_id_map.empty())
+        return results;
+
+    auto curr = next_list_id_to_id_map.find(PLAYLIST_NO_NEXT_LIST_ID);
+    assert(curr != next_list_id_to_id_map.end());
+
+    do
+    {
+        auto id = curr->second;
+        results.push_front(id);
+        curr = next_list_id_to_id_map.find(id);
+    } while (curr != next_list_id_to_id_map.end());
+
+    return results;
+}
 }  // namespace
 
 playlist_table::playlist_table(
@@ -82,25 +102,18 @@ std::vector<int64_t> playlist_table::all_ids() const
     return results;
 }
 
-std::vector<int64_t> playlist_table::all_root_ids() const
+std::list<int64_t> playlist_table::child_ids(int64_t id) const
 {
-    std::vector<int64_t> results;
-    context_->db << "SELECT id FROM Playlist WHERE parentListId = 0" >>
-        [&](int64_t id) { results.push_back(id); };
+    std::unordered_map<int64_t, int64_t> next_list_id_to_id_map;
+    context_->db << "SELECT id, nextListId FROM Playlist WHERE parentListId = ?"
+                 << id >>
+        [&](int64_t id, int64_t next_list_id)
+    { next_list_id_to_id_map[next_list_id] = id; };
 
-    return results;
+    return sort_ids(next_list_id_to_id_map);
 }
 
-std::vector<int64_t> playlist_table::children(int64_t id) const
-{
-    std::vector<int64_t> results;
-    context_->db << "SELECT id FROM Playlist WHERE parentListId = ?" << id >>
-        [&](int64_t id) { results.push_back(id); };
-
-    return results;
-}
-
-std::vector<int64_t> playlist_table::descendants(int64_t id) const
+std::vector<int64_t> playlist_table::descendant_ids(int64_t id) const
 {
     std::vector<int64_t> results;
     context_->db << "SELECT childListId FROM PlaylistAllChildren WHERE id = ?"
@@ -119,7 +132,7 @@ bool playlist_table::exists(int64_t id) const
     return result > 0;
 }
 
-std::vector<int64_t> playlist_table::find(const std::string& title) const
+std::vector<int64_t> playlist_table::find_ids(const std::string& title) const
 {
     std::vector<int64_t> results;
     context_->db << "SELECT id FROM Playlist WHERE title = ?" << title >>
@@ -128,7 +141,7 @@ std::vector<int64_t> playlist_table::find(const std::string& title) const
     return results;
 }
 
-stdx::optional<int64_t> playlist_table::find(
+stdx::optional<int64_t> playlist_table::find_id(
     int64_t parent_id, const std::string& title) const
 {
     stdx::optional<int64_t> result;
@@ -144,7 +157,7 @@ stdx::optional<int64_t> playlist_table::find(
     return result;
 }
 
-stdx::optional<int64_t> playlist_table::find_root(
+stdx::optional<int64_t> playlist_table::find_root_id(
     const std::string& title) const
 {
     stdx::optional<int64_t> result;
@@ -190,6 +203,17 @@ void playlist_table::remove(int64_t id)
     context_->db << "DELETE FROM Playlist WHERE id = ?" << id;
 }
 
+std::list<int64_t> playlist_table::root_ids() const
+{
+    std::unordered_map<int64_t, int64_t> next_list_id_to_id_map;
+    context_->db
+        << "SELECT id, nextListId FROM Playlist WHERE parentListId = 0" >>
+        [&](int64_t id, int64_t next_list_id)
+        { next_list_id_to_id_map[next_list_id] = id; };
+
+    return sort_ids(next_list_id_to_id_map);
+}
+
 void playlist_table::update(const playlist_row& row)
 {
     if (row.id == PLAYLIST_ROW_ID_NONE)
@@ -213,10 +237,9 @@ void playlist_table::update(const playlist_row& row)
         // When the relative ordering of the playlist is not changing, the
         // operation is a simple update.
         context_->db
-            << "UPDATE Playlist SET title = ?, parentListId = ?, "
-               "isPersisted = ?, lastEditTime = ?, isExplicitlyExported = ? "
-               "WHERE Id = ?"
-            << row.title << row.parent_list_id << row.is_persisted
+            << "UPDATE Playlist SET title = ?, isPersisted = ?, "
+               "lastEditTime = ?, isExplicitlyExported = ? WHERE Id = ?"
+            << row.title << row.is_persisted
             << djinterop::util::to_ft(row.last_edit_time)
             << row.is_explicitly_exported << row.id;
     }

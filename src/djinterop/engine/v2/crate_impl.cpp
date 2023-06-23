@@ -59,7 +59,7 @@ std::vector<crate> crate_impl::children()
 {
     std::vector<crate> results;
 
-    auto ids = playlist_.children(id());
+    auto ids = playlist_.child_ids(id());
     for (auto&& id : ids)
     {
         results.emplace_back(std::make_shared<crate_impl>(library_, id));
@@ -75,7 +75,7 @@ void crate_impl::clear_tracks()
 
 crate crate_impl::create_sub_crate(std::string name)
 {
-    if (library_->playlist().find(id(), name))
+    if (library_->playlist().find_id(id(), name))
     {
         throw crate_already_exists{
             "Cannot create a crate with name '" + name +
@@ -105,7 +105,7 @@ std::vector<crate> crate_impl::descendants()
 {
     std::vector<crate> results;
 
-    auto ids = playlist_.descendants(id());
+    auto ids = playlist_.descendant_ids(id());
     for (auto&& id : ids)
     {
         results.emplace_back(std::make_shared<crate_impl>(library_, id));
@@ -173,7 +173,7 @@ void crate_impl::set_parent(stdx::optional<crate> parent)
 
 stdx::optional<crate> crate_impl::sub_crate_by_name(const std::string& name)
 {
-    auto id_maybe = library_->playlist().find(id(), name);
+    auto id_maybe = library_->playlist().find_id(id(), name);
     if (!id_maybe)
     {
         return stdx::nullopt;
