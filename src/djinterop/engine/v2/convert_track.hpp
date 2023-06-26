@@ -24,15 +24,20 @@
 #include <djinterop/optional.hpp>
 #include <djinterop/performance_data.hpp>
 
+#include "../../util/convert.hpp"
+
 namespace djinterop::engine::v2::convert
 {
 namespace read
 {
 inline stdx::optional<int64_t> album_art_id(int64_t album_art_id)
 {
-    return album_art_id != ALBUM_ART_ID_NONE
-               ? stdx::make_optional<int64_t>(album_art_id)
-               : stdx::nullopt;
+    if (album_art_id == ALBUM_ART_ID_NONE)
+    {
+        return stdx::nullopt;
+    }
+
+    return stdx::make_optional(album_art_id);
 }
 
 inline stdx::optional<double> average_loudness(
@@ -48,8 +53,12 @@ inline stdx::optional<double> bpm(
 {
     // Prefer the analysed BPM on account of typically being more accurate, if
     // it is available.
-    return bpm_analyzed ? bpm_analyzed
-                        : static_cast<stdx::optional<double> >(bpm);
+    if (bpm_analyzed)
+    {
+        return bpm_analyzed;
+    }
+
+    return djinterop::util::optional_static_cast<double>(bpm);
 }
 
 inline stdx::optional<std::chrono::milliseconds> duration(int64_t length)
@@ -62,23 +71,29 @@ inline stdx::optional<std::chrono::milliseconds> duration(int64_t length)
 
 inline stdx::optional<djinterop::musical_key> key(stdx::optional<int32_t> key)
 {
-    stdx::optional<djinterop::musical_key> converted;
-    if (key)
-        converted = static_cast<djinterop::musical_key>(key.value());
-
-    return converted;
+    return djinterop::util::optional_static_cast<djinterop::musical_key>(key);
 }
 
-inline stdx::optional<int32_t> rating(int64_t rating)
+inline stdx::optional<int> rating(int64_t rating)
 {
-    return rating != RATING_NONE ? stdx::make_optional(rating) : stdx::nullopt;
+    if (rating == RATING_NONE)
+    {
+        return stdx::nullopt;
+    }
+
+    return stdx::make_optional(static_cast<int>(rating));
 }
 
 inline stdx::optional<unsigned long long> sample_count(
     const track_data_blob& track_data)
 {
-    return track_data.samples != 0 ? stdx::make_optional(track_data.samples)
-                                   : stdx::nullopt;
+    if (track_data.samples == 0)
+    {
+        return stdx::nullopt;
+    }
+
+    return stdx::make_optional(
+        static_cast<unsigned long long>(track_data.samples));
 }
 
 inline stdx::optional<double> sample_rate(const track_data_blob& track_data)
@@ -112,7 +127,7 @@ inline converted_bpm_fields bpm(stdx::optional<double> bpm)
     // Deliberate choice to override the BPM as determined by analysis.  This
     // results in the 'least astonishment' for a caller if they set then get the
     // BPM of a track.
-    return {bpm, static_cast<stdx::optional<int64_t> >(bpm)};
+    return {bpm, djinterop::util::optional_static_cast<int64_t>(bpm)};
 }
 
 inline int64_t duration(stdx::optional<std::chrono::milliseconds> duration)

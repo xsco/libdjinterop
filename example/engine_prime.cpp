@@ -47,7 +47,7 @@ int main()
     }
 
     djinterop::track_snapshot td;
-    td.relative_path = "../01 - Some Artist - Some Song.mp3";
+    td.relative_path = "../01 - Some Artist - Some Song.mp3"s;
     td.track_number = 1;
     td.duration = std::chrono::milliseconds{366000};
     td.bpm = 120;
@@ -84,7 +84,7 @@ int main()
     auto waveform_extents = e::calculate_overview_waveform_extents(
         *td.sample_count, *td.sample_rate);
     td.waveform.reserve(waveform_extents.size);
-    for (int64_t i = 0; i < waveform_extents.size; ++i)
+    for (unsigned long long i = 0; i < waveform_extents.size; ++i)
     {
         td.waveform.push_back(  // VALUE / OPACITY for each band (low/mid/high)
             {{0, 255},          // low

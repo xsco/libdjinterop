@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.19.0
+        VERSION 0.19.1
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
@@ -18,10 +18,18 @@ endif()
 # Require C++17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-if (MSVC)
+if(MSVC)
+    add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
+
     # Ask MSVC to populate the __cplusplus macro properly.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus")
+else()
+    add_compile_options("-Wall" "$<$<CONFIG:RELEASE>:-O3>")
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        add_compile_options("-stdlib=libc++")
+    endif()
 endif()
+
 
 # Build shared a library by default.
 option(BUILD_SHARED_LIBS "Build shared library" ON)
@@ -98,6 +106,7 @@ endif()
 include(CheckIncludeFileCXX)
 CHECK_INCLUDE_FILE_CXX(optional DJINTEROP_STD_OPTIONAL)
 CHECK_INCLUDE_FILE_CXX(experimental/optional DJINTEROP_STD_EXPERIMENTAL_OPTIONAL)
+
 configure_file(
     include/djinterop/config.hpp.in
     include/djinterop/config.hpp)

@@ -39,8 +39,8 @@ stdx::optional<crate> database_impl::crate_by_id(int64_t id)
         return stdx::nullopt;
     }
 
-    return std::make_optional<crate>(
-        std::make_shared<crate_impl>(library_, id));
+    auto impl = std::make_shared<crate_impl>(library_, id);
+    return stdx::make_optional<crate>(crate{impl});
 }
 
 std::vector<crate> database_impl::crates()
@@ -130,8 +130,8 @@ stdx::optional<crate> database_impl::root_crate_by_name(const std::string& name)
         return stdx::nullopt;
     }
 
-    return std::make_optional<crate>(
-        std::make_shared<crate_impl>(library_, *id_maybe));
+    auto impl = std::make_shared<crate_impl>(library_, *id_maybe);
+    return stdx::make_optional<crate>(crate{impl});
 }
 
 stdx::optional<track> database_impl::track_by_id(int64_t id)
@@ -139,8 +139,8 @@ stdx::optional<track> database_impl::track_by_id(int64_t id)
     auto track_table = library_->track();
     if (track_table.exists(id))
     {
-        return stdx::make_optional<track>(
-            std::make_shared<track_impl>(library_, id));
+        auto impl = std::make_shared<track_impl>(library_, id);
+        return stdx::make_optional<track>(track{impl});
     }
 
     return stdx::nullopt;

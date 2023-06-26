@@ -20,6 +20,7 @@
 #include <cassert>
 #include <cstdint>
 #include <ostream>
+#include <string>
 
 #include <djinterop/engine/engine.hpp>
 #include <djinterop/track_snapshot.hpp>
@@ -76,6 +77,7 @@ inline void populate_track_snapshot(
     djinterop::track_snapshot& s, example_track_data_variation variation,
     example_track_data_usage usage, djinterop::engine::engine_version version)
 {
+    using namespace std::string_literals;
     switch (variation)
     {
         case example_track_data_variation::empty:
@@ -135,7 +137,7 @@ inline void populate_track_snapshot(
 
             s.main_cue = djinterop::stdx::nullopt;
             s.publisher = djinterop::stdx::nullopt;
-            s.relative_path = "filename.ext";
+            s.relative_path = "filename.ext"s;
             s.sample_count = djinterop::stdx::nullopt;
             s.sample_rate = djinterop::stdx::nullopt;
             s.title = djinterop::stdx::nullopt;
@@ -145,17 +147,17 @@ inline void populate_track_snapshot(
             break;
 
         case example_track_data_variation::basic_metadata_only_1:
-            s.album = "Some Album";
-            s.artist = "Some Artist";
+            s.album = "Some Album"s;
+            s.artist = "Some Artist"s;
             s.average_loudness = djinterop::stdx::nullopt;
             s.beatgrid.clear();
             s.bitrate = 320;
             s.bpm = 123;
-            s.comment = "Comment";
-            s.composer = "Composer";
+            s.comment = "Comment"s;
+            s.composer = "Composer"s;
             s.duration = std::chrono::milliseconds{210000};
             s.file_bytes = djinterop::stdx::nullopt;
-            s.genre = "Genre";
+            s.genre = "Genre"s;
             s.hot_cues.clear();
             if (usage == example_track_data_usage::fetch)
                 s.hot_cues.resize(8);
@@ -168,11 +170,11 @@ inline void populate_track_snapshot(
                 s.loops.resize(8);
 
             s.main_cue = djinterop::stdx::nullopt;
-            s.publisher = "Publisher";
-            s.relative_path = "../01 - Some Artist - Some Track.mp3";
+            s.publisher = "Publisher"s;
+            s.relative_path = "../01 - Some Artist - Some Track.mp3"s;
             s.sample_count = djinterop::stdx::nullopt;
             s.sample_rate = djinterop::stdx::nullopt;
-            s.title = "Some Title";
+            s.title = "Some Title"s;
             s.track_number = 1;
             s.waveform.clear();
             s.year = 2017;
@@ -183,13 +185,13 @@ inline void populate_track_snapshot(
             s.beatgrid.clear();
             s.beatgrid.push_back({0, 20000});
             s.beatgrid.push_back({776, 16061375});
-            s.album = "Other Album";
-            s.artist = "Other Artist";
+            s.album = "Other Album"s;
+            s.artist = "Other Artist"s;
             s.average_loudness = 0.555;
             s.bitrate = 1536;
             s.bpm = 128;
-            s.comment = "Other Comment";
-            s.composer = "Other Composer";
+            s.comment = "Other Comment"s;
+            s.composer = "Other Composer"s;
             s.duration = std::chrono::milliseconds{365000};
             if (version.schema_version >=
                 djinterop::engine::os_1_4_0.schema_version)
@@ -197,7 +199,7 @@ inline void populate_track_snapshot(
                 s.file_bytes = 1048576;
             }
 
-            s.genre = "Other Genre";
+            s.genre = "Other Genre"s;
             s.hot_cues.clear();
             if (usage == example_track_data_usage::fetch)
                 s.hot_cues.resize(8);
@@ -219,11 +221,11 @@ inline void populate_track_snapshot(
                 "Example loop", 102687.5, 185375,
                 djinterop::engine::standard_pad_colors::pad_8};
             s.main_cue = 88200;
-            s.publisher = "Other Publisher";
-            s.relative_path = "../02 - Other Artist - Other Track.flac";
+            s.publisher = "Other Publisher"s;
+            s.relative_path = "../02 - Other Artist - Other Track.flac"s;
             s.sample_count = 16096500;
             s.sample_rate = 44100;
-            s.title = "Some Title";
+            s.title = "Some Title"s;
             s.track_number = 2;
             s.waveform.clear();
             auto waveform_extents =
@@ -234,7 +236,7 @@ inline void populate_track_snapshot(
                           calculate_high_resolution_waveform_extents(
                               *s.sample_count, *s.sample_rate);
             s.waveform.reserve(waveform_extents.size);
-            for (int64_t i = 0; i < waveform_extents.size; ++i)
+            for (unsigned long long i = 0; i < waveform_extents.size; ++i)
             {
                 if (version.schema_version.maj < 2)
                 {

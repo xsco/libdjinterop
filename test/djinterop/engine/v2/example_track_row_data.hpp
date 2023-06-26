@@ -20,6 +20,7 @@
 #include <cassert>
 #include <cstdint>
 #include <ostream>
+#include <string>
 
 #include <djinterop/engine/engine.hpp>
 #include <djinterop/engine/v2/track_table.hpp>
@@ -54,6 +55,7 @@ inline void populate_track_row(
     example_track_row_type row_type, djinterop::engine::v2::track_row& r,
     const djinterop::engine::engine_version& version)
 {
+    using namespace std::string_literals;
     namespace ev = djinterop::engine;
     namespace ev2 = djinterop::engine::v2;
     switch (row_type)
@@ -81,14 +83,14 @@ inline void populate_track_row(
             r.bpm_analyzed = 135.25;
             r.album_art_id = 0;
             r.file_bytes = 1048576;
-            r.title = "Title";
-            r.artist = "Artist";
-            r.album = "Album";
-            r.genre = "Genre";
-            r.comment = "Comment";
-            r.label = "Label";
-            r.composer = "Composer";
-            r.remixer = "Remixer";
+            r.title = "Title"s;
+            r.artist = "Artist"s;
+            r.album = "Album"s;
+            r.genre = "Genre"s;
+            r.comment = "Comment"s;
+            r.label = "Label"s;
+            r.composer = "Composer"s;
+            r.remixer = "Remixer"s;
             r.key = 1;
             r.rating = 5;
             r.time_last_played = std::chrono::system_clock::time_point{
@@ -134,14 +136,14 @@ inline void populate_track_row(
             r.bpm_analyzed = 135.25;
             r.album_art_id = 0;
             r.file_bytes = 1048576;
-            r.title = "Title";
-            r.artist = "Artist";
-            r.album = "Album";
-            r.genre = "Genre";
-            r.comment = "Comment";
-            r.label = "Label";
-            r.composer = "Composer";
-            r.remixer = "Remixer";
+            r.title = "Title"s;
+            r.artist = "Artist"s;
+            r.album = "Album"s;
+            r.genre = "Genre"s;
+            r.comment = "Comment"s;
+            r.label = "Label"s;
+            r.composer = "Composer"s;
+            r.remixer = "Remixer"s;
             r.key = 1;
             r.rating = 5;
             r.time_last_played = std::chrono::system_clock::time_point{
