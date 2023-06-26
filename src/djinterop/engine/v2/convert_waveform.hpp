@@ -85,7 +85,7 @@ inline overview_waveform_data_blob waveform(
     if (!w.empty())
     {
         result.waveform_points.reserve(extents.size);
-        for (auto i = 0; i < extents.size; ++i)
+        for (unsigned long long i = 0; i < extents.size; ++i)
         {
             auto entry = w[w.size() * (2 * i + 1) / 2048];
 

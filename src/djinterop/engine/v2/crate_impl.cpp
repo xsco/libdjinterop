@@ -133,8 +133,8 @@ stdx::optional<crate> crate_impl::parent()
         return stdx::nullopt;
     }
 
-    return std::make_optional<crate>(
-        std::make_shared<crate_impl>(library_, row->parent_list_id));
+    auto impl = std::make_shared<crate_impl>(library_, row->parent_list_id);
+    return stdx::make_optional<crate>(crate{impl});
 }
 
 void crate_impl::remove_track(track tr)
@@ -179,8 +179,8 @@ stdx::optional<crate> crate_impl::sub_crate_by_name(const std::string& name)
         return stdx::nullopt;
     }
 
-    return std::make_optional<crate>(
-        std::make_shared<crate_impl>(library_, *id_maybe));
+    auto impl = std::make_shared<crate_impl>(library_, *id_maybe);
+    return stdx::make_optional<crate>(crate{impl});
 }
 
 std::vector<track> crate_impl::tracks()

@@ -18,6 +18,7 @@
 #include <djinterop/engine/v2/playlist_table.hpp>
 
 #include <cassert>
+#include <unordered_map>
 #include <utility>
 
 #include <djinterop/exceptions.hpp>

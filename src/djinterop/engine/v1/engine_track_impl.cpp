@@ -23,6 +23,7 @@
 #include <djinterop/djinterop.hpp>
 
 #include "../../util/chrono.hpp"
+#include "../../util/convert.hpp"
 #include "../../util/filesystem.hpp"
 #include "../../util/sqlite_transaction.hpp"
 #include "djinterop/engine/track_utils.hpp"
@@ -170,7 +171,10 @@ track_data to_track_data(
     stdx::optional<double> sample_rate, stdx::optional<double> average_loudness,
     stdx::optional<musical_key> key)
 {
-    return track_data{sample_rate, sample_count, average_loudness, key};
+    return track_data{
+        sample_rate,
+        djinterop::util::optional_static_cast<int64_t>(sample_count),
+        average_loudness, key};
 }
 
 quick_cues_data to_cues_data(
@@ -190,7 +194,10 @@ beat_data to_beat_data(
     stdx::optional<double> sample_rate,
     const std::vector<beatgrid_marker>& beatgrid)
 {
-    return beat_data{sample_rate, sample_count, beatgrid, beatgrid};
+    return beat_data{
+        sample_rate,
+        djinterop::util::optional_static_cast<double>(sample_count), beatgrid,
+        beatgrid};
 }
 
 loops_data to_loops_data(const std::vector<stdx::optional<loop> >& loops)
@@ -219,7 +226,7 @@ overview_waveform_data to_overview_waveform_data(
     {
         // Calculate an overview waveform automatically.
         overview_waveform.reserve(extents.size);
-        for (int32_t i = 0; i < extents.size; ++i)
+        for (unsigned long long i = 0; i < extents.size; ++i)
         {
             auto entry = waveform
                 [waveform.size() * (2 * i + 1) / (2 * extents.size)];
@@ -347,7 +354,8 @@ track_snapshot engine_track_impl::snapshot() const
         perf_data.track_performance_data
             ? perf_data.track_performance_data->average_loudness
             : stdx::nullopt;
-    snapshot.bitrate = track_data.bitrate;
+    snapshot.bitrate =
+        djinterop::util::optional_static_cast<int>(track_data.bitrate);
     snapshot.bpm =
         track_data.bpm_analyzed ? track_data.bpm_analyzed
         : track_data.bpm
@@ -358,7 +366,9 @@ track_snapshot engine_track_impl::snapshot() const
         auto ms = 1000 * *track_data.length;
         snapshot.duration = stdx::make_optional(milliseconds{ms});
     }
-    snapshot.file_bytes = track_data.file_bytes;
+    snapshot.file_bytes =
+        djinterop::util::optional_static_cast<unsigned long long>(
+            track_data.file_bytes);
     if (perf_data.quick_cues)
     {
         snapshot.hot_cues = std::move(perf_data.quick_cues->hot_cues);
@@ -485,12 +495,13 @@ void engine_track_impl::update(const track_snapshot& snapshot)
     storage_->update_track(
         id(), track_number, length_fields.length,
         length_fields.length_calculated, bpm_fields.bpm, year,
-        snapshot.relative_path, filename, snapshot.bitrate,
+        snapshot.relative_path, filename,
+        djinterop::util::optional_static_cast<int64_t>(snapshot.bitrate),
         bpm_fields.bpm_analyzed, default_track_type, default_is_external_track,
         default_uuid_of_external_database,
         default_id_track_in_external_database, no_album_art_id,
-        snapshot.file_bytes, default_pdb_import_key, default_uri,
-        default_is_beatgrid_locked);
+        djinterop::util::optional_static_cast<int64_t>(snapshot.file_bytes),
+        default_pdb_import_key, default_uri, default_is_beatgrid_locked);
 
     // Set string-based metadata.
     storage_->set_meta_data(
@@ -505,11 +516,6 @@ void engine_track_impl::update(const track_snapshot& snapshot)
         timestamp_fields.last_accessed_at_ts, last_play_hash);
 
     // Set performance data, or remove, as appropriate.
-    auto any_hot_cues = std::any_of(
-        snapshot.hot_cues.begin(), snapshot.hot_cues.end(),
-        [](auto hc) { return hc; });
-    auto any_loops = std::any_of(
-        snapshot.loops.begin(), snapshot.loops.end(), [](auto l) { return l; });
     auto has_perf_data =
         snapshot.sample_count || snapshot.sample_rate ||
         snapshot.average_loudness || !snapshot.beatgrid.empty() ||
@@ -588,8 +594,8 @@ void engine_track_impl::set_beatgrid(std::vector<beatgrid_marker> beatgrid)
 
 stdx::optional<int> engine_track_impl::bitrate()
 {
-    return storage_->get_track_column<stdx::optional<int64_t> >(
-        id(), "bitrate");
+    return djinterop::util::optional_static_cast<int>(
+        storage_->get_track_column<stdx::optional<int64_t> >(id(), "bitrate"));
 }
 
 void engine_track_impl::set_bitrate(stdx::optional<int> bitrate)
@@ -862,7 +868,10 @@ void engine_track_impl::set_loops(std::vector<stdx::optional<loop> > loops)
 stdx::optional<double> engine_track_impl::main_cue()
 {
     auto cue = get_quick_cues_data().adjusted_main_cue;
-    return cue != 0 ? stdx::make_optional<double>(cue) : stdx::nullopt;
+    if (cue == 0)
+        return stdx::nullopt;
+
+    return stdx::make_optional(cue);
 }
 
 void engine_track_impl::set_main_cue(stdx::optional<double> sample_offset)
@@ -919,7 +928,8 @@ void engine_track_impl::set_relative_path(std::string relative_path)
 
 stdx::optional<unsigned long long> engine_track_impl::sample_count()
 {
-    return get_track_data().sample_count;
+    return djinterop::util::optional_static_cast<unsigned long long>(
+        get_track_data().sample_count);
 }
 
 void engine_track_impl::set_sample_count(
@@ -944,8 +954,10 @@ void engine_track_impl::set_sample_count(
     auto sample_rate_or_zero = track_d.sample_rate.value_or(0);
 
     // write new data
-    track_d.sample_count = sample_count;
-    beat_d.sample_count = sample_count;
+    track_d.sample_count =
+        djinterop::util::optional_static_cast<int64_t>(sample_count);
+    beat_d.sample_count =
+        djinterop::util::optional_static_cast<double>(sample_count);
     set_beat_data(std::move(beat_d));
     set_track_data(std::move(track_d));
 
@@ -1065,7 +1077,7 @@ void engine_track_impl::set_waveform(std::vector<waveform_entry> waveform)
         overview_waveform_d.samples_per_entry =
             overview_extents.samples_per_entry;
         overview_waveform_d.waveform.reserve(overview_extents.size);
-        for (int32_t i = 0; i < overview_extents.size; ++i)
+        for (unsigned long long i = 0; i < overview_extents.size; ++i)
         {
             auto entry = waveform
                 [waveform.size() * (2 * i + 1) / (2 * overview_extents.size)];
@@ -1146,11 +1158,12 @@ track create_track(
     auto id = storage->create_track(
         track_number, length_fields.length, length_fields.length_calculated,
         bpm_fields.bpm, year, snapshot.relative_path, filename,
-        snapshot.bitrate, bpm_fields.bpm_analyzed, default_track_type,
-        default_is_external_track, default_uuid_of_external_database,
+        djinterop::util::optional_static_cast<int64_t>(snapshot.bitrate),
+        bpm_fields.bpm_analyzed, default_track_type, default_is_external_track,
+        default_uuid_of_external_database,
         default_id_track_in_external_database, no_album_art_id,
-        snapshot.file_bytes, default_pdb_import_key, default_uri,
-        default_is_beatgrid_locked);
+        djinterop::util::optional_static_cast<int64_t>(snapshot.file_bytes),
+        default_pdb_import_key, default_uri, default_is_beatgrid_locked);
 
     // Set string-based metadata.
     storage->set_meta_data(

@@ -22,6 +22,7 @@
 #include <djinterop/exceptions.hpp>
 #include <djinterop/track.hpp>
 
+#include "../../util/convert.hpp"
 #include "../../util/filesystem.hpp"
 #include "convert_beatgrid.hpp"
 #include "convert_hot_cues.hpp"
@@ -121,16 +122,16 @@ track_row snapshot_to_row(
 
     return track_row{
         TRACK_ROW_ID_NONE,
-        snapshot.track_number,
+        djinterop::util::optional_static_cast<int64_t>(snapshot.track_number),
         converted_duration,
         converted_bpm.bpm,
-        snapshot.year,
+        djinterop::util::optional_static_cast<int64_t>(snapshot.year),
         *snapshot.relative_path,
         filename,
-        snapshot.bitrate,
+        djinterop::util::optional_static_cast<int64_t>(snapshot.bitrate),
         converted_bpm.bpm_analyzed,
         album_art_id,
-        snapshot.file_bytes,
+        djinterop::util::optional_static_cast<int64_t>(snapshot.file_bytes),
         snapshot.title,
         snapshot.artist,
         snapshot.album,
@@ -192,12 +193,14 @@ track_snapshot track_impl::snapshot() const
     snapshot.average_loudness = convert::read::average_loudness(row.track_data);
     snapshot.beatgrid =
         convert::read::beatgrid_markers(row.beat_data.adjusted_beat_grid);
-    snapshot.bitrate = row.bitrate;
+    snapshot.bitrate = djinterop::util::optional_static_cast<int>(row.bitrate);
     snapshot.bpm = convert::read::bpm(row.bpm_analyzed, row.bpm);
     snapshot.comment = row.comment;
     snapshot.composer = row.composer;
     snapshot.duration = convert::read::duration(row.length);
-    snapshot.file_bytes = row.file_bytes;
+    snapshot.file_bytes =
+        djinterop::util::optional_static_cast<unsigned long long>(
+            row.file_bytes);
     snapshot.genre = row.genre;
     snapshot.hot_cues = convert::read::hot_cues(row.quick_cues);
     snapshot.key = convert::read::key(row.key);
@@ -211,9 +214,10 @@ track_snapshot track_impl::snapshot() const
     snapshot.sample_count = convert::read::sample_count(row.track_data);
     snapshot.sample_rate = convert::read::sample_rate(row.track_data);
     snapshot.title = row.title;
-    snapshot.track_number = row.play_order;
+    snapshot.track_number =
+        djinterop::util::optional_static_cast<int>(row.play_order);
     snapshot.waveform = convert::read::waveform(row.overview_waveform_data);
-    snapshot.year = row.year;
+    snapshot.year = djinterop::util::optional_static_cast<int>(row.year);
 
     return snapshot;
 }
@@ -288,12 +292,13 @@ void track_impl::set_beatgrid(std::vector<beatgrid_marker> beatgrid)
 
 stdx::optional<int> track_impl::bitrate()
 {
-    return track_.get_bitrate(id());
+    return djinterop::util::optional_static_cast<int>(track_.get_bitrate(id()));
 }
 
 void track_impl::set_bitrate(stdx::optional<int> bitrate)
 {
-    track_.set_bitrate(id(), bitrate);
+    track_.set_bitrate(
+        id(), djinterop::util::optional_static_cast<int64_t>(bitrate));
 }
 
 stdx::optional<double> track_impl::bpm()
@@ -378,7 +383,7 @@ void track_impl::set_genre(stdx::optional<std::string> genre)
 stdx::optional<hot_cue> track_impl::hot_cue_at(int index)
 {
     auto quick_cues = track_.get_quick_cues(id());
-    if (index < 0 || index > quick_cues.quick_cues.size())
+    if (index < 0 || (unsigned)index > quick_cues.quick_cues.size())
     {
         throw std::out_of_range{
             "Request for hot cue at given index exceeds maximum number of cues "
@@ -391,7 +396,7 @@ stdx::optional<hot_cue> track_impl::hot_cue_at(int index)
 void track_impl::set_hot_cue_at(int index, stdx::optional<hot_cue> cue)
 {
     auto quick_cues = track_.get_quick_cues(id());
-    if (index < 0 || index > quick_cues.quick_cues.size())
+    if (index < 0 || (unsigned)index > quick_cues.quick_cues.size())
     {
         throw std::out_of_range{
             "Request to set hot cue at given index exceeds maximum number of "
@@ -449,7 +454,7 @@ void track_impl::set_last_played_at(
 stdx::optional<loop> track_impl::loop_at(int index)
 {
     auto loops = track_.get_loops(id());
-    if (index < 0 || index > loops.loops.size())
+    if (index < 0 || (unsigned)index > loops.loops.size())
     {
         throw std::out_of_range{
             "Request for loop at given index exceeds maximum number of loops "
@@ -462,7 +467,7 @@ stdx::optional<loop> track_impl::loop_at(int index)
 void track_impl::set_loop_at(int index, stdx::optional<loop> l)
 {
     auto loops = track_.get_loops(id());
-    if (index < 0 || index > loops.loops.size())
+    if (index < 0 || (unsigned)index > loops.loops.size())
     {
         throw std::out_of_range{
             "Request to set loop at given index exceeds maximum number of "
@@ -488,7 +493,10 @@ stdx::optional<double> track_impl::main_cue()
 {
     auto quick_cues = track_.get_quick_cues(id());
     auto cue = quick_cues.adjusted_main_cue;
-    return cue != 0 ? stdx::make_optional<double>(cue) : stdx::nullopt;
+    if (cue == 0)
+        return stdx::nullopt;
+
+    return stdx::make_optional(cue);
 }
 
 void track_impl::set_main_cue(stdx::optional<double> sample_offset)
@@ -583,12 +591,14 @@ void track_impl::set_title(stdx::optional<std::string> title)
 
 stdx::optional<int> track_impl::track_number()
 {
-    return track_.get_play_order(id());
+    return djinterop::util::optional_static_cast<int>(
+        track_.get_play_order(id()));
 }
 
 void track_impl::set_track_number(stdx::optional<int> track_number)
 {
-    track_.set_play_order(id(), track_number);
+    track_.set_play_order(
+        id(), djinterop::util::optional_static_cast<int64_t>(track_number));
 }
 
 std::vector<waveform_entry> track_impl::waveform()
@@ -608,12 +618,12 @@ void track_impl::set_waveform(std::vector<waveform_entry> waveform)
 
 stdx::optional<int> track_impl::year()
 {
-    return track_.get_year(id());
+    return djinterop::util::optional_static_cast<int>(track_.get_year(id()));
 }
 
 void track_impl::set_year(stdx::optional<int> year)
 {
-    track_.set_year(id(), year);
+    track_.set_year(id(), djinterop::util::optional_static_cast<int64_t>(year));
 }
 
 track create_track(

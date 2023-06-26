@@ -22,12 +22,11 @@
 #include <djinterop/musical_key.hpp>
 #include <djinterop/optional.hpp>
 
+#include "../../util/convert.hpp"
 #include "djinterop/engine/encode_decode_utils.hpp"
 #include "performance_data_format.hpp"
 
-namespace djinterop
-{
-namespace engine::v1
+namespace djinterop::engine::v1
 {
 namespace
 {
@@ -39,16 +38,6 @@ stdx::optional<std::decay_t<T> > prohibit(const U& sentinel, T&& data)
         return stdx::nullopt;
     }
     return stdx::make_optional(std::forward<T>(data));
-}
-
-template <typename T, typename U>
-stdx::optional<T> opt_static_cast(const stdx::optional<U>& u)
-{
-    if (!u)
-    {
-        return stdx::nullopt;
-    }
-    return stdx::make_optional(static_cast<T>(*u));
 }
 
 char* encode_beatgrid(const std::vector<beatgrid_marker>& beatgrid, char* ptr)
@@ -726,7 +715,7 @@ track_data track_data::decode(const std::vector<char>& compressed_track_data)
 
     int32_t raw_key;
     std::tie(raw_key, ptr) = decode_int32_be(ptr);
-    result.key = opt_static_cast<musical_key>(prohibit(0, raw_key));
+    result.key = util::optional_static_cast<musical_key>(prohibit(0, raw_key));
 
     if (ptr != end)
     {
@@ -737,5 +726,4 @@ track_data track_data::decode(const std::vector<char>& compressed_track_data)
     return result;
 }
 
-}  // namespace engine::v1
-}  // namespace djinterop
+}  // namespace djinterop::engine::v1

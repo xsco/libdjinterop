@@ -24,6 +24,7 @@
 #include <djinterop/exceptions.hpp>
 
 #include "../../util/chrono.hpp"
+#include "../../util/convert.hpp"
 
 namespace djinterop::engine::v2
 {
@@ -384,7 +385,7 @@ stdx::optional<track_row> track_table::get(int64_t id) const
                 stdx::optional<std::string> label,
                 stdx::optional<std::string> composer,
                 stdx::optional<std::string> remixer,
-                stdx::optional<int64_t> key, int64_t rating,
+                stdx::optional<int32_t> key, int64_t rating,
                 stdx::optional<std::string> album_art,
                 stdx::optional<int64_t> time_last_played, bool is_played,
                 std::string file_type, bool is_analyzed,
@@ -493,7 +494,7 @@ stdx::optional<track_row> track_table::get(int64_t id) const
                 stdx::optional<std::string> label,
                 stdx::optional<std::string> composer,
                 stdx::optional<std::string> remixer,
-                stdx::optional<int64_t> key, int64_t rating,
+                stdx::optional<int32_t> key, int64_t rating,
                 stdx::optional<std::string> album_art,
                 stdx::optional<int64_t> time_last_played, bool is_played,
                 std::string file_type, bool is_analyzed,
@@ -600,7 +601,7 @@ stdx::optional<track_row> track_table::get(int64_t id) const
                 stdx::optional<std::string> label,
                 stdx::optional<std::string> composer,
                 stdx::optional<std::string> remixer,
-                stdx::optional<int64_t> key, int64_t rating,
+                stdx::optional<int32_t> key, int64_t rating,
                 stdx::optional<std::string> album_art,
                 stdx::optional<int64_t> time_last_played, bool is_played,
                 std::string file_type, bool is_analyzed,
