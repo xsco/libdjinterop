@@ -168,7 +168,7 @@ BOOST_DATA_TEST_CASE(
     auto p_id = playlist_tbl.add(p_row);
     ev2::playlist_entity_row pe_row{
         ev2::PLAYLIST_ENTITY_ROW_ID_NONE, p_id, EXAMPLE_TRACK_ID_1, db_uuid};
-    auto pe_id = playlist_entity_tbl.add_back(pe_row);
+    playlist_entity_tbl.add_back(pe_row);
 
     // Act/Assert
     BOOST_CHECK_THROW(

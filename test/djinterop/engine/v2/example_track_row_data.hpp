@@ -164,7 +164,7 @@ inline void populate_track_row(
             r.is_beat_grid_locked = false;
             r.origin_database_uuid = "e423f29c-fb50-4ddc-b730-fd1d6534b022";
             r.origin_track_id = 12345;
-            r.track_data = ev2::track_data_blob{41000, 5424300, 0.5, 1};
+            r.track_data = ev2::track_data_blob{41000, 5424300, 1, 0.5, 0.5, 0.5};
             r.overview_waveform_data = ev2::overview_waveform_data_blob{};
             auto beatgrid = std::vector<ev2::beat_grid_marker_blob>{};
             beatgrid.push_back(ev2::beat_grid_marker_blob{0, 1, 16, 0});

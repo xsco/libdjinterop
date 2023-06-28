@@ -21,6 +21,7 @@
 #error This library needs at least a C++17 compliant compiler
 #endif
 
+#include <cstddef>
 #include <cstdint>
 #include <ostream>
 #include <vector>
@@ -79,17 +80,20 @@ struct DJINTEROP_PUBLIC overview_waveform_data_blob
     /// Maximum values across all waveform points.
     overview_waveform_point maximum_point;
 
+    /// Extra data (if any) found in a decoded blob.
+    std::vector<std::byte> extra_data;
+
     /// Encode this struct into binary blob form.
     ///
     /// \return Returns a byte array.
-    [[nodiscard]] std::vector<char> to_blob() const;
+    [[nodiscard]] std::vector<std::byte> to_blob() const;
 
     /// Decode an instance of this struct from binary blob form.
     ///
     /// \param blob Binary blob.
     /// \return Returns a decoded instance of this struct.
     [[nodiscard]] static overview_waveform_data_blob from_blob(
-        const std::vector<char>& blob);
+        const std::vector<std::byte>& blob);
 
     friend bool operator==(
         const overview_waveform_data_blob& lhs,
@@ -98,7 +102,8 @@ struct DJINTEROP_PUBLIC overview_waveform_data_blob
         return lhs.samples_per_waveform_point ==
                    rhs.samples_per_waveform_point &&
                lhs.waveform_points == rhs.waveform_points &&
-               lhs.maximum_point == rhs.maximum_point;
+               lhs.maximum_point == rhs.maximum_point &&
+               lhs.extra_data == rhs.extra_data;
     }
 
     friend bool operator!=(

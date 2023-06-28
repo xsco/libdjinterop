@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
@@ -47,8 +48,8 @@ struct beat_data
                first.adjusted_beatgrid == second.adjusted_beatgrid;
     }
 
-    std::vector<char> encode() const;
-    static beat_data decode(const std::vector<char>& compressed_data);
+    std::vector<std::byte> encode() const;
+    static beat_data decode(const std::vector<std::byte>& compressed_data);
 };
 
 struct high_res_waveform_data
@@ -66,9 +67,9 @@ struct high_res_waveform_data
                first.waveform == second.waveform;
     }
 
-    std::vector<char> encode() const;
+    std::vector<std::byte> encode() const;
     static high_res_waveform_data decode(
-        const std::vector<char>& compressed_data);
+        const std::vector<std::byte>& compressed_data);
 };
 
 struct loops_data
@@ -83,9 +84,9 @@ struct loops_data
         return first.loops == second.loops;
     }
 
-    std::vector<char> encode() const;
+    std::vector<std::byte> encode() const;
     static loops_data decode(
-        const std::vector<char>& raw_data);  // not compressed
+        const std::vector<std::byte>& raw_data);  // not compressed
 };
 
 struct overview_waveform_data
@@ -103,9 +104,9 @@ struct overview_waveform_data
                first.waveform == second.waveform;
     }
 
-    std::vector<char> encode() const;
+    std::vector<std::byte> encode() const;
     static overview_waveform_data decode(
-        const std::vector<char>& compressed_data);
+        const std::vector<std::byte>& compressed_data);
 };
 
 struct quick_cues_data
@@ -124,8 +125,8 @@ struct quick_cues_data
                first.default_main_cue == second.default_main_cue;
     }
 
-    std::vector<char> encode() const;
-    static quick_cues_data decode(const std::vector<char>& compressed_data);
+    std::vector<std::byte> encode() const;
+    static quick_cues_data decode(const std::vector<std::byte>& compressed_data);
 };
 
 struct track_data
@@ -146,8 +147,8 @@ struct track_data
                first.key == second.key;
     }
 
-    std::vector<char> encode() const;
-    static track_data decode(const std::vector<char>& compressed_data);
+    std::vector<std::byte> encode() const;
+    static track_data decode(const std::vector<std::byte>& compressed_data);
 };
 
 }  // namespace engine::v1

@@ -40,7 +40,7 @@ stdx::optional<std::decay_t<T> > prohibit(const U& sentinel, T&& data)
     return stdx::make_optional(std::forward<T>(data));
 }
 
-char* encode_beatgrid(const std::vector<beatgrid_marker>& beatgrid, char* ptr)
+std::byte* encode_beatgrid(const std::vector<beatgrid_marker>& beatgrid, std::byte* ptr)
 {
     typedef std::vector<beatgrid_marker>::size_type vec_size_t;
     ptr = encode_int64_be(beatgrid.size(), ptr);
@@ -59,8 +59,8 @@ char* encode_beatgrid(const std::vector<beatgrid_marker>& beatgrid, char* ptr)
     return ptr;
 }
 
-std::pair<std::vector<beatgrid_marker>, const char*> decode_beatgrid(
-    const char* ptr, const char* end)
+std::pair<std::vector<beatgrid_marker>, const std::byte*> decode_beatgrid(
+    const std::byte* ptr, const std::byte* end)
 {
     int64_t count;
     std::tie(count, ptr) = decode_int64_be(ptr);
@@ -122,9 +122,9 @@ std::pair<std::vector<beatgrid_marker>, const char*> decode_beatgrid(
 }  // namespace
 
 // Encode beat data into a byte array
-std::vector<char> beat_data::encode() const
+std::vector<std::byte> beat_data::encode() const
 {
-    std::vector<char> uncompressed(
+    std::vector<std::byte> uncompressed(
         33 + 24 * (default_beatgrid.size() + adjusted_beatgrid.size()));
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();
@@ -145,7 +145,7 @@ std::vector<char> beat_data::encode() const
 }
 
 // Extract beat data from a byte array
-beat_data beat_data::decode(const std::vector<char>& compressed_data)
+beat_data beat_data::decode(const std::vector<std::byte>& compressed_data)
 {
     const auto raw_data = zlib_uncompress(compressed_data);
     auto ptr = raw_data.data();
@@ -197,7 +197,7 @@ beat_data beat_data::decode(const std::vector<char>& compressed_data)
     // tolerated here in accordance with the robustness principle.
     while (ptr != end)
     {
-        if (*ptr != 0)
+        if (std::to_integer<int>(*ptr) != 0)
         {
             throw std::invalid_argument{"Beat data has trailing non-zero data"};
         }
@@ -209,9 +209,9 @@ beat_data beat_data::decode(const std::vector<char>& compressed_data)
 }
 
 // Encode high-resolution waveform data into a byte array
-std::vector<char> high_res_waveform_data::encode() const
+std::vector<std::byte> high_res_waveform_data::encode() const
 {
-    std::vector<char> uncompressed(30 + 6 * waveform.size());
+    std::vector<std::byte> uncompressed(30 + 6 * waveform.size());
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();
 
@@ -261,7 +261,7 @@ std::vector<char> high_res_waveform_data::encode() const
 
 // Extract high-resolution waveform from a byte array
 high_res_waveform_data high_res_waveform_data::decode(
-    const std::vector<char>& compressed_data)
+    const std::vector<std::byte>& compressed_data)
 {
     const auto raw_data = zlib_uncompress(compressed_data);
     auto ptr = raw_data.data();
@@ -319,7 +319,7 @@ high_res_waveform_data high_res_waveform_data::decode(
 }
 
 // Encode loops into a byte array
-std::vector<char> loops_data::encode() const
+std::vector<std::byte> loops_data::encode() const
 {
     auto total_label_length = std::accumulate(
         loops.begin(), loops.end(), int64_t{0},
@@ -327,7 +327,7 @@ std::vector<char> loops_data::encode() const
             return x + (loop ? loop->label.length() : 0);
         });
 
-    std::vector<char> uncompressed(
+    std::vector<std::byte> uncompressed(
         8 + (23 * loops.size()) + total_label_length);
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();
@@ -379,7 +379,7 @@ std::vector<char> loops_data::encode() const
 }
 
 // Extract loops from a byte array
-loops_data loops_data::decode(const std::vector<char>& raw_data)
+loops_data loops_data::decode(const std::vector<std::byte>& raw_data)
 {
     // Note that loops are not compressed, unlike all the other fields
     auto ptr = raw_data.data();
@@ -409,7 +409,7 @@ loops_data loops_data::decode(const std::vector<char>& raw_data)
 
         if (label_length > 0)
         {
-            loop.label.assign(ptr, label_length);
+            loop.label.assign(reinterpret_cast<const char*>(ptr), label_length);
             ptr += label_length;
         }
 
@@ -439,9 +439,9 @@ loops_data loops_data::decode(const std::vector<char>& raw_data)
 }
 
 // Encode overview waveform data into a byte array
-std::vector<char> overview_waveform_data::encode() const
+std::vector<std::byte> overview_waveform_data::encode() const
 {
-    std::vector<char> uncompressed(27 + 3 * waveform.size());
+    std::vector<std::byte> uncompressed(27 + 3 * waveform.size());
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();
 
@@ -480,7 +480,7 @@ std::vector<char> overview_waveform_data::encode() const
 
 // Extract overview waveform from a byte array
 overview_waveform_data overview_waveform_data::decode(
-    const std::vector<char>& compressed_data)
+    const std::vector<std::byte>& compressed_data)
 {
     const auto raw_data = zlib_uncompress(compressed_data);
     auto ptr = raw_data.data();
@@ -535,7 +535,7 @@ overview_waveform_data overview_waveform_data::decode(
 }
 
 // Encode quick cues data into a byte array
-std::vector<char> quick_cues_data::encode() const
+std::vector<std::byte> quick_cues_data::encode() const
 {
     auto total_label_length = std::accumulate(
         hot_cues.begin(), hot_cues.end(), int64_t{0},
@@ -544,7 +544,7 @@ std::vector<char> quick_cues_data::encode() const
         });
 
     // Work out total length of all cue labels
-    std::vector<char> uncompressed(129 + total_label_length);
+    std::vector<std::byte> uncompressed(129 + total_label_length);
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();
 
@@ -595,7 +595,7 @@ std::vector<char> quick_cues_data::encode() const
 
 // Extract quick cues data from a byte array
 quick_cues_data quick_cues_data::decode(
-    const std::vector<char>& compressed_data)
+    const std::vector<std::byte>& compressed_data)
 {
     const auto raw_data = zlib_uncompress(compressed_data);
     auto ptr = raw_data.data();
@@ -626,7 +626,7 @@ quick_cues_data quick_cues_data::decode(
 
         if (label_length > 0)
         {
-            quick_cue.label.assign(ptr, label_length);
+            quick_cue.label.assign(reinterpret_cast<const char*>(ptr), label_length);
             ptr += label_length;
         }
 
@@ -665,9 +665,9 @@ quick_cues_data quick_cues_data::decode(
 }
 
 // Encode track data into a byte array
-std::vector<char> track_data::encode() const
+std::vector<std::byte> track_data::encode() const
 {
-    std::vector<char> uncompressed(28);  // Track data has fixed size
+    std::vector<std::byte> uncompressed(28);  // Track data has fixed size
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();
 
@@ -686,7 +686,7 @@ std::vector<char> track_data::encode() const
 }
 
 // Extract track data from a byte array
-track_data track_data::decode(const std::vector<char>& compressed_track_data)
+track_data track_data::decode(const std::vector<std::byte>& compressed_track_data)
 {
     const auto raw_data = zlib_uncompress(compressed_track_data);
     auto ptr = raw_data.data();

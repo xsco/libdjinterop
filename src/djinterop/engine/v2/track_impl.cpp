@@ -93,18 +93,25 @@ track_row snapshot_to_row(
         convert::write::sample_rate(snapshot.sample_rate);
 
     track_data_blob track_data{
-        converted_sample_rate, converted_sample_count.track_data_samples,
-        converted_average_loudness, converted_key.track_data_key};
+        converted_sample_rate,        converted_sample_count.track_data_samples,
+        converted_key.track_data_key, converted_average_loudness,
+        converted_average_loudness,   converted_average_loudness};
 
     auto overview_waveform_data = convert::write::waveform(
         snapshot.waveform, snapshot.sample_count, snapshot.sample_rate);
 
     auto converted_beatgrid = convert::write::beatgrid(snapshot.beatgrid);
+
+    // Real beat data seems to have 9 additional zero bytes at the end!
+    std::vector<std::byte> beat_data_extra(9, std::byte{0});
+
     beat_data_blob beat_data{
-        converted_sample_rate, converted_sample_count.beat_data_samples,
+        converted_sample_rate,
+        converted_sample_count.beat_data_samples,
         converted_beatgrid.is_beatgrid_set,
         converted_beatgrid.default_beat_grid,
-        converted_beatgrid.adjusted_beat_grid};
+        converted_beatgrid.adjusted_beat_grid,
+        beat_data_extra};
 
     quick_cues_blob quick_cues;
     quick_cues.default_main_cue = convert::write::main_cue(snapshot.main_cue);
@@ -267,8 +274,10 @@ stdx::optional<double> track_impl::average_loudness()
 void track_impl::set_average_loudness(stdx::optional<double> average_loudness)
 {
     auto track_data = track_.get_track_data(id());
-    track_data.average_loudness =
-        convert::write::average_loudness(average_loudness);
+    auto converted = convert::write::average_loudness(average_loudness);
+    track_data.average_loudness_1 = converted;
+    track_data.average_loudness_2 = converted;
+    track_data.average_loudness_3 = converted;
     track_.set_track_data(id(), track_data);
 }
 
