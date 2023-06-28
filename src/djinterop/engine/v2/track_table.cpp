@@ -18,6 +18,7 @@
 #include <djinterop/engine/v2/track_table.hpp>
 
 #include <cassert>
+#include <cstddef>
 #include <utility>
 
 #include <djinterop/engine/v2/engine_library_context.hpp>
@@ -388,8 +389,7 @@ stdx::optional<track_row> track_table::get(int64_t id) const
                 stdx::optional<int32_t> key, int64_t rating,
                 stdx::optional<std::string> album_art,
                 stdx::optional<int64_t> time_last_played, bool is_played,
-                std::string file_type, bool is_analyzed,
-                int64_t date_created,
+                std::string file_type, bool is_analyzed, int64_t date_created,
                 int64_t date_added, bool is_available,
                 bool is_metadata_of_packed_track_changed,
                 bool is_performance_data_of_packed_track_changed,
@@ -398,11 +398,11 @@ stdx::optional<track_row> track_table::get(int64_t id) const
                 stdx::optional<std::string> streaming_source,
                 stdx::optional<std::string> uri, bool is_beat_grid_locked,
                 std::string origin_database_uuid, int64_t origin_track_id,
-                const std::vector<char>& track_data,
-                const std::vector<char>& overview_waveform_data,
-                const std::vector<char>& beat_data,
-                const std::vector<char>& quick_cues,
-                const std::vector<char>& loops,
+                const std::vector<std::byte>& track_data,
+                const std::vector<std::byte>& overview_waveform_data,
+                const std::vector<std::byte>& beat_data,
+                const std::vector<std::byte>& quick_cues,
+                const std::vector<std::byte>& loops,
                 stdx::optional<int64_t> third_party_source_id,
                 int64_t streaming_flags, bool explicit_lyrics,
                 stdx::optional<int64_t> active_on_load_loops,
@@ -497,8 +497,7 @@ stdx::optional<track_row> track_table::get(int64_t id) const
                 stdx::optional<int32_t> key, int64_t rating,
                 stdx::optional<std::string> album_art,
                 stdx::optional<int64_t> time_last_played, bool is_played,
-                std::string file_type, bool is_analyzed,
-                int64_t date_created,
+                std::string file_type, bool is_analyzed, int64_t date_created,
                 int64_t date_added, bool is_available,
                 bool is_metadata_of_packed_track_changed,
                 bool is_performance_data_of_packed_track_changed,
@@ -507,11 +506,11 @@ stdx::optional<track_row> track_table::get(int64_t id) const
                 stdx::optional<std::string> streaming_source,
                 stdx::optional<std::string> uri, bool is_beat_grid_locked,
                 std::string origin_database_uuid, int64_t origin_track_id,
-                const std::vector<char>& track_data,
-                const std::vector<char>& overview_waveform_data,
-                const std::vector<char>& beat_data,
-                const std::vector<char>& quick_cues,
-                const std::vector<char>& loops,
+                const std::vector<std::byte>& track_data,
+                const std::vector<std::byte>& overview_waveform_data,
+                const std::vector<std::byte>& beat_data,
+                const std::vector<std::byte>& quick_cues,
+                const std::vector<std::byte>& loops,
                 stdx::optional<int64_t> third_party_source_id,
                 int64_t streaming_flags, bool explicit_lyrics,
                 stdx::optional<int64_t> active_on_load_loops)
@@ -604,8 +603,7 @@ stdx::optional<track_row> track_table::get(int64_t id) const
                 stdx::optional<int32_t> key, int64_t rating,
                 stdx::optional<std::string> album_art,
                 stdx::optional<int64_t> time_last_played, bool is_played,
-                std::string file_type, bool is_analyzed,
-                int64_t date_created,
+                std::string file_type, bool is_analyzed, int64_t date_created,
                 int64_t date_added, bool is_available,
                 bool is_metadata_of_packed_track_changed,
                 bool is_performance_data_of_packed_track_changed,
@@ -614,11 +612,11 @@ stdx::optional<track_row> track_table::get(int64_t id) const
                 stdx::optional<std::string> streaming_source,
                 stdx::optional<std::string> uri, bool is_beat_grid_locked,
                 std::string origin_database_uuid, int64_t origin_track_id,
-                const std::vector<char>& track_data,
-                const std::vector<char>& overview_waveform_data,
-                const std::vector<char>& beat_data,
-                const std::vector<char>& quick_cues,
-                const std::vector<char>& loops,
+                const std::vector<std::byte>& track_data,
+                const std::vector<std::byte>& overview_waveform_data,
+                const std::vector<std::byte>& beat_data,
+                const std::vector<std::byte>& quick_cues,
+                const std::vector<std::byte>& loops,
                 stdx::optional<int64_t> third_party_source_id,
                 int64_t streaming_flags, bool explicit_lyrics)
         {
@@ -1298,26 +1296,26 @@ void track_table::set_origin_track_id(int64_t id, int64_t origin_track_id)
 track_data_blob track_table::get_track_data(int64_t id)
 {
     return track_data_blob::from_blob(
-        get_column<std::vector<char> >(context_->db, id, "trackData"));
+        get_column<std::vector<std::byte> >(context_->db, id, "trackData"));
 }
 
 void track_table::set_track_data(int64_t id, const track_data_blob& track_data)
 {
-    set_column<std::vector<char> >(
+    set_column<std::vector<std::byte> >(
         context_->db, id, "trackData", track_data.to_blob());
 }
 
 overview_waveform_data_blob track_table::get_overview_waveform_data(int64_t id)
 {
     return overview_waveform_data_blob::from_blob(
-        get_column<std::vector<char> >(
+        get_column<std::vector<std::byte> >(
             context_->db, id, "overviewWaveFormData"));
 }
 
 void track_table::set_overview_waveform_data(
     int64_t id, const overview_waveform_data_blob& overview_waveform_data)
 {
-    set_column<std::vector<char> >(
+    set_column<std::vector<std::byte> >(
         context_->db, id, "overviewWaveFormData",
         overview_waveform_data.to_blob());
 }
@@ -1325,36 +1323,37 @@ void track_table::set_overview_waveform_data(
 beat_data_blob track_table::get_beat_data(int64_t id)
 {
     return beat_data_blob::from_blob(
-        get_column<std::vector<char> >(context_->db, id, "beatData"));
+        get_column<std::vector<std::byte> >(context_->db, id, "beatData"));
 }
 
 void track_table::set_beat_data(int64_t id, const beat_data_blob& beat_data)
 {
-    set_column<std::vector<char> >(
+    set_column<std::vector<std::byte> >(
         context_->db, id, "beatData", beat_data.to_blob());
 }
 
 quick_cues_blob track_table::get_quick_cues(int64_t id)
 {
     return quick_cues_blob::from_blob(
-        get_column<std::vector<char> >(context_->db, id, "quickCues"));
+        get_column<std::vector<std::byte> >(context_->db, id, "quickCues"));
 }
 
 void track_table::set_quick_cues(int64_t id, const quick_cues_blob& quick_cues)
 {
-    set_column<std::vector<char> >(
+    set_column<std::vector<std::byte> >(
         context_->db, id, "quickCues", quick_cues.to_blob());
 }
 
 loops_blob track_table::get_loops(int64_t id)
 {
     return loops_blob::from_blob(
-        get_column<std::vector<char> >(context_->db, id, "loops"));
+        get_column<std::vector<std::byte> >(context_->db, id, "loops"));
 }
 
 void track_table::set_loops(int64_t id, const loops_blob& loops)
 {
-    set_column<std::vector<char> >(context_->db, id, "loops", loops.to_blob());
+    set_column<std::vector<std::byte> >(
+        context_->db, id, "loops", loops.to_blob());
 }
 
 stdx::optional<int64_t> track_table::get_third_party_source_id(int64_t id)

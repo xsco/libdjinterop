@@ -25,15 +25,15 @@
 
 namespace djinterop::engine::v2
 {
-std::vector<char> loops_blob::to_blob() const
+std::vector<std::byte> loops_blob::to_blob() const
 {
     auto total_label_length = std::accumulate(
         loops.begin(), loops.end(), int64_t{0},
         [](int64_t x, const stdx::optional<loop_blob>& loop)
         { return x + (loop ? loop->label.length() : 0); });
 
-    std::vector<char> uncompressed(
-        8 + (23 * loops.size()) + total_label_length);
+    std::vector<std::byte> uncompressed(
+        8 + (23 * loops.size()) + total_label_length + extra_data.size());
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();
 
@@ -56,13 +56,14 @@ std::vector<char> loops_blob::to_blob() const
         ptr = encode_uint8(loop.color.b, ptr);
     }
 
+    ptr = encode_extra(extra_data, ptr);
     assert(ptr == end);
 
     // Note that the loops blob is not compressed.
     return uncompressed;
 }
 
-loops_blob loops_blob::from_blob(const std::vector<char>& blob)
+loops_blob loops_blob::from_blob(const std::vector<std::byte>& blob)
 {
     // Note that loops are not compressed, unlike all the other fields.
     auto ptr = blob.data();
@@ -92,7 +93,7 @@ loops_blob loops_blob::from_blob(const std::vector<char>& blob)
 
         if (label_length > 0)
         {
-            loop.label.assign(ptr, label_length);
+            loop.label.assign(reinterpret_cast<const char*>(ptr), label_length);
             ptr += label_length;
         }
 
@@ -108,6 +109,7 @@ loops_blob loops_blob::from_blob(const std::vector<char>& blob)
         result.loops.push_back(loop);
     }
 
+    std::tie(result.extra_data, ptr) = decode_extra(ptr, end);
     assert(ptr == end);
 
     return result;

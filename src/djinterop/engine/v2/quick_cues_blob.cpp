@@ -25,7 +25,7 @@
 
 namespace djinterop::engine::v2
 {
-std::vector<char> quick_cues_blob::to_blob() const
+std::vector<std::byte> quick_cues_blob::to_blob() const
 {
     // Work out total length of all cue labels in order to size the buffer.
     auto total_label_length = std::accumulate(
@@ -33,8 +33,8 @@ std::vector<char> quick_cues_blob::to_blob() const
         [](int64_t x, const quick_cue_blob& quick_cue)
         { return x + quick_cue.label.length(); });
 
-    std::vector<char> uncompressed(
-        25 + (13 * quick_cues.size()) + total_label_length);
+    std::vector<std::byte> uncompressed(
+        25 + (13 * quick_cues.size()) + total_label_length + extra_data.size());
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();
 
@@ -57,12 +57,13 @@ std::vector<char> quick_cues_blob::to_blob() const
     ptr = encode_double_be(adjusted_main_cue, ptr);
     ptr = encode_uint8(is_main_cue_adjusted, ptr);
     ptr = encode_double_be(default_main_cue, ptr);
+    ptr = encode_extra(extra_data, ptr);
     assert(ptr == end);
 
     return zlib_compress(uncompressed);
 }
 
-quick_cues_blob quick_cues_blob::from_blob(const std::vector<char>& blob)
+quick_cues_blob quick_cues_blob::from_blob(const std::vector<std::byte>& blob)
 {
     const auto uncompressed = zlib_uncompress(blob);
     auto ptr = uncompressed.data();
@@ -93,7 +94,8 @@ quick_cues_blob quick_cues_blob::from_blob(const std::vector<char>& blob)
 
         if (label_length > 0)
         {
-            quick_cue.label.assign(ptr, label_length);
+            quick_cue.label.assign(
+                reinterpret_cast<const char*>(ptr), label_length);
             ptr += label_length;
         }
 
@@ -109,6 +111,7 @@ quick_cues_blob quick_cues_blob::from_blob(const std::vector<char>& blob)
     std::tie(result.adjusted_main_cue, ptr) = decode_double_be(ptr);
     std::tie(result.is_main_cue_adjusted, ptr) = decode_uint8(ptr);
     std::tie(result.default_main_cue, ptr) = decode_double_be(ptr);
+    std::tie(result.extra_data, ptr) = decode_extra(ptr, end);
     assert(ptr == end);
 
     return result;

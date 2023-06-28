@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -249,7 +250,7 @@ public:
         db << (std::string{"SELECT "} + column_name +
                " FROM PerformanceData WHERE id = ?")
            << id >>
-            [&](const std::vector<char>& encoded_data) {
+            [&](const std::vector<std::byte>& encoded_data) {
                 if (!result)
                 {
                     result = T::decode(encoded_data);

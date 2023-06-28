@@ -43,8 +43,8 @@ inline stdx::optional<int64_t> album_art_id(int64_t album_art_id)
 inline stdx::optional<double> average_loudness(
     const track_data_blob& track_data)
 {
-    return track_data.average_loudness != 0
-               ? stdx::make_optional(track_data.average_loudness)
+    return track_data.average_loudness_1 != 0
+               ? stdx::make_optional(track_data.average_loudness_1)
                : stdx::nullopt;
 }
 

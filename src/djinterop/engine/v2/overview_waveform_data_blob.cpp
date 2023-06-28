@@ -24,9 +24,10 @@
 
 namespace djinterop::engine::v2
 {
-std::vector<char> overview_waveform_data_blob::to_blob() const
+std::vector<std::byte> overview_waveform_data_blob::to_blob() const
 {
-    std::vector<char> uncompressed(27 + 3 * waveform_points.size());
+    std::vector<std::byte> uncompressed(
+        27 + (3 * waveform_points.size()) + extra_data.size());
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();
 
@@ -46,13 +47,14 @@ std::vector<char> overview_waveform_data_blob::to_blob() const
     ptr = encode_uint8(maximum_point.low_value, ptr);
     ptr = encode_uint8(maximum_point.mid_value, ptr);
     ptr = encode_uint8(maximum_point.high_value, ptr);
+    ptr = encode_extra(extra_data, ptr);
     assert(ptr == end);
 
     return zlib_compress(uncompressed);
 }
 
 overview_waveform_data_blob overview_waveform_data_blob::from_blob(
-    const std::vector<char>& blob)
+    const std::vector<std::byte>& blob)
 {
     const auto raw_data = zlib_uncompress(blob);
     auto ptr = raw_data.data();
@@ -96,6 +98,7 @@ overview_waveform_data_blob overview_waveform_data_blob::from_blob(
     std::tie(result.maximum_point.low_value, ptr) = decode_uint8(ptr);
     std::tie(result.maximum_point.mid_value, ptr) = decode_uint8(ptr);
     std::tie(result.maximum_point.high_value, ptr) = decode_uint8(ptr);
+    std::tie(result.extra_data, ptr) = decode_extra(ptr, end);
     assert(ptr == end);
 
     return result;

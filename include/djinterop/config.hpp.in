@@ -61,4 +61,10 @@
 #cmakedefine DJINTEROP_STD_OPTIONAL
 #cmakedefine DJINTEROP_STD_EXPERIMENTAL_OPTIONAL
 
+#include <cstddef>
+static_assert(sizeof(std::byte) == 1,
+              "Only platforms where sizeof(std::byte) == 1 are supported");
+static_assert(alignof(std::byte) == 1,
+              "Only platforms where alignof(std::byte) == 1 are supported");
+
 #endif  // DJINTEROP_CONFIG_HPP
