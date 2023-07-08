@@ -1,3 +1,13 @@
+libdjinterop (0.19.1-0ubuntu1) bionic; urgency=medium
+
+  * Remove meson, use CMake as main build system
+  * Implement stream output operators
+  * Remove transaction guard from public API
+  * Engine schemas 2.0.1 to 2.20.3
+  * Remove Engine-isms from high-level API
+
+ -- Adam Szmigin <smidge@xsco.net>  Sat, 08 Jul 2023 21:00:56 +0100
+
 libdjinterop (0.16.1-0ubuntu1) bionic; urgency=medium
 
   * Int type missing include fix
