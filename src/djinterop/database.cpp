@@ -18,11 +18,8 @@
 #include <sqlite_modern_cpp.h>
 
 #include <djinterop/djinterop.hpp>
-#include <djinterop/enginelibrary/el_database_impl.hpp>
-#include <djinterop/enginelibrary/schema/schema.hpp>
-#include <djinterop/impl/database_impl.hpp>
-#include <djinterop/transaction_guard.hpp>
-#include <djinterop/util.hpp>
+
+#include "impl/database_impl.hpp"
 
 namespace djinterop
 {
@@ -31,11 +28,6 @@ database::database(const database& db) = default;
 database::~database() = default;
 
 database& database::operator=(const database& db) = default;
-
-transaction_guard database::begin_transaction() const
-{
-    return pimpl_->begin_transaction();
-}
 
 stdx::optional<crate> database::crate_by_id(int64_t id) const
 {
@@ -65,11 +57,6 @@ track database::create_track(const track_snapshot& snapshot)
 std::string database::directory() const
 {
     return pimpl_->directory();
-}
-
-bool database::is_supported() const
-{
-    return pimpl_->is_supported();
 }
 
 void database::verify() const
@@ -117,11 +104,6 @@ std::vector<track> database::tracks_by_relative_path(
 std::string database::uuid() const
 {
     return pimpl_->uuid();
-}
-
-semantic_version database::version() const
-{
-    return pimpl_->version();
 }
 
 std::string database::version_name() const

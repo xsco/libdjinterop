@@ -34,21 +34,12 @@
 
 namespace djinterop
 {
+// TODO (mr-smidge): Review use of fwd decls here.  A user should be able to
+//  include any public header and get to work!
 class crate;
 class database_impl;
-struct semantic_version;
 class track;
 struct track_snapshot;
-class transaction_guard;
-
-class database_not_found : public std::runtime_error
-{
-public:
-    explicit database_not_found(const std::string& what_arg) noexcept
-        : runtime_error{what_arg}
-    {
-    }
-};
 
 class DJINTEROP_PUBLIC database
 {
@@ -61,8 +52,6 @@ public:
 
     /// Copy assignment operator
     database& operator=(const database& db);
-
-    transaction_guard begin_transaction() const;
 
     /// Returns the crate with the given ID
     ///
@@ -90,10 +79,6 @@ public:
     /// This is the same as the directory passed to the `database` constructor.
     std::string directory() const;
 
-    /// Returns true iff the database version is supported by this version of
-    /// `libdjinterop` or not
-    bool is_supported() const;
-
     /// Returns the UUID of the database
     std::string uuid() const;
 
@@ -102,9 +87,6 @@ public:
     /// A `database_inconsistency` (or some exception derived from it) is thrown
     /// if any kind of inconsistency is found.
     void verify() const;
-
-    /// Returns the schema version of the database
-    semantic_version version() const;
 
     /// Returns a descriptive name for the database version.
     std::string version_name() const;
@@ -137,6 +119,7 @@ public:
 
     /// Returns all tracks whose `relative_path` attribute in the database
     /// matches the given string
+    // TODO (mr-smidge): Change to optional<track>, not vector.
     std::vector<track> tracks_by_relative_path(
         const std::string& relative_path) const;
 

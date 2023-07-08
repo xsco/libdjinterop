@@ -12,8 +12,9 @@ compile_commands.json
 .envrc
 
 # IDE settings
-/.vscode/
+.idea/
+.vscode/
 
-# CMake typical build dir
-/cmake_build/
-
+# CMake typical build dirs
+/cmake_build*
+/cmake-build*

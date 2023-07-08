@@ -31,6 +31,15 @@
 
 namespace djinterop
 {
+class database_not_found : public std::runtime_error
+{
+public:
+    explicit database_not_found(const std::string& what_arg) noexcept
+        : runtime_error{what_arg}
+    {
+    }
+};
+
 /// The `database_inconsistency` exception is thrown when the schema of a
 /// database does not match the expectations suggested by its reported version
 /// number.
@@ -43,29 +52,28 @@ public:
     }
 };
 
-/// The `unsupported_database_version` exception is thrown when a database
-/// schema version is encountered that is not yet supported by this version of
-/// the library.
-class unsupported_database_version : public std::runtime_error
+/// The `unsupported_database` exception is thrown when a database is
+/// encountered that is not yet supported by this version of the library.
+class unsupported_database : public std::runtime_error
 {
 public:
-    explicit unsupported_database_version(const semantic_version version)
-        noexcept : runtime_error{"Unsupported database version"},
-                   version_{version}
+    explicit unsupported_database(const std::string& what_arg) noexcept
+        : runtime_error{what_arg}
     {
     }
+};
 
-    explicit unsupported_database_version(
-        const std::string& what_arg, const semantic_version version) noexcept
-        : runtime_error{what_arg},
-          version_{version}
+/// The `unsupported operation` exception is thrown when an attempt is made to
+/// perform an operation that is not supported by the database, such as a
+/// missing feature on the high-level API, or a feature only available in
+/// certain database versions.
+class unsupported_operation : public std::runtime_error
+{
+public:
+    explicit unsupported_operation(const std::string& what_arg) noexcept
+        : runtime_error{what_arg}
     {
     }
-
-    const semantic_version version() const { return version_; }
-
-private:
-    semantic_version version_;
 };
 
 /// The `crate_deleted` exception is thrown when an invalid `crate` object is
@@ -81,7 +89,7 @@ public:
     }
 
     /// Returns the crate ID that was deemed non-existent
-    int64_t id() const noexcept { return id_; }
+    [[nodiscard]] int64_t id() const noexcept { return id_; }
 
 private:
     int64_t id_;
@@ -95,32 +103,57 @@ public:
     /// Construct the exception for a given crate ID
     explicit crate_database_inconsistency(
         const std::string& what_arg, int64_t id) noexcept
-        : database_inconsistency{what_arg.c_str()},
+        : database_inconsistency{what_arg},
           id_{id}
     {
     }
 
-    /// Get the crate ID that was deemed inconsistent
-    int64_t id() const noexcept { return id_; }
+    /// The crate ID that was deemed to be inconsistent.
+    [[nodiscard]] int64_t id() const noexcept { return id_; }
 
 private:
     int64_t id_;
 };
 
-/// The `crate_database_inconsistency` exception is thrown when a database
-/// inconsistency is found that correlates to a crate.
+/// The `crate_already_exists` exception is thrown when a request is made to
+/// create a crate with a name that already exists.
+class crate_already_exists: public std::runtime_error
+{
+public:
+    /// Construct the exception.
+    explicit crate_already_exists(const std::string& what_arg) noexcept
+        : runtime_error{what_arg.c_str()}
+    {
+    }
+};
+
+/// The `crate_invalid_parent` exception is thrown when a crate parent is found
+/// to be invalid.
+class crate_invalid_parent : public std::runtime_error
+{
+public:
+    /// Construct the exception.
+    explicit crate_invalid_parent(const std::string& what_arg) noexcept
+        : runtime_error{what_arg.c_str()}
+    {
+    }
+};
+
+/// The `crate_invalid_name` exception is thrown when a crate name is found to
+/// be invalid.
 class crate_invalid_name : public std::runtime_error
 {
 public:
-    /// Construct the exception for a given crate name
-    explicit crate_invalid_name(const std::string& what_arg, std::string name)
-        noexcept : runtime_error{what_arg.c_str()},
-                   name_{name}
+    /// Construct the exception for a given crate name.
+    explicit crate_invalid_name(
+        const std::string& what_arg, const std::string& name) noexcept
+        : runtime_error{what_arg.c_str()},
+          name_{name}
     {
     }
 
-    /// Get the name that was deemed invalid
-    std::string name() const noexcept { return name_; }
+    /// The name that was deemed invalid.
+    [[nodiscard]] std::string name() const noexcept { return name_; }
 
 private:
     std::string name_;
@@ -139,7 +172,7 @@ public:
     }
 
     /// Returns the track ID that was found to be non-existent
-    int64_t id() const noexcept { return id_; }
+    [[nodiscard]] int64_t id() const noexcept { return id_; }
 
 private:
     int64_t id_;
@@ -151,8 +184,8 @@ class invalid_track_snapshot : public std::invalid_argument
 {
 public:
     /// Initialise a new instance of the exception with a custom message.
-    explicit invalid_track_snapshot(const std::string& what_arg)
-    : std::invalid_argument(what_arg)
+    explicit invalid_track_snapshot(const std::string& what_arg) :
+        std::invalid_argument{what_arg}
     {
     }
 };
@@ -171,10 +204,34 @@ public:
     }
 
     /// Get the track ID that is the subject of this exception
-    int64_t id() const noexcept { return id_; }
+    [[nodiscard]] int64_t id() const noexcept { return id_; }
 
 private:
     int64_t id_;
+};
+
+/// The `hot_cues_overflow` exception is thrown when more hot cues are provided
+/// than are supported by the database.
+class hot_cues_overflow : std::invalid_argument
+{
+public:
+    /// Constructs the exception.
+    explicit hot_cues_overflow(const std::string& what_arg) noexcept
+        : std::invalid_argument{what_arg}
+    {
+    }
+};
+
+/// The `loops_overflow` exception is thrown when more loops are provided than
+/// are supported by the database.
+class loops_overflow : std::invalid_argument
+{
+public:
+    /// Constructs the exception.
+    explicit loops_overflow(const std::string& what_arg) noexcept
+        : std::invalid_argument{what_arg}
+    {
+    }
 };
 
 }  // namespace djinterop

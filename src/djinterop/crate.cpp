@@ -19,8 +19,8 @@
 #include <vector>
 
 #include <djinterop/djinterop.hpp>
-#include <djinterop/impl/crate_impl.hpp>
-#include <djinterop/util.hpp>
+
+#include "impl/crate_impl.hpp"
 
 namespace djinterop
 {

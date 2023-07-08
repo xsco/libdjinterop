@@ -16,22 +16,23 @@
  */
 
 #pragma once
-#ifndef DJINTEROP_TRACK_BUILDER_HPP
-#define DJINTEROP_TRACK_BUILDER_HPP
+#ifndef DJINTEROP_TRACK_SNAPSHOT_HPP
+#define DJINTEROP_TRACK_SNAPSHOT_HPP
 
 #if __cplusplus < 201703L
 #error This library needs at least a C++17 compliant compiler
 #endif
 
-#include <array>
 #include <chrono>
 #include <cstdint>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include <djinterop/musical_key.hpp>
 #include <djinterop/optional.hpp>
 #include <djinterop/performance_data.hpp>
+#include <djinterop/stream_helper.hpp>
 
 namespace djinterop
 {
@@ -45,33 +46,26 @@ class database;
 /// changes to the snapshot that can be committed to a database at a later time.
 /// This means that only minimal interactions with the database are required to
 /// persist the changes.
+///
+/// Note that the snapshot does not contain any reference to a track identifier:
+/// the association between a snapshot and any real track is left to the user
+/// to define and maintain.
 struct track_snapshot
 {
-    /// Create a new instance of `track_snapshot` to assemble a new track.
-    track_snapshot() : id{stdx::nullopt} {}
-
-    /// Create new instance of `track_snapshot` to edit an existing track.
-    explicit track_snapshot(int64_t id) : id{id} {}
-
-    const stdx::optional<int64_t> id;
-
-    /// The adjusted beatgrid.
-    std::vector<beatgrid_marker> adjusted_beatgrid;
-
-    /// The adjusted main cue sample offset.
-    stdx::optional<double> adjusted_main_cue;
-
     /// The album name metadata.
     stdx::optional<std::string> album;
 
     /// The artist name metadata.
     stdx::optional<std::string> artist;
 
-    /// The average loudness.
+    /// The average loudness metadata.
     stdx::optional<double> average_loudness;
 
+    /// The beatgrid.
+    std::vector<beatgrid_marker> beatgrid;
+
     /// The bitrate metadata.
-    stdx::optional<int64_t> bitrate;
+    stdx::optional<int> bitrate;
 
     /// The BPM metadata.
     stdx::optional<double> bpm;
@@ -82,66 +76,129 @@ struct track_snapshot
     /// The composer metadata.
     stdx::optional<std::string> composer;
 
-    /// The default beatgrid.
-    std::vector<beatgrid_marker> default_beatgrid;
-
-    /// The default main cue sample offset.
-    stdx::optional<double> default_main_cue;
-
     /// The duration metadata.
     stdx::optional<std::chrono::milliseconds> duration;
 
-    /// The size of the file, in bytes.
-    stdx::optional<int64_t> file_bytes;
+    /// The size of the file, in bytes, metadata.
+    stdx::optional<unsigned long long> file_bytes;
 
     /// The genre metadata.
     stdx::optional<std::string> genre;
 
     /// The hot cues.
-    std::array<stdx::optional<hot_cue>, 8> hot_cues;
+    std::vector<stdx::optional<hot_cue> > hot_cues;
 
     /// The key.
     stdx::optional<musical_key> key;
-
-    /// The time at which this track was last accessed.
-    stdx::optional<std::chrono::system_clock::time_point> last_accessed_at;
-
-    /// The time of last attribute modification of this track's file.
-    stdx::optional<std::chrono::system_clock::time_point> last_modified_at;
 
     /// The time at which the track was last played.
     stdx::optional<std::chrono::system_clock::time_point> last_played_at;
 
     /// The loops.
-    std::array<stdx::optional<loop>, 8> loops;
+    std::vector<stdx::optional<loop> > loops;
+
+    /// The main cue sample offset.
+    stdx::optional<double> main_cue;
 
     /// The publisher metadata.
     stdx::optional<std::string> publisher;
 
     /// The track rating, from 0-100.
     /// Any rating provided outside this range will be clamped.
-    stdx::optional<int32_t> rating;
+    stdx::optional<int> rating;
 
     /// The path to this track's file on disk, relative to the directory of
     /// the database.
     stdx::optional<std::string> relative_path;
 
-    /// The sampling info.
-    stdx::optional<sampling_info> sampling;
+    /// Number of audio samples within the track.
+    stdx::optional<unsigned long long> sample_count;
+
+    /// Sample rate, i.e. number of samples per second.
+    stdx::optional<double> sample_rate;
 
     /// The title metadata.
     stdx::optional<std::string> title;
 
     /// The track number metadata.
-    stdx::optional<int32_t> track_number;
+    stdx::optional<int> track_number;
+
+    // TODO (mr-smidge): Add `stdx::optional<std::string> uri` field.
 
     /// The waveform.
     std::vector<waveform_entry> waveform;
 
     /// The recording year metadata.
-    stdx::optional<int32_t> year;
+    stdx::optional<int> year;
+
+    friend bool operator==(
+        const track_snapshot& lhs, const track_snapshot& rhs) noexcept
+    {
+        return std::tie(
+                   lhs.album, lhs.artist, lhs.average_loudness,
+                   lhs.beatgrid, lhs.bitrate, lhs.bpm, lhs.comment,
+                   lhs.composer, lhs.duration, lhs.file_bytes, lhs.genre,
+                   lhs.hot_cues, lhs.key, lhs.last_played_at, lhs.loops,
+                   lhs.main_cue, lhs.publisher, lhs.rating, lhs.relative_path,
+                   lhs.sample_count, lhs.sample_rate, lhs.title,
+                   lhs.track_number, lhs.waveform, lhs.year) ==
+               std::tie(
+                   rhs.album, rhs.artist, rhs.average_loudness,
+                   rhs.beatgrid, rhs.bitrate, rhs.bpm, rhs.comment,
+                   rhs.composer, rhs.duration, rhs.file_bytes, rhs.genre,
+                   rhs.hot_cues, rhs.key, rhs.last_played_at, rhs.loops,
+                   rhs.main_cue, rhs.publisher, rhs.rating, rhs.relative_path,
+                   rhs.sample_count, rhs.sample_rate, rhs.title,
+                   rhs.track_number, rhs.waveform, rhs.year);
+    }
+
+    friend bool operator!=(
+        const track_snapshot& lhs, const track_snapshot& rhs) noexcept
+    {
+        return !(rhs == lhs);
+    }
+
+    friend std::ostream& operator<<(
+        std::ostream& os, const track_snapshot& obj) noexcept
+    {
+#define PRINT_FIELD(field) \
+    os << ", " #field "="; \
+    stream_helper::print(os, obj.field)
+
+        os << "track_snapshot{album=";
+        stream_helper::print(os, obj.album);
+
+        PRINT_FIELD(artist);
+        PRINT_FIELD(average_loudness);
+        PRINT_FIELD(beatgrid);
+        PRINT_FIELD(bitrate);
+        PRINT_FIELD(bpm);
+        PRINT_FIELD(comment);
+        PRINT_FIELD(composer);
+        PRINT_FIELD(duration);
+        PRINT_FIELD(file_bytes);
+        PRINT_FIELD(genre);
+        PRINT_FIELD(hot_cues);
+        PRINT_FIELD(key);
+        PRINT_FIELD(last_played_at);
+        PRINT_FIELD(loops);
+        PRINT_FIELD(main_cue);
+        PRINT_FIELD(publisher);
+        PRINT_FIELD(rating);
+        PRINT_FIELD(relative_path);
+        PRINT_FIELD(sample_count);
+        PRINT_FIELD(sample_rate);
+        PRINT_FIELD(title);
+        PRINT_FIELD(track_number);
+        os << ", waveform=[#" << obj.waveform.size() << "]";
+        PRINT_FIELD(year);
+
+        os << "}";
+        return os;
+#undef PRINT_FIELD
+    }
 };
 
 }  // namespace djinterop
 
-#endif  // DJINTEROP_TRACK_BUILDER_HPP
+#endif  // DJINTEROP_TRACK_SNAPSHOT_HPP

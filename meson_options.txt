@@ -1,2 +1,0 @@
-option('system_sqlite', type: 'boolean', value: true,
-    description: 'Use a system-wide installation of SQLite, rather than the built-in one.')

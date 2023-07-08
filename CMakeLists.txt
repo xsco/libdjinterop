@@ -1,16 +1,6 @@
-# libdjinterop CMake file
-#
-# This CMake build script is provided for simpler integration with projects
-# that wish to include libdjinterop via CMake's ExternalProject module.
-#
-# It is also automatically-detected as the preferred build system to use when
-# building `.deb` packages for Debian/Ubuntu and derivatives.
-#
-# The meson/ninja build should be preferred in all other cases.
-#
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.16.0
+        VERSION 0.19.1
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
@@ -28,10 +18,18 @@ endif()
 # Require C++17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-if (MSVC)
+if(MSVC)
+    add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
+
     # Ask MSVC to populate the __cplusplus macro properly.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus")
+else()
+    add_compile_options("-Wall" "$<$<CONFIG:RELEASE>:-O3>")
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        add_compile_options("-stdlib=libc++")
+    endif()
 endif()
+
 
 # Build shared a library by default.
 option(BUILD_SHARED_LIBS "Build shared library" ON)
@@ -48,32 +46,49 @@ add_library(
     src/djinterop/impl/crate_impl.cpp
     src/djinterop/impl/database_impl.cpp
     src/djinterop/impl/track_impl.cpp
-    src/djinterop/impl/transaction_guard_impl.cpp
-    src/djinterop/enginelibrary/schema/schema_1_6_0.cpp
-    src/djinterop/enginelibrary/schema/schema_1_7_1.cpp
-    src/djinterop/enginelibrary/schema/schema_1_9_1.cpp
-    src/djinterop/enginelibrary/schema/schema_1_11_1.cpp
-    src/djinterop/enginelibrary/schema/schema_1_13_0.cpp
-    src/djinterop/enginelibrary/schema/schema_1_13_1.cpp
-    src/djinterop/enginelibrary/schema/schema_1_13_2.cpp
-    src/djinterop/enginelibrary/schema/schema_1_15_0.cpp
-    src/djinterop/enginelibrary/schema/schema_1_17_0.cpp
-    src/djinterop/enginelibrary/schema/schema_1_18_0_ep.cpp
-    src/djinterop/enginelibrary/schema/schema_1_18_0_fw.cpp
-    src/djinterop/enginelibrary/schema/schema.cpp
-    src/djinterop/enginelibrary/el_crate_impl.cpp
-    src/djinterop/enginelibrary/el_database_impl.cpp
-    src/djinterop/enginelibrary/el_storage.cpp
-    src/djinterop/enginelibrary/el_track_impl.cpp
-    src/djinterop/enginelibrary/el_transaction_guard_impl.cpp
-    src/djinterop/enginelibrary/encode_decode_utils.cpp
-    src/djinterop/enginelibrary/performance_data_format.cpp
+    src/djinterop/engine/encode_decode_utils.cpp
+    src/djinterop/engine/engine.cpp
+    src/djinterop/engine/schema/schema_1_6_0.cpp
+    src/djinterop/engine/schema/schema_1_7_1.cpp
+    src/djinterop/engine/schema/schema_1_9_1.cpp
+    src/djinterop/engine/schema/schema_1_11_1.cpp
+    src/djinterop/engine/schema/schema_1_13_0.cpp
+    src/djinterop/engine/schema/schema_1_13_1.cpp
+    src/djinterop/engine/schema/schema_1_13_2.cpp
+    src/djinterop/engine/schema/schema_1_15_0.cpp
+    src/djinterop/engine/schema/schema_1_17_0.cpp
+    src/djinterop/engine/schema/schema_1_18_0_desktop.cpp
+    src/djinterop/engine/schema/schema_1_18_0_os.cpp
+    src/djinterop/engine/schema/schema_2_18_0.cpp
+    src/djinterop/engine/schema/schema_2_20_1.cpp
+    src/djinterop/engine/schema/schema_2_20_2.cpp
+    src/djinterop/engine/schema/schema_2_20_3.cpp
+    src/djinterop/engine/schema/schema.cpp
+    src/djinterop/engine/v1/engine_crate_impl.cpp
+    src/djinterop/engine/v1/engine_database_impl.cpp
+    src/djinterop/engine/v1/engine_storage.cpp
+    src/djinterop/engine/v1/engine_track_impl.cpp
+    src/djinterop/engine/v1/performance_data_format.cpp
+    src/djinterop/engine/v2/beat_data_blob.cpp
+    src/djinterop/engine/v2/change_log_table.cpp
+    src/djinterop/engine/v2/crate_impl.cpp
+    src/djinterop/engine/v2/database_impl.cpp
+    src/djinterop/engine/v2/engine_library.cpp
+    src/djinterop/engine/v2/information_table.cpp
+    src/djinterop/engine/v2/loops_blob.cpp
+    src/djinterop/engine/v2/overview_waveform_data_blob.cpp
+    src/djinterop/engine/v2/playlist_table.cpp
+    src/djinterop/engine/v2/playlist_entity_table.cpp
+    src/djinterop/engine/v2/quick_cues_blob.cpp
+    src/djinterop/engine/v2/track_data_blob.cpp
+    src/djinterop/engine/v2/track_table.cpp
+    src/djinterop/engine/v2/track_impl.cpp
     src/djinterop/crate.cpp
     src/djinterop/database.cpp
-    src/djinterop/enginelibrary.cpp
     src/djinterop/track.cpp
-    src/djinterop/transaction_guard.cpp
-    src/djinterop/util.cpp)
+    src/djinterop/util/chrono.cpp
+    src/djinterop/util/filesystem.cpp
+    src/djinterop/util/random.cpp)
 
 set_target_properties(DjInterop PROPERTIES
     OUTPUT_NAME "djinterop"
@@ -91,6 +106,7 @@ endif()
 include(CheckIncludeFileCXX)
 CHECK_INCLUDE_FILE_CXX(optional DJINTEROP_STD_OPTIONAL)
 CHECK_INCLUDE_FILE_CXX(experimental/optional DJINTEROP_STD_EXPERIMENTAL_OPTIONAL)
+
 configure_file(
     include/djinterop/config.hpp.in
     include/djinterop/config.hpp)
@@ -107,6 +123,7 @@ target_include_directories(
         DjInterop PRIVATE
         ${ZLIB_INCLUDE_DIRS}
         ext/sqlite_modern_cpp
+        ext/date
         src)
 
 target_link_libraries(
@@ -154,16 +171,33 @@ install(FILES
     include/djinterop/database.hpp
     include/djinterop/djinterop.hpp
     include/djinterop/exceptions.hpp
-    include/djinterop/enginelibrary.hpp
     include/djinterop/musical_key.hpp
     include/djinterop/optional.hpp
     include/djinterop/pad_color.hpp
     include/djinterop/performance_data.hpp
     include/djinterop/semantic_version.hpp
+    include/djinterop/stream_helper.hpp
     include/djinterop/track.hpp
     include/djinterop/track_snapshot.hpp
-    include/djinterop/transaction_guard.hpp
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}")
+install(FILES
+    include/djinterop/engine/engine.hpp
+    include/djinterop/engine/engine_version.hpp
+    DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/engine")
+install(FILES
+    include/djinterop/engine/v2/beat_data_blob.hpp
+    include/djinterop/engine/v2/change_log_table.hpp
+    include/djinterop/engine/v2/engine_library.hpp
+    include/djinterop/engine/v2/information_table.hpp
+    include/djinterop/engine/v2/loops_blob.hpp
+    include/djinterop/engine/v2/overview_waveform_data_blob.hpp
+    include/djinterop/engine/v2/playlist_entity_table.hpp
+    include/djinterop/engine/v2/playlist_table.hpp
+    include/djinterop/engine/v2/quick_cues_blob.hpp
+    include/djinterop/engine/v2/track_data_blob.hpp
+    include/djinterop/engine/v2/track_table.hpp
+    DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/engine/v2")
+
 
 if (UNIX)
     set(PKGCONFIG_TARGET djinterop)
@@ -201,34 +235,55 @@ install(FILES
         cmake/FindSQLite3.cmake
         DESTINATION "${DJINTEROP_INSTALL_CMAKEDIR}")
 
+# Example programs demonstrating usage.
+function(add_djinterop_example example_name)
+    add_executable(example_${example_name} example/${example_name}.cpp)
+    target_include_directories(example_${example_name} PUBLIC
+            ${CMAKE_CURRENT_BINARY_DIR}/include
+            include)
+    target_link_libraries(example_${example_name} PUBLIC DjInterop)
+endfunction()
+
+add_djinterop_example(engine_prime)
+add_djinterop_example(engine_library_v2_low_level)
+
+# Unit tests.
 include(CTest)
 find_package(Boost 1.65.1 QUIET COMPONENTS filesystem system)
 if (Boost_FOUND)
     set(TESTDATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/testdata")
-    add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
 
-    function(add_djinterop_test test_name)
-        add_executable(${test_name} EXCLUDE_FROM_ALL
-                test/enginelibrary/${test_name}.cpp)
-        target_compile_definitions(${test_name} PUBLIC
+    function(add_djinterop_test test_dir test_name)
+        string(REPLACE "/" "_" test_executable_name ${test_dir}${test_name})
+        add_executable(${test_executable_name}
+                test/djinterop/${test_dir}${test_name}.cpp)
+
+        target_compile_definitions(${test_executable_name} PUBLIC
                 -DTESTDATA_DIR=${TESTDATA_DIR})
-        target_include_directories(${test_name} PUBLIC
+        if (MSVC)
+            # Some unit tests are rather large and exceed max sections on VC++.
+            target_compile_options(${test_executable_name} PRIVATE /bigobj)
+        endif()
+
+        target_include_directories(${test_executable_name} PUBLIC
                 ${Boost_INCLUDE_DIRS}
                 ${CMAKE_CURRENT_BINARY_DIR}/include
                 include)
-        target_link_libraries(${test_name} PUBLIC
+        target_link_libraries(${test_executable_name} PUBLIC
                 DjInterop
                 ${Boost_LIBRARIES})
-        add_test(NAME ${test_name} COMMAND ${test_name})
-        add_dependencies(check ${test_name})
+        add_test(NAME ${test_executable_name} COMMAND ${test_executable_name})
     endfunction()
 
-    add_djinterop_test(crate_test)
-    add_djinterop_test(database_test)
-    add_djinterop_test(enginelibrary_test)
-    add_djinterop_test(semantic_version_test)
-    add_djinterop_test(track_test)
-    add_djinterop_test(track_snapshot_test)
+    add_djinterop_test("" semantic_version_test)
+    add_djinterop_test(engine/ crate_test)
+    add_djinterop_test(engine/ database_reference_test)
+    add_djinterop_test(engine/ database_test)
+    add_djinterop_test(engine/ engine_test)
+    add_djinterop_test(engine/ track_test)
+    add_djinterop_test(engine/v2/ track_table_test)
+    add_djinterop_test(engine/v2/ playlist_entity_table_test)
+    add_djinterop_test(engine/v2/ playlist_table_test)
 
 else()
     message(STATUS "Unit tests not available, as Boost cannot be found")

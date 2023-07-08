@@ -16,7 +16,8 @@
  */
 
 #include <djinterop/database.hpp>
-#include <djinterop/impl/crate_impl.hpp>
+
+#include "crate_impl.hpp"
 
 namespace djinterop
 {

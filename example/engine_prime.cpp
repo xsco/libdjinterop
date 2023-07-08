@@ -17,19 +17,19 @@
 
 #include <iostream>
 #include <string>
-#include <vector>
 
 #include <djinterop/djinterop.hpp>
 
-namespace el = djinterop::enginelibrary;
+namespace e = djinterop::engine;
 
-int main(int argc, char** argv)
+int main()
 {
     using namespace std::string_literals;
 
     auto dir = "Engine Library"s;
+    auto version = e::latest;
     bool created;
-    auto db = el::create_or_load_database(dir, el::version_latest, created);
+    auto db = e::create_or_load_database(dir, version, created);
     std::cout << (created ? "Created " : "Loaded ") << "database in directory "
               << dir << std::endl;
     std::cout << "DB version is " << db.version_name() << std::endl;
@@ -47,7 +47,7 @@ int main(int argc, char** argv)
     }
 
     djinterop::track_snapshot td;
-    td.relative_path = "../01 - Some Artist - Some Song.mp3";
+    td.relative_path = "../01 - Some Artist - Some Song.mp3"s;
     td.track_number = 1;
     td.duration = std::chrono::milliseconds{366000};
     td.bpm = 120;
@@ -57,39 +57,34 @@ int main(int argc, char** argv)
     td.publisher = djinterop::stdx::nullopt;  // indicates missing metadata
     td.key = djinterop::musical_key::a_minor;
     td.bitrate = 320;
-    td.rating = 60; // note: rating is in the range 0-100
+    td.rating = 60;             // note: rating is in the range 0-100
     td.average_loudness = 0.5;  // loudness range (0, 1]
-    int64_t sample_count = 16140600;
-    td.sampling = djinterop::sampling_info{
-        44100,          // sample rate
-        sample_count};  // sample count
-    std::vector<djinterop::beatgrid_marker> beatgrid{
-        {-4, -83316.78},                 // 1st marker
-        {812, 17470734.439}};            // 2nd marker
-    td.default_beatgrid = beatgrid;   // as analyzed
-    td.adjusted_beatgrid = beatgrid;  // manually adjusted
+    td.sample_count = 16140600;
+    td.sample_rate = 44100;
+    td.beatgrid.push_back({-4, -83316.78});
+    td.beatgrid.push_back({812, 17470734.439});
 
     // The main cue concerns the cue button
-    td.default_main_cue = 2732;   // as analyzed
-    td.adjusted_main_cue = 2732;  // manually adjusted
+    td.main_cue = 2732;
 
-    // There are always 8 hot cues, whereby each can optionally be set
+    // There are always 8 hot cues, whereby each can optionally be set.
+    td.hot_cues.resize(8);
     td.hot_cues[0] = djinterop::hot_cue{
         "Cue 1", 1377924.5,  // position in number of samples
-        el::standard_pad_colors::pad_1};
-    td.hot_cues[3] = djinterop::hot_cue{
-        "Cue 4", 5508265.96, el::standard_pad_colors::pad_4};
+        e::standard_pad_colors::pad_1};
+    td.hot_cues[3] =
+        djinterop::hot_cue{"Cue 4", 5508265.96, e::standard_pad_colors::pad_4};
 
     // The loop API works like the hot cue API
+    td.loops.resize(8);
     td.loops[0] = djinterop::loop{
-        "Loop 1", 1144.012, 345339.134, el::standard_pad_colors::pad_1};
+        "Loop 1", 1144.012, 345339.134, e::standard_pad_colors::pad_1};
 
-    // Set high-resolution waveform
-    int64_t spe = el::required_waveform_samples_per_entry(
-        td.sampling->sample_rate);
-    int64_t waveform_size = (sample_count + spe - 1) / spe;  // Ceiling division
-    td.waveform.reserve(waveform_size);
-    for (int64_t i = 0; i < waveform_size; ++i)
+    // Set waveform
+    auto waveform_extents = e::calculate_overview_waveform_extents(
+        *td.sample_count, *td.sample_rate);
+    td.waveform.reserve(waveform_extents.size);
+    for (unsigned long long i = 0; i < waveform_extents.size; ++i)
     {
         td.waveform.push_back(  // VALUE / OPACITY for each band (low/mid/high)
             {{0, 255},          // low
