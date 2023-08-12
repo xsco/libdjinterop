@@ -61,9 +61,10 @@ struct DJINTEROP_PUBLIC overview_waveform_point
     friend std::ostream& operator<<(
         std::ostream& os, const overview_waveform_point& obj) noexcept
     {
-        os << "overview_waveform_point{low_value=" << obj.low_value
-           << ", mid_value=" << obj.mid_value
-           << ", high_value=" << obj.high_value << "}";
+        os << "overview_waveform_point{low_value="
+           << static_cast<int>(obj.low_value)
+           << ", mid_value=" << static_cast<int>(obj.mid_value)
+           << ", high_value=" << static_cast<int>(obj.high_value) << "}";
         return os;
     }
 };
