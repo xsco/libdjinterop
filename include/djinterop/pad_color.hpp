@@ -78,7 +78,7 @@ inline bool operator!=(const pad_color& x, const pad_color& y)
 inline std::ostream& operator<<(std::ostream& o, const djinterop::pad_color& v)
 {
     o << "pad_color{r=" << (int)v.r << ", g=" << (int)v.g << ", b=" << (int)v.b
-      << ", a=" << (int)v.a;
+      << ", a=" << (int)v.a << "}";
     return o;
 }
 }  // namespace djinterop
