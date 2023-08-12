@@ -21,6 +21,7 @@
 #error This library needs at least a C++17 compliant compiler
 #endif
 
+#include <cstddef>
 #include <cstdint>
 #include <ostream>
 #include <string>
@@ -98,21 +99,25 @@ struct DJINTEROP_PUBLIC loops_blob
     /// List of loops.
     std::vector<loop_blob> loops;
 
+    /// Extra data (if any) found in a decoded blob.
+    std::vector<std::byte> extra_data;
+
     /// Encode this struct into binary blob form.
     ///
     /// \return Returns a byte array.
-    [[nodiscard]] std::vector<char> to_blob() const;
+    [[nodiscard]] std::vector<std::byte> to_blob() const;
 
     /// Decode an instance of this struct from binary blob form.
     ///
     /// \param blob Binary blob.
     /// \return Returns a decoded instance of this struct.
-    [[nodiscard]] static loops_blob from_blob(const std::vector<char>& blob);
+    [[nodiscard]] static loops_blob from_blob(
+        const std::vector<std::byte>& blob);
 
     friend bool operator==(
         const loops_blob& lhs, const loops_blob& rhs) noexcept
     {
-        return lhs.loops == rhs.loops;
+        return lhs.loops == rhs.loops && lhs.extra_data == rhs.extra_data;
     }
 
     friend bool operator!=(

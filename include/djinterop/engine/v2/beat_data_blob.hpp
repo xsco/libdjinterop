@@ -21,6 +21,7 @@
 #error This library needs at least a C++17 compliant compiler
 #endif
 
+#include <cstddef>
 #include <cstdint>
 #include <ostream>
 #include <string>
@@ -106,17 +107,20 @@ struct DJINTEROP_PUBLIC beat_data_blob
     /// List of markers making up the adjusted beat grid.
     beat_grid_marker_blobs_type adjusted_beat_grid;
 
+    /// Extra data (if any) found in a decoded blob.
+    std::vector<std::byte> extra_data;
+
     /// Encode this struct into binary blob form.
     ///
     /// \return Returns a byte array.
-    [[nodiscard]] std::vector<char> to_blob() const;
+    [[nodiscard]] std::vector<std::byte> to_blob() const;
 
     /// Decode an instance of this struct from binary blob form.
     ///
     /// \param blob Binary blob.
     /// \return Returns a decoded instance of this struct.
     [[nodiscard]] static beat_data_blob from_blob(
-        const std::vector<char>& blob);
+        const std::vector<std::byte>& blob);
 
     friend bool operator==(
         const beat_data_blob& lhs, const beat_data_blob& rhs) noexcept
@@ -125,7 +129,8 @@ struct DJINTEROP_PUBLIC beat_data_blob
                lhs.samples == rhs.samples &&
                lhs.is_beatgrid_set == rhs.is_beatgrid_set &&
                lhs.default_beat_grid == rhs.default_beat_grid &&
-               lhs.adjusted_beat_grid == rhs.adjusted_beat_grid;
+               lhs.adjusted_beat_grid == rhs.adjusted_beat_grid &&
+               lhs.extra_data == rhs.extra_data;
     }
 
     friend bool operator!=(

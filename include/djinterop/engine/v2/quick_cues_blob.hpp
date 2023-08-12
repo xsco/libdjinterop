@@ -21,6 +21,7 @@
 #error This library needs at least a C++17 compliant compiler
 #endif
 
+#include <cstddef>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -105,17 +106,20 @@ struct DJINTEROP_PUBLIC quick_cues_blob
     /// Default cue point.
     double default_main_cue;
 
+    /// Extra data (if any) found in a decoded blob.
+    std::vector<std::byte> extra_data;
+
     /// Encode this struct into binary blob form.
     ///
     /// \return Returns a byte array.
-    [[nodiscard]] std::vector<char> to_blob() const;
+    [[nodiscard]] std::vector<std::byte> to_blob() const;
 
     /// Decode an instance of this struct from binary blob form.
     ///
     /// \param blob Binary blob.
     /// \return Returns a decoded instance of this struct.
     [[nodiscard]] static quick_cues_blob from_blob(
-        const std::vector<char>& blob);
+        const std::vector<std::byte>& blob);
 
     friend bool operator==(
         const quick_cues_blob& lhs, const quick_cues_blob& rhs) noexcept
@@ -123,7 +127,8 @@ struct DJINTEROP_PUBLIC quick_cues_blob
         return lhs.quick_cues == rhs.quick_cues &&
                lhs.adjusted_main_cue == rhs.adjusted_main_cue &&
                lhs.is_main_cue_adjusted == rhs.is_main_cue_adjusted &&
-               lhs.default_main_cue == rhs.default_main_cue;
+               lhs.default_main_cue == rhs.default_main_cue &&
+               lhs.extra_data == rhs.extra_data;
     }
 
     friend bool operator!=(

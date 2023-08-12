@@ -26,8 +26,8 @@ namespace djinterop::engine::v2
 {
 namespace
 {
-char* encode_beatgrid(
-    const std::vector<beat_grid_marker_blob>& beat_grid, char* ptr)
+std::byte* encode_beatgrid(
+    const std::vector<beat_grid_marker_blob>& beat_grid, std::byte* ptr)
 {
     ptr = encode_int64_be(static_cast<int64_t>(beat_grid.size()), ptr);
     for (auto&& marker : beat_grid)
@@ -41,8 +41,8 @@ char* encode_beatgrid(
     return ptr;
 }
 
-std::pair<std::vector<beat_grid_marker_blob>, const char*> decode_beatgrid(
-    const char* ptr, const char* end)
+std::pair<std::vector<beat_grid_marker_blob>, const std::byte*> decode_beatgrid(
+    const std::byte* ptr, const std::byte* end)
 {
     int64_t count;
     std::tie(count, ptr) = decode_int64_be(ptr);
@@ -67,10 +67,11 @@ std::pair<std::vector<beat_grid_marker_blob>, const char*> decode_beatgrid(
 }
 }  // anonymous namespace
 
-std::vector<char> beat_data_blob::to_blob() const
+std::vector<std::byte> beat_data_blob::to_blob() const
 {
-    std::vector<char> uncompressed(
-        33 + 24 * (default_beat_grid.size() + adjusted_beat_grid.size()));
+    std::vector<std::byte> uncompressed(
+        33 + 24 * (default_beat_grid.size() + adjusted_beat_grid.size()) +
+        extra_data.size());
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();
 
@@ -79,12 +80,13 @@ std::vector<char> beat_data_blob::to_blob() const
     ptr = encode_uint8(is_beatgrid_set, ptr);
     ptr = encode_beatgrid(default_beat_grid, ptr);
     ptr = encode_beatgrid(adjusted_beat_grid, ptr);
+    ptr = encode_extra(extra_data, ptr);
     assert(ptr == end);
 
     return zlib_compress(uncompressed);
 }
 
-beat_data_blob beat_data_blob::from_blob(const std::vector<char>& blob)
+beat_data_blob beat_data_blob::from_blob(const std::vector<std::byte>& blob)
 {
     const auto raw_data = zlib_uncompress(blob);
     auto ptr = raw_data.data();
@@ -104,19 +106,7 @@ beat_data_blob beat_data_blob::from_blob(const std::vector<char>& blob)
     std::tie(result.default_beat_grid, ptr) = decode_beatgrid(ptr, end);
     std::tie(result.adjusted_beat_grid, ptr) = decode_beatgrid(ptr, end);
 
-    // Beat data has known to be encoded with 9 additional zero bytes at the
-    // end of the data buffer, across various Engine Library-supporting software
-    // and hardware.  The precise reason for this is unknown, but it is
-    // tolerated here in accordance with the robustness principle.
-    while (ptr != end)
-    {
-        if (*ptr != 0)
-        {
-            throw std::invalid_argument{"Beat data has trailing non-zero data"};
-        }
-
-        ptr++;
-    }
+    std::tie(result.extra_data, ptr) = decode_extra(ptr, end);
 
     assert(ptr == end);
 

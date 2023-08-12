@@ -17,6 +17,7 @@
 
 #include "engine_storage.hpp"
 
+#include <cstddef>
 #include <utility>
 
 #include <djinterop/database.hpp>
@@ -782,12 +783,12 @@ performance_data_row engine_storage::get_performance_data(int64_t id)
               "FROM PerformanceData WHERE id = ?"
            << id >>
             [&](int64_t id, int64_t is_analyzed, int64_t is_rendered,
-                const std::vector<char>& track_data_blob,
-                const std::vector<char>& high_res_waveform_data_blob,
-                const std::vector<char>& overview_waveform_data_blob,
-                const std::vector<char>& beat_data_blob,
-                const std::vector<char>& quick_cues_data_blob,
-                const std::vector<char>& loops_data_blob,
+                const std::vector<std::byte>& track_data_blob,
+                const std::vector<std::byte>& high_res_waveform_data_blob,
+                const std::vector<std::byte>& overview_waveform_data_blob,
+                const std::vector<std::byte>& beat_data_blob,
+                const std::vector<std::byte>& quick_cues_data_blob,
+                const std::vector<std::byte>& loops_data_blob,
                 int64_t has_serato_values, int64_t has_rekordbox_values,
                 int64_t has_traktor_values) {
                 if (result)
@@ -820,12 +821,12 @@ performance_data_row engine_storage::get_performance_data(int64_t id)
               "FROM PerformanceData WHERE id = ?"
            << id >>
             [&](int64_t id, int64_t is_analyzed, int64_t is_rendered,
-                const std::vector<char>& track_data_blob,
-                const std::vector<char>& high_res_waveform_data_blob,
-                const std::vector<char>& overview_waveform_data_blob,
-                const std::vector<char>& beat_data_blob,
-                const std::vector<char>& quick_cues_data_blob,
-                const std::vector<char>& loops_data_blob,
+                const std::vector<std::byte>& track_data_blob,
+                const std::vector<std::byte>& high_res_waveform_data_blob,
+                const std::vector<std::byte>& overview_waveform_data_blob,
+                const std::vector<std::byte>& beat_data_blob,
+                const std::vector<std::byte>& quick_cues_data_blob,
+                const std::vector<std::byte>& loops_data_blob,
                 int64_t has_serato_values, int64_t has_rekordbox_values) {
                 if (result)
                 {
@@ -857,12 +858,12 @@ performance_data_row engine_storage::get_performance_data(int64_t id)
               "FROM PerformanceData WHERE id = ?"
            << id >>
             [&](int64_t id, int64_t is_analyzed, int64_t is_rendered,
-                const std::vector<char>& track_data_blob,
-                const std::vector<char>& high_res_waveform_data_blob,
-                const std::vector<char>& overview_waveform_data_blob,
-                const std::vector<char>& beat_data_blob,
-                const std::vector<char>& quick_cues_data_blob,
-                const std::vector<char>& loops_data_blob,
+                const std::vector<std::byte>& track_data_blob,
+                const std::vector<std::byte>& high_res_waveform_data_blob,
+                const std::vector<std::byte>& overview_waveform_data_blob,
+                const std::vector<std::byte>& beat_data_blob,
+                const std::vector<std::byte>& quick_cues_data_blob,
+                const std::vector<std::byte>& loops_data_blob,
                 int64_t has_serato_values) {
                 if (result)
                 {
