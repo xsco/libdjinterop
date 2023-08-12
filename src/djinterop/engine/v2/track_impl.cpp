@@ -116,8 +116,7 @@ track_row snapshot_to_row(
     quick_cues_blob quick_cues;
     quick_cues.default_main_cue = convert::write::main_cue(snapshot.main_cue);
     quick_cues.adjusted_main_cue = convert::write::main_cue(snapshot.main_cue);
-    quick_cues.is_main_cue_adjusted =
-        quick_cues.default_main_cue != quick_cues.adjusted_main_cue;
+    quick_cues.is_main_cue_adjusted = true;
     quick_cues.quick_cues = convert::write::hot_cues(snapshot.hot_cues);
 
     loops_blob loops = convert::write::loops(snapshot.loops);
@@ -513,6 +512,7 @@ void track_impl::set_main_cue(stdx::optional<double> sample_offset)
     auto quick_cues = track_.get_quick_cues(id());
     quick_cues.adjusted_main_cue = sample_offset.value_or(0);
     quick_cues.default_main_cue = sample_offset.value_or(0);
+    quick_cues.is_main_cue_adjusted = true;
     track_.set_quick_cues(id(), quick_cues);
 }
 
