@@ -1,3 +1,12 @@
+libdjinterop (0.19.2-0ubuntu1) bionic; urgency=medium
+
+  * Preserve extra data when decoding Engine blobs
+  * String rendering fix
+  * Use V2 track data format for V2
+  * Always specify cue adjusted
+
+ -- Adam Szmigin <smidge@xsco.net>  Sat, 12 Aug 2023 16:47:28 +0100
+
 libdjinterop (0.19.1-0ubuntu1) bionic; urgency=medium
 
   * Remove meson, use CMake as main build system
