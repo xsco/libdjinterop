@@ -29,7 +29,7 @@ std::vector<std::byte> track_data_blob::to_blob() const
 {
     std::vector<std::byte> uncompressed(44 + extra_data.size());
     auto ptr = uncompressed.data();
-    const auto end = ptr + uncompressed.size();
+    [[maybe_unused]] const auto end = ptr + uncompressed.size();
 
     ptr = encode_double_be(sample_rate, ptr);
     ptr = encode_int64_be(samples, ptr);

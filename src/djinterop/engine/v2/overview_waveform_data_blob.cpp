@@ -29,7 +29,7 @@ std::vector<std::byte> overview_waveform_data_blob::to_blob() const
     std::vector<std::byte> uncompressed(
         27 + (3 * waveform_points.size()) + extra_data.size());
     auto ptr = uncompressed.data();
-    const auto end = ptr + uncompressed.size();
+    [[maybe_unused]] const auto end = ptr + uncompressed.size();
 
     // Encode
     auto waveform_size = static_cast<int64_t>(waveform_points.size());

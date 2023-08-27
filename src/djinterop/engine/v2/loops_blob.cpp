@@ -35,7 +35,7 @@ std::vector<std::byte> loops_blob::to_blob() const
     std::vector<std::byte> uncompressed(
         8 + (23 * loops.size()) + total_label_length + extra_data.size());
     auto ptr = uncompressed.data();
-    const auto end = ptr + uncompressed.size();
+    [[maybe_unused]] const auto end = ptr + uncompressed.size();
 
     ptr = encode_int64_le(static_cast<int64_t>(loops.size()), ptr);
 
