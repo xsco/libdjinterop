@@ -126,7 +126,7 @@ std::vector<int64_t> playlist_table::descendant_ids(int64_t id) const
 
 bool playlist_table::exists(int64_t id) const
 {
-    int64_t result;
+    int64_t result = 0;
     context_->db << "SELECT COUNT(*) FROM Playlist WHERE id = ?" << id >>
         [&](int64_t count) { result = count; };
 
