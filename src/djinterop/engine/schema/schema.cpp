@@ -33,6 +33,7 @@
 #include "schema_2_20_1.hpp"
 #include "schema_2_20_2.hpp"
 #include "schema_2_20_3.hpp"
+#include "schema_2_21_0.hpp"
 
 namespace djinterop::engine::schema
 {
@@ -77,6 +78,8 @@ std::unique_ptr<schema_creator_validator> make_schema_creator_validator(
         return std::make_unique<schema_2_20_3>();
     else if (version == os_3_0_0)
         return std::make_unique<schema_2_20_3>();
+    else if (version == desktop_3_1_0)
+        return std::make_unique<schema_2_21_0>();
 
     throw unsupported_engine_database{version.schema_version};
 }
