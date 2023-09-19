@@ -274,9 +274,9 @@ void track_impl::set_average_loudness(stdx::optional<double> average_loudness)
 {
     auto track_data = track_.get_track_data(id());
     auto converted = convert::write::average_loudness(average_loudness);
-    track_data.average_loudness_1 = converted;
-    track_data.average_loudness_2 = converted;
-    track_data.average_loudness_3 = converted;
+    track_data.average_loudness_low = converted;
+    track_data.average_loudness_mid = converted;
+    track_data.average_loudness_high = converted;
     track_.set_track_data(id(), track_data);
 }
 
