@@ -1,3 +1,15 @@
+libdjinterop (0.20.0-0ubuntu1) bionic; urgency=medium
+
+  [ Jan Holthuis ]
+  * chore: Use `[[maybe_unused]]` for variables only used in assertions
+  * fix: Always initialize `result` in `playlist_table::exists()`
+
+  [ Adam Szmigin ]
+  * Schema support up to firmware/DJ 3.2.0
+  * Better names for Engine track data loudness fields
+
+ -- Adam Szmigin <smidge@xsco.net>  Tue, 19 Sep 2023 23:08:08 +0100
+
 libdjinterop (0.19.2-0ubuntu1) bionic; urgency=medium
 
   * Preserve extra data when decoding Engine blobs
