@@ -73,7 +73,7 @@ std::vector<std::byte> beat_data_blob::to_blob() const
         33 + 24 * (default_beat_grid.size() + adjusted_beat_grid.size()) +
         extra_data.size());
     auto ptr = uncompressed.data();
-    const auto end = ptr + uncompressed.size();
+    [[maybe_unused]] const auto end = ptr + uncompressed.size();
 
     ptr = encode_double_be(sample_rate, ptr);
     ptr = encode_double_be(samples, ptr);

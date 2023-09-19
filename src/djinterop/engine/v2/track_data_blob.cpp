@@ -29,14 +29,14 @@ std::vector<std::byte> track_data_blob::to_blob() const
 {
     std::vector<std::byte> uncompressed(44 + extra_data.size());
     auto ptr = uncompressed.data();
-    const auto end = ptr + uncompressed.size();
+    [[maybe_unused]] const auto end = ptr + uncompressed.size();
 
     ptr = encode_double_be(sample_rate, ptr);
     ptr = encode_int64_be(samples, ptr);
     ptr = encode_int32_be(key, ptr);
-    ptr = encode_double_be(average_loudness_1, ptr);
-    ptr = encode_double_be(average_loudness_2, ptr);
-    ptr = encode_double_be(average_loudness_3, ptr);
+    ptr = encode_double_be(average_loudness_low, ptr);
+    ptr = encode_double_be(average_loudness_mid, ptr);
+    ptr = encode_double_be(average_loudness_high, ptr);
     ptr = encode_extra(extra_data, ptr);
     assert(ptr == end);
 
@@ -60,9 +60,9 @@ track_data_blob track_data_blob::from_blob(const std::vector<std::byte>& blob)
     std::tie(result.sample_rate, ptr) = decode_double_be(ptr);
     std::tie(result.samples, ptr) = decode_int64_be(ptr);
     std::tie(result.key, ptr) = decode_int32_be(ptr);
-    std::tie(result.average_loudness_1, ptr) = decode_double_be(ptr);
-    std::tie(result.average_loudness_2, ptr) = decode_double_be(ptr);
-    std::tie(result.average_loudness_3, ptr) = decode_double_be(ptr);
+    std::tie(result.average_loudness_low, ptr) = decode_double_be(ptr);
+    std::tie(result.average_loudness_mid, ptr) = decode_double_be(ptr);
+    std::tie(result.average_loudness_high, ptr) = decode_double_be(ptr);
     std::tie(result.extra_data, ptr) = decode_extra(ptr, end);
     assert(ptr == end);
 

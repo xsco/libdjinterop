@@ -42,14 +42,41 @@ struct DJINTEROP_PUBLIC track_data_blob
     /// Musical key.
     int32_t key;
 
-    /// Number (possibly?) indicating average loudness.
-    double average_loudness_1;
+    /// Number indicating average loudness for low-frequency sounds.
+    ///
+    /// On real hardware players, the ratio of average loudness across the three
+    /// different frequency bands affects how their relative scale in the
+    /// overview waveform is rendered.  Furthermore, the values in isolation
+    /// affect how the corresponding frequency band is scaled on the
+    /// high-resolution waveform, for peaks to occupy the full rendering area.
+    ///
+    /// The exact scale of the values this field holds are currently unknown.
+    /// However, a value of zero results in no rescaling of the waveforms.
+    double average_loudness_low;
 
-    /// Number (possibly?) indicating average loudness.
-    double average_loudness_2;
+    /// Number indicating average loudness for mid-frequency sounds.
+    ///
+    /// On real hardware players, the ratio of average loudness across the three
+    /// different frequency bands affects how their relative scale in the
+    /// overview waveform is rendered.  Furthermore, the values in isolation
+    /// affect how the corresponding frequency band is scaled on the
+    /// high-resolution waveform, for peaks to occupy the full rendering area.
+    ///
+    /// The exact scale of the values this field holds are currently unknown.
+    /// However, a value of zero results in no rescaling of the waveforms.
+    double average_loudness_mid;
 
-    /// Number (possibly?) indicating average loudness.
-    double average_loudness_3;
+    /// Number indicating average loudness for high-frequency sounds.
+    ///
+    /// On real hardware players, the ratio of average loudness across the three
+    /// different frequency bands affects how their relative scale in the
+    /// overview waveform is rendered.  Furthermore, the values in isolation
+    /// affect how the corresponding frequency band is scaled on the
+    /// high-resolution waveform, for peaks to occupy the full rendering area.
+    ///
+    /// The exact scale of the values this field holds are currently unknown.
+    /// However, a value of zero results in no rescaling of the waveforms.
+    double average_loudness_high;
 
     /// Extra data (if any) found in a decoded blob.
     std::vector<std::byte> extra_data;
@@ -72,9 +99,9 @@ struct DJINTEROP_PUBLIC track_data_blob
         return lhs.sample_rate == rhs.sample_rate &&
                lhs.samples == rhs.samples &&
                lhs.key == rhs.key &&
-               lhs.average_loudness_1 == rhs.average_loudness_1 &&
-               lhs.average_loudness_2 == rhs.average_loudness_2 &&
-               lhs.average_loudness_3 == rhs.average_loudness_3 &&
+               lhs.average_loudness_low == rhs.average_loudness_low &&
+               lhs.average_loudness_mid == rhs.average_loudness_mid &&
+               lhs.average_loudness_high == rhs.average_loudness_high &&
                lhs.extra_data == rhs.extra_data;
     }
 
@@ -90,10 +117,9 @@ struct DJINTEROP_PUBLIC track_data_blob
         os << "track_data_blob{sample_rate=" << obj.sample_rate
            << ", samples=" << obj.samples
            << ", key=" << obj.key
-           << ", average_loudness_1=" << obj.average_loudness_1
-           << ", average_loudness_2=" << obj.average_loudness_2
-           << ", average_loudness_3=" << obj.average_loudness_3
-           << "}";
+           << ", average_loudness_low=" << obj.average_loudness_low
+           << ", average_loudness_mid=" << obj.average_loudness_mid
+           << ", average_loudness_high=" << obj.average_loudness_high << "}";
         return os;
     }
 };
