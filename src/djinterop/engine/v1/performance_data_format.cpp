@@ -83,12 +83,14 @@ std::pair<std::vector<beatgrid_marker>, const std::byte*> decode_beatgrid(
         throw std::invalid_argument{"Beat data grid is missing data"};
     }
     std::vector<beatgrid_marker> result(count);
-    int32_t beats_until_next_marker;
+    int32_t beats_until_next_marker = 0;
     typedef std::vector<beatgrid_marker>::size_type vec_size_t;
     for (vec_size_t i = 0; i < result.size(); ++i)
     {
         std::tie(result[i].sample_offset, ptr) = decode_double_le(ptr);
-        std::tie(result[i].index, ptr) = decode_int64_le(ptr);
+        int64_t index;
+        std::tie(index, ptr) = decode_int64_le(ptr);
+        result[i].index = static_cast<int>(index);
         if (i != 0)
         {
             if (result[i].index <= result[i - 1].index)
@@ -186,7 +188,7 @@ beat_data beat_data::decode(const std::vector<std::byte>& compressed_data)
         result.default_beatgrid = std::move(default_beatgrid);
         result.adjusted_beatgrid = std::move(adjusted_beatgrid);
     }
-    catch (const std::invalid_argument& e)
+    catch ([[maybe_unused]] const std::invalid_argument& e)
     {
         // TODO (haslersn): print a warning with e.what().
     }
@@ -342,7 +344,7 @@ std::vector<std::byte> loops_data::encode() const
             {
                 throw std::logic_error{"Loop labels must not be empty"};
             }
-            ptr = encode_uint8(loop->label.length(), ptr);
+            ptr = encode_uint8(static_cast<uint8_t>(loop->label.length()), ptr);
             for (auto& chr : loop->label)
             {
                 ptr = encode_uint8(static_cast<uint8_t>(chr), ptr);
@@ -558,7 +560,8 @@ std::vector<std::byte> quick_cues_data::encode() const
             {
                 throw std::invalid_argument{"Hot cue labels must not be empty"};
             }
-            ptr = encode_uint8(hot_cue->label.length(), ptr);
+            ptr = encode_uint8(
+                static_cast<uint8_t>(hot_cue->label.length()), ptr);
             for (auto& chr : hot_cue->label)
             {
                 ptr = encode_uint8(static_cast<uint8_t>(chr), ptr);

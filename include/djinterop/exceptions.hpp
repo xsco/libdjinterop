@@ -212,7 +212,7 @@ private:
 
 /// The `hot_cues_overflow` exception is thrown when more hot cues are provided
 /// than are supported by the database.
-class hot_cues_overflow : std::invalid_argument
+class hot_cues_overflow : public std::invalid_argument
 {
 public:
     /// Constructs the exception.
@@ -224,7 +224,7 @@ public:
 
 /// The `loops_overflow` exception is thrown when more loops are provided than
 /// are supported by the database.
-class loops_overflow : std::invalid_argument
+class loops_overflow : public std::invalid_argument
 {
 public:
     /// Constructs the exception.
