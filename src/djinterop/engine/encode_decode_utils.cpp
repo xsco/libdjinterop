@@ -51,7 +51,7 @@ std::vector<std::byte> zlib_uncompress(
 
     auto* ptr = &compressed[4];
     auto* end = ptr + compressed.size();
-    const int chunk_size = 16384;
+    const uInt chunk_size = 16384;
     int ret;
     unsigned int have;
     std::byte out[chunk_size];
@@ -72,7 +72,8 @@ std::vector<std::byte> zlib_uncompress(
     do
     {
         strm.next_in = (Bytef*)ptr;
-        strm.avail_in = (ptr + chunk_size) < end ? chunk_size : end - ptr;
+        strm.avail_in = (ptr + chunk_size) < end ? chunk_size
+                                                 : static_cast<uInt>(end - ptr);
         ptr += strm.avail_in;
 
         // Run inflate() on until we are no longer filling the output buffer
@@ -150,7 +151,7 @@ std::vector<std::byte> zlib_compress(
         }
         else
         {
-            strm.avail_in = end - ptr;
+            strm.avail_in = static_cast<uInt>(end - ptr);
             flush = Z_FINISH;
         }
         ptr += strm.avail_in;
