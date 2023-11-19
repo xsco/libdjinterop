@@ -1,3 +1,9 @@
+libdjinterop (0.20.1-0ubuntu1) bionic; urgency=medium
+
+  * Fix MSVC warnings
+
+ -- Adam Szmigin <smidge@xsco.net>  Sun, 19 Nov 2023 23:30:19 +0000
+
 libdjinterop (0.20.0-0ubuntu1) bionic; urgency=medium
 
   [ Jan Holthuis ]
