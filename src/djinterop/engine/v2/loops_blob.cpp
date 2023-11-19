@@ -41,7 +41,7 @@ std::vector<std::byte> loops_blob::to_blob() const
 
     for (auto& loop : loops)
     {
-        ptr = encode_uint8(loop.label.length(), ptr);
+        ptr = encode_uint8(static_cast<uint8_t>(loop.label.length()), ptr);
         for (auto& chr : loop.label)
         {
             ptr = encode_uint8(static_cast<uint8_t>(chr), ptr);

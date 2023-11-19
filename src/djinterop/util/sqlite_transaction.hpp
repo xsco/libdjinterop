@@ -41,7 +41,7 @@ public:
             {
                 db_ << "ROLLBACK TRANSACTION";
             }
-            catch (const sqlite::sqlite_exception& e)
+            catch ([[maybe_unused]] const sqlite::sqlite_exception& e)
             {
                 // The exception is intentionally swallowed. An exception could
                 // for example arise if SQLite performed an automatic rollback,

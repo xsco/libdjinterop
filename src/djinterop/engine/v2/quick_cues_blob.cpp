@@ -42,7 +42,7 @@ std::vector<std::byte> quick_cues_blob::to_blob() const
 
     for (auto& quick_cue : quick_cues)
     {
-        ptr = encode_uint8(quick_cue.label.length(), ptr);
+        ptr = encode_uint8(static_cast<uint8_t>(quick_cue.label.length()), ptr);
         for (auto& chr : quick_cue.label)
         {
             ptr = encode_uint8(static_cast<uint8_t>(chr), ptr);

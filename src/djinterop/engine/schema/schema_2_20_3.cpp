@@ -67,7 +67,8 @@ void schema_2_20_3::verify_master_list(sqlite::database& db) const
     }
 }
 
-void schema_2_20_3::verify_change_log(sqlite::database& db) const
+void schema_2_20_3::verify_change_log(
+    [[maybe_unused]] sqlite::database& db) const
 {
     // The ChangeLog table no longer exists in schema >=2.20.3, and so should
     // never be verified.

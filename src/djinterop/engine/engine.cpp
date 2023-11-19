@@ -40,8 +40,10 @@ inline djinterop::stdx::optional<std::string> get_column_type(
     djinterop::stdx::optional<std::string> column_type;
 
     db << "PRAGMA table_info('" + table_name + "')" >>
-        [&](int col_id, std::string col_name, std::string col_type,
-            int nullable, std::string default_value, int part_of_pk)
+        [&]([[maybe_unused]] int col_id, const std::string& col_name,
+            const std::string& col_type, [[maybe_unused]] int nullable,
+            [[maybe_unused]] const std::string& default_value,
+            [[maybe_unused]] int part_of_pk)
     {
         if (col_name == column_name)
         {
@@ -207,7 +209,7 @@ database create_or_load_database(
         created = false;
         return load_database(directory, loaded_version);
     }
-    catch (database_not_found& e)
+    catch ([[maybe_unused]] database_not_found& e)
     {
         created = true;
         return create_database(directory, version);
@@ -220,7 +222,7 @@ bool database_exists(const std::string& directory)
     {
         load_database(directory);
     }
-    catch (database_not_found& e)
+    catch ([[maybe_unused]] database_not_found& e)
     {
         return false;
     }

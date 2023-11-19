@@ -94,8 +94,8 @@ struct master_list
             [&](std::string item_name, std::string table_name)
         {
             // Note that emplace() does not support aggregate initialisation
-            cols_.insert(
-                master_list_entry{item_type, std::move(item_name), std::move(table_name)});
+            cols_.insert(master_list_entry{
+                item_type, std::move(item_name), std::move(table_name)});
         };
     }
 
@@ -106,8 +106,8 @@ struct master_list
             [&](std::string item_name, std::string table_name)
         {
             // Note that emplace() does not support aggregate initialisation
-            cols_.insert(
-                master_list_entry{item_type, std::move(item_name), std::move(table_name)});
+            cols_.insert(master_list_entry{
+                item_type, std::move(item_name), std::move(table_name)});
         };
     }
 
@@ -133,8 +133,9 @@ struct table_info
         const std::string& table_name)
     {
         db << "PRAGMA " + db_name + ".table_info('" + table_name + "')" >>
-            [&](int col_id, std::string col_name, std::string col_type,
-                int nullable, std::string default_value, int part_of_pk)
+            [&]([[maybe_unused]] int col_id, std::string col_name,
+                std::string col_type, int nullable, std::string default_value,
+                int part_of_pk)
         {
             // Note that emplace() does not support aggregate initialisation
             cols_.insert(table_info_entry{
@@ -146,8 +147,9 @@ struct table_info
     table_info(sqlite::database& db, const std::string& table_name)
     {
         db << "PRAGMA table_info('" + table_name + "')" >>
-            [&](int col_id, std::string col_name, std::string col_type,
-                int nullable, std::string default_value, int part_of_pk)
+            [&]([[maybe_unused]] int col_id, std::string col_name,
+                std::string col_type, int nullable, std::string default_value,
+                int part_of_pk)
         {
             // Note that emplace() does not support aggregate initialisation
             cols_.insert(table_info_entry{
@@ -178,8 +180,8 @@ struct index_list
         const std::string& table_name)
     {
         db << "PRAGMA " + db_name + ".index_list('" + table_name + "')" >>
-            [&](int index_id, std::string index_name, int unique,
-                std::string creation_method, int partial_index)
+            [&]([[maybe_unused]] int index_id, std::string index_name,
+                int unique, std::string creation_method, int partial_index)
         {
             // Note that emplace() does not support aggregate initialisation
             indices_.insert(index_list_entry{
@@ -191,8 +193,8 @@ struct index_list
     index_list(sqlite::database& db, const std::string& table_name)
     {
         db << "PRAGMA index_list('" + table_name + "')" >>
-            [&](int index_id, std::string index_name, int unique,
-                std::string creation_method, int partial_index)
+            [&]([[maybe_unused]] int index_id, std::string index_name,
+                int unique, std::string creation_method, int partial_index)
         {
             // Note that emplace() does not support aggregate initialisation
             indices_.insert(index_list_entry{
@@ -226,7 +228,8 @@ struct index_info
         const std::string& index_name)
     {
         db << "PRAGMA " + db_name + ".index_info('" + index_name + "')" >>
-            [&](int ordinal, int col_table_id, std::string col_name)
+            [&](int ordinal, [[maybe_unused]] int col_table_id,
+                std::string col_name)
         {
             // Note that emplace() does not support aggregate initialisation
             cols_.insert(
@@ -237,7 +240,8 @@ struct index_info
     index_info(sqlite::database& db, const std::string& index_name)
     {
         db << "PRAGMA index_info('" + index_name + "')" >>
-            [&](int ordinal, int col_table_id, std::string col_name)
+            [&](int ordinal, [[maybe_unused]] int col_table_id,
+                std::string col_name)
         {
             // Note that emplace() does not support aggregate initialisation
             cols_.insert(
@@ -294,8 +298,7 @@ inline void validate(
 
 inline void validate_no_more(
     const master_list::const_iterator iter,
-    const master_list::const_iterator end,
-    const std::string& db_name)
+    const master_list::const_iterator end, const std::string& db_name)
 {
     if (iter != end)
         throw database_inconsistency{
