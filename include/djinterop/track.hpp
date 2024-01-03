@@ -162,9 +162,9 @@ public:
     void set_hot_cue_at(int index, stdx::optional<hot_cue> cue) const;
     void set_hot_cue_at(int index, hot_cue cue) const;
 
-    std::vector<stdx::optional<hot_cue> > hot_cues() const;
+    std::vector<stdx::optional<hot_cue>> hot_cues() const;
 
-    void set_hot_cues(std::vector<stdx::optional<hot_cue> > cues) const;
+    void set_hot_cues(std::vector<stdx::optional<hot_cue>> cues) const;
 
     /// Returns the ID of this track
     ///
@@ -198,7 +198,7 @@ public:
 
     std::vector<stdx::optional<loop>> loops() const;
 
-    void set_loops(std::vector<stdx::optional<loop> > loops) const;
+    void set_loops(std::vector<stdx::optional<loop>> loops) const;
 
     /// Get the track's main cue point.
     stdx::optional<double> main_cue() const;

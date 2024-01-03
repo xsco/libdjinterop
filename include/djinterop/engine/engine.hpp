@@ -134,8 +134,8 @@ constexpr const engine_version desktop_3_0_0{
 
 /// Engine DJ OS 3.0.0, 3.0.1
 constexpr const engine_version os_3_0_0{
-    semantic_version{3, 0, 0}, engine_database_type::os, "Engine DJ OS 3.0.0 to 3.0.1",
-    semantic_version{2, 20, 3}};
+    semantic_version{3, 0, 0}, engine_database_type::os,
+    "Engine DJ OS 3.0.0 to 3.0.1", semantic_version{2, 20, 3}};
 
 /// Engine DJ desktop 3.1.0 to 3.2.0
 constexpr const engine_version desktop_3_1_0{
@@ -152,7 +152,8 @@ constexpr const std::array<engine_version, 21> all_versions{
     os_1_0_0,      os_1_0_3,      desktop_1_1_1, os_1_2_0,      os_1_2_2,
     desktop_1_2_2, os_1_3_1,      os_1_4_0,      os_1_5_1,      desktop_1_5_1,
     os_1_6_0,      desktop_2_0_0, os_2_0_0,      desktop_2_2_0, os_2_2_0,
-    desktop_2_4_0, os_2_4_0,      desktop_3_0_0, os_3_0_0, desktop_3_1_0, os_3_1_0};
+    desktop_2_4_0, os_2_4_0,      desktop_3_0_0, os_3_0_0,      desktop_3_1_0,
+    os_3_1_0};
 
 /// Set of available V1 versions.
 constexpr const std::array<engine_version, 11> all_v1_versions{
@@ -161,7 +162,7 @@ constexpr const std::array<engine_version, 11> all_v1_versions{
 
 /// Set of available V2 versions.
 constexpr const std::array<engine_version, 10> all_v2_versions{
-    desktop_2_0_0, os_2_0_0,      desktop_2_2_0, os_2_2_0,     desktop_2_4_0,
+    desktop_2_0_0, os_2_0_0,      desktop_2_2_0, os_2_2_0,      desktop_2_4_0,
     os_2_4_0,      desktop_3_0_0, os_3_0_0,      desktop_3_1_0, os_3_1_0};
 
 /// The most recent version supported by the library.
@@ -197,17 +198,17 @@ constexpr const char* default_database_dir_name = "Engine Library";
 class DJINTEROP_PUBLIC unsupported_engine_database : public unsupported_database
 {
 public:
-    explicit unsupported_engine_database(const semantic_version& version)
-        noexcept : unsupported_database{std::string{
-                       "Unsupported database version " + to_string(version)}},
-                   version{version}
+    explicit unsupported_engine_database(
+        const semantic_version& version) noexcept :
+        unsupported_database{
+            std::string{"Unsupported database version " + to_string(version)}},
+        version{version}
     {
     }
 
     explicit unsupported_engine_database(
-        const std::string& what_arg, const semantic_version& version) noexcept
-        : unsupported_database{what_arg},
-          version{version}
+        const std::string& what_arg, const semantic_version& version) noexcept :
+        unsupported_database{what_arg}, version{version}
     {
     }
 

@@ -42,7 +42,8 @@ protected:
     virtual void verify_crate_track_list(sqlite::database& db) const;
     virtual void verify_historylist(sqlite::database& db) const;
     virtual void verify_historylist_track_list(sqlite::database& db) const;
-    virtual void verify_information(sqlite::database& db, const std::string& db_name) const;
+    virtual void verify_information(
+        sqlite::database& db, const std::string& db_name) const;
     virtual void verify_meta_data(sqlite::database& db) const;
     virtual void verify_meta_data_integer(sqlite::database& db) const;
     virtual void verify_playlist(sqlite::database& db) const;

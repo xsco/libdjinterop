@@ -47,8 +47,8 @@ struct engine_library_context;
 struct DJINTEROP_PUBLIC track_row_id_error : public std::runtime_error
 {
 public:
-    explicit track_row_id_error(const std::string& what_arg) noexcept
-        : runtime_error{what_arg}
+    explicit track_row_id_error(const std::string& what_arg) noexcept :
+        runtime_error{what_arg}
     {
     }
 };

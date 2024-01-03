@@ -208,9 +208,9 @@ std::list<int64_t> playlist_table::root_ids() const
 {
     std::unordered_map<int64_t, int64_t> next_list_id_to_id_map;
     context_->db
-        << "SELECT id, nextListId FROM Playlist WHERE parentListId = 0" >>
+            << "SELECT id, nextListId FROM Playlist WHERE parentListId = 0" >>
         [&](int64_t id, int64_t next_list_id)
-        { next_list_id_to_id_map[next_list_id] = id; };
+    { next_list_id_to_id_map[next_list_id] = id; };
 
     return sort_ids(next_list_id_to_id_map);
 }

@@ -402,7 +402,8 @@ void schema_1_6_0::verify_historylist_track_list(sqlite::database& db) const
     }
 }
 
-void schema_1_6_0::verify_information(sqlite::database& db, const std::string& db_name) const
+void schema_1_6_0::verify_information(
+    sqlite::database& db, const std::string& db_name) const
 {
     {
         table_info cols{db, db_name, "Information"};

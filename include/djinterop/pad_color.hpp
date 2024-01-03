@@ -45,8 +45,7 @@ struct pad_color
      */
     constexpr pad_color(
         uint_least8_t r, uint_least8_t g, uint_least8_t b, uint_least8_t a) :
-        r{r},
-        g{g}, b{b}, a{a}
+        r{r}, g{g}, b{b}, a{a}
     {
     }
 
