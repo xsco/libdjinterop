@@ -28,8 +28,8 @@ namespace djinterop::engine::v2
 {
 crate_impl::crate_impl(std::shared_ptr<engine_library> library, int64_t id) :
     djinterop::crate_impl{id}, library_{std::move(library)},
-    playlist_entity_{library_->playlist_entity()}, playlist_{
-                                                       library_->playlist()}
+    playlist_entity_{library_->playlist_entity()},
+    playlist_{library_->playlist()}
 {
 }
 

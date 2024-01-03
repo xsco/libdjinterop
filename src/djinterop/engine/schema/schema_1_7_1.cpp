@@ -25,7 +25,8 @@
 
 namespace djinterop::engine::schema
 {
-void schema_1_7_1::verify_information(sqlite::database& db, const std::string& db_name) const
+void schema_1_7_1::verify_information(
+    sqlite::database& db, const std::string& db_name) const
 {
     {
         table_info cols{db, db_name, "Information"};

@@ -39,10 +39,10 @@ inline stdx::optional<djinterop::hot_cue> hot_cue(
                      quick_cue.color});
 }
 
-inline std::vector<stdx::optional<djinterop::hot_cue> > hot_cues(
+inline std::vector<stdx::optional<djinterop::hot_cue>> hot_cues(
     const quick_cues_blob& quick_cues)
 {
-    std::vector<stdx::optional<djinterop::hot_cue> > converted;
+    std::vector<stdx::optional<djinterop::hot_cue>> converted;
     converted.reserve(quick_cues.quick_cues.size());
     for (auto&& c : quick_cues.quick_cues)
         converted.push_back(hot_cue(c));
@@ -68,7 +68,7 @@ inline quick_cue_blob hot_cue(const stdx::optional<hot_cue>& hot_cue)
 }
 
 inline std::vector<quick_cue_blob> hot_cues(
-    const std::vector<stdx::optional<djinterop::hot_cue> >& cues)
+    const std::vector<stdx::optional<djinterop::hot_cue>>& cues)
 {
     if (cues.size() > MAX_QUICK_CUES)
         throw djinterop::hot_cues_overflow{

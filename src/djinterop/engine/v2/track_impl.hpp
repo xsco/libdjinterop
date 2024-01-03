@@ -75,8 +75,8 @@ public:
     void set_genre(stdx::optional<std::string> genre) override;
     stdx::optional<hot_cue> hot_cue_at(int index) override;
     void set_hot_cue_at(int index, stdx::optional<hot_cue> cue) override;
-    std::vector<stdx::optional<hot_cue> > hot_cues() override;
-    void set_hot_cues(std::vector<stdx::optional<hot_cue> > cues) override;
+    std::vector<stdx::optional<hot_cue>> hot_cues() override;
+    void set_hot_cues(std::vector<stdx::optional<hot_cue>> cues) override;
     bool is_valid() override;
     stdx::optional<musical_key> key() override;
     void set_key(stdx::optional<musical_key> key) override;
@@ -87,8 +87,8 @@ public:
         override;
     stdx::optional<loop> loop_at(int index) override;
     void set_loop_at(int index, stdx::optional<loop> l) override;
-    std::vector<stdx::optional<loop> > loops() override;
-    void set_loops(std::vector<stdx::optional<loop> > loops) override;
+    std::vector<stdx::optional<loop>> loops() override;
+    void set_loops(std::vector<stdx::optional<loop>> loops) override;
     stdx::optional<double> main_cue() override;
     void set_main_cue(stdx::optional<double> sample_offset) override;
     stdx::optional<std::string> publisher() override;

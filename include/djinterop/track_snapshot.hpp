@@ -86,7 +86,7 @@ struct track_snapshot
     stdx::optional<std::string> genre;
 
     /// The hot cues.
-    std::vector<stdx::optional<hot_cue> > hot_cues;
+    std::vector<stdx::optional<hot_cue>> hot_cues;
 
     /// The key.
     stdx::optional<musical_key> key;
@@ -95,7 +95,7 @@ struct track_snapshot
     stdx::optional<std::chrono::system_clock::time_point> last_played_at;
 
     /// The loops.
-    std::vector<stdx::optional<loop> > loops;
+    std::vector<stdx::optional<loop>> loops;
 
     /// The main cue sample offset.
     stdx::optional<double> main_cue;
@@ -135,19 +135,19 @@ struct track_snapshot
         const track_snapshot& lhs, const track_snapshot& rhs) noexcept
     {
         return std::tie(
-                   lhs.album, lhs.artist, lhs.average_loudness,
-                   lhs.beatgrid, lhs.bitrate, lhs.bpm, lhs.comment,
-                   lhs.composer, lhs.duration, lhs.file_bytes, lhs.genre,
-                   lhs.hot_cues, lhs.key, lhs.last_played_at, lhs.loops,
-                   lhs.main_cue, lhs.publisher, lhs.rating, lhs.relative_path,
+                   lhs.album, lhs.artist, lhs.average_loudness, lhs.beatgrid,
+                   lhs.bitrate, lhs.bpm, lhs.comment, lhs.composer,
+                   lhs.duration, lhs.file_bytes, lhs.genre, lhs.hot_cues,
+                   lhs.key, lhs.last_played_at, lhs.loops, lhs.main_cue,
+                   lhs.publisher, lhs.rating, lhs.relative_path,
                    lhs.sample_count, lhs.sample_rate, lhs.title,
                    lhs.track_number, lhs.waveform, lhs.year) ==
                std::tie(
-                   rhs.album, rhs.artist, rhs.average_loudness,
-                   rhs.beatgrid, rhs.bitrate, rhs.bpm, rhs.comment,
-                   rhs.composer, rhs.duration, rhs.file_bytes, rhs.genre,
-                   rhs.hot_cues, rhs.key, rhs.last_played_at, rhs.loops,
-                   rhs.main_cue, rhs.publisher, rhs.rating, rhs.relative_path,
+                   rhs.album, rhs.artist, rhs.average_loudness, rhs.beatgrid,
+                   rhs.bitrate, rhs.bpm, rhs.comment, rhs.composer,
+                   rhs.duration, rhs.file_bytes, rhs.genre, rhs.hot_cues,
+                   rhs.key, rhs.last_played_at, rhs.loops, rhs.main_cue,
+                   rhs.publisher, rhs.rating, rhs.relative_path,
                    rhs.sample_count, rhs.sample_rate, rhs.title,
                    rhs.track_number, rhs.waveform, rhs.year);
     }

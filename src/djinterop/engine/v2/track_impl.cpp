@@ -415,13 +415,13 @@ void track_impl::set_hot_cue_at(int index, stdx::optional<hot_cue> cue)
     track_.set_quick_cues(id(), quick_cues);
 }
 
-std::vector<stdx::optional<hot_cue> > track_impl::hot_cues()
+std::vector<stdx::optional<hot_cue>> track_impl::hot_cues()
 {
     auto quick_cues = track_.get_quick_cues(id());
     return convert::read::hot_cues(quick_cues);
 }
 
-void track_impl::set_hot_cues(std::vector<stdx::optional<hot_cue> > cues)
+void track_impl::set_hot_cues(std::vector<stdx::optional<hot_cue>> cues)
 {
     auto quick_cues = track_.get_quick_cues(id());
     quick_cues.quick_cues = convert::write::hot_cues(cues);
@@ -486,12 +486,12 @@ void track_impl::set_loop_at(int index, stdx::optional<loop> l)
     track_.set_loops(id(), loops);
 }
 
-std::vector<stdx::optional<loop> > track_impl::loops()
+std::vector<stdx::optional<loop>> track_impl::loops()
 {
     return convert::read::loops(track_.get_loops(id()));
 }
 
-void track_impl::set_loops(std::vector<stdx::optional<loop> > loops)
+void track_impl::set_loops(std::vector<stdx::optional<loop>> loops)
 {
     auto converted = convert::write::loops(loops);
     track_.set_loops(id(), converted);

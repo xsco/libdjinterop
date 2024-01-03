@@ -30,8 +30,7 @@ struct engine_library_context
 {
     engine_library_context(
         std::string directory, engine_version version, sqlite::database db) :
-        directory{std::move(directory)},
-        version{version}, db{std::move(db)}
+        directory{std::move(directory)}, version{version}, db{std::move(db)}
     {
     }
 

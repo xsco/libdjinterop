@@ -34,7 +34,8 @@ protected:
     void verify_music_master_list(sqlite::database& db) const override;
     void verify_performance_master_list(sqlite::database& db) const override;
 
-    virtual void verify_change_log(sqlite::database& db, const std::string& db_name) const;
+    virtual void verify_change_log(
+        sqlite::database& db, const std::string& db_name) const;
     void verify_list(sqlite::database& db) const override;
     virtual void verify_pack(sqlite::database& db) const;
 

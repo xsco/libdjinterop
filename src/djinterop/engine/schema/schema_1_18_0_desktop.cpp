@@ -195,7 +195,8 @@ void schema_1_18_0_desktop::verify_music_schema(sqlite::database& db) const
     verify_track(db);
 }
 
-void schema_1_18_0_desktop::verify_performance_schema(sqlite::database& db) const
+void schema_1_18_0_desktop::verify_performance_schema(
+    sqlite::database& db) const
 {
     // List of tables unchanged since 1.17.0.
     verify_performance_master_list(db);
