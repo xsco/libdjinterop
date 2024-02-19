@@ -24,7 +24,7 @@ if(MSVC)
     # Ask MSVC to populate the __cplusplus macro properly.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus")
 else()
-    add_compile_options("-Wall" "$<$<CONFIG:RELEASE>:-O3>")
+    add_compile_options("$<$<CONFIG:DEBUG>:-Wall>")
 endif()
 
 
