@@ -366,7 +366,7 @@ void schema_1_9_1::verify_list_parent_list(sqlite::database& db) const
         auto iter = ii.begin(), end = ii.end();
         validate(iter, end, 0, "listOriginType");
         ++iter;
-        validate_no_more(iter ,end);
+        validate_no_more(iter, end);
     }
     {
         index_info ii{db, "music", "index_ListParentList_listParentId"};

@@ -123,7 +123,8 @@ void schema_1_17_0::verify_performance_master_list(sqlite::database& db) const
     }
 }
 
-void schema_1_17_0::verify_change_log(sqlite::database& db, const std::string& db_name) const
+void schema_1_17_0::verify_change_log(
+    sqlite::database& db, const std::string& db_name) const
 {
     {
         table_info cols{db, db_name, "ChangeLog"};

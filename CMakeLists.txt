@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.20.1
+        VERSION 0.20.2
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
@@ -24,10 +24,7 @@ if(MSVC)
     # Ask MSVC to populate the __cplusplus macro properly.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus")
 else()
-    add_compile_options("-Wall" "$<$<CONFIG:RELEASE>:-O3>")
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        add_compile_options("-stdlib=libc++")
-    endif()
+    add_compile_options("$<$<CONFIG:DEBUG>:-Wall>")
 endif()
 
 

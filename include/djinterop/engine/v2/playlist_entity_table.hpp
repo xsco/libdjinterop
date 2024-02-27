@@ -129,7 +129,8 @@ public:
     ///
     /// \param list_id Id of playlist.
     /// \return Returns a list of playlist entity rows.
-    [[nodiscard]] std::list<playlist_entity_row> get_for_list(int64_t list_id) const;
+    [[nodiscard]] std::list<playlist_entity_row> get_for_list(
+        int64_t list_id) const;
 
     /// Get the ids of all tracks in a given playlist, in playlist order.
     ///

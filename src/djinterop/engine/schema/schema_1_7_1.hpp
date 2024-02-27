@@ -31,7 +31,8 @@ public:
     static constexpr const semantic_version schema_version{1, 7, 1};
 
 protected:
-    void verify_information(sqlite::database& db, const std::string& db_name) const override;
+    void verify_information(
+        sqlite::database& db, const std::string& db_name) const override;
     void verify_track(sqlite::database& db) const override;
     void verify_performance_data(sqlite::database& db) const override;
 

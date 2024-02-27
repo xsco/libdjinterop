@@ -97,8 +97,7 @@ struct DJINTEROP_PUBLIC track_data_blob
         const track_data_blob& lhs, const track_data_blob& rhs) noexcept
     {
         return lhs.sample_rate == rhs.sample_rate &&
-               lhs.samples == rhs.samples &&
-               lhs.key == rhs.key &&
+               lhs.samples == rhs.samples && lhs.key == rhs.key &&
                lhs.average_loudness_low == rhs.average_loudness_low &&
                lhs.average_loudness_mid == rhs.average_loudness_mid &&
                lhs.average_loudness_high == rhs.average_loudness_high &&
@@ -115,8 +114,7 @@ struct DJINTEROP_PUBLIC track_data_blob
         std::ostream& os, const track_data_blob& obj) noexcept
     {
         os << "track_data_blob{sample_rate=" << obj.sample_rate
-           << ", samples=" << obj.samples
-           << ", key=" << obj.key
+           << ", samples=" << obj.samples << ", key=" << obj.key
            << ", average_loudness_low=" << obj.average_loudness_low
            << ", average_loudness_mid=" << obj.average_loudness_mid
            << ", average_loudness_high=" << obj.average_loudness_high << "}";

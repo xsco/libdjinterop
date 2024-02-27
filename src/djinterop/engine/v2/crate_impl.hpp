@@ -52,11 +52,12 @@ public:
     void set_parent(stdx::optional<crate> parent) override;
     stdx::optional<crate> sub_crate_by_name(const std::string& name) override;
     std::vector<track> tracks() override;
+
 private:
     std::shared_ptr<engine_library> library_;
     playlist_entity_table playlist_entity_;
     playlist_table playlist_;
 };
 
-}  // namespace engine::v1
+}  // namespace engine::v2
 }  // namespace djinterop

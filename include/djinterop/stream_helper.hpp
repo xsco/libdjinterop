@@ -32,8 +32,7 @@
 
 namespace djinterop::stream_helper
 {
-template <typename T>
-std::ostream& print(std::ostream& os, const T& obj)
+template <typename T> std::ostream& print(std::ostream& os, const T& obj)
 {
     return os << obj;
 }
@@ -50,7 +49,7 @@ std::ostream& print(std::ostream& os, const stdx::optional<T>& obj)
 template <typename Rep, typename Period>
 std::ostream& print(
     std::ostream& os,
-    const stdx::optional<std::chrono::duration<Rep, Period> >& obj)
+    const stdx::optional<std::chrono::duration<Rep, Period>>& obj)
 {
     if (obj)
         return os << obj->count();
@@ -68,7 +67,7 @@ std::ostream& print(
 template <typename Clock, typename Duration>
 std::ostream& print(
     std::ostream& os,
-    const stdx::optional<std::chrono::time_point<Clock, Duration> >& obj)
+    const stdx::optional<std::chrono::time_point<Clock, Duration>>& obj)
 {
     if (obj)
         return os << obj->time_since_epoch().count();

@@ -37,10 +37,10 @@ inline stdx::optional<djinterop::loop> loop(const loop_blob& l)
                : stdx::nullopt;
 }
 
-inline std::vector<stdx::optional<djinterop::loop> > loops(
+inline std::vector<stdx::optional<djinterop::loop>> loops(
     const loops_blob& loops)
 {
-    std::vector<stdx::optional<djinterop::loop> > converted;
+    std::vector<stdx::optional<djinterop::loop>> converted;
     converted.reserve(loops.loops.size());
     for (auto&& l : loops.loops)
         converted.push_back(loop(l));
@@ -65,7 +65,7 @@ inline loop_blob loop(stdx::optional<djinterop::loop> loop)
 }
 
 inline loops_blob loops(
-    const std::vector<stdx::optional<djinterop::loop> >& loops)
+    const std::vector<stdx::optional<djinterop::loop>>& loops)
 {
     if (loops.size() > MAX_LOOPS)
         throw djinterop::loops_overflow{
