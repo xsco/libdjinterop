@@ -1,3 +1,17 @@
+libdjinterop (0.20.2-0ubuntu1) bionic; urgency=medium
+
+  [ Adam Szmigin ]
+  * Linting tidy up
+
+  [ Be ]
+  * fix Clang build
+  * only compile with -Wall for debug builds
+
+  [ Adam Szmigin ]
+  * Bump version to 0.20.2
+
+ -- Adam Szmigin <smidge@xsco.net>  Tue, 27 Feb 2024 23:46:11 +0000
+
 libdjinterop (0.20.1-0ubuntu1) bionic; urgency=medium
 
   * Fix MSVC warnings
