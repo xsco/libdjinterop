@@ -140,12 +140,12 @@ constexpr const engine_version os_3_0_0{
 /// Engine DJ desktop 3.1.0 to 3.2.0
 constexpr const engine_version desktop_3_1_0{
     semantic_version{3, 1, 0}, engine_database_type::desktop,
-    "Engine DJ Desktop 3.1.0 to 3.2.0", semantic_version{2, 21, 0}};
+    "Engine DJ Desktop 3.1.0 to 3.4.0", semantic_version{2, 21, 0}};
 
 /// Engine DJ OS 3.1.0 to 3.2.0
 constexpr const engine_version os_3_1_0{
     semantic_version{3, 1, 0}, engine_database_type::desktop,
-    "Engine DJ OS 3.1.0 to 3.2.0", semantic_version{2, 21, 0}};
+    "Engine DJ OS 3.1.0 to 3.4.0", semantic_version{2, 21, 0}};
 
 /// Set of available versions.
 constexpr const std::array<engine_version, 21> all_versions{
