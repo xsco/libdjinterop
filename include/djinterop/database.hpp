@@ -65,10 +65,11 @@ public:
     /// Returns all crates with the given name
     std::vector<crate> crates_by_name(const std::string& name) const;
 
-    /// Creates a new root crate with the given name.
-    ///
-    /// The created crate has no parent.
-    crate create_root_crate(std::string name) const;
+    /// Create a new root crate with the given name.  The created crate has no parent.
+    crate create_root_crate(const std::string& name);
+
+    /// Create a new root crate with the given name, after the given crate in order.
+    crate create_root_crate_after(const std::string& name, const crate& after);
 
     /// Create a new track in the database, given a pre-populated track
     /// snapshot.

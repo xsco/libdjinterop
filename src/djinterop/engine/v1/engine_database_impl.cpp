@@ -89,7 +89,7 @@ std::vector<crate> engine_database_impl::crates_by_name(const std::string& name)
     return results;
 }
 
-crate engine_database_impl::create_root_crate(std::string name)
+crate engine_database_impl::create_root_crate(const std::string& name)
 {
     ensure_valid_crate_name(name);
     djinterop::util::sqlite_transaction trans{storage_->db};
@@ -123,6 +123,13 @@ crate engine_database_impl::create_root_crate(std::string name)
     trans.commit();
 
     return cr;
+}
+
+crate engine_database_impl::create_root_crate_after(
+    const std::string& name, [[maybe_unused]] const crate& after)
+{
+    // TODO (mr-smidge): Back-port sorted crate functionality to Engine V1.
+   return create_root_crate(name);
 }
 
 track engine_database_impl::create_track(const track_snapshot& snapshot)

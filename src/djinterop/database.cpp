@@ -20,6 +20,8 @@
 #include <djinterop/djinterop.hpp>
 
 #include "impl/database_impl.hpp"
+#include "djinterop/database.hpp"
+
 
 namespace djinterop
 {
@@ -44,9 +46,14 @@ std::vector<crate> database::crates_by_name(const std::string& name) const
     return pimpl_->crates_by_name(name);
 }
 
-crate database::create_root_crate(std::string name) const
+crate database::create_root_crate(const std::string& name)
 {
     return pimpl_->create_root_crate(name);
+}
+
+crate database::create_root_crate_after(const std::string &name, const crate &after)
+{
+    return pimpl_->create_root_crate_after(name, after);
 }
 
 track database::create_track(const track_snapshot& snapshot)
