@@ -73,7 +73,7 @@ void crate_impl::clear_tracks()
     playlist_entity_.clear(id());
 }
 
-crate crate_impl::create_sub_crate(std::string name)
+crate crate_impl::create_sub_crate(const std::string& name)
 {
     if (library_->playlist().find_id(id(), name))
     {
@@ -89,6 +89,41 @@ crate crate_impl::create_sub_crate(std::string name)
         id(),
         true,
         PLAYLIST_NO_NEXT_LIST_ID,
+        std::chrono::system_clock::now(),
+        true};
+
+    auto id = library_->playlist().add(row);
+    return crate{std::make_shared<crate_impl>(library_, id)};
+}
+
+crate crate_impl::create_sub_crate_after(
+    const std::string& name, const crate& after)
+{
+    if (library_->playlist().find_id(id(), name))
+    {
+        throw crate_already_exists{
+            "Cannot create a crate with name '" + name +
+            "' under parent crate '" + this->name() +
+            "', because a crate with that name already exists"};
+    }
+
+    auto after_row = library_->playlist().get(after.id());
+    if (after_row->parent_list_id != id())
+    {
+        throw crate_invalid_parent{
+            "Cannot create a crate under parent crate " + this->name() +
+            " after crate " + after_row->title +
+            ", because it resides under a different parent crate"};
+    }
+
+    // DB triggers will take care of massaging the next-list-id columns.  We
+    // only need to work out what the new "next" list should be.
+    playlist_row row{
+        PLAYLIST_ROW_ID_NONE,
+        name,
+        id(),
+        true,
+        after_row->next_list_id,
         std::chrono::system_clock::now(),
         true};
 

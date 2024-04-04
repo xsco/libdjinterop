@@ -43,7 +43,9 @@ public:
     virtual void add_track(track tr) = 0;
     virtual std::vector<crate> children() = 0;
     virtual void clear_tracks() = 0;
-    virtual crate create_sub_crate(std::string name) = 0;
+    virtual crate create_sub_crate(const std::string& name) = 0;
+    virtual crate create_sub_crate_after(
+        const std::string& name, const crate& after) = 0;
     virtual database db() = 0;
     virtual std::vector<crate> descendants() = 0;
     virtual bool is_valid() = 0;

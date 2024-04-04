@@ -36,7 +36,9 @@ public:
     std::vector<djinterop::crate> crates() override;
     std::vector<djinterop::crate> crates_by_name(
         const std::string& name) override;
-    djinterop::crate create_root_crate(std::string name) override;
+    crate create_root_crate(const std::string& name) override;
+    crate create_root_crate_after(
+        const std::string& name, const crate& after) override;
     track create_track(const track_snapshot& snapshot) override;
     std::string directory() override;
     void verify() override;

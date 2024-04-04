@@ -40,7 +40,7 @@ namespace e = djinterop::engine;
 BOOST_TEST_DECORATOR(* utf::description(
     "database::create_root_crate() for all supported schema versions"))
 BOOST_DATA_TEST_CASE(
-    create_root_crate__supported_version__creates, e::all_v1_versions, version)
+    create_root_crate__supported_version__creates, e::all_versions, version)
 {
     // Arrange
     BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
@@ -53,6 +53,34 @@ BOOST_DATA_TEST_CASE(
     // Assert
     BOOST_CHECK_NE(crate.id(), 0);
     BOOST_CHECK(crate.parent() == djinterop::stdx::nullopt);
+}
+
+BOOST_TEST_DECORATOR(* utf::description(
+    "database::create_root_crate_after() for all supported schema versions"))
+BOOST_DATA_TEST_CASE(
+    create_root_crate_after__supported_version__creates, e::all_v2_versions,
+    version)
+{
+    // Arrange
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
+    auto db = e::create_temporary_database(version);
+    auto crate_a = db.create_root_crate("Example Root Crate A");
+    auto crate_b = db.create_root_crate("Example Root Crate B");
+    auto crate_d = db.create_root_crate("Example Root Crate D");
+    auto crate_e = db.create_root_crate("Example Root Crate E");
+
+    // Act
+    BOOST_TEST_CHECKPOINT("(" << version << ") Creating root crate after another...");
+    auto crate = db.create_root_crate_after("Example Root Crate C", crate_b);
+
+    // Assert
+    auto crates = db.root_crates();
+    BOOST_CHECK_EQUAL(5, crates.size());
+    BOOST_CHECK(crates[0].id() == crate_a.id());
+    BOOST_CHECK(crates[1].id() == crate_b.id());
+    BOOST_CHECK(crates[2].id() == crate.id());
+    BOOST_CHECK(crates[3].id() == crate_d.id());
+    BOOST_CHECK(crates[4].id() == crate_e.id());
 }
 
 BOOST_TEST_DECORATOR(* utf::description(

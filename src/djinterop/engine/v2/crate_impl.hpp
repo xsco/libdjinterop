@@ -41,7 +41,9 @@ public:
     void add_track(track tr) override;
     std::vector<crate> children() override;
     void clear_tracks() override;
-    crate create_sub_crate(std::string name) override;
+    crate create_sub_crate(const std::string& name) override;
+    crate create_sub_crate_after(
+        const std::string& name, const crate& after) override;
     database db() override;
     std::vector<crate> descendants() override;
     bool is_valid() override;

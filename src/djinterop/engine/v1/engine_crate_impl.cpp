@@ -125,7 +125,7 @@ void engine_crate_impl::clear_tracks()
     storage_->db << "DELETE FROM CrateTrackList WHERE crateId = ?" << id();
 }
 
-crate engine_crate_impl::create_sub_crate(std::string name)
+crate engine_crate_impl::create_sub_crate(const std::string& name)
 {
     ensure_valid_name(name);
     util::sqlite_transaction trans{storage_->db};
@@ -180,6 +180,13 @@ crate engine_crate_impl::create_sub_crate(std::string name)
     trans.commit();
 
     return cr;
+}
+
+crate engine_crate_impl::create_sub_crate_after(
+    const std::string& name, [[maybe_unused]] const crate& after)
+{
+    // TODO (mr-smidge): Back-port sorted crate functionality to Engine V1.
+    return create_sub_crate(name);
 }
 
 database engine_crate_impl::db()
