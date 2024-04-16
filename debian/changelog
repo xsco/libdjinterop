@@ -1,3 +1,10 @@
+libdjinterop (0.20.3-0ubuntu1) bionic; urgency=medium
+
+  * EngineDJ 3.3.0 test data schema
+  * Support up to Engine 3.4.0 (#118)
+
+ -- Adam Szmigin <smidge@xsco.net>  Tue, 16 Apr 2024 22:19:58 +0100
+
 libdjinterop (0.20.2-0ubuntu1) bionic; urgency=medium
 
   [ Adam Szmigin ]
