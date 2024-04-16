@@ -28,9 +28,7 @@
 #include <vector>
 
 #include <djinterop/config.hpp>
-#include <djinterop/optional.hpp>
 #include <djinterop/pad_color.hpp>
-#include <djinterop/performance_data.hpp>
 
 namespace djinterop::engine::v2
 {

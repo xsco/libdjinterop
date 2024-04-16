@@ -28,9 +28,6 @@
 #include <vector>
 
 #include <djinterop/config.hpp>
-#include <djinterop/optional.hpp>
-#include <djinterop/pad_color.hpp>
-#include <djinterop/performance_data.hpp>
 
 namespace djinterop::engine::v2
 {
@@ -90,7 +87,7 @@ struct DJINTEROP_PUBLIC beat_grid_marker_blob
 struct DJINTEROP_PUBLIC beat_data_blob
 {
     /// Type of collection of beat grid markers.
-    typedef std::vector<beat_grid_marker_blob> beat_grid_marker_blobs_type;
+    using beat_grid_marker_blobs_type = std::vector<beat_grid_marker_blob>;
 
     /// Sample rate, in hertz.
     double sample_rate;

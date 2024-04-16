@@ -142,10 +142,10 @@ std::vector<int64_t> playlist_table::find_ids(const std::string& title) const
     return results;
 }
 
-stdx::optional<int64_t> playlist_table::find_id(
+std::optional<int64_t> playlist_table::find_id(
     int64_t parent_id, const std::string& title) const
 {
-    stdx::optional<int64_t> result;
+    std::optional<int64_t> result;
     context_->db
             << "SELECT id FROM Playlist WHERE title = ? AND parentListId = ?"
             << title << parent_id >>
@@ -158,10 +158,10 @@ stdx::optional<int64_t> playlist_table::find_id(
     return result;
 }
 
-stdx::optional<int64_t> playlist_table::find_root_id(
+std::optional<int64_t> playlist_table::find_root_id(
     const std::string& title) const
 {
-    stdx::optional<int64_t> result;
+    std::optional<int64_t> result;
     context_->db
             << "SELECT id FROM Playlist WHERE title = ? AND parentListId = 0"
             << title >>
@@ -174,9 +174,9 @@ stdx::optional<int64_t> playlist_table::find_root_id(
     return result;
 }
 
-djinterop::stdx::optional<playlist_row> playlist_table::get(int64_t id) const
+std::optional<playlist_row> playlist_table::get(int64_t id) const
 {
-    djinterop::stdx::optional<playlist_row> result;
+    std::optional<playlist_row> result;
     context_->db << "SELECT id, title, parentListId, isPersisted, nextListId, "
                     "lastEditTime, isExplicitlyExported "
                     "FROM Playlist WHERE id = ?"

@@ -19,9 +19,8 @@
 
 #include <chrono>
 #include <cstdint>
+#include <optional>
 #include <string>
-
-#include <djinterop/optional.hpp>
 
 namespace djinterop::util
 {
@@ -36,10 +35,10 @@ inline std::chrono::system_clock::time_point to_time_point(int64_t timestamp)
         std::chrono::seconds(timestamp)};
 }
 
-inline stdx::optional<std::chrono::system_clock::time_point> to_time_point(
-    stdx::optional<int64_t> timestamp)
+inline std::optional<std::chrono::system_clock::time_point> to_time_point(
+    std::optional<int64_t> timestamp)
 {
-    stdx::optional<std::chrono::system_clock::time_point> result;
+    std::optional<std::chrono::system_clock::time_point> result;
     if (timestamp)
         result = to_time_point(*timestamp);
 
@@ -53,10 +52,10 @@ inline int64_t to_timestamp(std::chrono::system_clock::time_point time)
         .count();
 }
 
-inline stdx::optional<int64_t> to_timestamp(
-    stdx::optional<std::chrono::system_clock::time_point> time)
+inline std::optional<int64_t> to_timestamp(
+    std::optional<std::chrono::system_clock::time_point> time)
 {
-    stdx::optional<int64_t> result;
+    std::optional<int64_t> result;
     if (time)
         result = to_timestamp(*time);
 

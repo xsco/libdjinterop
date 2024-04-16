@@ -48,11 +48,11 @@ public:
     std::vector<crate> descendants() override;
     bool is_valid() override;
     std::string name() override;
-    stdx::optional<crate> parent() override;
+    std::optional<crate> parent() override;
     void remove_track(track tr) override;
     void set_name(std::string name) override;
-    void set_parent(stdx::optional<crate> parent) override;
-    stdx::optional<crate> sub_crate_by_name(const std::string& name) override;
+    void set_parent(std::optional<crate> parent) override;
+    std::optional<crate> sub_crate_by_name(const std::string& name) override;
     std::vector<track> tracks() override;
 
 private:

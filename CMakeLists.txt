@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.21.0
+        VERSION 0.22.0
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
@@ -26,7 +26,6 @@ if(MSVC)
 else()
     add_compile_options("$<$<CONFIG:DEBUG>:-Wall>")
 endif()
-
 
 # Build shared a library by default.
 option(BUILD_SHARED_LIBS "Build shared library" ON)
@@ -101,10 +100,6 @@ if(DJINTEROP_LIBRARY_TYPE STREQUAL "STATIC_LIBRARY")
 endif()
 
 # Generate config.hpp based on build-time environment.
-include(CheckIncludeFileCXX)
-CHECK_INCLUDE_FILE_CXX(optional DJINTEROP_STD_OPTIONAL)
-CHECK_INCLUDE_FILE_CXX(experimental/optional DJINTEROP_STD_EXPERIMENTAL_OPTIONAL)
-
 configure_file(
     include/djinterop/config.hpp.in
     include/djinterop/config.hpp)
@@ -170,7 +165,6 @@ install(FILES
     include/djinterop/djinterop.hpp
     include/djinterop/exceptions.hpp
     include/djinterop/musical_key.hpp
-    include/djinterop/optional.hpp
     include/djinterop/pad_color.hpp
     include/djinterop/performance_data.hpp
     include/djinterop/semantic_version.hpp

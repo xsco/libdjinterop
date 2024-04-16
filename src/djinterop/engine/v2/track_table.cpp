@@ -35,7 +35,7 @@ template <typename ColumnType>
 ColumnType get_column(
     sqlite::database& db, int64_t id, const std::string& column_name)
 {
-    stdx::optional<ColumnType> result;
+    std::optional<ColumnType> result;
     auto sql = "SELECT " + column_name + " FROM Track WHERE id = ?";
     db << sql << id >> [&](ColumnType value) { result = value; };
 
@@ -54,11 +54,11 @@ std::chrono::system_clock::time_point get_column(
 }
 
 template <>
-stdx::optional<std::chrono::system_clock::time_point> get_column(
+std::optional<std::chrono::system_clock::time_point> get_column(
     sqlite::database& db, int64_t id, const std::string& column_name)
 
 {
-    auto timestamp = get_column<stdx::optional<int64_t>>(db, id, column_name);
+    auto timestamp = get_column<std::optional<int64_t>>(db, id, column_name);
     return djinterop::util::to_time_point(timestamp);
 }
 
@@ -88,10 +88,10 @@ void set_column(
 template <>
 void set_column(
     sqlite::database& db, int64_t id, const std::string& column_name,
-    const stdx::optional<std::chrono::system_clock::time_point>& value)
+    const std::optional<std::chrono::system_clock::time_point>& value)
 {
     auto timestamp = djinterop::util::to_timestamp(value);
-    set_column<stdx::optional<int64_t>>(db, id, column_name, timestamp);
+    set_column<std::optional<int64_t>>(db, id, column_name, timestamp);
 }
 
 }  // anonymous namespace
@@ -350,9 +350,9 @@ bool track_table::exists(int64_t id) const
     return result;
 }
 
-stdx::optional<track_row> track_table::get(int64_t id) const
+std::optional<track_row> track_table::get(int64_t id) const
 {
-    stdx::optional<track_row> result;
+    std::optional<track_row> result;
 
     if (context_->version.schema_version >= semantic_version{2, 20, 3})
     {
@@ -372,40 +372,40 @@ stdx::optional<track_row> track_table::get(int64_t id) const
                    "activeOnLoadLoops, lastEditTime "
                    "FROM Track WHERE id = ?"
                 << id >>
-            [&](int64_t id, stdx::optional<int64_t> play_order, int64_t length,
-                stdx::optional<int64_t> bpm, stdx::optional<int64_t> year,
+            [&](int64_t id, std::optional<int64_t> play_order, int64_t length,
+                std::optional<int64_t> bpm, std::optional<int64_t> year,
                 std::string path, std::string filename,
-                stdx::optional<int64_t> bitrate,
-                stdx::optional<double> bpm_analyzed, int64_t album_art_id,
-                stdx::optional<int64_t> file_bytes,
-                stdx::optional<std::string> title,
-                stdx::optional<std::string> artist,
-                stdx::optional<std::string> album,
-                stdx::optional<std::string> genre,
-                stdx::optional<std::string> comment,
-                stdx::optional<std::string> label,
-                stdx::optional<std::string> composer,
-                stdx::optional<std::string> remixer,
-                stdx::optional<int32_t> key, int64_t rating,
-                stdx::optional<std::string> album_art,
-                stdx::optional<int64_t> time_last_played, bool is_played,
+                std::optional<int64_t> bitrate,
+                std::optional<double> bpm_analyzed, int64_t album_art_id,
+                std::optional<int64_t> file_bytes,
+                std::optional<std::string> title,
+                std::optional<std::string> artist,
+                std::optional<std::string> album,
+                std::optional<std::string> genre,
+                std::optional<std::string> comment,
+                std::optional<std::string> label,
+                std::optional<std::string> composer,
+                std::optional<std::string> remixer,
+                std::optional<int32_t> key, int64_t rating,
+                std::optional<std::string> album_art,
+                std::optional<int64_t> time_last_played, bool is_played,
                 std::string file_type, bool is_analyzed, int64_t date_created,
                 int64_t date_added, bool is_available,
                 bool is_metadata_of_packed_track_changed,
                 bool is_performance_data_of_packed_track_changed,
-                stdx::optional<int64_t> played_indicator,
+                std::optional<int64_t> played_indicator,
                 bool is_metadata_imported, int64_t pdb_import_key,
-                stdx::optional<std::string> streaming_source,
-                stdx::optional<std::string> uri, bool is_beat_grid_locked,
+                std::optional<std::string> streaming_source,
+                std::optional<std::string> uri, bool is_beat_grid_locked,
                 std::string origin_database_uuid, int64_t origin_track_id,
                 const std::vector<std::byte>& track_data,
                 const std::vector<std::byte>& overview_waveform_data,
                 const std::vector<std::byte>& beat_data,
                 const std::vector<std::byte>& quick_cues,
                 const std::vector<std::byte>& loops,
-                stdx::optional<int64_t> third_party_source_id,
+                std::optional<int64_t> third_party_source_id,
                 int64_t streaming_flags, bool explicit_lyrics,
-                stdx::optional<int64_t> active_on_load_loops,
+                std::optional<int64_t> active_on_load_loops,
                 int64_t last_edit_time)
         {
             assert(!result);
@@ -480,40 +480,40 @@ stdx::optional<track_row> track_table::get(int64_t id) const
                    "activeOnLoadLoops "
                    "FROM Track WHERE id = ?"
                 << id >>
-            [&](int64_t id, stdx::optional<int64_t> play_order, int64_t length,
-                stdx::optional<int64_t> bpm, stdx::optional<int64_t> year,
+            [&](int64_t id, std::optional<int64_t> play_order, int64_t length,
+                std::optional<int64_t> bpm, std::optional<int64_t> year,
                 std::string path, std::string filename,
-                stdx::optional<int64_t> bitrate,
-                stdx::optional<double> bpm_analyzed, int64_t album_art_id,
-                stdx::optional<int64_t> file_bytes,
-                stdx::optional<std::string> title,
-                stdx::optional<std::string> artist,
-                stdx::optional<std::string> album,
-                stdx::optional<std::string> genre,
-                stdx::optional<std::string> comment,
-                stdx::optional<std::string> label,
-                stdx::optional<std::string> composer,
-                stdx::optional<std::string> remixer,
-                stdx::optional<int32_t> key, int64_t rating,
-                stdx::optional<std::string> album_art,
-                stdx::optional<int64_t> time_last_played, bool is_played,
+                std::optional<int64_t> bitrate,
+                std::optional<double> bpm_analyzed, int64_t album_art_id,
+                std::optional<int64_t> file_bytes,
+                std::optional<std::string> title,
+                std::optional<std::string> artist,
+                std::optional<std::string> album,
+                std::optional<std::string> genre,
+                std::optional<std::string> comment,
+                std::optional<std::string> label,
+                std::optional<std::string> composer,
+                std::optional<std::string> remixer,
+                std::optional<int32_t> key, int64_t rating,
+                std::optional<std::string> album_art,
+                std::optional<int64_t> time_last_played, bool is_played,
                 std::string file_type, bool is_analyzed, int64_t date_created,
                 int64_t date_added, bool is_available,
                 bool is_metadata_of_packed_track_changed,
                 bool is_performance_data_of_packed_track_changed,
-                stdx::optional<int64_t> played_indicator,
+                std::optional<int64_t> played_indicator,
                 bool is_metadata_imported, int64_t pdb_import_key,
-                stdx::optional<std::string> streaming_source,
-                stdx::optional<std::string> uri, bool is_beat_grid_locked,
+                std::optional<std::string> streaming_source,
+                std::optional<std::string> uri, bool is_beat_grid_locked,
                 std::string origin_database_uuid, int64_t origin_track_id,
                 const std::vector<std::byte>& track_data,
                 const std::vector<std::byte>& overview_waveform_data,
                 const std::vector<std::byte>& beat_data,
                 const std::vector<std::byte>& quick_cues,
                 const std::vector<std::byte>& loops,
-                stdx::optional<int64_t> third_party_source_id,
+                std::optional<int64_t> third_party_source_id,
                 int64_t streaming_flags, bool explicit_lyrics,
-                stdx::optional<int64_t> active_on_load_loops)
+                std::optional<int64_t> active_on_load_loops)
         {
             assert(!result);
 
@@ -586,38 +586,38 @@ stdx::optional<track_row> track_table::get(int64_t id) const
                    "thirdPartySourceId, streamingFlags, explicitLyrics "
                    "FROM Track WHERE id = ?"
                 << id >>
-            [&](int64_t id, stdx::optional<int64_t> play_order, int64_t length,
-                stdx::optional<int64_t> bpm, stdx::optional<int64_t> year,
+            [&](int64_t id, std::optional<int64_t> play_order, int64_t length,
+                std::optional<int64_t> bpm, std::optional<int64_t> year,
                 std::string path, std::string filename,
-                stdx::optional<int64_t> bitrate,
-                stdx::optional<double> bpm_analyzed, int64_t album_art_id,
-                stdx::optional<int64_t> file_bytes,
-                stdx::optional<std::string> title,
-                stdx::optional<std::string> artist,
-                stdx::optional<std::string> album,
-                stdx::optional<std::string> genre,
-                stdx::optional<std::string> comment,
-                stdx::optional<std::string> label,
-                stdx::optional<std::string> composer,
-                stdx::optional<std::string> remixer,
-                stdx::optional<int32_t> key, int64_t rating,
-                stdx::optional<std::string> album_art,
-                stdx::optional<int64_t> time_last_played, bool is_played,
+                std::optional<int64_t> bitrate,
+                std::optional<double> bpm_analyzed, int64_t album_art_id,
+                std::optional<int64_t> file_bytes,
+                std::optional<std::string> title,
+                std::optional<std::string> artist,
+                std::optional<std::string> album,
+                std::optional<std::string> genre,
+                std::optional<std::string> comment,
+                std::optional<std::string> label,
+                std::optional<std::string> composer,
+                std::optional<std::string> remixer,
+                std::optional<int32_t> key, int64_t rating,
+                std::optional<std::string> album_art,
+                std::optional<int64_t> time_last_played, bool is_played,
                 std::string file_type, bool is_analyzed, int64_t date_created,
                 int64_t date_added, bool is_available,
                 bool is_metadata_of_packed_track_changed,
                 bool is_performance_data_of_packed_track_changed,
-                stdx::optional<int64_t> played_indicator,
+                std::optional<int64_t> played_indicator,
                 bool is_metadata_imported, int64_t pdb_import_key,
-                stdx::optional<std::string> streaming_source,
-                stdx::optional<std::string> uri, bool is_beat_grid_locked,
+                std::optional<std::string> streaming_source,
+                std::optional<std::string> uri, bool is_beat_grid_locked,
                 std::string origin_database_uuid, int64_t origin_track_id,
                 const std::vector<std::byte>& track_data,
                 const std::vector<std::byte>& overview_waveform_data,
                 const std::vector<std::byte>& beat_data,
                 const std::vector<std::byte>& quick_cues,
                 const std::vector<std::byte>& loops,
-                stdx::optional<int64_t> third_party_source_id,
+                std::optional<int64_t> third_party_source_id,
                 int64_t streaming_flags, bool explicit_lyrics)
         {
             assert(!result);
@@ -670,7 +670,7 @@ stdx::optional<track_row> track_table::get(int64_t id) const
                 third_party_source_id,
                 streaming_flags,
                 explicit_lyrics,
-                stdx::nullopt,
+                std::nullopt,
                 LAST_EDIT_TIME_NONE};
         };
     }
@@ -678,10 +678,10 @@ stdx::optional<track_row> track_table::get(int64_t id) const
     return result;
 }
 
-stdx::optional<int64_t> track_table::find_id_by_path(
+std::optional<int64_t> track_table::find_id_by_path(
     const std::string& path) const
 {
-    stdx::optional<int64_t> result;
+    std::optional<int64_t> result;
 
     context_->db << "SELECT id FROM Track WHERE path = ?" << path >>
         [&](int64_t id)
@@ -859,14 +859,14 @@ void track_table::update(const track_row& row)
     }
 }
 
-stdx::optional<int64_t> track_table::get_play_order(int64_t id)
+std::optional<int64_t> track_table::get_play_order(int64_t id)
 {
-    return get_column<stdx::optional<int64_t>>(context_->db, id, "playOrder");
+    return get_column<std::optional<int64_t>>(context_->db, id, "playOrder");
 }
 
-void track_table::set_play_order(int64_t id, stdx::optional<int64_t> play_order)
+void track_table::set_play_order(int64_t id, std::optional<int64_t> play_order)
 {
-    set_column<stdx::optional<int64_t>>(
+    set_column<std::optional<int64_t>>(
         context_->db, id, "playOrder", play_order);
 }
 
@@ -880,24 +880,24 @@ void track_table::set_length(int64_t id, int64_t length)
     set_column<int64_t>(context_->db, id, "length", length);
 }
 
-stdx::optional<int64_t> track_table::get_bpm(int64_t id)
+std::optional<int64_t> track_table::get_bpm(int64_t id)
 {
-    return get_column<stdx::optional<int64_t>>(context_->db, id, "bpm");
+    return get_column<std::optional<int64_t>>(context_->db, id, "bpm");
 }
 
-void track_table::set_bpm(int64_t id, stdx::optional<int64_t> bpm)
+void track_table::set_bpm(int64_t id, std::optional<int64_t> bpm)
 {
-    set_column<stdx::optional<int64_t>>(context_->db, id, "bpm", bpm);
+    set_column<std::optional<int64_t>>(context_->db, id, "bpm", bpm);
 }
 
-stdx::optional<int64_t> track_table::get_year(int64_t id)
+std::optional<int64_t> track_table::get_year(int64_t id)
 {
-    return get_column<stdx::optional<int64_t>>(context_->db, id, "year");
+    return get_column<std::optional<int64_t>>(context_->db, id, "year");
 }
 
-void track_table::set_year(int64_t id, const stdx::optional<int64_t>& year)
+void track_table::set_year(int64_t id, const std::optional<int64_t>& year)
 {
-    set_column<stdx::optional<int64_t>>(context_->db, id, "year", year);
+    set_column<std::optional<int64_t>>(context_->db, id, "year", year);
 }
 
 std::string track_table::get_path(int64_t id)
@@ -920,25 +920,25 @@ void track_table::set_filename(int64_t id, const std::string& filename)
     set_column<std::string>(context_->db, id, "filename", filename);
 }
 
-stdx::optional<int64_t> track_table::get_bitrate(int64_t id)
+std::optional<int64_t> track_table::get_bitrate(int64_t id)
 {
-    return get_column<stdx::optional<int64_t>>(context_->db, id, "bitrate");
+    return get_column<std::optional<int64_t>>(context_->db, id, "bitrate");
 }
 
-void track_table::set_bitrate(int64_t id, stdx::optional<int64_t> bitrate)
+void track_table::set_bitrate(int64_t id, std::optional<int64_t> bitrate)
 {
-    set_column<stdx::optional<int64_t>>(context_->db, id, "bitrate", bitrate);
+    set_column<std::optional<int64_t>>(context_->db, id, "bitrate", bitrate);
 }
 
-stdx::optional<double> track_table::get_bpm_analyzed(int64_t id)
+std::optional<double> track_table::get_bpm_analyzed(int64_t id)
 {
-    return get_column<stdx::optional<double>>(context_->db, id, "bpmAnalyzed");
+    return get_column<std::optional<double>>(context_->db, id, "bpmAnalyzed");
 }
 
 void track_table::set_bpm_analyzed(
-    int64_t id, stdx::optional<double> bpm_analyzed)
+    int64_t id, std::optional<double> bpm_analyzed)
 {
-    set_column<stdx::optional<double>>(
+    set_column<std::optional<double>>(
         context_->db, id, "bpmAnalyzed", bpm_analyzed);
 }
 
@@ -952,117 +952,117 @@ void track_table::set_album_art_id(int64_t id, int64_t album_art_id)
     set_column<int64_t>(context_->db, id, "albumArtId", album_art_id);
 }
 
-stdx::optional<int64_t> track_table::get_file_bytes(int64_t id)
+std::optional<int64_t> track_table::get_file_bytes(int64_t id)
 {
-    return get_column<stdx::optional<int64_t>>(context_->db, id, "fileBytes");
+    return get_column<std::optional<int64_t>>(context_->db, id, "fileBytes");
 }
 
-void track_table::set_file_bytes(int64_t id, stdx::optional<int64_t> file_bytes)
+void track_table::set_file_bytes(int64_t id, std::optional<int64_t> file_bytes)
 {
-    set_column<stdx::optional<int64_t>>(
+    set_column<std::optional<int64_t>>(
         context_->db, id, "fileBytes", file_bytes);
 }
 
-stdx::optional<std::string> track_table::get_title(int64_t id)
+std::optional<std::string> track_table::get_title(int64_t id)
 {
-    return get_column<stdx::optional<std::string>>(context_->db, id, "title");
+    return get_column<std::optional<std::string>>(context_->db, id, "title");
 }
 
 void track_table::set_title(
-    int64_t id, const stdx::optional<std::string>& title)
+    int64_t id, const std::optional<std::string>& title)
 {
-    set_column<stdx::optional<std::string>>(context_->db, id, "title", title);
+    set_column<std::optional<std::string>>(context_->db, id, "title", title);
 }
 
-stdx::optional<std::string> track_table::get_artist(int64_t id)
+std::optional<std::string> track_table::get_artist(int64_t id)
 {
-    return get_column<stdx::optional<std::string>>(context_->db, id, "artist");
+    return get_column<std::optional<std::string>>(context_->db, id, "artist");
 }
 
 void track_table::set_artist(
-    int64_t id, const stdx::optional<std::string>& artist)
+    int64_t id, const std::optional<std::string>& artist)
 {
-    set_column<stdx::optional<std::string>>(context_->db, id, "artist", artist);
+    set_column<std::optional<std::string>>(context_->db, id, "artist", artist);
 }
 
-stdx::optional<std::string> track_table::get_album(int64_t id)
+std::optional<std::string> track_table::get_album(int64_t id)
 {
-    return get_column<stdx::optional<std::string>>(context_->db, id, "album");
+    return get_column<std::optional<std::string>>(context_->db, id, "album");
 }
 
 void track_table::set_album(
-    int64_t id, const stdx::optional<std::string>& album)
+    int64_t id, const std::optional<std::string>& album)
 {
-    set_column<stdx::optional<std::string>>(context_->db, id, "album", album);
+    set_column<std::optional<std::string>>(context_->db, id, "album", album);
 }
 
-stdx::optional<std::string> track_table::get_genre(int64_t id)
+std::optional<std::string> track_table::get_genre(int64_t id)
 {
-    return get_column<stdx::optional<std::string>>(context_->db, id, "genre");
+    return get_column<std::optional<std::string>>(context_->db, id, "genre");
 }
 
 void track_table::set_genre(
-    int64_t id, const stdx::optional<std::string>& genre)
+    int64_t id, const std::optional<std::string>& genre)
 {
-    set_column<stdx::optional<std::string>>(context_->db, id, "genre", genre);
+    set_column<std::optional<std::string>>(context_->db, id, "genre", genre);
 }
 
-stdx::optional<std::string> track_table::get_comment(int64_t id)
+std::optional<std::string> track_table::get_comment(int64_t id)
 {
-    return get_column<stdx::optional<std::string>>(context_->db, id, "comment");
+    return get_column<std::optional<std::string>>(context_->db, id, "comment");
 }
 
 void track_table::set_comment(
-    int64_t id, const stdx::optional<std::string>& comment)
+    int64_t id, const std::optional<std::string>& comment)
 {
-    set_column<stdx::optional<std::string>>(
+    set_column<std::optional<std::string>>(
         context_->db, id, "comment", comment);
 }
 
-stdx::optional<std::string> track_table::get_label(int64_t id)
+std::optional<std::string> track_table::get_label(int64_t id)
 {
-    return get_column<stdx::optional<std::string>>(context_->db, id, "label");
+    return get_column<std::optional<std::string>>(context_->db, id, "label");
 }
 
 void track_table::set_label(
-    int64_t id, const stdx::optional<std::string>& label)
+    int64_t id, const std::optional<std::string>& label)
 {
-    set_column<stdx::optional<std::string>>(context_->db, id, "label", label);
+    set_column<std::optional<std::string>>(context_->db, id, "label", label);
 }
 
-stdx::optional<std::string> track_table::get_composer(int64_t id)
+std::optional<std::string> track_table::get_composer(int64_t id)
 {
-    return get_column<stdx::optional<std::string>>(
+    return get_column<std::optional<std::string>>(
         context_->db, id, "composer");
 }
 
 void track_table::set_composer(
-    int64_t id, const stdx::optional<std::string>& composer)
+    int64_t id, const std::optional<std::string>& composer)
 {
-    set_column<stdx::optional<std::string>>(
+    set_column<std::optional<std::string>>(
         context_->db, id, "composer", composer);
 }
 
-stdx::optional<std::string> track_table::get_remixer(int64_t id)
+std::optional<std::string> track_table::get_remixer(int64_t id)
 {
-    return get_column<stdx::optional<std::string>>(context_->db, id, "remixer");
+    return get_column<std::optional<std::string>>(context_->db, id, "remixer");
 }
 
 void track_table::set_remixer(
-    int64_t id, const stdx::optional<std::string>& remixer)
+    int64_t id, const std::optional<std::string>& remixer)
 {
-    set_column<stdx::optional<std::string>>(
+    set_column<std::optional<std::string>>(
         context_->db, id, "remixer", remixer);
 }
 
-stdx::optional<int32_t> track_table::get_key(int64_t id)
+std::optional<int32_t> track_table::get_key(int64_t id)
 {
-    return get_column<stdx::optional<int32_t>>(context_->db, id, "key");
+    return get_column<std::optional<int32_t>>(context_->db, id, "key");
 }
 
-void track_table::set_key(int64_t id, stdx::optional<int32_t> key)
+void track_table::set_key(int64_t id, std::optional<int32_t> key)
 {
-    set_column<stdx::optional<int32_t>>(context_->db, id, "key", key);
+    set_column<std::optional<int32_t>>(context_->db, id, "key", key);
 }
 
 int64_t track_table::get_rating(int64_t id)
@@ -1075,31 +1075,31 @@ void track_table::set_rating(int64_t id, int64_t rating)
     set_column<int64_t>(context_->db, id, "rating", rating);
 }
 
-stdx::optional<std::string> track_table::get_album_art(int64_t id)
+std::optional<std::string> track_table::get_album_art(int64_t id)
 {
-    return get_column<stdx::optional<std::string>>(
+    return get_column<std::optional<std::string>>(
         context_->db, id, "albumArt");
 }
 
 void track_table::set_album_art(
-    int64_t id, const stdx::optional<std::string>& album_art)
+    int64_t id, const std::optional<std::string>& album_art)
 {
-    set_column<stdx::optional<std::string>>(
+    set_column<std::optional<std::string>>(
         context_->db, id, "albumArt", album_art);
 }
 
-stdx::optional<std::chrono::system_clock::time_point>
+std::optional<std::chrono::system_clock::time_point>
 track_table::get_time_last_played(int64_t id)
 {
-    return get_column<stdx::optional<std::chrono::system_clock::time_point>>(
+    return get_column<std::optional<std::chrono::system_clock::time_point>>(
         context_->db, id, "timeLastPlayed");
 }
 
 void track_table::set_time_last_played(
-    int64_t id, const stdx::optional<std::chrono::system_clock::time_point>&
+    int64_t id, const std::optional<std::chrono::system_clock::time_point>&
                     time_last_played)
 {
-    set_column<stdx::optional<std::chrono::system_clock::time_point>>(
+    set_column<std::optional<std::chrono::system_clock::time_point>>(
         context_->db, id, "timeLastPlayed", time_last_played);
 }
 
@@ -1133,33 +1133,33 @@ void track_table::set_is_analyzed(int64_t id, bool is_analyzed)
     set_column<bool>(context_->db, id, "isAnalyzed", is_analyzed);
 }
 
-stdx::optional<std::chrono::system_clock::time_point>
+std::optional<std::chrono::system_clock::time_point>
 track_table::get_date_created(int64_t id)
 {
-    return get_column<stdx::optional<std::chrono::system_clock::time_point>>(
+    return get_column<std::optional<std::chrono::system_clock::time_point>>(
         context_->db, id, "dateCreated");
 }
 
 void track_table::set_date_created(
     int64_t id,
-    const stdx::optional<std::chrono::system_clock::time_point>& date_created)
+    const std::optional<std::chrono::system_clock::time_point>& date_created)
 {
-    set_column<stdx::optional<std::chrono::system_clock::time_point>>(
+    set_column<std::optional<std::chrono::system_clock::time_point>>(
         context_->db, id, "dateCreated", date_created);
 }
 
-stdx::optional<std::chrono::system_clock::time_point>
+std::optional<std::chrono::system_clock::time_point>
 track_table::get_date_added(int64_t id)
 {
-    return get_column<stdx::optional<std::chrono::system_clock::time_point>>(
+    return get_column<std::optional<std::chrono::system_clock::time_point>>(
         context_->db, id, "dateAdded");
 }
 
 void track_table::set_date_added(
     int64_t id,
-    const stdx::optional<std::chrono::system_clock::time_point>& date_added)
+    const std::optional<std::chrono::system_clock::time_point>& date_added)
 {
-    set_column<stdx::optional<std::chrono::system_clock::time_point>>(
+    set_column<std::optional<std::chrono::system_clock::time_point>>(
         context_->db, id, "dateAdded", date_added);
 }
 
@@ -1200,16 +1200,16 @@ void track_table::set_is_performance_data_of_packed_track_changed(
         is_performance_data_of_packed_track_changed);
 }
 
-stdx::optional<int64_t> track_table::get_played_indicator(int64_t id)
+std::optional<int64_t> track_table::get_played_indicator(int64_t id)
 {
-    return get_column<stdx::optional<int64_t>>(
+    return get_column<std::optional<int64_t>>(
         context_->db, id, "playedIndicator");
 }
 
 void track_table::set_played_indicator(
-    int64_t id, const stdx::optional<int64_t>& played_indicator)
+    int64_t id, const std::optional<int64_t>& played_indicator)
 {
-    set_column<stdx::optional<int64_t>>(
+    set_column<std::optional<int64_t>>(
         context_->db, id, "playedIndicator", played_indicator);
 }
 
@@ -1235,27 +1235,27 @@ void track_table::set_pdb_import_key(int64_t id, int64_t pdb_import_key)
     set_column<int64_t>(context_->db, id, "pdbImportKey", pdb_import_key);
 }
 
-stdx::optional<std::string> track_table::get_streaming_source(int64_t id)
+std::optional<std::string> track_table::get_streaming_source(int64_t id)
 {
-    return get_column<stdx::optional<std::string>>(
+    return get_column<std::optional<std::string>>(
         context_->db, id, "streamingSource");
 }
 
 void track_table::set_streaming_source(
-    int64_t id, const stdx::optional<std::string>& streaming_source)
+    int64_t id, const std::optional<std::string>& streaming_source)
 {
-    set_column<stdx::optional<std::string>>(
+    set_column<std::optional<std::string>>(
         context_->db, id, "streamingSource", streaming_source);
 }
 
-stdx::optional<std::string> track_table::get_uri(int64_t id)
+std::optional<std::string> track_table::get_uri(int64_t id)
 {
-    return get_column<stdx::optional<std::string>>(context_->db, id, "uri");
+    return get_column<std::optional<std::string>>(context_->db, id, "uri");
 }
 
-void track_table::set_uri(int64_t id, const stdx::optional<std::string>& uri)
+void track_table::set_uri(int64_t id, const std::optional<std::string>& uri)
 {
-    set_column<stdx::optional<std::string>>(context_->db, id, "uri", uri);
+    set_column<std::optional<std::string>>(context_->db, id, "uri", uri);
 }
 
 bool track_table::get_is_beat_grid_locked(int64_t id)
@@ -1353,16 +1353,16 @@ void track_table::set_loops(int64_t id, const loops_blob& loops)
         context_->db, id, "loops", loops.to_blob());
 }
 
-stdx::optional<int64_t> track_table::get_third_party_source_id(int64_t id)
+std::optional<int64_t> track_table::get_third_party_source_id(int64_t id)
 {
-    return get_column<stdx::optional<int64_t>>(
+    return get_column<std::optional<int64_t>>(
         context_->db, id, "thirdPartySourceId");
 }
 
 void track_table::set_third_party_source_id(
-    int64_t id, const stdx::optional<int64_t>& third_party_source_id)
+    int64_t id, const std::optional<int64_t>& third_party_source_id)
 {
-    set_column<stdx::optional<int64_t>>(
+    set_column<std::optional<int64_t>>(
         context_->db, id, "thirdPartySourceId", third_party_source_id);
 }
 
@@ -1386,26 +1386,26 @@ void track_table::set_explicit_lyrics(int64_t id, bool explicit_lyrics)
     set_column<bool>(context_->db, id, "explicitLyrics", explicit_lyrics);
 }
 
-stdx::optional<int64_t> track_table::get_active_on_load_loops(int64_t id)
+std::optional<int64_t> track_table::get_active_on_load_loops(int64_t id)
 {
     if (context_->version.schema_version < semantic_version{2, 20, 1})
         throw djinterop::unsupported_operation{
             "The `activeOnLoadLoops` column is not available for this "
             "database version"};
 
-    return get_column<stdx::optional<int64_t>>(
+    return get_column<std::optional<int64_t>>(
         context_->db, id, "activeOnLoadLoops");
 }
 
 void track_table::set_active_on_load_loops(
-    int64_t id, stdx::optional<int64_t> active_on_load_loops)
+    int64_t id, std::optional<int64_t> active_on_load_loops)
 {
     if (context_->version.schema_version < semantic_version{2, 20, 1})
         throw djinterop::unsupported_operation{
             "The `activeOnLoadLoops` column is not available for this "
             "database version"};
 
-    set_column<stdx::optional<int64_t>>(
+    set_column<std::optional<int64_t>>(
         context_->db, id, "activeOnLoadLoops", active_on_load_loops);
 }
 

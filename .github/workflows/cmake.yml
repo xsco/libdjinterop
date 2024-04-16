@@ -8,15 +8,20 @@ on:
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: Release
+  BUILD_TYPE: Debug
 
 jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-22.04]
-  
-    runs-on: ${{ matrix.os }}
+        config: [
+          { os: ubuntu-20.04, c_compiler: gcc-10, cpp_compiler: g++-10 },
+          { os: ubuntu-22.04, c_compiler: gcc-11, cpp_compiler: g++-11 },
+          { os: ubuntu-22.04, c_compiler: gcc-12, cpp_compiler: g++-12 },
+          { os: ubuntu-22.04, c_compiler: gcc-13, cpp_compiler: g++-13 },
+        ]
+
+    runs-on: ${{ matrix.config.os }}
 
     steps:
     - uses: actions/checkout@v3
@@ -24,7 +29,7 @@ jobs:
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_C_COMPILER=${{matrix.config.c_compiler}} -DCMAKE_CXX_COMPILER=${{matrix.config.cpp_compiler}}
 
     - name: Build
       # Build your program with the given configuration

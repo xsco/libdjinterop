@@ -160,16 +160,16 @@ std::string crate_impl::name()
     return row->title;
 }
 
-stdx::optional<crate> crate_impl::parent()
+std::optional<crate> crate_impl::parent()
 {
     auto row = playlist_.get(id());
     if (row->parent_list_id == PARENT_LIST_ID_NONE)
     {
-        return stdx::nullopt;
+        return std::nullopt;
     }
 
     auto impl = std::make_shared<crate_impl>(library_, row->parent_list_id);
-    return stdx::make_optional<crate>(crate{impl});
+    return std::make_optional<crate>(crate{impl});
 }
 
 void crate_impl::remove_track(track tr)
@@ -189,7 +189,7 @@ void crate_impl::set_name(std::string name)
     playlist_.update(*row);
 }
 
-void crate_impl::set_parent(stdx::optional<crate> parent)
+void crate_impl::set_parent(std::optional<crate> parent)
 {
     if (parent && parent->id() == id())
     {
@@ -206,16 +206,16 @@ void crate_impl::set_parent(stdx::optional<crate> parent)
     playlist_.update(*row);
 }
 
-stdx::optional<crate> crate_impl::sub_crate_by_name(const std::string& name)
+std::optional<crate> crate_impl::sub_crate_by_name(const std::string& name)
 {
     auto id_maybe = library_->playlist().find_id(id(), name);
     if (!id_maybe)
     {
-        return stdx::nullopt;
+        return std::nullopt;
     }
 
     auto impl = std::make_shared<crate_impl>(library_, *id_maybe);
-    return stdx::make_optional<crate>(crate{impl});
+    return std::make_optional<crate>(crate{impl});
 }
 
 std::vector<track> crate_impl::tracks()
