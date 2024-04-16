@@ -50,9 +50,9 @@ engine_database_impl::engine_database_impl(std::shared_ptr<engine_storage> stora
 {
 }
 
-stdx::optional<crate> engine_database_impl::crate_by_id(int64_t id)
+std::optional<crate> engine_database_impl::crate_by_id(int64_t id)
 {
-    stdx::optional<crate> cr;
+    std::optional<crate> cr;
     storage_->db << "SELECT COUNT(*) FROM Crate WHERE id = ?" << id >>
         [&](int64_t count) {
             if (count == 1)
@@ -174,10 +174,10 @@ std::vector<crate> engine_database_impl::root_crates()
     return results;
 }
 
-stdx::optional<crate> engine_database_impl::root_crate_by_name(
+std::optional<crate> engine_database_impl::root_crate_by_name(
     const std::string& name)
 {
-    stdx::optional<crate> cr;
+    std::optional<crate> cr;
     storage_->db << "SELECT cr.id FROM Crate cr "
                     "JOIN CrateParentList cpl ON (cpl.crateOriginId = cr.id) "
                     "WHERE cr.title = ? "
@@ -190,9 +190,9 @@ stdx::optional<crate> engine_database_impl::root_crate_by_name(
     return cr;
 }
 
-stdx::optional<track> engine_database_impl::track_by_id(int64_t id)
+std::optional<track> engine_database_impl::track_by_id(int64_t id)
 {
-    stdx::optional<track> tr;
+    std::optional<track> tr;
     storage_->db << "SELECT COUNT(*) FROM Track WHERE id = ?" << id >>
         [&](int64_t count) {
             if (count == 1)

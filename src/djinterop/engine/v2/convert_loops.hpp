@@ -17,30 +17,28 @@
 
 #pragma once
 
-#include <chrono>
-#include <cstdint>
+#include <optional>
 
 #include <djinterop/engine/v2/loops_blob.hpp>
-#include <djinterop/optional.hpp>
 #include <djinterop/performance_data.hpp>
 
 namespace djinterop::engine::v2::convert
 {
 namespace read
 {
-inline stdx::optional<djinterop::loop> loop(const loop_blob& l)
+inline std::optional<djinterop::loop> loop(const loop_blob& l)
 {
     return (l.is_start_set || l.is_end_set)
-               ? stdx::make_optional(djinterop::loop{
+               ? std::make_optional(djinterop::loop{
                      l.label, l.start_sample_offset, l.end_sample_offset,
                      l.color})
-               : stdx::nullopt;
+               : std::nullopt;
 }
 
-inline std::vector<stdx::optional<djinterop::loop>> loops(
+inline std::vector<std::optional<djinterop::loop>> loops(
     const loops_blob& loops)
 {
-    std::vector<stdx::optional<djinterop::loop>> converted;
+    std::vector<std::optional<djinterop::loop>> converted;
     converted.reserve(loops.loops.size());
     for (auto&& l : loops.loops)
         converted.push_back(loop(l));
@@ -51,7 +49,7 @@ inline std::vector<stdx::optional<djinterop::loop>> loops(
 
 namespace write
 {
-inline loop_blob loop(stdx::optional<djinterop::loop> loop)
+inline loop_blob loop(std::optional<djinterop::loop> loop)
 {
     if (!loop)
         return loop_blob::empty();
@@ -65,7 +63,7 @@ inline loop_blob loop(stdx::optional<djinterop::loop> loop)
 }
 
 inline loops_blob loops(
-    const std::vector<stdx::optional<djinterop::loop>>& loops)
+    const std::vector<std::optional<djinterop::loop>>& loops)
 {
     if (loops.size() > MAX_LOOPS)
         throw djinterop::loops_overflow{

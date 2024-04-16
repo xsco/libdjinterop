@@ -19,8 +19,8 @@
 #ifndef DJINTEROP_CONFIG_HPP
 #define DJINTEROP_CONFIG_HPP
 
-#if __cplusplus < 201703L
-#error This library needs at least a C++17 compliant compiler
+#if __cplusplus < 202002L
+#error This library needs at least a C++20 compliant compiler
 #endif
 
 // Statement about whether the library was built/installed as static or shared.
@@ -54,12 +54,6 @@
 #define DJINTEROP_PUBLIC DJINTEROP_SYMBOL_IMPORT
 #endif  // DJINTEROP_SOURCE
 #define DJINTEROP_LOCAL DJINTEROP_SYMBOL_LOCAL
-
-// Symbols defined after this point represent the environment at the time
-// that this library was built.  The environment when this library is used must
-// be compatible in order to use the library successfully.
-#cmakedefine DJINTEROP_STD_OPTIONAL
-#cmakedefine DJINTEROP_STD_EXPERIMENTAL_OPTIONAL
 
 #include <cstddef>
 static_assert(sizeof(std::byte) == 1,

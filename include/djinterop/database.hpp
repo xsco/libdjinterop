@@ -19,18 +19,18 @@
 #ifndef DJINTEROP_DATABASE_HPP
 #define DJINTEROP_DATABASE_HPP
 
-#if __cplusplus < 201703L
-#error This library needs at least a C++17 compliant compiler
+#if __cplusplus < 202002L
+#error This library needs at least a C++20 compliant compiler
 #endif
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 #include <djinterop/config.hpp>
-#include <djinterop/optional.hpp>
 
 namespace djinterop
 {
@@ -55,9 +55,9 @@ public:
 
     /// Returns the crate with the given ID
     ///
-    /// If no such crate exists in the database, then `djinterop::stdx::nullopt`
+    /// If no such crate exists in the database, then `std::nullopt`
     /// is returned.
-    stdx::optional<crate> crate_by_id(int64_t id) const;
+    std::optional<crate> crate_by_id(int64_t id) const;
 
     /// Returns all crates contained in the database
     std::vector<crate> crates() const;
@@ -104,8 +104,8 @@ public:
 
     /// Returns the root-level crate with the given name.
     ///
-    /// If no such crate exists, then `djinterop::stdx::nullopt` is returned.
-    stdx::optional<crate> root_crate_by_name(const std::string& name) const;
+    /// If no such crate exists, then `std::nullopt` is returned.
+    std::optional<crate> root_crate_by_name(const std::string& name) const;
 
     /// Returns all root crates contained in the database
     ///
@@ -114,9 +114,9 @@ public:
 
     /// Returns the track with the given id
     ///
-    /// If no such track exists in the database, then `djinterop::stdx::nullopt`
+    /// If no such track exists in the database, then `std::nullopt`
     /// is returned.
-    stdx::optional<track> track_by_id(int64_t id) const;
+    std::optional<track> track_by_id(int64_t id) const;
 
     /// Returns all tracks whose `relative_path` attribute in the database
     /// matches the given string

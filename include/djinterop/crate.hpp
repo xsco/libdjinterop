@@ -1,13 +1,15 @@
 /*
-    Tdd!his file is part of libdjinterop.
-dd!
-    ldd!ibdjinterop is free software: you can redistribute it and/or modify
-    idd!t under the terms of the GNU Lesser General Public License as published
-by tdd!he Free Software Foundation, either version 3 of the License, or (dd!at
-your option) any later version. dd! ldd!ibdjinterop is distributed in the hope
-that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
+    This file is part of libdjinterop.
+
+    libdjinterop is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    libdjinterop is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
@@ -17,17 +19,17 @@ Lesser General Public License for more details.
 #ifndef DJINTEROP_CRATE_HPP
 #define DJINTEROP_CRATE_HPP
 
-#if __cplusplus < 201703L
-#error This library needs at least a C++17 compliant compiler
+#if __cplusplus < 202002L
+#error This library needs at least a C++20 compliant compiler
 #endif
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
 #include <djinterop/config.hpp>
-#include <djinterop/optional.hpp>
 
 namespace djinterop
 {
@@ -118,7 +120,7 @@ public:
     ///
     /// If the crate doesn't have a parent, then `djinterop::nullopt` is
     /// returned.
-    stdx::optional<crate> parent() const;
+    std::optional<crate> parent() const;
 
     /// Removes a track from the crate
     ///
@@ -133,7 +135,7 @@ public:
     ///
     /// If `djinterop::nullopt` is given, then this crate will have no parent.
     /// That is, it becomes a root crate.
-    void set_parent(stdx::optional<crate> parent) const;
+    void set_parent(std::optional<crate> parent) const;
 
     /// Gets the sub-crate of this one with a given name.
     ///
@@ -141,7 +143,7 @@ public:
     /// the search does not recurse into the immediate sub-crates of this crate.
     ///
     /// If no such crate is found, then `djinterop::nullopt` is returned.
-    stdx::optional<crate> sub_crate_by_name(const std::string& name) const;
+    std::optional<crate> sub_crate_by_name(const std::string& name) const;
 
     /// Returns the crate's contained tracks.
     ///

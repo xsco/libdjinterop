@@ -21,7 +21,6 @@
 #include <vector>
 
 #include <djinterop/engine/v2/beat_data_blob.hpp>
-#include <djinterop/optional.hpp>
 #include <djinterop/performance_data.hpp>
 
 namespace djinterop::engine::v2::convert

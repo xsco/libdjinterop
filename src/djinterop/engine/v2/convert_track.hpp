@@ -19,10 +19,9 @@
 
 #include <chrono>
 #include <cstdint>
+#include <optional>
 
 #include <djinterop/engine/v2/track_table.hpp>
-#include <djinterop/optional.hpp>
-#include <djinterop/performance_data.hpp>
 
 #include "../../util/convert.hpp"
 
@@ -30,26 +29,26 @@ namespace djinterop::engine::v2::convert
 {
 namespace read
 {
-inline stdx::optional<int64_t> album_art_id(int64_t album_art_id)
+inline std::optional<int64_t> album_art_id(int64_t album_art_id)
 {
     if (album_art_id == ALBUM_ART_ID_NONE)
     {
-        return stdx::nullopt;
+        return std::nullopt;
     }
 
-    return stdx::make_optional(album_art_id);
+    return std::make_optional(album_art_id);
 }
 
-inline stdx::optional<double> average_loudness(
+inline std::optional<double> average_loudness(
     const track_data_blob& track_data)
 {
     return track_data.average_loudness_low != 0
-               ? stdx::make_optional(track_data.average_loudness_low)
-               : stdx::nullopt;
+               ? std::make_optional(track_data.average_loudness_low)
+               : std::nullopt;
 }
 
-inline stdx::optional<double> bpm(
-    stdx::optional<double> bpm_analyzed, stdx::optional<int64_t> bpm)
+inline std::optional<double> bpm(
+    std::optional<double> bpm_analyzed, std::optional<int64_t> bpm)
 {
     // Prefer the analysed BPM on account of typically being more accurate, if
     // it is available.
@@ -61,68 +60,68 @@ inline stdx::optional<double> bpm(
     return djinterop::util::optional_static_cast<double>(bpm);
 }
 
-inline stdx::optional<std::chrono::milliseconds> duration(int64_t length)
+inline std::optional<std::chrono::milliseconds> duration(int64_t length)
 {
     if (length == 0)
-        return stdx::nullopt;
+        return std::nullopt;
 
     return std::chrono::milliseconds{length * 1000};
 }
 
-inline stdx::optional<djinterop::musical_key> key(stdx::optional<int32_t> key)
+inline std::optional<djinterop::musical_key> key(std::optional<int32_t> key)
 {
     return djinterop::util::optional_static_cast<djinterop::musical_key>(key);
 }
 
-inline stdx::optional<int> rating(int64_t rating)
+inline std::optional<int> rating(int64_t rating)
 {
     if (rating == RATING_NONE)
     {
-        return stdx::nullopt;
+        return std::nullopt;
     }
 
-    return stdx::make_optional(static_cast<int>(rating));
+    return std::make_optional(static_cast<int>(rating));
 }
 
-inline stdx::optional<unsigned long long> sample_count(
+inline std::optional<unsigned long long> sample_count(
     const track_data_blob& track_data)
 {
     if (track_data.samples == 0)
     {
-        return stdx::nullopt;
+        return std::nullopt;
     }
 
-    return stdx::make_optional(
+    return std::make_optional(
         static_cast<unsigned long long>(track_data.samples));
 }
 
-inline stdx::optional<double> sample_rate(const track_data_blob& track_data)
+inline std::optional<double> sample_rate(const track_data_blob& track_data)
 {
     return track_data.sample_rate != 0
-               ? stdx::make_optional(track_data.sample_rate)
-               : stdx::nullopt;
+               ? std::make_optional(track_data.sample_rate)
+               : std::nullopt;
 }
 }  // namespace read
 
 namespace write
 {
-inline int64_t album_art_id(stdx::optional<int64_t> album_art_id)
+inline int64_t album_art_id(std::optional<int64_t> album_art_id)
 {
     return album_art_id.value_or(ALBUM_ART_ID_NONE);
 }
 
-inline double average_loudness(stdx::optional<double> average_loudness)
+inline double average_loudness(std::optional<double> average_loudness)
 {
     return average_loudness.value_or(0);
 }
 
 struct converted_bpm_fields
 {
-    stdx::optional<double> bpm_analyzed;
-    stdx::optional<int64_t> bpm;
+    std::optional<double> bpm_analyzed;
+    std::optional<int64_t> bpm;
 };
 
-inline converted_bpm_fields bpm(stdx::optional<double> bpm)
+inline converted_bpm_fields bpm(std::optional<double> bpm)
 {
     // Deliberate choice to override the BPM as determined by analysis.  This
     // results in the 'least astonishment' for a caller if they set then get the
@@ -130,32 +129,31 @@ inline converted_bpm_fields bpm(stdx::optional<double> bpm)
     return {bpm, djinterop::util::optional_static_cast<int64_t>(bpm)};
 }
 
-inline int64_t duration(stdx::optional<std::chrono::milliseconds> duration)
+inline int64_t duration(std::optional<std::chrono::milliseconds> duration)
 {
     return duration.value_or(std::chrono::milliseconds{}).count() / 1000;
 }
 
 struct converted_key_fields
 {
-    stdx::optional<int32_t> key;
+    std::optional<int32_t> key;
     int32_t track_data_key;
 };
 
-inline converted_key_fields key(stdx::optional<djinterop::musical_key> key)
+inline converted_key_fields key(std::optional<djinterop::musical_key> key)
 {
     if (key)
     {
         auto converted = static_cast<int32_t>(*key);
-        return {stdx::make_optional(converted), converted};
+        return {std::make_optional(converted), converted};
     }
 
-    return {stdx::nullopt, 0};
+    return {std::nullopt, 0};
 }
 
-inline int64_t rating(stdx::optional<int32_t> rating)
+inline int64_t rating(std::optional<int32_t> rating)
 {
-    return static_cast<int64_t>(
-        std::clamp(rating.value_or(RATING_NONE), 0, 100));
+    return std::clamp(rating.value_or(RATING_NONE), 0, 100);
 }
 
 struct converted_sample_count_fields
@@ -165,13 +163,13 @@ struct converted_sample_count_fields
 };
 
 inline converted_sample_count_fields sample_count(
-    const stdx::optional<unsigned long long>& sample_count)
+    const std::optional<unsigned long long>& sample_count)
 {
     auto s = sample_count.value_or(0);
     return {static_cast<int64_t>(s), (double)s};
 }
 
-inline double sample_rate(const stdx::optional<double>& sample_rate)
+inline double sample_rate(const std::optional<double>& sample_rate)
 {
     return sample_rate.value_or(0);
 }

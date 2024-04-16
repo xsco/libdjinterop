@@ -19,8 +19,8 @@
 #ifndef DJINTEROP_ALBUM_ART_HPP
 #define DJINTEROP_ALBUM_ART_HPP
 
-#if __cplusplus < 201703L
-#error This library needs at least a C++17 compliant compiler
+#if __cplusplus < 202002L
+#error This library needs at least a C++20 compliant compiler
 #endif
 
 #include <cstdint>
@@ -33,7 +33,7 @@ namespace djinterop
 class album_art
 {
 public:
-    typedef uint_least8_t image_data_type;
+    using image_data_type = uint_least8_t;
 
     std::string hash_hex_str;
     std::vector<image_data_type> image_data;

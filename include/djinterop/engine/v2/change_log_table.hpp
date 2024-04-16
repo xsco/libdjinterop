@@ -17,16 +17,16 @@
 
 #pragma once
 
-#if __cplusplus < 201703L
-#error This library needs at least a C++17 compliant compiler
+#if __cplusplus < 202002L
+#error This library needs at least a C++20 compliant compiler
 #endif
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include <djinterop/config.hpp>
-#include <djinterop/optional.hpp>
 
 namespace djinterop::engine::v2
 {
@@ -86,7 +86,7 @@ public:
     /// Get the most recent entry in the changelog.
     ///
     /// \return Returns the last entry.
-    [[nodiscard]] djinterop::stdx::optional<change_log_row> last() const;
+    [[nodiscard]] std::optional<change_log_row> last() const;
 
 private:
     std::shared_ptr<engine_library_context> context_;

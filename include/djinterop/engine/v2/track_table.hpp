@@ -17,13 +17,14 @@
 
 #pragma once
 
-#if __cplusplus < 201703L
-#error This library needs at least a C++17 compliant compiler
+#if __cplusplus < 202002L
+#error This library needs at least a C++20 compliant compiler
 #endif
 
 #include <chrono>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -34,8 +35,6 @@
 #include <djinterop/engine/v2/overview_waveform_data_blob.hpp>
 #include <djinterop/engine/v2/quick_cues_blob.hpp>
 #include <djinterop/engine/v2/track_data_blob.hpp>
-#include <djinterop/musical_key.hpp>
-#include <djinterop/optional.hpp>
 #include <djinterop/stream_helper.hpp>
 
 namespace djinterop::engine::v2
@@ -55,19 +54,19 @@ public:
 
 /// Special value for id to indicate that a given row is not currently persisted
 /// in the database.
-constexpr const int64_t TRACK_ROW_ID_NONE = 0;
+constexpr int64_t TRACK_ROW_ID_NONE = 0;
 
 /// Special value for the `album_art_id` track table column that indicates that
 /// no album art is present for a given track.
-constexpr const int64_t ALBUM_ART_ID_NONE = 1;
+constexpr int64_t ALBUM_ART_ID_NONE = 1;
 
 /// Special value for the `rating` track table column that indicates that no
 /// rating is present for a given track.
-constexpr const int64_t RATING_NONE = 0;
+constexpr int64_t RATING_NONE = 0;
 
 /// Special value for the `lastEditTime` track table column that indicates there
 /// is no last edit time for a given track.
-constexpr const std::chrono::system_clock::time_point LAST_EDIT_TIME_NONE =
+constexpr std::chrono::system_clock::time_point LAST_EDIT_TIME_NONE =
     std::chrono::system_clock::time_point{std::chrono::seconds{0}};
 
 /// Represents a row in the `Track` table.
@@ -80,16 +79,16 @@ struct DJINTEROP_PUBLIC track_row
     int64_t id;
 
     /// `playOrder` column.
-    stdx::optional<int64_t> play_order;
+    std::optional<int64_t> play_order;
 
     /// `length` column, representing the approximate length, in seconds.
     int64_t length;
 
     /// `bpm` column, representing the approximate BPM.
-    stdx::optional<int64_t> bpm;
+    std::optional<int64_t> bpm;
 
     /// `year` column.
-    stdx::optional<int64_t> year;
+    std::optional<int64_t> year;
 
     /// `path` column.
     ///
@@ -102,11 +101,11 @@ struct DJINTEROP_PUBLIC track_row
     std::string filename;
 
     /// `bitrate` column.
-    stdx::optional<int64_t> bitrate;
+    std::optional<int64_t> bitrate;
 
     /// `bpmAnalyzed` column, representing the BPM as determined from track
     /// analysis.
-    stdx::optional<double> bpm_analyzed;
+    std::optional<double> bpm_analyzed;
 
     /// `albumArtId` column.
     ///
@@ -115,34 +114,34 @@ struct DJINTEROP_PUBLIC track_row
 
     /// `file_bytes` column, representing the size of the file underlying the
     /// track on disk, in bytes.
-    stdx::optional<int64_t> file_bytes;
+    std::optional<int64_t> file_bytes;
 
     /// `title` column.
-    stdx::optional<std::string> title;
+    std::optional<std::string> title;
 
     /// `artist` column.
-    stdx::optional<std::string> artist;
+    std::optional<std::string> artist;
 
     /// `album column.
-    stdx::optional<std::string> album;
+    std::optional<std::string> album;
 
     /// `genre` column.
-    stdx::optional<std::string> genre;
+    std::optional<std::string> genre;
 
     /// `comment` column.
-    stdx::optional<std::string> comment;
+    std::optional<std::string> comment;
 
     /// `label` column.
-    stdx::optional<std::string> label;
+    std::optional<std::string> label;
 
     /// `composer` column.
-    stdx::optional<std::string> composer;
+    std::optional<std::string> composer;
 
     /// `remixer` column.
-    stdx::optional<std::string> remixer;
+    std::optional<std::string> remixer;
 
     /// `key` column, as an integer between 0 and 23.
-    stdx::optional<int32_t> key;
+    std::optional<int32_t> key;
 
     /// `rating` column.
     ///
@@ -150,10 +149,10 @@ struct DJINTEROP_PUBLIC track_row
     int64_t rating;
 
     /// `albumArt` column.
-    stdx::optional<std::string> album_art;
+    std::optional<std::string> album_art;
 
     /// `timeLastPlayed` column.
-    stdx::optional<std::chrono::system_clock::time_point> time_last_played;
+    std::optional<std::chrono::system_clock::time_point> time_last_played;
 
     /// `isPlayed` column, indicating whether the track has ever been played.
     bool is_played;
@@ -189,7 +188,7 @@ struct DJINTEROP_PUBLIC track_row
     ///
     /// Random number matching the equivalent field in the `Information` table,
     /// if this track is the most recent to be played.
-    stdx::optional<int64_t> played_indicator;
+    std::optional<int64_t> played_indicator;
 
     /// `isMetadataImported` column.
     bool is_metadata_imported;
@@ -198,10 +197,10 @@ struct DJINTEROP_PUBLIC track_row
     int64_t pdb_import_key;
 
     /// `streamingSource` column.
-    stdx::optional<std::string> streaming_source;
+    std::optional<std::string> streaming_source;
 
     /// `uri` column.
-    stdx::optional<std::string> uri;
+    std::optional<std::string> uri;
 
     /// `isBeatGridLocked` column.
     bool is_beat_grid_locked;
@@ -236,7 +235,7 @@ struct DJINTEROP_PUBLIC track_row
     loops_blob loops;
 
     /// `thirdPartySourceId` column.
-    stdx::optional<int64_t> third_party_source_id;
+    std::optional<int64_t> third_party_source_id;
 
     /// `streamingFlags` column.
     int64_t streaming_flags;
@@ -245,7 +244,7 @@ struct DJINTEROP_PUBLIC track_row
     bool explicit_lyrics;
 
     /// `activeOnLoadLoops` column.
-    stdx::optional<int64_t> active_on_load_loops;
+    std::optional<int64_t> active_on_load_loops;
 
     /// `lastEditTime` column.
     ///
@@ -388,19 +387,19 @@ public:
     ///
     /// \param id Id of track.
     /// \return Returns a track row, or none if not found.
-    stdx::optional<track_row> get(int64_t id) const;
+    std::optional<track_row> get(int64_t id) const;
 
     /// Find whether a track exists, given its unique path.
     ///
     /// \param path Path of track.
     /// \return Returns a track id if found, or none if not found.
-    stdx::optional<int64_t> find_id_by_path(const std::string& path) const;
+    std::optional<int64_t> find_id_by_path(const std::string& path) const;
 
     /// Get the `playOrder` column for a given track.
-    stdx::optional<int64_t> get_play_order(int64_t id);
+    std::optional<int64_t> get_play_order(int64_t id);
 
     /// Set the `playOrder` column for a given track.
-    void set_play_order(int64_t id, stdx::optional<int64_t> play_order);
+    void set_play_order(int64_t id, std::optional<int64_t> play_order);
 
     /// Get the `length` column for a given track, representing the approximate
     /// length, in seconds.
@@ -412,17 +411,17 @@ public:
 
     /// Get the `bpm` column for a given track, representing the approximate
     /// BPM.
-    stdx::optional<int64_t> get_bpm(int64_t id);
+    std::optional<int64_t> get_bpm(int64_t id);
 
     /// Set the `bpm` column for a given track, representing the approximate
     /// BPM.
-    void set_bpm(int64_t id, stdx::optional<int64_t> bpm);
+    void set_bpm(int64_t id, std::optional<int64_t> bpm);
 
     /// Get the `year` column for a given track.
-    stdx::optional<int64_t> get_year(int64_t id);
+    std::optional<int64_t> get_year(int64_t id);
 
     /// Set the `year` column for a given track.
-    void set_year(int64_t id, const stdx::optional<int64_t>& year);
+    void set_year(int64_t id, const std::optional<int64_t>& year);
 
     /// Get the `path` column for a given track.
     ///
@@ -445,18 +444,18 @@ public:
     void set_filename(int64_t id, const std::string& filename);
 
     /// Get the `bitrate` column for a given track.
-    stdx::optional<int64_t> get_bitrate(int64_t id);
+    std::optional<int64_t> get_bitrate(int64_t id);
 
     /// Set the `bitrate` column for a given track.
-    void set_bitrate(int64_t id, stdx::optional<int64_t> bitrate);
+    void set_bitrate(int64_t id, std::optional<int64_t> bitrate);
 
     /// Get the `bpmAnalyzed` column for a given track, representing the BPM as
     /// determined from track analysis.
-    stdx::optional<double> get_bpm_analyzed(int64_t id);
+    std::optional<double> get_bpm_analyzed(int64_t id);
 
     /// Set the `bpmAnalyzed` column for a given track, representing the BPM as
     /// determined from track analysis.
-    void set_bpm_analyzed(int64_t id, stdx::optional<double> bpm_analyzed);
+    void set_bpm_analyzed(int64_t id, std::optional<double> bpm_analyzed);
 
     /// Get the `albumArtId` column for a given track.
     ///
@@ -470,67 +469,67 @@ public:
 
     /// Get the `file_bytes` column for a given track, representing the size of
     /// the file underlying the track on disk, in bytes.
-    stdx::optional<int64_t> get_file_bytes(int64_t id);
+    std::optional<int64_t> get_file_bytes(int64_t id);
 
     /// Set the `file_bytes` column for a given track, representing the size of
     /// the file underlying the track on disk, in bytes.
-    void set_file_bytes(int64_t id, stdx::optional<int64_t> file_bytes);
+    void set_file_bytes(int64_t id, std::optional<int64_t> file_bytes);
 
     /// Get the `title` column for a given track.
-    stdx::optional<std::string> get_title(int64_t id);
+    std::optional<std::string> get_title(int64_t id);
 
     /// Set the `title` column for a given track.
-    void set_title(int64_t id, const stdx::optional<std::string>& title);
+    void set_title(int64_t id, const std::optional<std::string>& title);
 
     /// Get the `artist` column for a given track.
-    stdx::optional<std::string> get_artist(int64_t id);
+    std::optional<std::string> get_artist(int64_t id);
 
     /// Set the `artist` column for a given track.
-    void set_artist(int64_t id, const stdx::optional<std::string>& artist);
+    void set_artist(int64_t id, const std::optional<std::string>& artist);
 
     /// Get the `album` column for a given track.
-    stdx::optional<std::string> get_album(int64_t id);
+    std::optional<std::string> get_album(int64_t id);
 
     /// Set the `album` column for a given track.
-    void set_album(int64_t id, const stdx::optional<std::string>& album);
+    void set_album(int64_t id, const std::optional<std::string>& album);
 
     /// Get the `genre` column for a given track.
-    stdx::optional<std::string> get_genre(int64_t id);
+    std::optional<std::string> get_genre(int64_t id);
 
     /// Set the `genre` column for a given track.
-    void set_genre(int64_t id, const stdx::optional<std::string>& genre);
+    void set_genre(int64_t id, const std::optional<std::string>& genre);
 
     /// Get the `comment` column for a given track.
-    stdx::optional<std::string> get_comment(int64_t id);
+    std::optional<std::string> get_comment(int64_t id);
 
     /// Set the `comment` column for a given track.
-    void set_comment(int64_t id, const stdx::optional<std::string>& comment);
+    void set_comment(int64_t id, const std::optional<std::string>& comment);
 
     /// Get the `label` column for a given track.
-    stdx::optional<std::string> get_label(int64_t id);
+    std::optional<std::string> get_label(int64_t id);
 
     /// Set the `label` column for a given track.
-    void set_label(int64_t id, const stdx::optional<std::string>& label);
+    void set_label(int64_t id, const std::optional<std::string>& label);
 
     /// Get the `composer` column for a given track.
-    stdx::optional<std::string> get_composer(int64_t id);
+    std::optional<std::string> get_composer(int64_t id);
 
     /// Set the `composer` column for a given track.
-    void set_composer(int64_t id, const stdx::optional<std::string>& composer);
+    void set_composer(int64_t id, const std::optional<std::string>& composer);
 
     /// Get the `remixer` column for a given track.
-    stdx::optional<std::string> get_remixer(int64_t id);
+    std::optional<std::string> get_remixer(int64_t id);
 
     /// Set the `remixer` column for a given track.
-    void set_remixer(int64_t id, const stdx::optional<std::string>& remixer);
+    void set_remixer(int64_t id, const std::optional<std::string>& remixer);
 
     /// Get the `key` column for a given track, as an integer between 0 and 23.
-    stdx::optional<int32_t> get_key(int64_t id);
+    std::optional<int32_t> get_key(int64_t id);
 
     /// Set the `key` column for a given track, as an integer between 0 and 23.
     ///
     /// The values align with those in the `djinterop::musical_key` enum.
-    void set_key(int64_t id, stdx::optional<int32_t> key);
+    void set_key(int64_t id, std::optional<int32_t> key);
 
     /// Get the `rating` column for a given track.
     ///
@@ -543,19 +542,19 @@ public:
     void set_rating(int64_t id, int64_t rating);
 
     /// Get the `albumArt` column for a given track.
-    stdx::optional<std::string> get_album_art(int64_t id);
+    std::optional<std::string> get_album_art(int64_t id);
 
     /// Set the `albumArt` column for a given track.
     void set_album_art(
-        int64_t id, const stdx::optional<std::string>& album_art);
+        int64_t id, const std::optional<std::string>& album_art);
 
     /// Get the `timeLastPlayed` column for a given track.
-    stdx::optional<std::chrono::system_clock::time_point> get_time_last_played(
+    std::optional<std::chrono::system_clock::time_point> get_time_last_played(
         int64_t id);
 
     /// Set the `timeLastPlayed` column for a given track.
     void set_time_last_played(
-        int64_t id, const stdx::optional<std::chrono::system_clock::time_point>&
+        int64_t id, const std::optional<std::chrono::system_clock::time_point>&
                         time_last_played);
 
     /// Get the `isPlayed` column for a given track, indicating whether the
@@ -583,23 +582,23 @@ public:
     void set_is_analyzed(int64_t id, bool is_analyzed);
 
     /// Get the `dateCreated` column for a given track.
-    stdx::optional<std::chrono::system_clock::time_point> get_date_created(
+    std::optional<std::chrono::system_clock::time_point> get_date_created(
         int64_t id);
 
     /// Set the `dateCreated` column for a given track.
     void set_date_created(
-        int64_t id, const stdx::optional<std::chrono::system_clock::time_point>&
+        int64_t id, const std::optional<std::chrono::system_clock::time_point>&
                         date_created);
 
     /// Get the `dateAdded` column for a given track, representing the time at
     /// which the track was added to the database.
-    stdx::optional<std::chrono::system_clock::time_point> get_date_added(
+    std::optional<std::chrono::system_clock::time_point> get_date_added(
         int64_t id);
 
     /// Set the `dateAdded` column for a given track, representing the time at
     /// which the track was added to the database.
     void set_date_added(
-        int64_t id, const stdx::optional<std::chrono::system_clock::time_point>&
+        int64_t id, const std::optional<std::chrono::system_clock::time_point>&
                         date_added);
 
     /// Get the `isAvailable` column for a given track, indicating if the file
@@ -630,14 +629,14 @@ public:
     ///
     /// Random number matching the equivalent field in the `Information` table,
     /// if this track is the most recent to be played.
-    stdx::optional<int64_t> get_played_indicator(int64_t id);
+    std::optional<int64_t> get_played_indicator(int64_t id);
 
     /// Set the `playedIndicator` column for a given track.
     ///
     /// Random number matching the equivalent field in the `Information` table,
     /// if this track is the most recent to be played.
     void set_played_indicator(
-        int64_t id, const stdx::optional<int64_t>& played_indicator);
+        int64_t id, const std::optional<int64_t>& played_indicator);
 
     /// Get the `isMetadataImported` column for a given track.
     bool get_is_metadata_imported(int64_t id);
@@ -652,17 +651,17 @@ public:
     void set_pdb_import_key(int64_t id, int64_t pdb_import_key);
 
     /// Get the `streamingSource` column for a given track.
-    stdx::optional<std::string> get_streaming_source(int64_t id);
+    std::optional<std::string> get_streaming_source(int64_t id);
 
     /// Set the `streamingSource` column for a given track.
     void set_streaming_source(
-        int64_t id, const stdx::optional<std::string>& streaming_source);
+        int64_t id, const std::optional<std::string>& streaming_source);
 
     /// Get the `uri` column for a given track.
-    stdx::optional<std::string> get_uri(int64_t id);
+    std::optional<std::string> get_uri(int64_t id);
 
     /// Set the `uri` column for a given track.
-    void set_uri(int64_t id, const stdx::optional<std::string>& uri);
+    void set_uri(int64_t id, const std::optional<std::string>& uri);
 
     /// Get the `isBeatGridLocked` column for a given track.
     bool get_is_beat_grid_locked(int64_t id);
@@ -731,11 +730,11 @@ public:
     void set_loops(int64_t id, const loops_blob& loops);
 
     /// Get the `thirdPartySourceId` column for a given track.
-    stdx::optional<int64_t> get_third_party_source_id(int64_t id);
+    std::optional<int64_t> get_third_party_source_id(int64_t id);
 
     /// Set the `thirdPartySourceId` column for a given track.
     void set_third_party_source_id(
-        int64_t id, const stdx::optional<int64_t>& third_party_source_id);
+        int64_t id, const std::optional<int64_t>& third_party_source_id);
 
     /// Get the `streamingFlags` column for a given track.
     int64_t get_streaming_flags(int64_t id);
@@ -750,11 +749,11 @@ public:
     void set_explicit_lyrics(int64_t id, bool explicit_lyrics);
 
     /// Get the `activeOnLoadLoops` column for a given track.
-    stdx::optional<int64_t> get_active_on_load_loops(int64_t id);
+    std::optional<int64_t> get_active_on_load_loops(int64_t id);
 
     /// Set the `activeOnLoadLoops` column for a given track.
     void set_active_on_load_loops(
-        int64_t id, stdx::optional<int64_t> active_on_load_loops);
+        int64_t id, std::optional<int64_t> active_on_load_loops);
 
     /// Get the `lastEditTime` column for a given track.
     std::chrono::system_clock::time_point get_last_edit_time(int64_t id);

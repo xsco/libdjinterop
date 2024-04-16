@@ -29,7 +29,7 @@ class engine_database_impl : public database_impl
 public:
     engine_database_impl(std::shared_ptr<engine_storage> storage);
 
-    stdx::optional<djinterop::crate> crate_by_id(int64_t id) override;
+    std::optional<djinterop::crate> crate_by_id(int64_t id) override;
     std::vector<djinterop::crate> crates() override;
     std::vector<djinterop::crate> crates_by_name(
         const std::string& name) override;
@@ -42,9 +42,9 @@ public:
     void remove_crate(djinterop::crate cr) override;
     void remove_track(djinterop::track tr) override;
     std::vector<djinterop::crate> root_crates() override;
-    stdx::optional<djinterop::crate> root_crate_by_name(
+    std::optional<djinterop::crate> root_crate_by_name(
         const std::string& name) override;
-    stdx::optional<djinterop::track> track_by_id(int64_t id) override;
+    std::optional<djinterop::track> track_by_id(int64_t id) override;
     std::vector<djinterop::track> tracks() override;
     std::vector<djinterop::track> tracks_by_relative_path(
         const std::string& relative_path) override;

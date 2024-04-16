@@ -19,20 +19,20 @@
 #ifndef DJINTEROP_TRACK_HPP
 #define DJINTEROP_TRACK_HPP
 
-#if __cplusplus < 201703L
-#error This library needs at least a C++17 compliant compiler
+#if __cplusplus < 202002L
+#error This library needs at least a C++20 compliant compiler
 #endif
 
 #include <chrono>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 #include <djinterop/config.hpp>
 #include <djinterop/musical_key.hpp>
-#include <djinterop/optional.hpp>
 #include <djinterop/performance_data.hpp>
 #include <djinterop/semantic_version.hpp>
 
@@ -80,50 +80,50 @@ public:
     void set_beatgrid(std::vector<beatgrid_marker> beatgrid) const;
 
     /// Returns the album name (metadata) of the track
-    stdx::optional<std::string> album() const;
+    std::optional<std::string> album() const;
 
     /// Sets the album name (metadata) of the track
-    void set_album(stdx::optional<std::string> album) const;
+    void set_album(std::optional<std::string> album) const;
     void set_album(std::string album) const;
 
     /// Returns the artist (metadata) of the track
-    stdx::optional<std::string> artist() const;
+    std::optional<std::string> artist() const;
 
     /// Sets the artist (metadata) of the track
-    void set_artist(stdx::optional<std::string> artist) const;
+    void set_artist(std::optional<std::string> artist) const;
     void set_artist(std::string artist) const;
 
-    stdx::optional<double> average_loudness() const;
+    std::optional<double> average_loudness() const;
 
-    void set_average_loudness(stdx::optional<double> average_loudness) const;
+    void set_average_loudness(std::optional<double> average_loudness) const;
     void set_average_loudness(double average_loudness) const;
 
     /// Returns the bitrate (metadata) of the track
-    stdx::optional<int> bitrate() const;
+    std::optional<int> bitrate() const;
 
     /// Sets the bitrate (metadata) of the track
-    void set_bitrate(stdx::optional<int> bitrate) const;
+    void set_bitrate(std::optional<int> bitrate) const;
     void set_bitrate(int bitrate) const;
 
     /// Returns the BPM (metadata) of the track, rounded to the nearest integer
-    stdx::optional<double> bpm() const;
+    std::optional<double> bpm() const;
 
     /// Sets the BPM (metadata) of the track, rounded to the nearest integer
-    void set_bpm(stdx::optional<double> bpm) const;
+    void set_bpm(std::optional<double> bpm) const;
     void set_bpm(double bpm) const;
 
     /// Returns the comment associated to the track (metadata)
-    stdx::optional<std::string> comment() const;
+    std::optional<std::string> comment() const;
 
     /// Sets the comment associated to the track (metadata)
-    void set_comment(stdx::optional<std::string> comment) const;
+    void set_comment(std::optional<std::string> comment) const;
     void set_comment(std::string comment) const;
 
     /// Returns the composer (metadata) of the track
-    stdx::optional<std::string> composer() const;
+    std::optional<std::string> composer() const;
 
     /// Sets the composer (metadata) of the track
-    void set_composer(stdx::optional<std::string> composer) const;
+    void set_composer(std::optional<std::string> composer) const;
     void set_composer(std::string composer) const;
 
     /// Returns the crates containing the track
@@ -133,10 +133,10 @@ public:
     database db() const;
 
     /// Returns the duration (metadata) of the track
-    stdx::optional<std::chrono::milliseconds> duration() const;
+    std::optional<std::chrono::milliseconds> duration() const;
 
     /// Sets the duration (metadata) of the track.
-    void set_duration(stdx::optional<std::chrono::milliseconds> duration);
+    void set_duration(std::optional<std::chrono::milliseconds> duration);
     void set_duration(std::chrono::milliseconds duration);
 
     // TODO (mr-smidge): Add `file_bytes()` and `set_file_bytes()` methods.
@@ -151,20 +151,20 @@ public:
     std::string filename() const;
 
     /// Returns the genre (metadata) of the track
-    stdx::optional<std::string> genre() const;
+    std::optional<std::string> genre() const;
 
     /// Sets the genre (metadata) of the track
-    void set_genre(stdx::optional<std::string> genre) const;
+    void set_genre(std::optional<std::string> genre) const;
     void set_genre(std::string genre) const;
 
-    stdx::optional<hot_cue> hot_cue_at(int index) const;
+    std::optional<hot_cue> hot_cue_at(int index) const;
 
-    void set_hot_cue_at(int index, stdx::optional<hot_cue> cue) const;
+    void set_hot_cue_at(int index, std::optional<hot_cue> cue) const;
     void set_hot_cue_at(int index, hot_cue cue) const;
 
-    std::vector<stdx::optional<hot_cue>> hot_cues() const;
+    std::vector<std::optional<hot_cue>> hot_cues() const;
 
-    void set_hot_cues(std::vector<stdx::optional<hot_cue>> cues) const;
+    void set_hot_cues(std::vector<std::optional<hot_cue>> cues) const;
 
     /// Returns the ID of this track
     ///
@@ -176,49 +176,49 @@ public:
     bool is_valid() const;
 
     /// Returns the key (metadata) of the track
-    stdx::optional<musical_key> key() const;
+    std::optional<musical_key> key() const;
 
     /// Sets the key (metadata) of the track
-    void set_key(stdx::optional<musical_key> key) const;
+    void set_key(std::optional<musical_key> key) const;
     void set_key(musical_key key) const;
 
     /// Returns the time at which the track was last played
-    stdx::optional<std::chrono::system_clock::time_point> last_played_at()
+    std::optional<std::chrono::system_clock::time_point> last_played_at()
         const;
 
     /// Sets the time at which the track was last played
     void set_last_played_at(
-        stdx::optional<std::chrono::system_clock::time_point> time) const;
+        std::optional<std::chrono::system_clock::time_point> time) const;
     void set_last_played_at(std::chrono::system_clock::time_point time) const;
 
-    stdx::optional<loop> loop_at(int index) const;
+    std::optional<loop> loop_at(int index) const;
 
-    void set_loop_at(int index, stdx::optional<loop> l) const;
+    void set_loop_at(int index, std::optional<loop> l) const;
     void set_loop_at(int index, loop l) const;
 
-    std::vector<stdx::optional<loop>> loops() const;
+    std::vector<std::optional<loop>> loops() const;
 
-    void set_loops(std::vector<stdx::optional<loop>> loops) const;
+    void set_loops(std::vector<std::optional<loop>> loops) const;
 
     /// Get the track's main cue point.
-    stdx::optional<double> main_cue() const;
+    std::optional<double> main_cue() const;
 
     /// Set the track's main cue point.
-    void set_main_cue(stdx::optional<double> sample_offset) const;
+    void set_main_cue(std::optional<double> sample_offset) const;
 
     /// Returns the publisher (metadata) of the track
-    stdx::optional<std::string> publisher() const;
+    std::optional<std::string> publisher() const;
 
     /// Sets the publisher (metadata) of the track
-    void set_publisher(stdx::optional<std::string> publisher) const;
+    void set_publisher(std::optional<std::string> publisher) const;
     void set_publisher(std::string publisher) const;
 
     /// Gets the track rating, from 0-100.
-    stdx::optional<int> rating() const;
+    std::optional<int> rating() const;
 
     /// Sets the track rating, from 0-100.  Any rating provided outside this
     /// range will be clamped.
-    void set_rating(stdx::optional<int> rating);
+    void set_rating(std::optional<int> rating);
     void set_rating(int rating);
 
     /// Get the path to this track's file on disk, relative to the music
@@ -230,31 +230,31 @@ public:
     void set_relative_path(std::string relative_path) const;
 
     /// Get the sample count of the track.
-    stdx::optional<unsigned long long> sample_count() const;
+    std::optional<unsigned long long> sample_count() const;
 
     /// Set the sample count of the track.
-    void set_sample_count(stdx::optional<unsigned long long> sample_count);
+    void set_sample_count(std::optional<unsigned long long> sample_count);
     void set_sample_count(unsigned long long sample_count);
 
     /// Get the sample rate of the track.
-    stdx::optional<double> sample_rate() const;
+    std::optional<double> sample_rate() const;
 
     /// Set the sample rate of the track.
-    void set_sample_rate(stdx::optional<double> sample_rate);
+    void set_sample_rate(std::optional<double> sample_rate);
     void set_sample_rate(double sample_rate);
 
     /// Returns the title (metadata) of the track
-    stdx::optional<std::string> title() const;
+    std::optional<std::string> title() const;
 
     /// Sets the title (metadata) of the track
-    void set_title(stdx::optional<std::string> title) const;
+    void set_title(std::optional<std::string> title) const;
     void set_title(std::string title) const;
 
     /// Returns the track number (metadata) of the track
-    stdx::optional<int> track_number() const;
+    std::optional<int> track_number() const;
 
     /// Sets the track number (metadata) of the track
-    void set_track_number(stdx::optional<int> track_number) const;
+    void set_track_number(std::optional<int> track_number) const;
     void set_track_number(int track_number) const;
 
     // TODO (mr-smidge): Add `uri()` and `set_uri()` methods.
@@ -264,10 +264,10 @@ public:
     void set_waveform(std::vector<waveform_entry> waveform) const;
 
     /// Returns the recording year (metadata) of the track
-    stdx::optional<int> year() const;
+    std::optional<int> year() const;
 
     /// Sets the recording year (metadata) of the track
-    void set_year(stdx::optional<int> year) const;
+    void set_year(std::optional<int> year) const;
     void set_year(int year) const;
 
     // TODO (haslersn): non public?

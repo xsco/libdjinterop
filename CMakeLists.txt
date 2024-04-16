@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.21.0
+        VERSION 0.22.0
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
@@ -15,8 +15,8 @@ if(POLICY CMP0076)
     cmake_policy(SET CMP0076 NEW)
 endif()
 
-# Require C++17
-set(CMAKE_CXX_STANDARD 17)
+# Require C++20
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 if(MSVC)
     add_compile_options("/W4" "/wd4251" "/wd4275" "$<$<CONFIG:RELEASE>:/O2>")
@@ -27,6 +27,19 @@ else()
     add_compile_options("$<$<CONFIG:DEBUG>:-Wall>")
 endif()
 
+# G++-10 supports "enough" C++20 for our liking.
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION MATCHES "^10\\.[0-9]+\\.[0-9]+$")
+    message(STATUS "We're using g++-10...")
+    add_compile_definitions(__cplusplus 202002L)
+endif()
+
+# Public headers rely on the __cplusplus macro being populated correctly.
+# It can be useful to know exactly what it evaluates to.
+try_run(CPP_MACRO_PRINT_COMPILE_RESULT CPP_MACRO_PRINT_RUN_RESULT
+        "${CMAKE_CURRENT_BINARY_DIR}"
+        "${CMAKE_CURRENT_LIST_DIR}/cmake/cplusplus_macro_print.cpp"
+        RUN_OUTPUT_VARIABLE CPP_MACRO_PRINT_OUTPUT)
+message(STATUS "${CPP_MACRO_PRINT_OUTPUT}")
 
 # Build shared a library by default.
 option(BUILD_SHARED_LIBS "Build shared library" ON)
@@ -101,10 +114,6 @@ if(DJINTEROP_LIBRARY_TYPE STREQUAL "STATIC_LIBRARY")
 endif()
 
 # Generate config.hpp based on build-time environment.
-include(CheckIncludeFileCXX)
-CHECK_INCLUDE_FILE_CXX(optional DJINTEROP_STD_OPTIONAL)
-CHECK_INCLUDE_FILE_CXX(experimental/optional DJINTEROP_STD_EXPERIMENTAL_OPTIONAL)
-
 configure_file(
     include/djinterop/config.hpp.in
     include/djinterop/config.hpp)
@@ -170,7 +179,6 @@ install(FILES
     include/djinterop/djinterop.hpp
     include/djinterop/exceptions.hpp
     include/djinterop/musical_key.hpp
-    include/djinterop/optional.hpp
     include/djinterop/pad_color.hpp
     include/djinterop/performance_data.hpp
     include/djinterop/semantic_version.hpp

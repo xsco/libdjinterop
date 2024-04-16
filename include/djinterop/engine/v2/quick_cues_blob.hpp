@@ -17,8 +17,8 @@
 
 #pragma once
 
-#if __cplusplus < 201703L
-#error This library needs at least a C++17 compliant compiler
+#if __cplusplus < 202002L
+#error This library needs at least a C++20 compliant compiler
 #endif
 
 #include <cstddef>
@@ -27,9 +27,7 @@
 #include <vector>
 
 #include <djinterop/config.hpp>
-#include <djinterop/optional.hpp>
 #include <djinterop/pad_color.hpp>
-#include <djinterop/performance_data.hpp>
 
 namespace djinterop::engine::v2
 {
@@ -91,7 +89,7 @@ struct DJINTEROP_PUBLIC quick_cue_blob
 struct DJINTEROP_PUBLIC quick_cues_blob
 {
     /// Type of collection of quick cues.
-    typedef std::vector<quick_cue_blob> quick_cue_blobs_type;
+    using quick_cue_blobs_type = std::vector<quick_cue_blob>;
 
     /// List of quick cues.
     quick_cue_blobs_type quick_cues;
