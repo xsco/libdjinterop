@@ -85,8 +85,12 @@ public:
     /// zero crates.
     void clear_tracks() const;
 
-    /// Creates a new, empty crate as a child of this one, and returns it.
-    crate create_sub_crate(std::string name);
+    /// Create a new crate as a child of this one.
+    crate create_sub_crate(const std::string& name);
+
+    /// Create a new crate as a child of this one, after the given crate in
+    /// order.
+    crate create_sub_crate_after(const std::string& name, const crate& after);
 
     /// Returns the database containing the crate
     database db() const;

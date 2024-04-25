@@ -21,6 +21,7 @@
 #include <djinterop/djinterop.hpp>
 
 #include "impl/crate_impl.hpp"
+#include "djinterop/crate.hpp"
 
 namespace djinterop
 {
@@ -50,9 +51,14 @@ void crate::clear_tracks() const
     pimpl_->clear_tracks();
 }
 
-crate crate::create_sub_crate(std::string name)
+crate crate::create_sub_crate(const std::string& name)
 {
     return pimpl_->create_sub_crate(name);
+}
+
+crate crate::create_sub_crate_after(const std::string& name, const crate& after)
+{
+    return pimpl_-> create_sub_crate_after(name, after);
 }
 
 database crate::db() const

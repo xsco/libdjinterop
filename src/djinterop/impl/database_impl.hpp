@@ -36,7 +36,9 @@ public:
     virtual stdx::optional<crate> crate_by_id(int64_t id) = 0;
     virtual std::vector<crate> crates() = 0;
     virtual std::vector<crate> crates_by_name(const std::string& name) = 0;
-    virtual crate create_root_crate(std::string name) = 0;
+    virtual crate create_root_crate(const std::string& name) = 0;
+    virtual crate create_root_crate_after(
+        const std::string& name, const crate& after) = 0;
     virtual track create_track(const track_snapshot& snapshot) = 0;
     virtual std::string directory() = 0;
     virtual void verify() = 0;
