@@ -82,8 +82,8 @@ inline bool operator<(const index_info_entry& o1, const index_info_entry& o2)
 
 struct master_list
 {
-    typedef std::set<master_list_entry>::iterator iterator;
-    typedef std::set<master_list_entry>::const_iterator const_iterator;
+    using iterator = std::set<master_list_entry>::iterator;
+    using const_iterator = std::set<master_list_entry>::const_iterator;
 
     master_list(
         sqlite::database& db, const std::string& db_name,
@@ -125,8 +125,8 @@ private:
 
 struct table_info
 {
-    typedef std::set<table_info_entry>::iterator iterator;
-    typedef std::set<table_info_entry>::const_iterator const_iterator;
+    using iterator = std::set<table_info_entry>::iterator;
+    using const_iterator = std::set<table_info_entry>::const_iterator;
 
     table_info(
         sqlite::database& db, const std::string& db_name,
@@ -172,8 +172,8 @@ private:
 
 struct index_list
 {
-    typedef std::set<index_list_entry>::iterator iterator;
-    typedef std::set<index_list_entry>::const_iterator const_iterator;
+    using iterator = std::set<index_list_entry>::iterator;
+    using const_iterator = std::set<index_list_entry>::const_iterator;
 
     index_list(
         sqlite::database& db, const std::string& db_name,
@@ -220,8 +220,8 @@ private:
 
 struct index_info
 {
-    typedef std::set<index_info_entry>::iterator iterator;
-    typedef std::set<index_info_entry>::const_iterator const_iterator;
+    using iterator = std::set<index_info_entry>::iterator;
+    using const_iterator = std::set<index_info_entry>::const_iterator;
 
     index_info(
         sqlite::database& db, const std::string& db_name,

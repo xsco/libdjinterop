@@ -33,7 +33,7 @@ namespace djinterop
 class album_art
 {
 public:
-    typedef uint_least8_t image_data_type;
+    using image_data_type = uint_least8_t;
 
     std::string hash_hex_str;
     std::vector<image_data_type> image_data;

@@ -25,13 +25,13 @@
 #include <cstdint>
 #include <list>
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 #include <djinterop/config.hpp>
-#include <djinterop/optional.hpp>
 #include <djinterop/stream_helper.hpp>
 
 namespace djinterop::engine::v2
@@ -42,7 +42,6 @@ struct engine_library_context;
 /// operation.
 struct DJINTEROP_PUBLIC playlist_row_id_error : public std::runtime_error
 {
-public:
     explicit playlist_row_id_error(const std::string& what_arg) noexcept :
         runtime_error{what_arg}
     {
@@ -51,14 +50,14 @@ public:
 
 /// Special value for id to indicate that a given row is not currently persisted
 /// in the database.
-constexpr const int64_t PLAYLIST_ROW_ID_NONE = 0;
+constexpr int64_t PLAYLIST_ROW_ID_NONE = 0;
 
 /// Special value for parent id to indicate that a given row is at the root
 /// level, and does not have any parent playlist.
-constexpr const int64_t PARENT_LIST_ID_NONE = 0;
+constexpr int64_t PARENT_LIST_ID_NONE = 0;
 
 /// Special value for next list id to indicate that there is no next list.
-constexpr const int64_t PLAYLIST_NO_NEXT_LIST_ID = 0;
+constexpr int64_t PLAYLIST_NO_NEXT_LIST_ID = 0;
 
 /// Represents a row in the `PlayList` table.
 struct DJINTEROP_PUBLIC playlist_row
@@ -179,21 +178,21 @@ public:
     /// \param parent_id Id of parent playlist.
     /// \param title Title of playlist to find.
     /// \return Returns the id of the playlist, or none if not found.
-    [[nodiscard]] stdx::optional<int64_t> find_id(
+    [[nodiscard]] std::optional<int64_t> find_id(
         int64_t parent_id, const std::string& title) const;
 
     /// Find the id of a root playlist, given its title.
     ///
     /// \param title Title of playlist to find.
     /// \return Returns the id of the playlist, or none if not found.
-    [[nodiscard]] stdx::optional<int64_t> find_root_id(
+    [[nodiscard]] std::optional<int64_t> find_root_id(
         const std::string& title) const;
 
     /// Get a playlist by id.
     ///
     /// \param id Id of playlist.
     /// \return Returns an optional playlist row.
-    [[nodiscard]] djinterop::stdx::optional<playlist_row> get(int64_t id) const;
+    [[nodiscard]] std::optional<playlist_row> get(int64_t id) const;
 
     /// Remove an entry from the table.
     ///

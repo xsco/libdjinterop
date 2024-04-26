@@ -17,32 +17,29 @@
 
 #pragma once
 
-#include <chrono>
-#include <cstdint>
 #include <vector>
 
 #include <djinterop/engine/v2/quick_cues_blob.hpp>
-#include <djinterop/optional.hpp>
 #include <djinterop/performance_data.hpp>
 
 namespace djinterop::engine::v2::convert
 {
 namespace read
 {
-inline stdx::optional<djinterop::hot_cue> hot_cue(
+inline std::optional<djinterop::hot_cue> hot_cue(
     const quick_cue_blob& quick_cue)
 {
     return quick_cue.sample_offset == QUICK_CUE_SAMPLE_OFFSET_EMPTY
-               ? stdx::nullopt
-               : stdx::make_optional(djinterop::hot_cue{
+               ? std::nullopt
+               : std::make_optional(djinterop::hot_cue{
                      quick_cue.label, quick_cue.sample_offset,
                      quick_cue.color});
 }
 
-inline std::vector<stdx::optional<djinterop::hot_cue>> hot_cues(
+inline std::vector<std::optional<djinterop::hot_cue>> hot_cues(
     const quick_cues_blob& quick_cues)
 {
-    std::vector<stdx::optional<djinterop::hot_cue>> converted;
+    std::vector<std::optional<djinterop::hot_cue>> converted;
     converted.reserve(quick_cues.quick_cues.size());
     for (auto&& c : quick_cues.quick_cues)
         converted.push_back(hot_cue(c));
@@ -50,15 +47,15 @@ inline std::vector<stdx::optional<djinterop::hot_cue>> hot_cues(
     return converted;
 }
 
-inline stdx::optional<double> main_cue(double main_cue)
+inline std::optional<double> main_cue(double main_cue)
 {
-    return main_cue != 0 ? stdx::make_optional(main_cue) : stdx::nullopt;
+    return main_cue != 0 ? std::make_optional(main_cue) : std::nullopt;
 }
 }  // namespace read
 
 namespace write
 {
-inline quick_cue_blob hot_cue(const stdx::optional<hot_cue>& hot_cue)
+inline quick_cue_blob hot_cue(const std::optional<hot_cue>& hot_cue)
 {
     if (!hot_cue)
         return quick_cue_blob::empty();
@@ -68,7 +65,7 @@ inline quick_cue_blob hot_cue(const stdx::optional<hot_cue>& hot_cue)
 }
 
 inline std::vector<quick_cue_blob> hot_cues(
-    const std::vector<stdx::optional<djinterop::hot_cue>>& cues)
+    const std::vector<std::optional<djinterop::hot_cue>>& cues)
 {
     if (cues.size() > MAX_QUICK_CUES)
         throw djinterop::hot_cues_overflow{
@@ -88,7 +85,7 @@ inline std::vector<quick_cue_blob> hot_cues(
     return converted;
 }
 
-inline double main_cue(stdx::optional<double> main_cue)
+inline double main_cue(std::optional<double> main_cue)
 {
     return main_cue.value_or(0);
 }

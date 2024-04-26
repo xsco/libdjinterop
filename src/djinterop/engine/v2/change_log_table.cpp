@@ -65,9 +65,9 @@ std::vector<change_log_row> change_log_table::after(int64_t id) const
     return results;
 }
 
-djinterop::stdx::optional<change_log_row> change_log_table::last() const
+std::optional<change_log_row> change_log_table::last() const
 {
-    djinterop::stdx::optional<change_log_row> result;
+    std::optional<change_log_row> result;
     context_->db
             << "SELECT id, trackId FROM ChangeLog ORDER BY id DESC LIMIT 1" >>
         [&](int64_t id, int64_t track_id)

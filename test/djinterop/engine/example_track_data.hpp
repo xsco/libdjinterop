@@ -81,82 +81,82 @@ inline void populate_track_snapshot(
     switch (variation)
     {
         case example_track_data_variation::empty:
-            s.album = djinterop::stdx::nullopt;
-            s.artist = djinterop::stdx::nullopt;
-            s.average_loudness = djinterop::stdx::nullopt;
+            s.album = std::nullopt;
+            s.artist = std::nullopt;
+            s.average_loudness = std::nullopt;
             s.beatgrid.clear();
-            s.bitrate = djinterop::stdx::nullopt;
-            s.bpm = djinterop::stdx::nullopt;
-            s.comment = djinterop::stdx::nullopt;
-            s.composer = djinterop::stdx::nullopt;
-            s.duration = djinterop::stdx::nullopt;
-            s.file_bytes = djinterop::stdx::nullopt;
-            s.genre = djinterop::stdx::nullopt;
+            s.bitrate = std::nullopt;
+            s.bpm = std::nullopt;
+            s.comment = std::nullopt;
+            s.composer = std::nullopt;
+            s.duration = std::nullopt;
+            s.file_bytes = std::nullopt;
+            s.genre = std::nullopt;
             s.hot_cues.clear();
             if (usage == example_track_data_usage::fetch)
                 s.hot_cues.resize(8);
 
-            s.key = djinterop::stdx::nullopt;
-            s.last_played_at = djinterop::stdx::nullopt;
+            s.key = std::nullopt;
+            s.last_played_at = std::nullopt;
             s.loops.clear();
             if (usage == example_track_data_usage::fetch)
                 s.loops.resize(8);
 
-            s.main_cue = djinterop::stdx::nullopt;
-            s.publisher = djinterop::stdx::nullopt;
-            s.relative_path = djinterop::stdx::nullopt;
-            s.sample_count = djinterop::stdx::nullopt;
-            s.sample_rate = djinterop::stdx::nullopt;
-            s.title = djinterop::stdx::nullopt;
-            s.track_number = djinterop::stdx::nullopt;
+            s.main_cue = std::nullopt;
+            s.publisher = std::nullopt;
+            s.relative_path = std::nullopt;
+            s.sample_count = std::nullopt;
+            s.sample_rate = std::nullopt;
+            s.title = std::nullopt;
+            s.track_number = std::nullopt;
             s.waveform.clear();
-            s.year = djinterop::stdx::nullopt;
+            s.year = std::nullopt;
             break;
 
         case example_track_data_variation::minimal_1:
-            s.album = djinterop::stdx::nullopt;
-            s.artist = djinterop::stdx::nullopt;
-            s.average_loudness = djinterop::stdx::nullopt;
+            s.album = std::nullopt;
+            s.artist = std::nullopt;
+            s.average_loudness = std::nullopt;
             s.beatgrid.clear();
-            s.bitrate = djinterop::stdx::nullopt;
-            s.bpm = djinterop::stdx::nullopt;
-            s.comment = djinterop::stdx::nullopt;
-            s.composer = djinterop::stdx::nullopt;
-            s.duration = djinterop::stdx::nullopt;
-            s.file_bytes = djinterop::stdx::nullopt;
-            s.genre = djinterop::stdx::nullopt;
+            s.bitrate = std::nullopt;
+            s.bpm = std::nullopt;
+            s.comment = std::nullopt;
+            s.composer = std::nullopt;
+            s.duration = std::nullopt;
+            s.file_bytes = std::nullopt;
+            s.genre = std::nullopt;
             s.hot_cues.clear();
             if (usage == example_track_data_usage::fetch)
                 s.hot_cues.resize(8);
 
-            s.key = djinterop::stdx::nullopt;
-            s.last_played_at = djinterop::stdx::nullopt;
+            s.key = std::nullopt;
+            s.last_played_at = std::nullopt;
             s.loops.clear();
             if (usage == example_track_data_usage::fetch)
                 s.loops.resize(8);
 
-            s.main_cue = djinterop::stdx::nullopt;
-            s.publisher = djinterop::stdx::nullopt;
+            s.main_cue = std::nullopt;
+            s.publisher = std::nullopt;
             s.relative_path = "filename.ext"s;
-            s.sample_count = djinterop::stdx::nullopt;
-            s.sample_rate = djinterop::stdx::nullopt;
-            s.title = djinterop::stdx::nullopt;
-            s.track_number = djinterop::stdx::nullopt;
+            s.sample_count = std::nullopt;
+            s.sample_rate = std::nullopt;
+            s.title = std::nullopt;
+            s.track_number = std::nullopt;
             s.waveform.clear();
-            s.year = djinterop::stdx::nullopt;
+            s.year = std::nullopt;
             break;
 
         case example_track_data_variation::basic_metadata_only_1:
             s.album = "Some Album"s;
             s.artist = "Some Artist"s;
-            s.average_loudness = djinterop::stdx::nullopt;
+            s.average_loudness = std::nullopt;
             s.beatgrid.clear();
             s.bitrate = 320;
             s.bpm = 123;
             s.comment = "Comment"s;
             s.composer = "Composer"s;
             s.duration = std::chrono::milliseconds{210000};
-            s.file_bytes = djinterop::stdx::nullopt;
+            s.file_bytes = std::nullopt;
             s.genre = "Genre"s;
             s.hot_cues.clear();
             if (usage == example_track_data_usage::fetch)
@@ -169,11 +169,11 @@ inline void populate_track_snapshot(
             if (usage == example_track_data_usage::fetch)
                 s.loops.resize(8);
 
-            s.main_cue = djinterop::stdx::nullopt;
+            s.main_cue = std::nullopt;
             s.publisher = "Publisher"s;
             s.relative_path = "../01 - Some Artist - Some Track.mp3"s;
-            s.sample_count = djinterop::stdx::nullopt;
-            s.sample_rate = djinterop::stdx::nullopt;
+            s.sample_count = std::nullopt;
+            s.sample_rate = std::nullopt;
             s.title = "Some Title"s;
             s.track_number = 1;
             s.waveform.clear();

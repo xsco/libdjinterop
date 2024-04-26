@@ -17,11 +17,11 @@
 
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 
 #include <djinterop/crate.hpp>
-#include <djinterop/optional.hpp>
 #include <djinterop/track.hpp>
 
 #include "database_impl.hpp"
@@ -50,12 +50,12 @@ public:
     virtual std::vector<crate> descendants() = 0;
     virtual bool is_valid() = 0;
     virtual std::string name() = 0;
-    virtual stdx::optional<crate> parent() = 0;
+    virtual std::optional<crate> parent() = 0;
     virtual void remove_track(track tr) = 0;
-    virtual stdx::optional<crate> sub_crate_by_name(
+    virtual std::optional<crate> sub_crate_by_name(
         const std::string& name) = 0;
     virtual void set_name(std::string name) = 0;
-    virtual void set_parent(stdx::optional<crate> parent) = 0;
+    virtual void set_parent(std::optional<crate> parent) = 0;
     virtual std::vector<track> tracks() = 0;
 
 private:

@@ -228,7 +228,7 @@ bool engine_crate_impl::is_valid()
 
 std::string engine_crate_impl::name()
 {
-    stdx::optional<std::string> name;
+    std::optional<std::string> name;
     storage_->db << "SELECT title FROM Crate WHERE id = ?" << id() >>
         [&](std::string title) {
             if (!name)
@@ -248,9 +248,9 @@ std::string engine_crate_impl::name()
     return *name;
 }
 
-stdx::optional<crate> engine_crate_impl::parent()
+std::optional<crate> engine_crate_impl::parent()
 {
-    stdx::optional<crate> parent;
+    std::optional<crate> parent;
     storage_->db
             << "SELECT crateParentId FROM CrateParentList WHERE crateOriginId "
                "= ? AND crateParentId <> crateOriginId"
@@ -315,7 +315,7 @@ void engine_crate_impl::set_name(std::string name)
     trans.commit();
 }
 
-void engine_crate_impl::set_parent(stdx::optional<crate> parent)
+void engine_crate_impl::set_parent(std::optional<crate> parent)
 {
     if (parent && parent->id() == id())
     {
@@ -345,9 +345,9 @@ void engine_crate_impl::set_parent(stdx::optional<crate> parent)
     trans.commit();
 }
 
-stdx::optional<crate> engine_crate_impl::sub_crate_by_name(const std::string& name)
+std::optional<crate> engine_crate_impl::sub_crate_by_name(const std::string& name)
 {
-    stdx::optional<crate> cr;
+    std::optional<crate> cr;
     storage_->db << "SELECT cr.id FROM Crate cr "
                     "JOIN CrateParentList cpl ON (cpl.crateOriginId = cr.id) "
                     "WHERE cr.title = ? "

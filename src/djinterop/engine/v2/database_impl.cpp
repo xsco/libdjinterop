@@ -31,16 +31,16 @@ database_impl::database_impl(std::shared_ptr<engine_library> library) :
 {
 }
 
-stdx::optional<crate> database_impl::crate_by_id(int64_t id)
+std::optional<crate> database_impl::crate_by_id(int64_t id)
 {
     auto exists = library_->playlist().exists(id);
     if (!exists)
     {
-        return stdx::nullopt;
+        return std::nullopt;
     }
 
     auto impl = std::make_shared<crate_impl>(library_, id);
-    return stdx::make_optional<crate>(crate{impl});
+    return std::make_optional<crate>(crate{impl});
 }
 
 std::vector<crate> database_impl::crates()
@@ -162,28 +162,28 @@ std::vector<crate> database_impl::root_crates()
     return results;
 }
 
-stdx::optional<crate> database_impl::root_crate_by_name(const std::string& name)
+std::optional<crate> database_impl::root_crate_by_name(const std::string& name)
 {
     auto id_maybe = library_->playlist().find_root_id(name);
     if (!id_maybe)
     {
-        return stdx::nullopt;
+        return std::nullopt;
     }
 
     auto impl = std::make_shared<crate_impl>(library_, *id_maybe);
-    return stdx::make_optional<crate>(crate{impl});
+    return std::make_optional<crate>(crate{impl});
 }
 
-stdx::optional<track> database_impl::track_by_id(int64_t id)
+std::optional<track> database_impl::track_by_id(int64_t id)
 {
     auto track_table = library_->track();
     if (track_table.exists(id))
     {
         auto impl = std::make_shared<track_impl>(library_, id);
-        return stdx::make_optional<track>(track{impl});
+        return std::make_optional<track>(track{impl});
     }
 
-    return stdx::nullopt;
+    return std::nullopt;
 }
 
 std::vector<track> database_impl::tracks()

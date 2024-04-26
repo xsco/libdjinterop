@@ -24,12 +24,12 @@
 #include <cstdint>
 #include <list>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 #include <djinterop/config.hpp>
-#include <djinterop/optional.hpp>
 
 namespace djinterop::engine::v2
 {
@@ -122,7 +122,7 @@ public:
     /// \param list_id Id of playlist.
     /// \param track_id Id of track in playlist.
     /// \return Returns the optional playlist entity row.
-    [[nodiscard]] stdx::optional<playlist_entity_row> get(
+    [[nodiscard]] std::optional<playlist_entity_row> get(
         int64_t list_id, int64_t track_id) const;
 
     /// Get a list of entity rows for a given playlist, in playlist order.

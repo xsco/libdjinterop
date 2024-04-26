@@ -105,7 +105,7 @@ BOOST_DATA_TEST_CASE(
     auto actual = track_tbl.get(id);
 
     // Assert
-    BOOST_REQUIRE(actual != djinterop::stdx::nullopt);
+    BOOST_REQUIRE(actual != std::nullopt);
     actual->last_edit_time = expected.last_edit_time;
     BOOST_CHECK_EQUAL(expected, *actual);
 }
@@ -153,7 +153,7 @@ BOOST_DATA_TEST_CASE(
         "(" << version << ", " << initial_row_type << ", " << update_row_type
             << ") Fetching track...");
     auto actual = track_tbl.get(id);
-    BOOST_REQUIRE(actual != djinterop::stdx::nullopt);
+    BOOST_REQUIRE(actual != std::nullopt);
     actual->last_edit_time = expected.last_edit_time;
     BOOST_CHECK_EQUAL(expected, *actual);
 }
