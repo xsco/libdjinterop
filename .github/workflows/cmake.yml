@@ -18,7 +18,6 @@ jobs:
           { os: ubuntu-20.04, c_compiler: gcc-10, cpp_compiler: g++-10 },
           { os: ubuntu-22.04, c_compiler: gcc-11, cpp_compiler: g++-11 },
           { os: ubuntu-22.04, c_compiler: gcc-12, cpp_compiler: g++-12 },
-          { os: ubuntu-22.04, c_compiler: gcc-13, cpp_compiler: g++-13 },
         ]
 
     runs-on: ${{ matrix.config.os }}
