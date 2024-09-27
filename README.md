@@ -8,6 +8,8 @@ This library currently supports:
 
 * Engine Library, as used on "Prime"-series DJ equipment.
 
+Documentation can be viewed on [GitHub Pages](https://xcso.github.io/libdjinterop/)
+
 State of Support
 ================
 

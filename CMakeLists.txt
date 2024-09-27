@@ -285,3 +285,25 @@ endif()
 include(InstallRequiredSystemLibraries)
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 include(CPack)
+
+# Add documentation option
+option(BUILD_DOC "Build documentation" ON)
+
+# Check if Doxygen is installed
+find_package(Doxygen OPTIONAL_COMPONENTS dot dia)
+if (DOXYGEN_FOUND)
+    set(DOXYGEN_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    set(DOXYGEN_HTML_OUTPUT docs)
+    set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
+
+    message("Doxygen build started")
+
+    doxygen_add_docs(
+            docs
+            include
+            README.md
+            COMMENT "Generate docs"
+    )
+else (DOXYGEN_FOUND)
+    message("Doxygen need to be installed to generate the doxygen documentation")
+endif (DOXYGEN_FOUND)

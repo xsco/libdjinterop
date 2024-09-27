@@ -12,3 +12,6 @@ compile_commands.json
 # CMake typical build dirs
 /cmake_build*
 /cmake-build*
+
+# Doxygen
+docs
