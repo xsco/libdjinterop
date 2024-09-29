@@ -17,10 +17,10 @@
 
 #pragma once
 
+#include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
-
-#include <djinterop/optional.hpp>
 
 namespace djinterop
 {
@@ -33,7 +33,7 @@ class database_impl
 public:
     virtual ~database_impl();
 
-    virtual stdx::optional<crate> crate_by_id(int64_t id) = 0;
+    virtual std::optional<crate> crate_by_id(int64_t id) = 0;
     virtual std::vector<crate> crates() = 0;
     virtual std::vector<crate> crates_by_name(const std::string& name) = 0;
     virtual crate create_root_crate(const std::string& name) = 0;
@@ -45,9 +45,9 @@ public:
     virtual void remove_crate(crate cr) = 0;
     virtual void remove_track(track tr) = 0;
     virtual std::vector<crate> root_crates() = 0;
-    virtual stdx::optional<crate> root_crate_by_name(
+    virtual std::optional<crate> root_crate_by_name(
         const std::string& name) = 0;
-    virtual stdx::optional<track> track_by_id(int64_t id) = 0;
+    virtual std::optional<track> track_by_id(int64_t id) = 0;
     virtual std::vector<track> tracks() = 0;
     virtual std::vector<track> tracks_by_relative_path(
         const std::string& relative_path) = 0;

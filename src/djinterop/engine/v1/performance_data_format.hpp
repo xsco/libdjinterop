@@ -19,9 +19,9 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <vector>
 
-#include <djinterop/optional.hpp>
 #include <djinterop/performance_data.hpp>
 
 namespace djinterop
@@ -32,12 +32,10 @@ namespace engine::v1
 {
 struct beat_data
 {
-    stdx::optional<double> sample_rate;
-    stdx::optional<double> sample_count;
+    std::optional<double> sample_rate;
+    std::optional<double> sample_count;
     std::vector<beatgrid_marker> default_beatgrid;
     std::vector<beatgrid_marker> adjusted_beatgrid;
-
-    beat_data() noexcept = default;
 
     friend bool operator==(
         const beat_data& first, const beat_data& second) noexcept
@@ -57,8 +55,6 @@ struct high_res_waveform_data
     double samples_per_entry;
     std::vector<waveform_entry> waveform;
 
-    high_res_waveform_data() noexcept = default;
-
     friend bool operator==(
         const high_res_waveform_data& first,
         const high_res_waveform_data& second) noexcept
@@ -74,9 +70,7 @@ struct high_res_waveform_data
 
 struct loops_data
 {
-    std::vector<stdx::optional<loop> > loops;
-
-    loops_data() noexcept = default;
+    std::vector<std::optional<loop> > loops;
 
     friend bool operator==(
         const loops_data& first, const loops_data& second) noexcept
@@ -94,8 +88,6 @@ struct overview_waveform_data
     double samples_per_entry;
     std::vector<waveform_entry> waveform;
 
-    overview_waveform_data() noexcept = default;
-
     friend bool operator==(
         const overview_waveform_data& first,
         const overview_waveform_data& second) noexcept
@@ -111,11 +103,9 @@ struct overview_waveform_data
 
 struct quick_cues_data
 {
-    std::vector<stdx::optional<hot_cue> > hot_cues;
+    std::vector<std::optional<hot_cue> > hot_cues;
     double adjusted_main_cue = 0;
     double default_main_cue = 0;
-
-    quick_cues_data() noexcept = default;
 
     friend bool operator==(
         const quick_cues_data& first, const quick_cues_data& second) noexcept
@@ -131,12 +121,10 @@ struct quick_cues_data
 
 struct track_data
 {
-    stdx::optional<double> sample_rate;
-    stdx::optional<int64_t> sample_count;
-    stdx::optional<double> average_loudness;  // range (0, 1]
-    stdx::optional<musical_key> key;
-
-    track_data() noexcept = default;
+    std::optional<double> sample_rate;
+    std::optional<int64_t> sample_count;
+    std::optional<double> average_loudness;  // range (0, 1]
+    std::optional<musical_key> key;
 
     friend bool operator==(
         const track_data& first, const track_data& second) noexcept

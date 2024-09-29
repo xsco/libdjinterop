@@ -25,12 +25,12 @@
 
 #include <chrono>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <vector>
 
 #include <djinterop/musical_key.hpp>
-#include <djinterop/optional.hpp>
 #include <djinterop/performance_data.hpp>
 #include <djinterop/stream_helper.hpp>
 
@@ -53,83 +53,83 @@ class database;
 struct track_snapshot
 {
     /// The album name metadata.
-    stdx::optional<std::string> album;
+    std::optional<std::string> album;
 
     /// The artist name metadata.
-    stdx::optional<std::string> artist;
+    std::optional<std::string> artist;
 
     /// The average loudness metadata.
-    stdx::optional<double> average_loudness;
+    std::optional<double> average_loudness;
 
     /// The beatgrid.
     std::vector<beatgrid_marker> beatgrid;
 
     /// The bitrate metadata.
-    stdx::optional<int> bitrate;
+    std::optional<int> bitrate;
 
     /// The BPM metadata.
-    stdx::optional<double> bpm;
+    std::optional<double> bpm;
 
     /// The comment metadata.
-    stdx::optional<std::string> comment;
+    std::optional<std::string> comment;
 
     /// The composer metadata.
-    stdx::optional<std::string> composer;
+    std::optional<std::string> composer;
 
     /// The duration metadata.
-    stdx::optional<std::chrono::milliseconds> duration;
+    std::optional<std::chrono::milliseconds> duration;
 
     /// The size of the file, in bytes, metadata.
-    stdx::optional<unsigned long long> file_bytes;
+    std::optional<unsigned long long> file_bytes;
 
     /// The genre metadata.
-    stdx::optional<std::string> genre;
+    std::optional<std::string> genre;
 
     /// The hot cues.
-    std::vector<stdx::optional<hot_cue>> hot_cues;
+    std::vector<std::optional<hot_cue>> hot_cues;
 
     /// The key.
-    stdx::optional<musical_key> key;
+    std::optional<musical_key> key;
 
     /// The time at which the track was last played.
-    stdx::optional<std::chrono::system_clock::time_point> last_played_at;
+    std::optional<std::chrono::system_clock::time_point> last_played_at;
 
     /// The loops.
-    std::vector<stdx::optional<loop>> loops;
+    std::vector<std::optional<loop>> loops;
 
     /// The main cue sample offset.
-    stdx::optional<double> main_cue;
+    std::optional<double> main_cue;
 
     /// The publisher metadata.
-    stdx::optional<std::string> publisher;
+    std::optional<std::string> publisher;
 
     /// The track rating, from 0-100.
     /// Any rating provided outside this range will be clamped.
-    stdx::optional<int> rating;
+    std::optional<int> rating;
 
     /// The path to this track's file on disk, relative to the directory of
     /// the database.
-    stdx::optional<std::string> relative_path;
+    std::optional<std::string> relative_path;
 
     /// Number of audio samples within the track.
-    stdx::optional<unsigned long long> sample_count;
+    std::optional<unsigned long long> sample_count;
 
     /// Sample rate, i.e. number of samples per second.
-    stdx::optional<double> sample_rate;
+    std::optional<double> sample_rate;
 
     /// The title metadata.
-    stdx::optional<std::string> title;
+    std::optional<std::string> title;
 
     /// The track number metadata.
-    stdx::optional<int> track_number;
+    std::optional<int> track_number;
 
-    // TODO (mr-smidge): Add `stdx::optional<std::string> uri` field.
+    // TODO (mr-smidge): Add `std::optional<std::string> uri` field.
 
     /// The waveform.
     std::vector<waveform_entry> waveform;
 
     /// The recording year metadata.
-    stdx::optional<int> year;
+    std::optional<int> year;
 
     friend bool operator==(
         const track_snapshot& lhs, const track_snapshot& rhs) noexcept

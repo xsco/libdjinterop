@@ -33,11 +33,11 @@ namespace djinterop::engine
 {
 namespace
 {
-inline djinterop::stdx::optional<std::string> get_column_type(
+inline std::optional<std::string> get_column_type(
     sqlite::database& db, const std::string& table_name,
     const std::string& column_name)
 {
-    djinterop::stdx::optional<std::string> column_type;
+    std::optional<std::string> column_type;
 
     db << "PRAGMA table_info('" + table_name + "')" >>
         [&]([[maybe_unused]] int col_id, const std::string& col_name,

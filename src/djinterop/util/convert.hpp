@@ -17,20 +17,20 @@
 
 #pragma once
 
-#include <djinterop/optional.hpp>
+#include <optional>
 
 namespace djinterop::util
 {
 template <typename T, typename U>
-djinterop::stdx::optional<T> optional_static_cast(
-    const djinterop::stdx::optional<U>& u)
+std::optional<T> optional_static_cast(
+    const std::optional<U>& u)
 {
     if (u)
     {
-        return djinterop::stdx::make_optional(static_cast<T>(*u));
+        return std::make_optional(static_cast<T>(*u));
     }
 
-    return djinterop::stdx::nullopt;
+    return std::nullopt;
 }
 
 }  // namespace djinterop::util

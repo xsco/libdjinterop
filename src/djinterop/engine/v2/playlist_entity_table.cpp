@@ -43,7 +43,7 @@ int64_t playlist_entity_table::add_back(
             "playlist entity, and so it cannot be created again"};
     }
 
-    djinterop::stdx::optional<int64_t> existing_id;
+    std::optional<int64_t> existing_id;
     context_->db << "SELECT id FROM PlaylistEntity WHERE listId = ? AND "
                     "trackId = ? AND databaseUuid = ?"
                  << row.list_id << row.track_id << row.database_uuid >>
@@ -89,10 +89,10 @@ void playlist_entity_table::clear(int64_t list_id)
     context_->db << "DELETE FROM PlaylistEntity WHERE listId = ?" << list_id;
 }
 
-djinterop::stdx::optional<playlist_entity_row> playlist_entity_table::get(
+std::optional<playlist_entity_row> playlist_entity_table::get(
     int64_t list_id, int64_t track_id) const
 {
-    djinterop::stdx::optional<playlist_entity_row> result;
+    std::optional<playlist_entity_row> result;
     context_->db << "SELECT id, listId, trackId, databaseUuid, nextEntityId, "
                     "membershipReference FROM PlaylistEntity WHERE listId = ? "
                     "AND trackId = ?"

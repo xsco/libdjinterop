@@ -233,5 +233,5 @@ BOOST_DATA_TEST_CASE(
     track.set_average_loudness(0);
 
     // Assert
-    BOOST_CHECK(track.average_loudness() == djinterop::stdx::nullopt);
+    BOOST_CHECK(track.average_loudness() == std::nullopt);
 }

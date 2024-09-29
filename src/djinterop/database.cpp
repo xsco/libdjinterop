@@ -31,7 +31,7 @@ database::~database() = default;
 
 database& database::operator=(const database& db) = default;
 
-stdx::optional<crate> database::crate_by_id(int64_t id) const
+std::optional<crate> database::crate_by_id(int64_t id) const
 {
     return pimpl_->crate_by_id(id);
 }
@@ -86,13 +86,13 @@ std::vector<crate> database::root_crates() const
     return pimpl_->root_crates();
 }
 
-stdx::optional<crate> database::root_crate_by_name(
+std::optional<crate> database::root_crate_by_name(
     const std::string& name) const
 {
     return pimpl_->root_crate_by_name(name);
 }
 
-stdx::optional<track> database::track_by_id(int64_t id) const
+std::optional<track> database::track_by_id(int64_t id) const
 {
     return pimpl_->track_by_id(id);
 }

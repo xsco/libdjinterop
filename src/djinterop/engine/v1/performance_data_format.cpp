@@ -17,10 +17,10 @@
 
 #include <iomanip>
 #include <numeric>
+#include <optional>
 #include <vector>
 
 #include <djinterop/musical_key.hpp>
-#include <djinterop/optional.hpp>
 
 #include "../../util/convert.hpp"
 #include "djinterop/engine/encode_decode_utils.hpp"
@@ -31,18 +31,18 @@ namespace djinterop::engine::v1
 namespace
 {
 template <typename T, typename U>
-stdx::optional<std::decay_t<T> > prohibit(const U& sentinel, T&& data)
+std::optional<std::decay_t<T> > prohibit(const U& sentinel, T&& data)
 {
     if (data == sentinel)
     {
-        return stdx::nullopt;
+        return std::nullopt;
     }
-    return stdx::make_optional(std::forward<T>(data));
+    return std::make_optional(std::forward<T>(data));
 }
 
 std::byte* encode_beatgrid(const std::vector<beatgrid_marker>& beatgrid, std::byte* ptr)
 {
-    typedef std::vector<beatgrid_marker>::size_type vec_size_t;
+    using vec_size_t = std::vector<beatgrid_marker>::size_type;
     ptr = encode_int64_be(beatgrid.size(), ptr);
     for (vec_size_t i = 0; i < beatgrid.size(); ++i)
     {
@@ -84,7 +84,7 @@ std::pair<std::vector<beatgrid_marker>, const std::byte*> decode_beatgrid(
     }
     std::vector<beatgrid_marker> result(count);
     int32_t beats_until_next_marker = 0;
-    typedef std::vector<beatgrid_marker>::size_type vec_size_t;
+    using vec_size_t = std::vector<beatgrid_marker>::size_type;
     for (vec_size_t i = 0; i < result.size(); ++i)
     {
         std::tie(result[i].sample_offset, ptr) = decode_double_le(ptr);
@@ -166,9 +166,9 @@ beat_data beat_data::decode(const std::vector<std::byte>& compressed_data)
     std::tie(sample_rate, ptr) = decode_double_be(ptr);
     std::tie(sample_count, ptr) = decode_double_be(ptr);
     result.sample_rate =
-        sample_rate != 0 ? stdx::make_optional(sample_rate) : stdx::nullopt;
+        sample_rate != 0 ? std::make_optional(sample_rate) : std::nullopt;
     result.sample_count =
-        sample_count != 0 ? stdx::make_optional(sample_count) : stdx::nullopt;
+        sample_count != 0 ? std::make_optional(sample_count) : std::nullopt;
 
     uint8_t is_beat_data_set;
     std::tie(is_beat_data_set, ptr) = decode_uint8(ptr);
@@ -325,7 +325,7 @@ std::vector<std::byte> loops_data::encode() const
 {
     auto total_label_length = std::accumulate(
         loops.begin(), loops.end(), int64_t{0},
-        [](int64_t x, const stdx::optional<loop>& loop) {
+        [](int64_t x, const std::optional<loop>& loop) {
             return x + (loop ? loop->label.length() : 0);
         });
 
@@ -429,7 +429,7 @@ loops_data loops_data::decode(const std::vector<std::byte>& raw_data)
         if (loop.start_sample_offset != -1)
             result.loops.emplace_back(loop);
         else
-            result.loops.emplace_back(stdx::nullopt);
+            result.loops.emplace_back(std::nullopt);
     }
 
     if (ptr != end)
@@ -541,7 +541,7 @@ std::vector<std::byte> quick_cues_data::encode() const
 {
     auto total_label_length = std::accumulate(
         hot_cues.begin(), hot_cues.end(), int64_t{0},
-        [](int64_t x, const stdx::optional<hot_cue>& hot_cue) {
+        [](int64_t x, const std::optional<hot_cue>& hot_cue) {
             return x + (hot_cue ? hot_cue->label.length() : 0);
         });
 
@@ -642,7 +642,7 @@ quick_cues_data quick_cues_data::decode(
         if (quick_cue.sample_offset != -1)
             result.hot_cues.emplace_back(quick_cue);
         else
-            result.hot_cues.emplace_back(stdx::nullopt);
+            result.hot_cues.emplace_back(std::nullopt);
     }
 
     std::tie(result.adjusted_main_cue, ptr) = decode_double_be(ptr);
@@ -708,9 +708,9 @@ track_data track_data::decode(const std::vector<std::byte>& compressed_track_dat
     std::tie(sample_rate, ptr) = decode_double_be(ptr);
     std::tie(sample_count, ptr) = decode_int64_be(ptr);
     result.sample_rate =
-        sample_rate != 0 ? stdx::make_optional(sample_rate) : stdx::nullopt;
+        sample_rate != 0 ? std::make_optional(sample_rate) : std::nullopt;
     result.sample_count =
-        sample_count != 0 ? stdx::make_optional(sample_count) : stdx::nullopt;
+        sample_count != 0 ? std::make_optional(sample_count) : std::nullopt;
 
     double raw_average_loudness;
     std::tie(raw_average_loudness, ptr) = decode_double_be(ptr);

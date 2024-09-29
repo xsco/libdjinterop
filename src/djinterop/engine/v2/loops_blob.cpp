@@ -19,6 +19,7 @@
 
 #include <cassert>
 #include <numeric>
+#include <optional>
 #include <stdexcept>
 
 #include "../encode_decode_utils.hpp"
@@ -29,7 +30,7 @@ std::vector<std::byte> loops_blob::to_blob() const
 {
     auto total_label_length = std::accumulate(
         loops.begin(), loops.end(), int64_t{0},
-        [](int64_t x, const stdx::optional<loop_blob>& loop)
+        [](int64_t x, const std::optional<loop_blob>& loop)
         { return x + (loop ? loop->label.length() : 0); });
 
     std::vector<std::byte> uncompressed(

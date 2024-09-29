@@ -54,7 +54,7 @@ int main()
     td.year = 1970;
     td.title = "Some Song"s;
     td.artist = "Some Artist"s;
-    td.publisher = djinterop::stdx::nullopt;  // indicates missing metadata
+    td.publisher = std::nullopt;  // indicates missing metadata
     td.key = djinterop::musical_key::a_minor;
     td.bitrate = 320;
     td.rating = 60;             // note: rating is in the range 0-100

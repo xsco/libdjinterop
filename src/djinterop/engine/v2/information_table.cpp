@@ -18,10 +18,9 @@
 #include <djinterop/engine/v2/information_table.hpp>
 
 #include <cassert>
+#include <optional>
 #include <string>
 #include <utility>
-
-#include <djinterop/optional.hpp>
 
 #include "engine_library_context.hpp"
 
@@ -36,7 +35,7 @@ information_table::information_table(
 
 information_row information_table::get() const
 {
-    djinterop::stdx::optional<information_row> result;
+    std::optional<information_row> result;
     context_->db << "SELECT id, uuid, schemaVersionMajor, schemaVersionMinor, "
                     "schemaVersionPatch, currentPlayedIndiciator, "
                     "lastRekordBoxLibraryImportReadCounter FROM Information" >>

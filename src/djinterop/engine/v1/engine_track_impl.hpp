@@ -19,13 +19,9 @@
 
 #include <chrono>
 #include <memory>
-#include <stdexcept>
+#include <optional>
 #include <string>
 #include <vector>
-
-#include <djinterop/engine/engine.hpp>
-#include <djinterop/exceptions.hpp>
-#include <djinterop/optional.hpp>
 
 #include "../../impl/track_impl.hpp"
 #include "engine_storage.hpp"
@@ -62,66 +58,66 @@ public:
 
     void update(const track_snapshot& snapshot) override;
 
-    stdx::optional<std::string> album() override;
-    void set_album(stdx::optional<std::string> album) override;
-    stdx::optional<std::string> artist() override;
-    void set_artist(stdx::optional<std::string> artist) override;
-    stdx::optional<double> average_loudness() override;
-    void set_average_loudness(stdx::optional<double> average_loudness) override;
+    std::optional<std::string> album() override;
+    void set_album(std::optional<std::string> album) override;
+    std::optional<std::string> artist() override;
+    void set_artist(std::optional<std::string> artist) override;
+    std::optional<double> average_loudness() override;
+    void set_average_loudness(std::optional<double> average_loudness) override;
     std::vector<beatgrid_marker> beatgrid() override;
     void set_beatgrid(std::vector<beatgrid_marker> beatgrid) override;
-    stdx::optional<int> bitrate() override;
-    void set_bitrate(stdx::optional<int> bitrate) override;
-    stdx::optional<double> bpm() override;
-    void set_bpm(stdx::optional<double> bpm) override;
-    stdx::optional<std::string> comment() override;
-    void set_comment(stdx::optional<std::string> comment) override;
-    stdx::optional<std::string> composer() override;
-    void set_composer(stdx::optional<std::string> composer) override;
+    std::optional<int> bitrate() override;
+    void set_bitrate(std::optional<int> bitrate) override;
+    std::optional<double> bpm() override;
+    void set_bpm(std::optional<double> bpm) override;
+    std::optional<std::string> comment() override;
+    void set_comment(std::optional<std::string> comment) override;
+    std::optional<std::string> composer() override;
+    void set_composer(std::optional<std::string> composer) override;
     std::vector<djinterop::crate> containing_crates() override;
     database db() override;
-    stdx::optional<std::chrono::milliseconds> duration() override;
-    void set_duration(stdx::optional<std::chrono::milliseconds> duration) override;
+    std::optional<std::chrono::milliseconds> duration() override;
+    void set_duration(std::optional<std::chrono::milliseconds> duration) override;
     std::string file_extension() override;
     std::string filename() override;
-    stdx::optional<std::string> genre() override;
-    void set_genre(stdx::optional<std::string> genre) override;
-    stdx::optional<hot_cue> hot_cue_at(int index) override;
-    void set_hot_cue_at(int index, stdx::optional<hot_cue> cue) override;
-    std::vector<stdx::optional<hot_cue> > hot_cues() override;
-    void set_hot_cues(std::vector<stdx::optional<hot_cue> > cues) override;
+    std::optional<std::string> genre() override;
+    void set_genre(std::optional<std::string> genre) override;
+    std::optional<hot_cue> hot_cue_at(int index) override;
+    void set_hot_cue_at(int index, std::optional<hot_cue> cue) override;
+    std::vector<std::optional<hot_cue> > hot_cues() override;
+    void set_hot_cues(std::vector<std::optional<hot_cue> > cues) override;
     bool is_valid() override;
-    stdx::optional<musical_key> key() override;
-    void set_key(stdx::optional<musical_key> key) override;
-    stdx::optional<std::chrono::system_clock::time_point> last_played_at()
+    std::optional<musical_key> key() override;
+    void set_key(std::optional<musical_key> key) override;
+    std::optional<std::chrono::system_clock::time_point> last_played_at()
         override;
     void set_last_played_at(
-        stdx::optional<std::chrono::system_clock::time_point> played_at)
+        std::optional<std::chrono::system_clock::time_point> played_at)
         override;
-    stdx::optional<loop> loop_at(int index) override;
-    void set_loop_at(int index, stdx::optional<loop> l) override;
-    std::vector<stdx::optional<loop> > loops() override;
-    void set_loops(std::vector<stdx::optional<loop> > loops) override;
-    stdx::optional<double> main_cue() override;
-    void set_main_cue(stdx::optional<double> sample_offset) override;
-    stdx::optional<std::string> publisher() override;
-    void set_publisher(stdx::optional<std::string> publisher) override;
-    stdx::optional<int> rating() override;
-    void set_rating(stdx::optional<int> rating) override;
+    std::optional<loop> loop_at(int index) override;
+    void set_loop_at(int index, std::optional<loop> l) override;
+    std::vector<std::optional<loop> > loops() override;
+    void set_loops(std::vector<std::optional<loop> > loops) override;
+    std::optional<double> main_cue() override;
+    void set_main_cue(std::optional<double> sample_offset) override;
+    std::optional<std::string> publisher() override;
+    void set_publisher(std::optional<std::string> publisher) override;
+    std::optional<int> rating() override;
+    void set_rating(std::optional<int> rating) override;
     std::string relative_path() override;
     void set_relative_path(std::string relative_path) override;
-    stdx::optional<unsigned long long> sample_count() override;
-    void set_sample_count(stdx::optional<unsigned long long> sample_count) override;
-    stdx::optional<double> sample_rate() override;
-    void set_sample_rate(stdx::optional<double> sample_rate) override;
-    stdx::optional<std::string> title() override;
-    void set_title(stdx::optional<std::string> title) override;
-    stdx::optional<int> track_number() override;
-    void set_track_number(stdx::optional<int> track_number) override;
+    std::optional<unsigned long long> sample_count() override;
+    void set_sample_count(std::optional<unsigned long long> sample_count) override;
+    std::optional<double> sample_rate() override;
+    void set_sample_rate(std::optional<double> sample_rate) override;
+    std::optional<std::string> title() override;
+    void set_title(std::optional<std::string> title) override;
+    std::optional<int> track_number() override;
+    void set_track_number(std::optional<int> track_number) override;
     std::vector<waveform_entry> waveform() override;
     void set_waveform(std::vector<waveform_entry> waveform) override;
-    stdx::optional<int> year() override;
-    void set_year(stdx::optional<int> year) override;
+    std::optional<int> year() override;
+    void set_year(std::optional<int> year) override;
 
 private:
     std::shared_ptr<engine_storage> storage_;

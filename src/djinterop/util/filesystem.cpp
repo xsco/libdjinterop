@@ -24,8 +24,6 @@
 #include <direct.h>
 #endif
 
-#include <djinterop/optional.hpp>
-
 namespace djinterop::util
 {
 void create_dir(const std::string& directory)
@@ -53,10 +51,10 @@ std::string get_filename(const std::string& file_path)
     return file_path.substr(slash_pos + 1);
 }
 
-stdx::optional<std::string> get_file_extension(const std::string& file_path)
+std::optional<std::string> get_file_extension(const std::string& file_path)
 {
     auto filename = get_filename(file_path);
-    stdx::optional<std::string> file_extension;
+    std::optional<std::string> file_extension;
     auto dot_pos = filename.rfind('.');
     if (dot_pos != std::string::npos)
     {

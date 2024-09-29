@@ -52,7 +52,7 @@ BOOST_DATA_TEST_CASE(
 
     // Assert
     BOOST_CHECK_NE(crate.id(), 0);
-    BOOST_CHECK(crate.parent() == djinterop::stdx::nullopt);
+    BOOST_CHECK(crate.parent() == std::nullopt);
 }
 
 BOOST_TEST_DECORATOR(* utf::description(

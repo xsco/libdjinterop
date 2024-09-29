@@ -16,8 +16,10 @@
  */
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <iomanip>
+#include <optional>
 #include <sstream>
 
 #include <djinterop/djinterop.hpp>
@@ -44,15 +46,15 @@ const int64_t default_track_type = 1;
 
 const int64_t default_is_external_track = 0;
 
-const stdx::optional<std::string> default_uuid_of_external_database;
+const std::optional<std::string> default_uuid_of_external_database;
 
-const stdx::optional<int64_t> default_id_track_in_external_database;
+const std::optional<int64_t> default_id_track_in_external_database;
 
 const int64_t no_album_art_id = 1;
 
 const int64_t default_pdb_import_key = 0;
 
-const stdx::optional<std::string> default_uri;
+const std::optional<std::string> default_uri;
 
 const int64_t default_is_beatgrid_locked = 0;
 
@@ -66,18 +68,18 @@ const int64_t default_has_traktor_values = 0;
 
 struct length_field_data
 {
-    stdx::optional<int64_t> length;
-    stdx::optional<int64_t> length_calculated;
-    stdx::optional<std::string> length_mm_ss;
+    std::optional<int64_t> length;
+    std::optional<int64_t> length_calculated;
+    std::optional<std::string> length_mm_ss;
 };
 
 length_field_data to_length_fields(
-    stdx::optional<std::chrono::milliseconds> duration,
-    stdx::optional<unsigned long long> sample_count,
-    stdx::optional<double> sample_rate)
+    std::optional<std::chrono::milliseconds> duration,
+    std::optional<unsigned long long> sample_count,
+    std::optional<double> sample_rate)
 {
-    stdx::optional<int64_t> length;
-    stdx::optional<std::string> length_mm_ss;
+    std::optional<int64_t> length;
+    std::optional<std::string> length_mm_ss;
     if (duration)
     {
         length = static_cast<int64_t>(duration->count() / 1000);
@@ -93,7 +95,7 @@ length_field_data to_length_fields(
     }
 
     // A zero sample rate is interpreted as no sample rate.
-    stdx::optional<int64_t> length_calculated;
+    std::optional<int64_t> length_calculated;
     if (sample_count && sample_rate && *sample_rate != 0)
     {
         length_calculated = static_cast<int64_t>(*sample_count) /
@@ -105,21 +107,21 @@ length_field_data to_length_fields(
 
 struct bpm_field_data
 {
-    stdx::optional<int64_t> bpm;
-    stdx::optional<double> bpm_analyzed;
+    std::optional<int64_t> bpm;
+    std::optional<double> bpm_analyzed;
 };
 
 bpm_field_data to_bpm_fields(
-    stdx::optional<double> bpm, stdx::optional<double> sample_rate,
+    std::optional<double> bpm, std::optional<double> sample_rate,
     const std::vector<beatgrid_marker>& beatgrid)
 {
-    stdx::optional<int64_t> rounded_bpm;
+    std::optional<int64_t> rounded_bpm;
     if (bpm)
     {
         rounded_bpm = static_cast<int64_t>(*bpm);
     }
 
-    stdx::optional<double> bpm_analyzed;
+    std::optional<double> bpm_analyzed;
     if (sample_rate && beatgrid.size() >= 2)
     {
         auto marker_1 = beatgrid[0];
@@ -137,27 +139,27 @@ bpm_field_data to_bpm_fields(
 
 struct timestamp_field_data
 {
-    stdx::optional<int64_t> last_played_at_ts;
-    stdx::optional<int64_t> last_modified_at_ts;
-    stdx::optional<int64_t> last_accessed_at_ts;
-    stdx::optional<std::string> ever_played;
+    std::optional<int64_t> last_played_at_ts;
+    std::optional<int64_t> last_modified_at_ts;
+    std::optional<int64_t> last_accessed_at_ts;
+    std::optional<std::string> ever_played;
 };
 
 timestamp_field_data to_timestamp_fields(
-    stdx::optional<std::chrono::system_clock::time_point> last_played_at)
+    std::optional<std::chrono::system_clock::time_point> last_played_at)
 {
     auto last_played_at_ts = djinterop::util::to_timestamp(last_played_at);
 
-    stdx::optional<std::string> ever_played =
-        last_played_at ? stdx::optional<std::string>{"1"} : stdx::nullopt;
+    std::optional<std::string> ever_played =
+        last_played_at ? std::optional<std::string>{"1"} : std::nullopt;
 
     return timestamp_field_data{
-        last_played_at_ts, stdx::nullopt, stdx::nullopt, ever_played};
+        last_played_at_ts, std::nullopt, std::nullopt, ever_played};
 }
 
-stdx::optional<int64_t> to_key_num(stdx::optional<musical_key> key)
+std::optional<int64_t> to_key_num(std::optional<musical_key> key)
 {
-    stdx::optional<int64_t> key_num;
+    std::optional<int64_t> key_num;
     if (key)
     {
         key_num = static_cast<int64_t>(*key);
@@ -167,9 +169,9 @@ stdx::optional<int64_t> to_key_num(stdx::optional<musical_key> key)
 }
 
 track_data to_track_data(
-    stdx::optional<unsigned long long> sample_count,
-    stdx::optional<double> sample_rate, stdx::optional<double> average_loudness,
-    stdx::optional<musical_key> key)
+    std::optional<unsigned long long> sample_count,
+    std::optional<double> sample_rate, std::optional<double> average_loudness,
+    std::optional<musical_key> key)
 {
     return track_data{
         sample_rate,
@@ -178,11 +180,11 @@ track_data to_track_data(
 }
 
 quick_cues_data to_cues_data(
-    const std::vector<stdx::optional<hot_cue> >& hot_cues,
-    stdx::optional<double> main_cue)
+    const std::vector<std::optional<hot_cue> >& hot_cues,
+    std::optional<double> main_cue)
 {
-    auto data = quick_cues_data{
-        hot_cues, main_cue.value_or(0), main_cue.value_or(0)};
+    const auto main_cue_or_zero = main_cue.value_or(0);
+    auto data = quick_cues_data{hot_cues, main_cue_or_zero, main_cue_or_zero};
     if (data.hot_cues.size() < 8)
         data.hot_cues.resize(8);
 
@@ -190,8 +192,8 @@ quick_cues_data to_cues_data(
 }
 
 beat_data to_beat_data(
-    stdx::optional<unsigned long long> sample_count,
-    stdx::optional<double> sample_rate,
+    std::optional<unsigned long long> sample_count,
+    std::optional<double> sample_rate,
     const std::vector<beatgrid_marker>& beatgrid)
 {
     return beat_data{
@@ -200,7 +202,7 @@ beat_data to_beat_data(
         beatgrid};
 }
 
-loops_data to_loops_data(const std::vector<stdx::optional<loop> >& loops)
+loops_data to_loops_data(const std::vector<std::optional<loop> >& loops)
 {
     auto data = loops_data{loops};
     if (data.loops.size() < 8)
@@ -210,8 +212,8 @@ loops_data to_loops_data(const std::vector<stdx::optional<loop> >& loops)
 }
 
 overview_waveform_data to_overview_waveform_data(
-    stdx::optional<unsigned long long> sample_count,
-    stdx::optional<double> sample_rate,
+    std::optional<unsigned long long> sample_count,
+    std::optional<double> sample_rate,
     const std::vector<waveform_entry>& waveform)
 {
     if (!sample_count || !sample_rate)
@@ -238,8 +240,8 @@ overview_waveform_data to_overview_waveform_data(
 }
 
 high_res_waveform_data to_high_res_waveform_data(
-    stdx::optional<unsigned long long> sample_count,
-    stdx::optional<double> sample_rate,
+    std::optional<unsigned long long> sample_count,
+    std::optional<double> sample_rate,
     const std::vector<waveform_entry>& waveform)
 {
     // Make the assumption that the client has respected the required number
@@ -348,23 +350,23 @@ track_snapshot engine_track_impl::snapshot() const
     }
     snapshot.main_cue =
         (perf_data.quick_cues && perf_data.quick_cues->adjusted_main_cue != 0)
-            ? stdx::make_optional(perf_data.quick_cues->adjusted_main_cue)
-            : stdx::nullopt;
+            ? std::make_optional(perf_data.quick_cues->adjusted_main_cue)
+            : std::nullopt;
     snapshot.average_loudness =
         perf_data.track_performance_data
             ? perf_data.track_performance_data->average_loudness
-            : stdx::nullopt;
+            : std::nullopt;
     snapshot.bitrate =
         djinterop::util::optional_static_cast<int>(track_data.bitrate);
     snapshot.bpm =
         track_data.bpm_analyzed ? track_data.bpm_analyzed
         : track_data.bpm
-            ? stdx::make_optional(static_cast<double>(*track_data.bpm))
-            : stdx::nullopt;
+            ? std::make_optional(static_cast<double>(*track_data.bpm))
+            : std::nullopt;
     if (track_data.length)
     {
         auto ms = 1000 * *track_data.length;
-        snapshot.duration = stdx::make_optional(milliseconds{ms});
+        snapshot.duration = std::make_optional(milliseconds{ms});
     }
     snapshot.file_bytes =
         djinterop::util::optional_static_cast<unsigned long long>(
@@ -375,7 +377,7 @@ track_snapshot engine_track_impl::snapshot() const
     }
     snapshot.key = perf_data.track_performance_data
                        ? perf_data.track_performance_data->key
-                       : stdx::nullopt;
+                       : std::nullopt;
     if (perf_data.loops)
     {
         snapshot.loops = std::move(perf_data.loops->loops);
@@ -393,16 +395,16 @@ track_snapshot engine_track_impl::snapshot() const
     }
     snapshot.track_number =
         track_data.play_order
-            ? stdx::make_optional(static_cast<int32_t>(*track_data.play_order))
-            : stdx::nullopt;
+            ? std::make_optional(static_cast<int32_t>(*track_data.play_order))
+            : std::nullopt;
     if (perf_data.high_res_waveform)
     {
         snapshot.waveform = std::move(perf_data.high_res_waveform->waveform);
     }
     snapshot.year =
         track_data.year
-            ? stdx::make_optional(static_cast<int32_t>(*track_data.year))
-            : stdx::nullopt;
+            ? std::make_optional(static_cast<int32_t>(*track_data.year))
+            : std::nullopt;
 
     for (auto&& row : meta_data)
     {
@@ -436,7 +438,7 @@ track_snapshot engine_track_impl::snapshot() const
             case metadata_int_type::musical_key:
                 if (!snapshot.key)
                 {
-                    snapshot.key = stdx::make_optional(
+                    snapshot.key = std::make_optional(
                         static_cast<musical_key>(row.value));
                 }
 
@@ -465,18 +467,18 @@ void engine_track_impl::update(const track_snapshot& snapshot)
     auto extension = djinterop::util::get_file_extension(filename);
     auto track_number =
         snapshot.track_number
-            ? stdx::make_optional(static_cast<int64_t>(*snapshot.track_number))
-            : stdx::nullopt;
+            ? std::make_optional(static_cast<int64_t>(*snapshot.track_number))
+            : std::nullopt;
     auto year = snapshot.year
-                    ? stdx::make_optional(static_cast<int64_t>(*snapshot.year))
-                    : stdx::nullopt;
+                    ? std::make_optional(static_cast<int64_t>(*snapshot.year))
+                    : std::nullopt;
     auto timestamp_fields = to_timestamp_fields(snapshot.last_played_at);
     auto key_num = to_key_num(snapshot.key);
     auto clamped_rating = snapshot.rating
-                              ? stdx::make_optional(static_cast<int64_t>(
+                              ? std::make_optional(static_cast<int64_t>(
                                     std::clamp(*snapshot.rating, 0, 100)))
-                              : stdx::nullopt;
-    stdx::optional<int64_t> last_play_hash;
+                              : std::nullopt;
+    std::optional<int64_t> last_play_hash;
     auto track_data = to_track_data(
         snapshot.sample_count, snapshot.sample_rate, snapshot.average_loudness,
         snapshot.key);
@@ -537,40 +539,40 @@ void engine_track_impl::update(const track_snapshot& snapshot)
     trans.commit();
 }
 
-stdx::optional<std::string> engine_track_impl::album()
+std::optional<std::string> engine_track_impl::album()
 {
     return storage_->get_meta_data(id(), metadata_str_type::album);
 }
 
-void engine_track_impl::set_album(stdx::optional<std::string> album)
+void engine_track_impl::set_album(std::optional<std::string> album)
 {
     storage_->set_meta_data(id(), metadata_str_type::album, album);
 }
 
-stdx::optional<std::string> engine_track_impl::artist()
+std::optional<std::string> engine_track_impl::artist()
 {
     return storage_->get_meta_data(id(), metadata_str_type::artist);
 }
 
-void engine_track_impl::set_artist(stdx::optional<std::string> artist)
+void engine_track_impl::set_artist(std::optional<std::string> artist)
 {
     return storage_->set_meta_data(id(), metadata_str_type::artist, artist);
 }
 
-stdx::optional<double> engine_track_impl::average_loudness()
+std::optional<double> engine_track_impl::average_loudness()
 {
     return get_track_data().average_loudness;
 }
 
 void engine_track_impl::set_average_loudness(
-    stdx::optional<double> average_loudness)
+    std::optional<double> average_loudness)
 {
     djinterop::util::sqlite_transaction trans{storage_->db};
     auto track_d = get_track_data();
 
     // Zero average loudness is interpreted as no average loudness.
     track_d.average_loudness =
-        average_loudness.value_or(0) == 0 ? stdx::nullopt : average_loudness;
+        average_loudness.value_or(0) == 0 ? std::nullopt : average_loudness;
 
     set_track_data(track_d);
     trans.commit();
@@ -592,27 +594,27 @@ void engine_track_impl::set_beatgrid(std::vector<beatgrid_marker> beatgrid)
     trans.commit();
 }
 
-stdx::optional<int> engine_track_impl::bitrate()
+std::optional<int> engine_track_impl::bitrate()
 {
     return djinterop::util::optional_static_cast<int>(
-        storage_->get_track_column<stdx::optional<int64_t> >(id(), "bitrate"));
+        storage_->get_track_column<std::optional<int64_t> >(id(), "bitrate"));
 }
 
-void engine_track_impl::set_bitrate(stdx::optional<int> bitrate)
+void engine_track_impl::set_bitrate(std::optional<int> bitrate)
 {
     storage_->set_track_column(id(), "bitrate", bitrate);
 }
 
-stdx::optional<double> engine_track_impl::bpm()
+std::optional<double> engine_track_impl::bpm()
 {
-    return storage_->get_track_column<stdx::optional<double> >(
+    return storage_->get_track_column<std::optional<double> >(
         id(), "bpmAnalyzed");
 }
 
-void engine_track_impl::set_bpm(stdx::optional<double> bpm)
+void engine_track_impl::set_bpm(std::optional<double> bpm)
 {
     storage_->set_track_column(id(), "bpmAnalyzed", bpm);
-    stdx::optional<int64_t> ceiled_bpm;
+    std::optional<int64_t> ceiled_bpm;
     if (bpm)
     {
         ceiled_bpm = static_cast<int64_t>(std::ceil(*bpm));
@@ -620,22 +622,22 @@ void engine_track_impl::set_bpm(stdx::optional<double> bpm)
     storage_->set_track_column(id(), "bpm", ceiled_bpm);
 }
 
-stdx::optional<std::string> engine_track_impl::comment()
+std::optional<std::string> engine_track_impl::comment()
 {
     return storage_->get_meta_data(id(), metadata_str_type::comment);
 }
 
-void engine_track_impl::set_comment(stdx::optional<std::string> comment)
+void engine_track_impl::set_comment(std::optional<std::string> comment)
 {
     storage_->set_meta_data(id(), metadata_str_type::comment, comment);
 }
 
-stdx::optional<std::string> engine_track_impl::composer()
+std::optional<std::string> engine_track_impl::composer()
 {
     return storage_->get_meta_data(id(), metadata_str_type::composer);
 }
 
-void engine_track_impl::set_composer(stdx::optional<std::string> composer)
+void engine_track_impl::set_composer(std::optional<std::string> composer)
 {
     storage_->set_meta_data(id(), metadata_str_type::composer, composer);
 }
@@ -658,25 +660,25 @@ std::vector<crate> engine_track_impl::containing_crates()
     return results;
 }
 
-stdx::optional<milliseconds> engine_track_impl::duration()
+std::optional<milliseconds> engine_track_impl::duration()
 {
     auto secs =
-        storage_->get_track_column<stdx::optional<int64_t> >(id(), "length");
+        storage_->get_track_column<std::optional<int64_t> >(id(), "length");
     if (secs)
     {
         return milliseconds{*secs * 1000};
     }
-    return stdx::nullopt;
+    return std::nullopt;
 }
 
 void engine_track_impl::set_duration(
-    stdx::optional<std::chrono::milliseconds> duration)
+    std::optional<std::chrono::milliseconds> duration)
 {
     djinterop::util::sqlite_transaction trans{storage_->db};
-    stdx::optional<int64_t> secs =
-        duration ? stdx::make_optional(duration->count() / 1000)
-                 : stdx::nullopt;
-    storage_->set_track_column<stdx::optional<int64_t> >(id(), "length", secs);
+    std::optional<int64_t> secs =
+        duration ? std::make_optional(duration->count() / 1000)
+                 : std::nullopt;
+    storage_->set_track_column<std::optional<int64_t> >(id(), "length", secs);
 
     if (secs)
     {
@@ -693,7 +695,7 @@ void engine_track_impl::set_duration(
     else
     {
         storage_->set_meta_data(
-            id(), metadata_str_type::duration_mm_ss, stdx::nullopt);
+            id(), metadata_str_type::duration_mm_ss, std::nullopt);
     }
 
     trans.commit();
@@ -712,23 +714,23 @@ std::string engine_track_impl::filename()
     return djinterop::util::get_filename(rel_path);
 }
 
-stdx::optional<std::string> engine_track_impl::genre()
+std::optional<std::string> engine_track_impl::genre()
 {
     return storage_->get_meta_data(id(), metadata_str_type::genre);
 }
 
-void engine_track_impl::set_genre(stdx::optional<std::string> genre)
+void engine_track_impl::set_genre(std::optional<std::string> genre)
 {
     storage_->set_meta_data(id(), metadata_str_type::genre, genre);
 }
 
-stdx::optional<hot_cue> engine_track_impl::hot_cue_at(int index)
+std::optional<hot_cue> engine_track_impl::hot_cue_at(int index)
 {
     auto quick_cues_d = get_quick_cues_data();
     return std::move(quick_cues_d.hot_cues[index]);
 }
 
-void engine_track_impl::set_hot_cue_at(int index, stdx::optional<hot_cue> cue)
+void engine_track_impl::set_hot_cue_at(int index, std::optional<hot_cue> cue)
 {
     djinterop::util::sqlite_transaction trans{storage_->db};
     auto quick_cues_d = get_quick_cues_data();
@@ -737,13 +739,13 @@ void engine_track_impl::set_hot_cue_at(int index, stdx::optional<hot_cue> cue)
     trans.commit();
 }
 
-std::vector<stdx::optional<hot_cue> > engine_track_impl::hot_cues()
+std::vector<std::optional<hot_cue> > engine_track_impl::hot_cues()
 {
     auto quick_cues_d = get_quick_cues_data();
     return std::move(quick_cues_d.hot_cues);
 }
 
-void engine_track_impl::set_hot_cues(std::vector<stdx::optional<hot_cue> > cues)
+void engine_track_impl::set_hot_cues(std::vector<std::optional<hot_cue> > cues)
 {
     djinterop::util::sqlite_transaction trans{storage_->db};
     // TODO (haslersn): The following can be optimized because in this case we
@@ -776,9 +778,9 @@ bool engine_track_impl::is_valid()
     return valid;
 }
 
-stdx::optional<musical_key> engine_track_impl::key()
+std::optional<musical_key> engine_track_impl::key()
 {
-    stdx::optional<musical_key> result;
+    std::optional<musical_key> result;
     auto key_num =
         storage_->get_meta_data_integer(id(), metadata_int_type::musical_key);
     if (key_num)
@@ -788,9 +790,9 @@ stdx::optional<musical_key> engine_track_impl::key()
     return result;
 }
 
-void engine_track_impl::set_key(stdx::optional<musical_key> key)
+void engine_track_impl::set_key(std::optional<musical_key> key)
 {
-    stdx::optional<int64_t> key_num;
+    std::optional<int64_t> key_num;
     if (key)
     {
         key_num = static_cast<int64_t>(*key);
@@ -805,17 +807,17 @@ void engine_track_impl::set_key(stdx::optional<musical_key> key)
     trans.commit();
 }
 
-stdx::optional<system_clock::time_point> engine_track_impl::last_played_at()
+std::optional<system_clock::time_point> engine_track_impl::last_played_at()
 {
     return djinterop::util::to_time_point(storage_->get_meta_data_integer(
         id(), metadata_int_type::last_played_ts));
 }
 
 void engine_track_impl::set_last_played_at(
-    stdx::optional<system_clock::time_point> played_at)
+    std::optional<system_clock::time_point> played_at)
 {
-    static stdx::optional<std::string> zero{"0"};
-    static stdx::optional<std::string> one{"1"};
+    static std::optional<std::string> zero{"0"};
+    static std::optional<std::string> one{"1"};
     storage_->set_meta_data(
         id(), metadata_str_type::ever_played, played_at ? one : zero);
     storage_->set_meta_data_integer(
@@ -832,13 +834,13 @@ void engine_track_impl::set_last_played_at(
     }
 }
 
-stdx::optional<loop> engine_track_impl::loop_at(int index)
+std::optional<loop> engine_track_impl::loop_at(int index)
 {
     auto loops_d = get_loops_data();
     return std::move(loops_d.loops[index]);
 }
 
-void engine_track_impl::set_loop_at(int index, stdx::optional<loop> l)
+void engine_track_impl::set_loop_at(int index, std::optional<loop> l)
 {
     djinterop::util::sqlite_transaction trans{storage_->db};
     auto loops_d = get_loops_data();
@@ -847,13 +849,13 @@ void engine_track_impl::set_loop_at(int index, stdx::optional<loop> l)
     trans.commit();
 }
 
-std::vector<stdx::optional<loop> > engine_track_impl::loops()
+std::vector<std::optional<loop> > engine_track_impl::loops()
 {
     auto loops_d = get_loops_data();
     return std::move(loops_d.loops);
 }
 
-void engine_track_impl::set_loops(std::vector<stdx::optional<loop> > loops)
+void engine_track_impl::set_loops(std::vector<std::optional<loop> > loops)
 {
     djinterop::util::sqlite_transaction trans{storage_->db};
     loops_data loops_d;
@@ -865,16 +867,16 @@ void engine_track_impl::set_loops(std::vector<stdx::optional<loop> > loops)
     trans.commit();
 }
 
-stdx::optional<double> engine_track_impl::main_cue()
+std::optional<double> engine_track_impl::main_cue()
 {
     auto cue = get_quick_cues_data().adjusted_main_cue;
     if (cue == 0)
-        return stdx::nullopt;
+        return std::nullopt;
 
-    return stdx::make_optional(cue);
+    return std::make_optional(cue);
 }
 
-void engine_track_impl::set_main_cue(stdx::optional<double> sample_offset)
+void engine_track_impl::set_main_cue(std::optional<double> sample_offset)
 {
     djinterop::util::sqlite_transaction trans{storage_->db};
     auto quick_cues_d = get_quick_cues_data();
@@ -884,29 +886,29 @@ void engine_track_impl::set_main_cue(stdx::optional<double> sample_offset)
     trans.commit();
 }
 
-stdx::optional<std::string> engine_track_impl::publisher()
+std::optional<std::string> engine_track_impl::publisher()
 {
     return storage_->get_meta_data(id(), metadata_str_type::publisher);
 }
 
-void engine_track_impl::set_publisher(stdx::optional<std::string> publisher)
+void engine_track_impl::set_publisher(std::optional<std::string> publisher)
 {
     storage_->set_meta_data(id(), metadata_str_type::publisher, publisher);
 }
 
-stdx::optional<int32_t> engine_track_impl::rating()
+std::optional<int32_t> engine_track_impl::rating()
 {
     auto result =
         storage_->get_meta_data_integer(id(), metadata_int_type::rating);
-    return result ? stdx::make_optional(static_cast<int32_t>(*result))
-                  : stdx::nullopt;
+    return result ? std::make_optional(static_cast<int32_t>(*result))
+                  : std::nullopt;
 }
 
-void engine_track_impl::set_rating(stdx::optional<int32_t> rating)
+void engine_track_impl::set_rating(std::optional<int32_t> rating)
 {
-    auto clamped_rating = rating ? stdx::make_optional(static_cast<int64_t>(
+    auto clamped_rating = rating ? std::make_optional(static_cast<int64_t>(
                                        std::clamp(*rating, 0, 100)))
-                                 : stdx::nullopt;
+                                 : std::nullopt;
     storage_->set_meta_data_integer(
         id(), metadata_int_type::rating, clamped_rating);
 }
@@ -926,14 +928,14 @@ void engine_track_impl::set_relative_path(std::string relative_path)
     storage_->set_meta_data(id(), metadata_str_type::file_extension, extension);
 }
 
-stdx::optional<unsigned long long> engine_track_impl::sample_count()
+std::optional<unsigned long long> engine_track_impl::sample_count()
 {
     return djinterop::util::optional_static_cast<unsigned long long>(
         get_track_data().sample_count);
 }
 
 void engine_track_impl::set_sample_count(
-    stdx::optional<unsigned long long> sample_count)
+    std::optional<unsigned long long> sample_count)
 {
     djinterop::util::sqlite_transaction trans{storage_->db};
 
@@ -943,7 +945,7 @@ void engine_track_impl::set_sample_count(
     auto high_res_waveform_d = get_high_res_waveform_data();
     auto overview_waveform_d = get_overview_waveform_data();
 
-    stdx::optional<int64_t> secs;
+    std::optional<int64_t> secs;
     if (sample_count && track_d.sample_rate && *track_d.sample_rate != 0)
     {
         secs = *sample_count / static_cast<int64_t>(*track_d.sample_rate);
@@ -974,12 +976,12 @@ void engine_track_impl::set_sample_count(
     trans.commit();
 }
 
-stdx::optional<double> engine_track_impl::sample_rate()
+std::optional<double> engine_track_impl::sample_rate()
 {
     return get_track_data().sample_rate;
 }
 
-void engine_track_impl::set_sample_rate(stdx::optional<double> sample_rate)
+void engine_track_impl::set_sample_rate(std::optional<double> sample_rate)
 {
     djinterop::util::sqlite_transaction trans{storage_->db};
 
@@ -989,7 +991,7 @@ void engine_track_impl::set_sample_rate(stdx::optional<double> sample_rate)
     auto high_res_waveform_d = get_high_res_waveform_data();
     auto overview_waveform_d = get_overview_waveform_data();
 
-    stdx::optional<int64_t> secs;
+    std::optional<int64_t> secs;
     if (track_d.sample_count && sample_rate && *sample_rate != 0)
     {
         secs = *track_d.sample_count / static_cast<int64_t>(*sample_rate);
@@ -1030,23 +1032,23 @@ void engine_track_impl::set_sample_rate(stdx::optional<double> sample_rate)
     trans.commit();
 }
 
-stdx::optional<std::string> engine_track_impl::title()
+std::optional<std::string> engine_track_impl::title()
 {
     return storage_->get_meta_data(id(), metadata_str_type::title);
 }
 
-void engine_track_impl::set_title(stdx::optional<std::string> title)
+void engine_track_impl::set_title(std::optional<std::string> title)
 {
     storage_->set_meta_data(id(), metadata_str_type::title, title);
 }
 
-stdx::optional<int32_t> engine_track_impl::track_number()
+std::optional<int32_t> engine_track_impl::track_number()
 {
-    return storage_->get_track_column<stdx::optional<int32_t> >(
+    return storage_->get_track_column<std::optional<int32_t> >(
         id(), "playOrder");
 }
 
-void engine_track_impl::set_track_number(stdx::optional<int32_t> track_number)
+void engine_track_impl::set_track_number(std::optional<int32_t> track_number)
 {
     storage_->set_track_column(id(), "playOrder", track_number);
 }
@@ -1100,12 +1102,12 @@ void engine_track_impl::set_waveform(std::vector<waveform_entry> waveform)
     trans.commit();
 }
 
-stdx::optional<int> engine_track_impl::year()
+std::optional<int> engine_track_impl::year()
 {
-    return storage_->get_track_column<stdx::optional<int> >(id(), "year");
+    return storage_->get_track_column<std::optional<int> >(id(), "year");
 }
 
-void engine_track_impl::set_year(stdx::optional<int> year)
+void engine_track_impl::set_year(std::optional<int> year)
 {
     storage_->set_track_column(id(), "year", year);
 }
@@ -1128,18 +1130,18 @@ track create_track(
     auto extension = djinterop::util::get_file_extension(filename);
     auto track_number =
         snapshot.track_number
-            ? stdx::make_optional(static_cast<int64_t>(*snapshot.track_number))
-            : stdx::nullopt;
+            ? std::make_optional(static_cast<int64_t>(*snapshot.track_number))
+            : std::nullopt;
     auto year = snapshot.year
-                    ? stdx::make_optional(static_cast<int64_t>(*snapshot.year))
-                    : stdx::nullopt;
+                    ? std::make_optional(static_cast<int64_t>(*snapshot.year))
+                    : std::nullopt;
     auto timestamp_fields = to_timestamp_fields(snapshot.last_played_at);
     auto key_num = to_key_num(snapshot.key);
     auto clamped_rating = snapshot.rating
-                              ? stdx::make_optional(static_cast<int64_t>(
+                              ? std::make_optional(static_cast<int64_t>(
                                     std::clamp(*snapshot.rating, 0, 100)))
-                              : stdx::nullopt;
-    stdx::optional<int64_t> last_play_hash;
+                              : std::nullopt;
+    std::optional<int64_t> last_play_hash;
     auto track_data = to_track_data(
         snapshot.sample_count, snapshot.sample_rate, snapshot.average_loudness,
         snapshot.key);

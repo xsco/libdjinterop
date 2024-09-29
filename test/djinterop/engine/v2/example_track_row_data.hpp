@@ -117,7 +117,7 @@ inline void populate_track_row(
             if (version.schema_version >= djinterop::semantic_version{2, 20, 1})
                 r.active_on_load_loops = 123;
             else
-                r.active_on_load_loops = djinterop::stdx::nullopt;
+                r.active_on_load_loops = std::nullopt;
 
             r.last_edit_time = ev2::LAST_EDIT_TIME_NONE;
 
@@ -183,7 +183,7 @@ inline void populate_track_row(
             if (version.schema_version >= djinterop::semantic_version{2, 20, 1})
                 r.active_on_load_loops = 123;
             else
-                r.active_on_load_loops = djinterop::stdx::nullopt;
+                r.active_on_load_loops = std::nullopt;
 
             r.last_edit_time = ev2::LAST_EDIT_TIME_NONE;
 

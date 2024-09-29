@@ -18,10 +18,10 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <vector>
 
 #include <djinterop/engine/v2/overview_waveform_data_blob.hpp>
-#include <djinterop/optional.hpp>
 #include <djinterop/performance_data.hpp>
 #include "../track_utils.hpp"
 
@@ -62,8 +62,8 @@ inline overview_waveform_point waveform_entry(
 
 inline overview_waveform_data_blob waveform(
     const std::vector<djinterop::waveform_entry>& w,
-    stdx::optional<unsigned long long> sample_count,
-    stdx::optional<double> sample_rate)
+    std::optional<unsigned long long> sample_count,
+    std::optional<double> sample_rate)
 {
     overview_waveform_data_blob result;
     if (w.empty())

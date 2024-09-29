@@ -1,9 +1,3 @@
-# The typical build output directory
-/build/
-
-# Sub-projects
-/subprojects/
-
 # Compilation database
 compile_commands.json
 .clangd/

@@ -103,20 +103,20 @@ std::shared_ptr<engine_storage> engine_storage::create_temporary(
 }
 
 int64_t engine_storage::create_track(
-    stdx::optional<int64_t> play_order, stdx::optional<int64_t> length,
-    stdx::optional<int64_t> length_calculated, stdx::optional<int64_t> bpm,
-    stdx::optional<int64_t> year,
-    const stdx::optional<std::string>& relative_path,
-    const stdx::optional<std::string>& filename,
-    stdx::optional<int64_t> bitrate, stdx::optional<double> bpm_analyzed,
-    stdx::optional<int64_t> track_type,
-    stdx::optional<int64_t> is_external_track,
-    const stdx::optional<std::string>& uuid_of_external_database,
-    stdx::optional<int64_t> id_track_in_external_database,
-    stdx::optional<int64_t> album_art_id, stdx::optional<int64_t> file_bytes,
-    stdx::optional<int64_t> pdb_import_key,
-    const stdx::optional<std::string>& uri,
-    stdx::optional<int64_t> is_beatgrid_locked)
+    std::optional<int64_t> play_order, std::optional<int64_t> length,
+    std::optional<int64_t> length_calculated, std::optional<int64_t> bpm,
+    std::optional<int64_t> year,
+    const std::optional<std::string>& relative_path,
+    const std::optional<std::string>& filename,
+    std::optional<int64_t> bitrate, std::optional<double> bpm_analyzed,
+    std::optional<int64_t> track_type,
+    std::optional<int64_t> is_external_track,
+    const std::optional<std::string>& uuid_of_external_database,
+    std::optional<int64_t> id_track_in_external_database,
+    std::optional<int64_t> album_art_id, std::optional<int64_t> file_bytes,
+    std::optional<int64_t> pdb_import_key,
+    const std::optional<std::string>& uri,
+    std::optional<int64_t> is_beatgrid_locked)
 {
     if (version.schema_version >= os_1_6_0.schema_version)
     {
@@ -202,7 +202,7 @@ int64_t engine_storage::create_track(
 
 track_row engine_storage::get_track(int64_t id)
 {
-    stdx::optional<track_row> result;
+    std::optional<track_row> result;
     if (version.schema_version >= os_1_6_0.schema_version)
     {
         db << ("SELECT playOrder, length, lengthCalculated, bpm, year, path, "
@@ -211,23 +211,23 @@ track_row engine_storage::get_track(int64_t id)
                "fileBytes, pdbImportKey, uri, isBeatGridLocked "
                "FROM Track WHERE id = ?")
            << id >>
-            [&](stdx::optional<int64_t> play_order,
-                stdx::optional<int64_t> length,
-                stdx::optional<int64_t> length_calculated,
-                stdx::optional<int64_t> bpm, stdx::optional<int64_t> year,
-                stdx::optional<std::string> relative_path,
-                stdx::optional<std::string> filename,
-                stdx::optional<int64_t> bitrate,
-                stdx::optional<double> bpm_analyzed,
-                stdx::optional<int64_t> track_type,
-                stdx::optional<int64_t> is_external_track,
-                stdx::optional<std::string> uuid_of_external_database,
-                stdx::optional<int64_t> id_track_in_external_database,
-                stdx::optional<int64_t> album_art_id,
-                stdx::optional<int64_t> file_bytes,
-                stdx::optional<int64_t> pdb_import_key,
-                stdx::optional<std::string> uri,
-                stdx::optional<int64_t> is_beatgrid_locked) {
+            [&](std::optional<int64_t> play_order,
+                std::optional<int64_t> length,
+                std::optional<int64_t> length_calculated,
+                std::optional<int64_t> bpm, std::optional<int64_t> year,
+                std::optional<std::string> relative_path,
+                std::optional<std::string> filename,
+                std::optional<int64_t> bitrate,
+                std::optional<double> bpm_analyzed,
+                std::optional<int64_t> track_type,
+                std::optional<int64_t> is_external_track,
+                std::optional<std::string> uuid_of_external_database,
+                std::optional<int64_t> id_track_in_external_database,
+                std::optional<int64_t> album_art_id,
+                std::optional<int64_t> file_bytes,
+                std::optional<int64_t> pdb_import_key,
+                std::optional<std::string> uri,
+                std::optional<int64_t> is_beatgrid_locked) {
                 if (result)
                 {
                     throw track_database_inconsistency{
@@ -262,22 +262,22 @@ track_row engine_storage::get_track(int64_t id)
                "fileBytes, pdbImportKey, uri "
                "FROM Track WHERE id = ?")
            << id >>
-            [&](stdx::optional<int64_t> play_order,
-                stdx::optional<int64_t> length,
-                stdx::optional<int64_t> length_calculated,
-                stdx::optional<int64_t> bpm, stdx::optional<int64_t> year,
-                stdx::optional<std::string> relative_path,
-                stdx::optional<std::string> filename,
-                stdx::optional<int64_t> bitrate,
-                stdx::optional<double> bpm_analyzed,
-                stdx::optional<int64_t> track_type,
-                stdx::optional<int64_t> is_external_track,
-                stdx::optional<std::string> uuid_of_external_database,
-                stdx::optional<int64_t> id_track_in_external_database,
-                stdx::optional<int64_t> album_art_id,
-                stdx::optional<int64_t> file_bytes,
-                stdx::optional<int64_t> pdb_import_key,
-                stdx::optional<std::string> uri) {
+            [&](std::optional<int64_t> play_order,
+                std::optional<int64_t> length,
+                std::optional<int64_t> length_calculated,
+                std::optional<int64_t> bpm, std::optional<int64_t> year,
+                std::optional<std::string> relative_path,
+                std::optional<std::string> filename,
+                std::optional<int64_t> bitrate,
+                std::optional<double> bpm_analyzed,
+                std::optional<int64_t> track_type,
+                std::optional<int64_t> is_external_track,
+                std::optional<std::string> uuid_of_external_database,
+                std::optional<int64_t> id_track_in_external_database,
+                std::optional<int64_t> album_art_id,
+                std::optional<int64_t> file_bytes,
+                std::optional<int64_t> pdb_import_key,
+                std::optional<std::string> uri) {
                 if (result)
                 {
                     throw track_database_inconsistency{
@@ -311,20 +311,20 @@ track_row engine_storage::get_track(int64_t id)
                "pdbImportKey "
                "FROM Track WHERE id = ?")
            << id >>
-            [&](stdx::optional<int64_t> play_order,
-                stdx::optional<int64_t> length,
-                stdx::optional<int64_t> length_calculated,
-                stdx::optional<int64_t> bpm, stdx::optional<int64_t> year,
-                stdx::optional<std::string> relative_path,
-                stdx::optional<std::string> filename,
-                stdx::optional<int64_t> bitrate,
-                stdx::optional<double> bpm_analyzed,
-                stdx::optional<int64_t> track_type,
-                stdx::optional<int64_t> is_external_track,
-                stdx::optional<std::string> uuid_of_external_database,
-                stdx::optional<int64_t> id_track_in_external_database,
-                stdx::optional<int64_t> album_art_id,
-                stdx::optional<int64_t> pdb_import_key) {
+            [&](std::optional<int64_t> play_order,
+                std::optional<int64_t> length,
+                std::optional<int64_t> length_calculated,
+                std::optional<int64_t> bpm, std::optional<int64_t> year,
+                std::optional<std::string> relative_path,
+                std::optional<std::string> filename,
+                std::optional<int64_t> bitrate,
+                std::optional<double> bpm_analyzed,
+                std::optional<int64_t> track_type,
+                std::optional<int64_t> is_external_track,
+                std::optional<std::string> uuid_of_external_database,
+                std::optional<int64_t> id_track_in_external_database,
+                std::optional<int64_t> album_art_id,
+                std::optional<int64_t> pdb_import_key) {
                 if (result)
                 {
                     throw track_database_inconsistency{
@@ -345,7 +345,7 @@ track_row engine_storage::get_track(int64_t id)
                     std::move(uuid_of_external_database),
                     id_track_in_external_database,
                     album_art_id,
-                    stdx::nullopt,  // file_bytes
+                    std::nullopt,  // file_bytes
                     pdb_import_key};
             };
     }
@@ -356,19 +356,19 @@ track_row engine_storage::get_track(int64_t id)
                "uuidOfExternalDatabase, idTrackInExternalDatabase, idAlbumArt "
                "FROM Track WHERE id = ?")
            << id >>
-            [&](stdx::optional<int64_t> play_order,
-                stdx::optional<int64_t> length,
-                stdx::optional<int64_t> length_calculated,
-                stdx::optional<int64_t> bpm, stdx::optional<int64_t> year,
-                stdx::optional<std::string> relative_path,
-                stdx::optional<std::string> filename,
-                stdx::optional<int64_t> bitrate,
-                stdx::optional<double> bpm_analyzed,
-                stdx::optional<int64_t> track_type,
-                stdx::optional<int64_t> is_external_track,
-                stdx::optional<std::string> uuid_of_external_database,
-                stdx::optional<int64_t> id_track_in_external_database,
-                stdx::optional<int64_t> album_art_id) {
+            [&](std::optional<int64_t> play_order,
+                std::optional<int64_t> length,
+                std::optional<int64_t> length_calculated,
+                std::optional<int64_t> bpm, std::optional<int64_t> year,
+                std::optional<std::string> relative_path,
+                std::optional<std::string> filename,
+                std::optional<int64_t> bitrate,
+                std::optional<double> bpm_analyzed,
+                std::optional<int64_t> track_type,
+                std::optional<int64_t> is_external_track,
+                std::optional<std::string> uuid_of_external_database,
+                std::optional<int64_t> id_track_in_external_database,
+                std::optional<int64_t> album_art_id) {
                 if (result)
                 {
                     throw track_database_inconsistency{
@@ -401,20 +401,20 @@ track_row engine_storage::get_track(int64_t id)
 
 /// Update a row in the `Track` table.
 void engine_storage::update_track(
-    int64_t id, stdx::optional<int64_t> play_order,
-    stdx::optional<int64_t> length, stdx::optional<int64_t> length_calculated,
-    stdx::optional<int64_t> bpm, stdx::optional<int64_t> year,
-    const stdx::optional<std::string>& relative_path,
-    const stdx::optional<std::string>& filename,
-    stdx::optional<int64_t> bitrate, stdx::optional<double> bpm_analyzed,
-    stdx::optional<int64_t> track_type,
-    stdx::optional<int64_t> is_external_track,
-    const stdx::optional<std::string>& uuid_of_external_database,
-    stdx::optional<int64_t> id_track_in_external_database,
-    stdx::optional<int64_t> album_art_id, stdx::optional<int64_t> file_bytes,
-    stdx::optional<int64_t> pdb_import_key,
-    const stdx::optional<std::string>& uri,
-    stdx::optional<int64_t> is_beatgrid_locked)
+    int64_t id, std::optional<int64_t> play_order,
+    std::optional<int64_t> length, std::optional<int64_t> length_calculated,
+    std::optional<int64_t> bpm, std::optional<int64_t> year,
+    const std::optional<std::string>& relative_path,
+    const std::optional<std::string>& filename,
+    std::optional<int64_t> bitrate, std::optional<double> bpm_analyzed,
+    std::optional<int64_t> track_type,
+    std::optional<int64_t> is_external_track,
+    const std::optional<std::string>& uuid_of_external_database,
+    std::optional<int64_t> id_track_in_external_database,
+    std::optional<int64_t> album_art_id, std::optional<int64_t> file_bytes,
+    std::optional<int64_t> pdb_import_key,
+    const std::optional<std::string>& uri,
+    std::optional<int64_t> is_beatgrid_locked)
 {
     if (version.schema_version >= os_1_6_0.schema_version)
     {
@@ -498,10 +498,10 @@ std::vector<meta_data_row> engine_storage::get_all_meta_data(int64_t id)
     return results;
 }
 
-stdx::optional<std::string> engine_storage::get_meta_data(
+std::optional<std::string> engine_storage::get_meta_data(
     int64_t id, metadata_str_type type)
 {
-    stdx::optional<std::string> result;
+    std::optional<std::string> result;
     db << "SELECT text FROM MetaData WHERE id = ? AND "
           "type = ? AND text IS NOT NULL"
        << id << static_cast<int64_t>(type) >>
@@ -522,7 +522,7 @@ stdx::optional<std::string> engine_storage::get_meta_data(
 }
 
 void engine_storage::set_meta_data(
-    int64_t id, metadata_str_type type, stdx::optional<std::string> content)
+    int64_t id, metadata_str_type type, std::optional<std::string> content)
 {
     if (content)
     {
@@ -543,19 +543,19 @@ void engine_storage::set_meta_data(
 }
 
 void engine_storage::set_meta_data(
-    int64_t id, const stdx::optional<std::string>& title,
-    const stdx::optional<std::string>& artist,
-    const stdx::optional<std::string>& album,
-    const stdx::optional<std::string>& genre,
-    const stdx::optional<std::string>& comment,
-    const stdx::optional<std::string>& publisher,
-    const stdx::optional<std::string>& composer,
-    const stdx::optional<std::string>& duration_mm_ss,
-    const stdx::optional<std::string>& ever_played,
-    const stdx::optional<std::string>& file_extension)
+    int64_t id, const std::optional<std::string>& title,
+    const std::optional<std::string>& artist,
+    const std::optional<std::string>& album,
+    const std::optional<std::string>& genre,
+    const std::optional<std::string>& comment,
+    const std::optional<std::string>& publisher,
+    const std::optional<std::string>& composer,
+    const std::optional<std::string>& duration_mm_ss,
+    const std::optional<std::string>& ever_played,
+    const std::optional<std::string>& file_extension)
 {
     // Note that rows are created even for null values.
-    stdx::optional<std::string> no_value;
+    std::optional<std::string> no_value;
     if (version.schema_version >= os_1_4_0.schema_version)
     {
         // A new unknown entry of type 17 may appear from 1.15.0 onwards.
@@ -650,10 +650,10 @@ std::vector<meta_data_integer_row> engine_storage::get_all_meta_data_integer(
     return results;
 }
 
-stdx::optional<int64_t> engine_storage::get_meta_data_integer(
+std::optional<int64_t> engine_storage::get_meta_data_integer(
     int64_t id, metadata_int_type type)
 {
-    stdx::optional<int64_t> result;
+    std::optional<int64_t> result;
     db << "SELECT value FROM MetaDataInteger WHERE id = "
           "? AND type = ? AND value IS NOT NULL"
        << id << static_cast<int64_t>(type) >>
@@ -674,26 +674,26 @@ stdx::optional<int64_t> engine_storage::get_meta_data_integer(
 }
 
 void engine_storage::set_meta_data_integer(
-    int64_t id, metadata_int_type type, stdx::optional<int64_t> content)
+    int64_t id, metadata_int_type type, std::optional<int64_t> content)
 {
     db << "REPLACE INTO MetaDataInteger (id, type, value) VALUES (?, ?, ?)"
        << id << static_cast<int64_t>(type) << content;
 }
 
 void engine_storage::set_meta_data_integer(
-    int64_t id, stdx::optional<int64_t> musical_key,
-    stdx::optional<int64_t> rating,
-    stdx::optional<int64_t> last_played_timestamp,
-    stdx::optional<int64_t> last_modified_timestamp,
-    stdx::optional<int64_t> last_accessed_timestamp,
-    stdx::optional<int64_t> last_play_hash)
+    int64_t id, std::optional<int64_t> musical_key,
+    std::optional<int64_t> rating,
+    std::optional<int64_t> last_played_timestamp,
+    std::optional<int64_t> last_modified_timestamp,
+    std::optional<int64_t> last_accessed_timestamp,
+    std::optional<int64_t> last_play_hash)
 {
     // Note that rows are created even for null values.
     //
     // Hardware players have been observed to record integer metadata in the
     // order 4, 5, 1, 2, 3, 6, 8, 7, 9, 10, 11, for reasons unknown.  The code
     // below replicates this order for maximum compatibility.
-    stdx::optional<int64_t> no_value;
+    std::optional<int64_t> no_value;
     if (version.schema_version >= os_1_2_0.schema_version)
     {
         // A new unknown entry of type 12 may appear from 1.11.1 onwards.
@@ -773,7 +773,7 @@ void engine_storage::clear_performance_data(int64_t id)
 
 performance_data_row engine_storage::get_performance_data(int64_t id)
 {
-    stdx::optional<performance_data_row> result;
+    std::optional<performance_data_row> result;
     if (version.schema_version >= os_1_2_0.schema_version)
     {
         db << "SELECT id, isAnalyzed, isRendered, "

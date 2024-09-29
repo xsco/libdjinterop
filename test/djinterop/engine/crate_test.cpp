@@ -25,7 +25,6 @@
 #include <djinterop/database.hpp>
 #include <djinterop/engine/engine.hpp>
 #include <djinterop/exceptions.hpp>
-#include <djinterop/optional.hpp>
 #include <djinterop/track.hpp>
 #include <djinterop/track_snapshot.hpp>
 
@@ -33,7 +32,6 @@
 
 namespace e = djinterop::engine;
 namespace utf = boost::unit_test;
-namespace stdx = djinterop::stdx;
 
 namespace
 {
@@ -367,10 +365,10 @@ BOOST_DATA_TEST_CASE(
 
     // Act
     BOOST_TEST_CHECKPOINT("(" << version << ") Setting parent...");
-    crate.set_parent(stdx::nullopt);
+    crate.set_parent(std::nullopt);
 
     // Assert
-    BOOST_CHECK(crate.parent() == stdx::nullopt);
+    BOOST_CHECK(crate.parent() == std::nullopt);
 }
 
 BOOST_TEST_DECORATOR(
@@ -393,7 +391,7 @@ BOOST_DATA_TEST_CASE(
     crate.set_parent(new_parent_crate);
 
     // Assert
-    BOOST_REQUIRE(crate.parent() != stdx::nullopt);
+    BOOST_REQUIRE(crate.parent() != std::nullopt);
     BOOST_CHECK(crate.parent()->id() == new_parent_crate.id());
 }
 
@@ -413,10 +411,10 @@ BOOST_DATA_TEST_CASE(
 
     // Act
     BOOST_TEST_CHECKPOINT("(" << version << ") Setting parent...");
-    crate.set_parent(stdx::nullopt);
+    crate.set_parent(std::nullopt);
 
     // Assert
-    BOOST_CHECK(crate.parent() == stdx::nullopt);
+    BOOST_CHECK(crate.parent() == std::nullopt);
 }
 
 BOOST_TEST_DECORATOR(
@@ -441,7 +439,7 @@ BOOST_DATA_TEST_CASE(
     crate.set_parent(new_parent_crate);
 
     // Assert
-    BOOST_REQUIRE(crate.parent() != stdx::nullopt);
+    BOOST_REQUIRE(crate.parent() != std::nullopt);
     BOOST_CHECK(crate.parent()->id() == new_parent_crate.id());
 }
 
