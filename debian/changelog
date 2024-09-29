@@ -1,3 +1,12 @@
+libdjinterop (0.22.1-0ubuntu1) bionic; urgency=medium
+
+  * Use std::optional (#121)
+  * Remove g++-13 Github action workflow (#123)
+  * Add missing include on cstdint to database_impl.hpp (#124)
+  * Add support for Engine 4.0.0/4.0.1 (#127)
+
+ -- Adam Szmigin <smidge@xsco.net>  Sun, 29 Sep 2024 13:36:34 +0100
+
 libdjinterop (0.21.0-0ubuntu1) bionic; urgency=medium
 
   * Create crates in order (#119)
