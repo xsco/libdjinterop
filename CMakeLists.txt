@@ -292,7 +292,6 @@ option(BUILD_DOC "Build documentation" ON)
 # Check if Doxygen is installed
 find_package(Doxygen OPTIONAL_COMPONENTS dot dia)
 if (DOXYGEN_FOUND)
-    set(DOXYGEN_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     set(DOXYGEN_HTML_OUTPUT docs)
     set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
 
