@@ -62,6 +62,7 @@ add_library(
     src/djinterop/engine/schema/schema_2_21_0.cpp
     src/djinterop/engine/schema/schema_2_21_1.cpp
     src/djinterop/engine/schema/schema_2_21_2.cpp
+    src/djinterop/engine/schema/schema_3_0_0.cpp
     src/djinterop/engine/schema/schema.cpp
     src/djinterop/engine/v1/engine_crate_impl.cpp
     src/djinterop/engine/v1/engine_database_impl.cpp
