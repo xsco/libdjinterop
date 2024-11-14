@@ -21,24 +21,23 @@
 
 #include <sqlite_modern_cpp.h>
 
-#include <djinterop/engine/engine_version.hpp>
-#include <utility>
+#include <djinterop/engine/engine_schema.hpp>
 
 namespace djinterop::engine::v2
 {
 struct engine_library_context
 {
     engine_library_context(
-        std::string directory, engine_version version, sqlite::database db) :
-        directory{std::move(directory)}, version{version}, db{std::move(db)}
+        std::string directory, engine_schema schema, sqlite::database db) :
+        directory{std::move(directory)}, schema{schema}, db{std::move(db)}
     {
     }
 
     /// The directory in which the Engine DB files reside.
     const std::string directory;
 
-    /// The version of the Engine database.
-    const engine_version version;
+    /// The schema version of the Engine database.
+    const engine_schema schema;
 
     /// The main SQLite database holding Engine data.
     sqlite::database db;

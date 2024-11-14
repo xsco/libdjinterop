@@ -3,7 +3,7 @@
 
     libdjinterop is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
+    the Free Software Foundation, either schema 3 of the License, or
     (at your option) any later version.
 
     libdjinterop is distributed in the hope that it will be useful,
@@ -41,16 +41,16 @@ std::vector<std::string> invalid_crate_names{"", "Contains ; semicolon"};
 
 BOOST_TEST_DECORATOR(
     *utf::description("crate::crate() for all supported schema versions"))
-BOOST_DATA_TEST_CASE(ctor_copy__copies, e::all_versions, version)
+BOOST_DATA_TEST_CASE(ctor_copy__copies, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example crate...");
     auto crate = db.create_root_crate("Example Root Crate");
 
     // Act
-    BOOST_TEST_CHECKPOINT("(" << version << ") Copying crate via copy ctor...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Copying crate via copy ctor...");
     djinterop::crate copy{crate};
 
     // Assert
@@ -60,16 +60,16 @@ BOOST_DATA_TEST_CASE(ctor_copy__copies, e::all_versions, version)
 
 BOOST_TEST_DECORATOR(
     *utf::description("crate::operator=() for all supported schema versions"))
-BOOST_DATA_TEST_CASE(op_copy_assign__copies, e::all_versions, version)
+BOOST_DATA_TEST_CASE(op_copy_assign__copies, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example crate...");
     auto crate = db.create_root_crate("Example Root Crate");
 
     // Act
-    BOOST_TEST_CHECKPOINT("(" << version << ") Copying crate via copy ctor...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Copying crate via copy ctor...");
     auto copy = crate;
 
     // Assert
@@ -79,23 +79,23 @@ BOOST_DATA_TEST_CASE(op_copy_assign__copies, e::all_versions, version)
 
 BOOST_TEST_DECORATOR(*utf::description(
     "crate::add_track() to empty crate for all supported schema versions"))
-BOOST_DATA_TEST_CASE(add_track__to_empty_crate__adds, e::all_versions, version)
+BOOST_DATA_TEST_CASE(add_track__to_empty_crate__adds, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example crate...");
     auto crate = db.create_root_crate("Example Root Crate");
     djinterop::track_snapshot snapshot{};
     populate_track_snapshot(
         snapshot, example_track_data_variation::minimal_1,
-        example_track_data_usage::create, version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example track...");
+        example_track_data_usage::create, schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example track...");
     auto track = db.create_track(snapshot);
 
     // Act
     BOOST_TEST_CHECKPOINT(
-        "(" << version << ") Adding example track to crate...");
+        "(" << schema << ") Adding example track to crate...");
     crate.add_track(track);
 
     // Assert
@@ -108,22 +108,22 @@ BOOST_DATA_TEST_CASE(add_track__to_empty_crate__adds, e::all_versions, version)
 BOOST_TEST_DECORATOR(*utf::description(
     "crate::add_track() to non-empty crate for all supported schema versions"))
 BOOST_DATA_TEST_CASE(
-    add_track__to_nonempty_crate__adds, e::all_versions, version)
+    add_track__to_nonempty_crate__adds, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example crate...");
     auto crate = db.create_root_crate("Example Root Crate");
     djinterop::track_snapshot snapshot1{};
     djinterop::track_snapshot snapshot2{};
     populate_track_snapshot(
         snapshot1, example_track_data_variation::minimal_1,
-        example_track_data_usage::create, version);
+        example_track_data_usage::create, schema);
     populate_track_snapshot(
         snapshot2, example_track_data_variation::basic_metadata_only_1,
-        example_track_data_usage::create, version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example tracks...");
+        example_track_data_usage::create, schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example tracks...");
     auto track1 = db.create_track(snapshot1);
     auto track2 = db.create_track(snapshot2);
     crate.add_track(track1);
@@ -145,22 +145,22 @@ BOOST_DATA_TEST_CASE(
 
 BOOST_TEST_DECORATOR(
     *utf::description("crate::add_tracks() for all supported schema versions"))
-BOOST_DATA_TEST_CASE(add_tracks__adds, e::all_versions, version)
+BOOST_DATA_TEST_CASE(add_tracks__adds, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example crate...");
     auto crate = db.create_root_crate("Example Root Crate");
     djinterop::track_snapshot snapshot1{};
     djinterop::track_snapshot snapshot2{};
     populate_track_snapshot(
         snapshot1, example_track_data_variation::minimal_1,
-        example_track_data_usage::create, version);
+        example_track_data_usage::create, schema);
     populate_track_snapshot(
         snapshot2, example_track_data_variation::basic_metadata_only_1,
-        example_track_data_usage::create, version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example tracks...");
+        example_track_data_usage::create, schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example tracks...");
     auto track1 = db.create_track(snapshot1);
     auto track2 = db.create_track(snapshot2);
     std::vector<djinterop::track> tracks{track1, track2};
@@ -175,12 +175,12 @@ BOOST_DATA_TEST_CASE(add_tracks__adds, e::all_versions, version)
 
 BOOST_TEST_DECORATOR(*utf::description(
     "crate::children() on empty crate for all supported schema versions"))
-BOOST_DATA_TEST_CASE(children__empty__none, e::all_versions, version)
+BOOST_DATA_TEST_CASE(children__empty__none, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example crate...");
     auto crate = db.create_root_crate("Example Root Crate");
 
     // Act
@@ -192,12 +192,12 @@ BOOST_DATA_TEST_CASE(children__empty__none, e::all_versions, version)
 
 BOOST_TEST_DECORATOR(*utf::description(
     "crate::clear_tracks() on empty crate for all supported schema versions"))
-BOOST_DATA_TEST_CASE(clear_tracks__empty__no_effect, e::all_versions, version)
+BOOST_DATA_TEST_CASE(clear_tracks__empty__no_effect, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example crate...");
     auto crate = db.create_root_crate("Example Root Crate");
 
     // Act
@@ -211,21 +211,21 @@ BOOST_DATA_TEST_CASE(clear_tracks__empty__no_effect, e::all_versions, version)
 BOOST_TEST_DECORATOR(
     *utf::description("crate::clear_tracks() on non-empty crate for all "
                       "supported schema versions"))
-BOOST_DATA_TEST_CASE(clear_tracks__nonempty__cleared, e::all_versions, version)
+BOOST_DATA_TEST_CASE(clear_tracks__nonempty__cleared, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example crate...");
     auto crate = db.create_root_crate("Example Root Crate");
     djinterop::track_snapshot snapshot{};
     populate_track_snapshot(
         snapshot, example_track_data_variation::minimal_1,
-        example_track_data_usage::create, version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example track...");
+        example_track_data_usage::create, schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example track...");
     auto track = db.create_track(snapshot);
     BOOST_TEST_CHECKPOINT(
-        "(" << version << ") Adding example track to crate...");
+        "(" << schema << ") Adding example track to crate...");
     crate.add_track(track);
 
     // Act
@@ -238,16 +238,16 @@ BOOST_DATA_TEST_CASE(clear_tracks__nonempty__cleared, e::all_versions, version)
 
 BOOST_TEST_DECORATOR(*utf::description(
     "crate::create_sub_crate() for all supported schema versions"))
-BOOST_DATA_TEST_CASE(create_sub_crate__creates, e::all_versions, version)
+BOOST_DATA_TEST_CASE(create_sub_crate__creates, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example crate...");
     auto crate = db.create_root_crate("Example Root Crate");
 
     // Act
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example sub crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example sub crate...");
     auto sub_crate = crate.create_sub_crate("Example Sub Crate");
 
     // Assert
@@ -261,23 +261,23 @@ BOOST_TEST_DECORATOR(
     *utf::description("crate::remove_track() for track not in crate for all "
                       "supported schema versions"))
 BOOST_DATA_TEST_CASE(
-    remove_track__not_in_crate__no_effect, e::all_versions, version)
+    remove_track__not_in_crate__no_effect, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example crate...");
     auto crate = db.create_root_crate("Example Root Crate");
     djinterop::track_snapshot snapshot{};
     populate_track_snapshot(
         snapshot, example_track_data_variation::minimal_1,
-        example_track_data_usage::create, version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example track...");
+        example_track_data_usage::create, schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example track...");
     auto track = db.create_track(snapshot);
 
     // Act
     BOOST_TEST_CHECKPOINT(
-        "(" << version << ") Attempting to remove track from crate...");
+        "(" << schema << ") Attempting to remove track from crate...");
     crate.remove_track(track);
 
     // Assert
@@ -288,25 +288,25 @@ BOOST_DATA_TEST_CASE(
 BOOST_TEST_DECORATOR(
     *utf::description("crate::remove_track() for track in crate for all "
                       "supported schema versions"))
-BOOST_DATA_TEST_CASE(remove_track__in_crate__removed, e::all_versions, version)
+BOOST_DATA_TEST_CASE(remove_track__in_crate__removed, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example crate...");
     auto crate = db.create_root_crate("Example Root Crate");
     djinterop::track_snapshot snapshot{};
     populate_track_snapshot(
         snapshot, example_track_data_variation::minimal_1,
-        example_track_data_usage::create, version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example track...");
+        example_track_data_usage::create, schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example track...");
     auto track = db.create_track(snapshot);
     BOOST_TEST_CHECKPOINT(
-        "(" << version << ") Adding example track to crate...");
+        "(" << schema << ") Adding example track to crate...");
     crate.add_track(track);
 
     // Act
-    BOOST_TEST_CHECKPOINT("(" << version << ") Removing track from crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Removing track from crate...");
     crate.remove_track(track);
 
     // Assert
@@ -317,17 +317,17 @@ BOOST_DATA_TEST_CASE(remove_track__in_crate__removed, e::all_versions, version)
 BOOST_TEST_DECORATOR(*utf::description(
     "crate::set_name() with valid name for all supported schema versions"))
 BOOST_DATA_TEST_CASE(
-    set_name__valid__sets, e::all_versions* valid_crate_names, version,
+    set_name__valid__sets, e::supported_schemas* valid_crate_names, schema,
     crate_name)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example crate...");
     auto crate = db.create_root_crate("Example Root Crate");
 
     // Act
-    BOOST_TEST_CHECKPOINT("(" << version << ") Changing crate name...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Changing crate name...");
     crate.set_name(crate_name);
 
     // Assert
@@ -337,17 +337,17 @@ BOOST_DATA_TEST_CASE(
 BOOST_TEST_DECORATOR(*utf::description(
     "crate::set_name() with invalid name for all supported schema versions"))
 BOOST_DATA_TEST_CASE(
-    set_name__invalid__throws, e::all_versions* invalid_crate_names, version,
+    set_name__invalid__throws, e::supported_schemas* invalid_crate_names, schema,
     crate_name)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example crate...");
     auto crate = db.create_root_crate("Example Root Crate");
 
     // Act/Assert
-    BOOST_TEST_CHECKPOINT("(" << version << ") Changing crate name...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Changing crate name...");
     BOOST_CHECK_THROW(
         crate.set_name(crate_name), djinterop::crate_invalid_name);
 }
@@ -355,16 +355,16 @@ BOOST_DATA_TEST_CASE(
 BOOST_TEST_DECORATOR(*utf::description(
     "crate::set_parent() from root to root for all supported schema versions"))
 BOOST_DATA_TEST_CASE(
-    set_parent__root_to_root__no_effect, e::all_versions, version)
+    set_parent__root_to_root__no_effect, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example crate...");
     auto crate = db.create_root_crate("Moveable Crate");
 
     // Act
-    BOOST_TEST_CHECKPOINT("(" << version << ") Setting parent...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Setting parent...");
     crate.set_parent(std::nullopt);
 
     // Assert
@@ -375,19 +375,19 @@ BOOST_TEST_DECORATOR(
     *utf::description("crate::set_parent() from root to non-root for all "
                       "supported schema versions"))
 BOOST_DATA_TEST_CASE(
-    set_parent__root_to_nonroot__changes, e::all_versions, version)
+    set_parent__root_to_nonroot__changes, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example crate...");
     auto crate = db.create_root_crate("Moveable Crate");
     BOOST_TEST_CHECKPOINT(
-        "(" << version << ") Creating another example crate...");
+        "(" << schema << ") Creating another example crate...");
     auto new_parent_crate = db.create_root_crate("Example Root Crate");
 
     // Act
-    BOOST_TEST_CHECKPOINT("(" << version << ") Setting parent...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Setting parent...");
     crate.set_parent(new_parent_crate);
 
     // Assert
@@ -399,18 +399,18 @@ BOOST_TEST_DECORATOR(
     *utf::description("crate::set_parent() from non-root to root for all "
                       "supported schema versions"))
 BOOST_DATA_TEST_CASE(
-    set_parent__nonroot_to_root__changes, e::all_versions, version)
+    set_parent__nonroot_to_root__changes, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example crate...");
     auto original_parent_crate = db.create_root_crate("Example Root Crate");
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example sub crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example sub crate...");
     auto crate = original_parent_crate.create_sub_crate("Moveable Crate");
 
     // Act
-    BOOST_TEST_CHECKPOINT("(" << version << ") Setting parent...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Setting parent...");
     crate.set_parent(std::nullopt);
 
     // Assert
@@ -421,21 +421,21 @@ BOOST_TEST_DECORATOR(
     *utf::description("crate::set_parent() from non-root to non-root for all "
                       "supported schema versions"))
 BOOST_DATA_TEST_CASE(
-    set_parent__nonroot_to_nonroot__changes, e::all_versions, version)
+    set_parent__nonroot_to_nonroot__changes, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example crate...");
     auto original_parent_crate = db.create_root_crate("Example Root Crate");
     BOOST_TEST_CHECKPOINT(
-        "(" << version << ") Creating another example crate...");
+        "(" << schema << ") Creating another example crate...");
     auto new_parent_crate = db.create_root_crate("Another Example Root Crate");
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example sub crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example sub crate...");
     auto crate = original_parent_crate.create_sub_crate("Moveable Crate");
 
     // Act
-    BOOST_TEST_CHECKPOINT("(" << version << ") Setting parent...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Setting parent...");
     crate.set_parent(new_parent_crate);
 
     // Assert
@@ -445,16 +445,16 @@ BOOST_DATA_TEST_CASE(
 
 BOOST_TEST_DECORATOR(*utf::description(
     "crate::set_parent() to self for all supported schema versions"))
-BOOST_DATA_TEST_CASE(set_parent__self__throws, e::all_versions, version)
+BOOST_DATA_TEST_CASE(set_parent__self__throws, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example crate...");
     auto crate = db.create_root_crate("Example Root Crate");
 
     // Act/Assert
-    BOOST_TEST_CHECKPOINT("(" << version << ") Setting parent...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Setting parent...");
     BOOST_CHECK_THROW(crate.set_parent(crate), djinterop::crate_invalid_parent);
 }
 
@@ -465,14 +465,14 @@ BOOST_DATA_TEST_CASE(set_parent__self__throws, e::all_versions, version)
 BOOST_TEST_DECORATOR(
     *utf::description("crate::sub_crate_by_name() for extant name for all "
                       "supported schema versions"))
-BOOST_DATA_TEST_CASE(sub_crate_by_name__valid__finds, e::all_versions, version)
+BOOST_DATA_TEST_CASE(sub_crate_by_name__valid__finds, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example crate...");
     auto crate = db.create_root_crate("Example Root Crate");
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example sub-crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example sub-crate...");
     auto sub_crate = crate.create_sub_crate("Example Sub Crate");
 
     // Act
@@ -487,14 +487,14 @@ BOOST_DATA_TEST_CASE(sub_crate_by_name__valid__finds, e::all_versions, version)
 BOOST_TEST_DECORATOR(
     *utf::description("crate::sub_crate_by_name() for not-found name for all "
                       "supported schema versions"))
-BOOST_DATA_TEST_CASE(sub_crate_by_name__invalid__none, e::all_versions, version)
+BOOST_DATA_TEST_CASE(sub_crate_by_name__invalid__none, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example crate...");
     auto crate = db.create_root_crate("Example Root Crate");
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating example sub-crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example sub-crate...");
     auto sub_crate = crate.create_sub_crate("Example Sub Crate");
 
     // Act

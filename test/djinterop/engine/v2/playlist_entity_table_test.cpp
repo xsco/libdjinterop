@@ -3,7 +3,7 @@
 
     libdjinterop is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
+    the Free Software Foundation, either schema 3 of the License, or
     (at your option) any later version.
 
     libdjinterop is distributed in the hope that it will be useful,
@@ -39,10 +39,10 @@ const constexpr int64_t EXAMPLE_TRACK_ID_2 = 67890;
 
 BOOST_TEST_DECORATOR(*utf::description("add_back() to empty playlist"))
 BOOST_DATA_TEST_CASE(
-    add_back__empty_playlist__adds, e::all_v2_versions, version)
+    add_back__empty_playlist__adds, e::supported_v2_schemas, schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto playlist_entity_tbl = library.playlist_entity();
@@ -73,10 +73,10 @@ BOOST_DATA_TEST_CASE(
 
 BOOST_TEST_DECORATOR(*utf::description("add_back() to non-empty playlist"))
 BOOST_DATA_TEST_CASE(
-    add_back__nonempty_playlist__adds, e::all_v2_versions, version)
+    add_back__nonempty_playlist__adds, e::supported_v2_schemas, schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto playlist_entity_tbl = library.playlist_entity();
@@ -102,7 +102,8 @@ BOOST_DATA_TEST_CASE(
     BOOST_CHECK_EQUAL(iter->track_id, pe_row_1.track_id);
     BOOST_CHECK_EQUAL(iter->database_uuid, db_uuid);
     BOOST_CHECK_EQUAL(iter->next_entity_id, pe_id_2);
-    BOOST_CHECK_EQUAL(iter->membership_reference, pe_row_1.membership_reference);
+    BOOST_CHECK_EQUAL(
+        iter->membership_reference, pe_row_1.membership_reference);
     ++iter;
     BOOST_REQUIRE(iter != entities.end());
     BOOST_CHECK_EQUAL(iter->id, pe_id_2);
@@ -111,7 +112,8 @@ BOOST_DATA_TEST_CASE(
     BOOST_CHECK_EQUAL(iter->database_uuid, db_uuid);
     BOOST_CHECK_EQUAL(
         iter->next_entity_id, ev2::PLAYLIST_ENTITY_NO_NEXT_ENTITY_ID);
-    BOOST_CHECK_EQUAL(iter->membership_reference, pe_row_2.membership_reference);
+    BOOST_CHECK_EQUAL(
+        iter->membership_reference, pe_row_2.membership_reference);
     ++iter;
     BOOST_REQUIRE(iter == entities.end());
 }
@@ -119,10 +121,11 @@ BOOST_DATA_TEST_CASE(
 BOOST_TEST_DECORATOR(
     *utf::description("add_back() same track multiple times idempotently"))
 BOOST_DATA_TEST_CASE(
-    add_back__same_track_multple_no_throw__idempotent, e::all_v2_versions, version)
+    add_back__same_track_multple_no_throw__idempotent, e::supported_v2_schemas,
+    schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto playlist_entity_tbl = library.playlist_entity();
@@ -155,10 +158,11 @@ BOOST_DATA_TEST_CASE(
 BOOST_TEST_DECORATOR(
     *utf::description("add_back() same track multiple times with throw"))
 BOOST_DATA_TEST_CASE(
-    add_back__same_track_multple_throw__idempotent, e::all_v2_versions, version)
+    add_back__same_track_multple_throw__idempotent, e::supported_v2_schemas,
+    schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto playlist_entity_tbl = library.playlist_entity();

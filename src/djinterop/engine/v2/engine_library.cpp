@@ -54,35 +54,8 @@ std::shared_ptr<engine_library_context> load_existing(
 
     sqlite::database db{db_path};
 
-    // Check that the `Information` table exists.
-    std::string sql =
-        "SELECT COUNT(*) AS rows "
-        "FROM sqlite_master "
-        "WHERE name = 'Information'";
-    int32_t table_count;
-    db << sql >> table_count;
-    if (table_count != 1)
-    {
-        throw database_inconsistency{
-            "Did not find an `Information` table in the database"};
-    }
-
-    // Detect version.
-    semantic_version schema_version{};
-    db << "SELECT schemaVersionMajor, schemaVersionMinor, "
-          "schemaVersionPatch FROM Information" >>
-        std::tie(schema_version.maj, schema_version.min, schema_version.pat);
-
-    for (auto&& candidate_version : all_v2_versions)
-    {
-        if (schema_version == candidate_version.schema_version)
-        {
-            return std::make_shared<engine_library_context>(
-                directory, candidate_version, db);
-        }
-    }
-
-    throw unsupported_engine_database{schema_version};
+    const auto schema = schema::detect_schema(db);
+    return std::make_shared<engine_library_context>(directory, schema, db);
 }
 
 }  // anonymous namespace
@@ -99,7 +72,7 @@ engine_library::engine_library(
 }
 
 engine_library engine_library::create(
-    const std::string& directory, const engine_version& version)
+    const std::string& directory, const engine_schema& schema)
 {
     // Ensure the target directory exists.
     if (!djinterop::util::path_exists(directory))
@@ -124,23 +97,23 @@ engine_library engine_library::create(
 
     auto db = sqlite::database{db_path};
 
-    auto schema_creator = schema::make_schema_creator_validator(version);
+    auto schema_creator = schema::make_schema_creator_validator(schema);
     schema_creator->create(db);
 
     return engine_library{std::make_shared<engine_library_context>(
-        directory, version, std::move(db))};
+        directory, schema, std::move(db))};
 }
 
-engine_library engine_library::create_temporary(const engine_version& version)
+engine_library engine_library::create_temporary(const engine_schema& schema)
 {
     auto db = sqlite::database(":memory:");
 
     // Create the desired schema on the new database.
-    auto schema_creator = schema::make_schema_creator_validator(version);
+    auto schema_creator = schema::make_schema_creator_validator(schema);
     schema_creator->create(db);
 
     return engine_library{std::make_shared<engine_library_context>(
-        ":memory:", version, std::move(db))};
+        ":memory:", schema, std::move(db))};
 }
 
 bool engine_library::exists(const std::string& directory)
@@ -150,7 +123,8 @@ bool engine_library::exists(const std::string& directory)
 
 void engine_library::verify() const
 {
-    auto validator = schema::make_schema_creator_validator(context_->version);
+    auto validator =
+        schema::make_schema_creator_validator(context_->schema);
     validator->verify(context_->db);
 }
 
@@ -166,9 +140,9 @@ std::string engine_library::directory() const
     return context_->directory;
 }
 
-engine_version engine_library::version() const
+engine_schema engine_library::schema() const
 {
-    return context_->version;
+    return context_->schema;
 }
 
 }  // namespace djinterop::engine::v2

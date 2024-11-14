@@ -26,7 +26,7 @@
 
 #include <djinterop/config.hpp>
 #include <djinterop/database.hpp>
-#include <djinterop/engine/engine_version.hpp>
+#include <djinterop/engine/engine_schema.hpp>
 #include <djinterop/engine/v2/change_log_table.hpp>
 #include <djinterop/engine/v2/information_table.hpp>
 #include <djinterop/engine/v2/playlist_entity_table.hpp>
@@ -59,19 +59,19 @@ public:
     /// Make a new, empty library of a given version.
     ///
     /// \param directory Directory in which to create the new library.
-    /// \param version Version to create.
+    /// \param schema Version to create.
     /// \return Returns the new Engine library.
     static engine_library create(
-        const std::string& directory, const engine_version& version);
+        const std::string& directory, const engine_schema& schema);
 
     /// Make a new, empty, in-memory library of a given version.
     ///
     /// Any changes made to the library will not persist beyond destruction
     /// of the class instance.
     ///
-    /// \param version Version to create.
+    /// \param schema Version to create.
     /// \return Returns the new temporary Engine library.
-    static engine_library create_temporary(const engine_version& version);
+    static engine_library create_temporary(const engine_schema& schema);
 
     /// Test whether an Engine Library already exists in the given directory.
     ///
@@ -91,10 +91,10 @@ public:
     /// \return Returns the top-level directory.
     [[nodiscard]] std::string directory() const;
 
-    /// Get the version of the Engine library.
+    /// Get the schema version of the Engine library.
     ///
-    /// \return Returns the Engine version.
-    [[nodiscard]] engine_version version() const;
+    /// \return Returns the Engine schema version.
+    [[nodiscard]] engine_schema schema() const;
 
     /// Get a class representing the `ChangeLog` table.
     [[nodiscard]] change_log_table change_log() const

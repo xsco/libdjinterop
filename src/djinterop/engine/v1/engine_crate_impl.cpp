@@ -145,7 +145,7 @@ crate engine_crate_impl::create_sub_crate(const std::string& name)
         };
 
     int64_t sub_id;
-    if (storage_->version >= desktop_1_1_1)
+    if (storage_->schema >= engine_schema::schema_1_9_1)
     {
         // Newer schemas consider crates to be a kind of 'list', and so the
         // `Crate` table has been replaced with a VIEW onto `List`.  The main

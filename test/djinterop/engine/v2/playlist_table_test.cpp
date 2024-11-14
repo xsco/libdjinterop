@@ -3,7 +3,7 @@
 
     libdjinterop is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
+    the Free Software Foundation, either schema 3 of the License, or
     (at your option) any later version.
 
     libdjinterop is distributed in the hope that it will be useful,
@@ -63,10 +63,10 @@ ev2::playlist_row make_playlist_row(
 }  // anonymous namespace
 
 BOOST_TEST_DECORATOR(*utf::description("add() root playlist to empty database"))
-BOOST_DATA_TEST_CASE(add__empty_root__adds, e::all_v2_versions, version)
+BOOST_DATA_TEST_CASE(add__empty_root__adds, e::supported_v2_schemas, schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto row = make_playlist_row("Example");
@@ -83,10 +83,10 @@ BOOST_DATA_TEST_CASE(add__empty_root__adds, e::all_v2_versions, version)
 
 BOOST_TEST_DECORATOR(
     *utf::description("add() root playlist to non-empty database"))
-BOOST_DATA_TEST_CASE(add__nonempty_root__adds, e::all_v2_versions, version)
+BOOST_DATA_TEST_CASE(add__nonempty_root__adds, e::supported_v2_schemas, schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto prior_row = make_playlist_row("Example (Prior)");
@@ -106,10 +106,10 @@ BOOST_DATA_TEST_CASE(add__nonempty_root__adds, e::all_v2_versions, version)
 
 BOOST_TEST_DECORATOR(
     *utf::description("add() non-root playlist to empty database"))
-BOOST_DATA_TEST_CASE(add__empty_nonroot__adds, e::all_v2_versions, version)
+BOOST_DATA_TEST_CASE(add__empty_nonroot__adds, e::supported_v2_schemas, schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto parent_row = make_playlist_row("Parent");
@@ -129,10 +129,10 @@ BOOST_DATA_TEST_CASE(add__empty_nonroot__adds, e::all_v2_versions, version)
 
 BOOST_TEST_DECORATOR(
     *utf::description("add() non-root playlist to non-empty database"))
-BOOST_DATA_TEST_CASE(add__nonempty_nonroot__adds, e::all_v2_versions, version)
+BOOST_DATA_TEST_CASE(add__nonempty_nonroot__adds, e::supported_v2_schemas, schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto parent_row = make_playlist_row("Parent");
@@ -155,10 +155,10 @@ BOOST_DATA_TEST_CASE(add__nonempty_nonroot__adds, e::all_v2_versions, version)
 
 BOOST_TEST_DECORATOR(*utf::description("root_ids() after insertion at end"))
 BOOST_DATA_TEST_CASE(
-    root_ids__after_insert_end__ordered, e::all_v2_versions, version)
+    root_ids__after_insert_end__ordered, e::supported_v2_schemas, schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto prior_row_1 = make_playlist_row("A");
@@ -186,10 +186,10 @@ BOOST_DATA_TEST_CASE(
 BOOST_TEST_DECORATOR(
     *utf::description("root_ids() after insertion at beginning"))
 BOOST_DATA_TEST_CASE(
-    root_ids__after_insert_beginning__ordered, e::all_v2_versions, version)
+    root_ids__after_insert_beginning__ordered, e::supported_v2_schemas, schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto prior_row_1 = make_playlist_row("A");
@@ -216,10 +216,10 @@ BOOST_DATA_TEST_CASE(
 
 BOOST_TEST_DECORATOR(*utf::description("root_ids() after insertion at middle"))
 BOOST_DATA_TEST_CASE(
-    root_ids__after_insert_middle__ordered, e::all_v2_versions, version)
+    root_ids__after_insert_middle__ordered, e::supported_v2_schemas, schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto prior_row_1 = make_playlist_row("A");
@@ -246,10 +246,10 @@ BOOST_DATA_TEST_CASE(
 
 BOOST_TEST_DECORATOR(*utf::description("child_ids() after insertion at end"))
 BOOST_DATA_TEST_CASE(
-    child_ids__after_insert_end__ordered, e::all_v2_versions, version)
+    child_ids__after_insert_end__ordered, e::supported_v2_schemas, schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto parent_row = make_playlist_row("Parent");
@@ -279,10 +279,10 @@ BOOST_DATA_TEST_CASE(
 BOOST_TEST_DECORATOR(
     *utf::description("child_ids() after insertion at beginning"))
 BOOST_DATA_TEST_CASE(
-    child_ids__after_insert_beginning__ordered, e::all_v2_versions, version)
+    child_ids__after_insert_beginning__ordered, e::supported_v2_schemas, schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto parent_row = make_playlist_row("Parent");
@@ -311,10 +311,10 @@ BOOST_DATA_TEST_CASE(
 
 BOOST_TEST_DECORATOR(*utf::description("child_ids() after insertion at middle"))
 BOOST_DATA_TEST_CASE(
-    child_ids__after_insert_middle__ordered, e::all_v2_versions, version)
+    child_ids__after_insert_middle__ordered, e::supported_v2_schemas, schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto parent_row = make_playlist_row("Parent");
@@ -344,10 +344,10 @@ BOOST_DATA_TEST_CASE(
 BOOST_TEST_DECORATOR(
     *utf::description("update() from beginning to middle, same parent"))
 BOOST_DATA_TEST_CASE(
-    update__beginning_to_middle__ordered, e::all_v2_versions, version)
+    update__beginning_to_middle__ordered, e::supported_v2_schemas, schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto row_1 = make_playlist_row("A");
@@ -376,10 +376,10 @@ BOOST_DATA_TEST_CASE(
 BOOST_TEST_DECORATOR(
     *utf::description("update() from end to middle, same parent"))
 BOOST_DATA_TEST_CASE(
-    update__end_to_middle__ordered, e::all_v2_versions, version)
+    update__end_to_middle__ordered, e::supported_v2_schemas, schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto row_1 = make_playlist_row("A");
@@ -408,10 +408,10 @@ BOOST_DATA_TEST_CASE(
 BOOST_TEST_DECORATOR(
     *utf::description("update() from middle to beginning, same parent"))
 BOOST_DATA_TEST_CASE(
-    update__middle_to_beginning__ordered, e::all_v2_versions, version)
+    update__middle_to_beginning__ordered, e::supported_v2_schemas, schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto row_1 = make_playlist_row("A");
@@ -440,10 +440,10 @@ BOOST_DATA_TEST_CASE(
 BOOST_TEST_DECORATOR(
     *utf::description("update() from middle to end, same parent"))
 BOOST_DATA_TEST_CASE(
-    update__middle_to_end__ordered, e::all_v2_versions, version)
+    update__middle_to_end__ordered, e::supported_v2_schemas, schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto row_1 = make_playlist_row("A");
@@ -473,10 +473,10 @@ BOOST_DATA_TEST_CASE(
 BOOST_TEST_DECORATOR(
     *utf::description("update() from only child to root end"))
 BOOST_DATA_TEST_CASE(
-    update__only_child_to_root_end__moved, e::all_v2_versions, version)
+    update__only_child_to_root_end__moved, e::supported_v2_schemas, schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto parent_row = make_playlist_row("Parent");
@@ -509,10 +509,10 @@ BOOST_DATA_TEST_CASE(
 BOOST_TEST_DECORATOR(
     *utf::description("update() from first child to root end"))
 BOOST_DATA_TEST_CASE(
-    update__first_child_to_root_end__moved, e::all_v2_versions, version)
+    update__first_child_to_root_end__moved, e::supported_v2_schemas, schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto parent_row = make_playlist_row("Parent");
@@ -549,10 +549,10 @@ BOOST_DATA_TEST_CASE(
 BOOST_TEST_DECORATOR(
     *utf::description("update() from last child to root beginning"))
 BOOST_DATA_TEST_CASE(
-    update__last_child_to_root_beginning__moved, e::all_v2_versions, version)
+    update__last_child_to_root_beginning__moved, e::supported_v2_schemas, schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
     auto playlist_tbl = library.playlist();
     auto parent_row = make_playlist_row("Parent");

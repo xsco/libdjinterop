@@ -219,7 +219,7 @@ std::string database_impl::uuid()
 
 std::string database_impl::version_name()
 {
-    return library_->version().name;
+    return to_string(library_->schema());
 }
 
 }  // namespace djinterop::engine::v2

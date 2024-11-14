@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.22.1
+        VERSION 0.23.0
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
@@ -177,7 +177,7 @@ install(FILES
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}")
 install(FILES
     include/djinterop/engine/engine.hpp
-    include/djinterop/engine/engine_version.hpp
+    include/djinterop/engine/engine_schema.hpp
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/engine")
 install(FILES
     include/djinterop/engine/v2/beat_data_blob.hpp
