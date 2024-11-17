@@ -53,7 +53,7 @@ inline std::ostream& operator<<(std::ostream& o, example_track_row_type v)
 
 inline void populate_track_row(
     example_track_row_type row_type, djinterop::engine::v2::track_row& r,
-    const djinterop::engine::engine_version& version)
+    const djinterop::engine::engine_schema& schema)
 {
     using namespace std::string_literals;
     namespace ev = djinterop::engine;
@@ -114,7 +114,8 @@ inline void populate_track_row(
             r.streaming_flags = 0;
             r.explicit_lyrics = false;
 
-            if (version.schema_version >= djinterop::semantic_version{2, 20, 1})
+            if (schema >=
+                djinterop::engine::engine_schema::schema_2_20_1)
                 r.active_on_load_loops = 123;
             else
                 r.active_on_load_loops = std::nullopt;
@@ -180,7 +181,8 @@ inline void populate_track_row(
             r.streaming_flags = 0;
             r.explicit_lyrics = false;
 
-            if (version.schema_version >= djinterop::semantic_version{2, 20, 1})
+            if (schema >=
+                djinterop::engine::engine_schema::schema_2_20_1)
                 r.active_on_load_loops = 123;
             else
                 r.active_on_load_loops = std::nullopt;

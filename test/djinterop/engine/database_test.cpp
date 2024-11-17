@@ -3,7 +3,7 @@
 
     libdjinterop is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
+    the Free Software Foundation, either schema 3 of the License, or
     (at your option) any later version.
 
     libdjinterop is distributed in the hope that it will be useful,
@@ -40,14 +40,14 @@ namespace e = djinterop::engine;
 BOOST_TEST_DECORATOR(* utf::description(
     "database::create_root_crate() for all supported schema versions"))
 BOOST_DATA_TEST_CASE(
-    create_root_crate__supported_version__creates, e::all_versions, version)
+    create_root_crate__supported_version__creates, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
 
     // Act
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating root crate...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating root crate...");
     auto crate = db.create_root_crate("Example Root Crate");
 
     // Assert
@@ -58,19 +58,19 @@ BOOST_DATA_TEST_CASE(
 BOOST_TEST_DECORATOR(* utf::description(
     "database::create_root_crate_after() for all supported schema versions"))
 BOOST_DATA_TEST_CASE(
-    create_root_crate_after__supported_version__creates, e::all_v2_versions,
-    version)
+    create_root_crate_after__supported_version__creates, e::supported_v2_schemas,
+    schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
     auto crate_a = db.create_root_crate("Example Root Crate A");
     auto crate_b = db.create_root_crate("Example Root Crate B");
     auto crate_d = db.create_root_crate("Example Root Crate D");
     auto crate_e = db.create_root_crate("Example Root Crate E");
 
     // Act
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating root crate after another...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating root crate after another...");
     auto crate = db.create_root_crate_after("Example Root Crate C", crate_b);
 
     // Assert
@@ -86,19 +86,19 @@ BOOST_DATA_TEST_CASE(
 BOOST_TEST_DECORATOR(* utf::description(
     "database::create_track() for all supported schema versions"))
 BOOST_DATA_TEST_CASE(
-    create_track__supported_version__creates, e::all_versions, version)
+    create_track__supported_version__creates, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
 
     djinterop::track_snapshot snapshot{};
     populate_track_snapshot(
         snapshot, example_track_data_variation::minimal_1,
-        example_track_data_usage::create, version);
+        example_track_data_usage::create, schema);
 
     // Act
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating track...");
     auto track = db.create_track(snapshot);
 
     // Assert
@@ -108,18 +108,18 @@ BOOST_DATA_TEST_CASE(
 BOOST_TEST_DECORATOR(* utf::description(
     "database::remove_track() for all supported schema versions"))
 BOOST_DATA_TEST_CASE(
-    remove_track__supported_version__removes, e::all_versions, version)
+    remove_track__supported_version__removes, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
 
     djinterop::track_snapshot snapshot{};
     populate_track_snapshot(
         snapshot, example_track_data_variation::minimal_1,
-        example_track_data_usage::create, version);
+        example_track_data_usage::create, schema);
 
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating track...");
     auto track = db.create_track(snapshot);
 
     // Act
@@ -132,34 +132,34 @@ BOOST_DATA_TEST_CASE(
 
 BOOST_TEST_DECORATOR(* utf::description(
     "database::verify() for all supported versions"))
-BOOST_DATA_TEST_CASE(verify__no_throw, e::all_versions, version)
+BOOST_DATA_TEST_CASE(verify__no_throw, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
 
     // Act/Assert
-    BOOST_TEST_CHECKPOINT("(" << version << ") Verifying DB...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Verifying DB...");
     db.verify();
 }
 
 BOOST_TEST_DECORATOR(*utf::description("database::tracks(), all schema versions"))
-BOOST_DATA_TEST_CASE(tracks__expected_ids, e::all_versions, version)
+BOOST_DATA_TEST_CASE(tracks__expected_ids, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
 
     djinterop::track_snapshot snapshot{};
     populate_track_snapshot(
         snapshot, example_track_data_variation::minimal_1,
-        example_track_data_usage::create, version);
+        example_track_data_usage::create, schema);
 
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating track...");
     auto track = db.create_track(snapshot);
 
     // Act
-    BOOST_TEST_CHECKPOINT("(" << version << ") Fetching tracks...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Fetching tracks...");
     auto results = db.tracks();
 
     // Assert
@@ -168,22 +168,22 @@ BOOST_DATA_TEST_CASE(tracks__expected_ids, e::all_versions, version)
 }
 
 BOOST_TEST_DECORATOR(*utf::description("database::tracks_by_relative_path(), valid path, all schema versions"))
-BOOST_DATA_TEST_CASE(tracks_by_relative_path__valid_path__expected_ids, e::all_versions, version)
+BOOST_DATA_TEST_CASE(tracks_by_relative_path__valid_path__expected_ids, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
 
     djinterop::track_snapshot snapshot{};
     populate_track_snapshot(
         snapshot, example_track_data_variation::minimal_1,
-        example_track_data_usage::create, version);
+        example_track_data_usage::create, schema);
 
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating track...");
     auto track = db.create_track(snapshot);
 
     // Act
-    BOOST_TEST_CHECKPOINT("(" << version << ") Fetching tracks...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Fetching tracks...");
     auto results = db.tracks_by_relative_path(*snapshot.relative_path);
 
     // Assert
@@ -192,14 +192,14 @@ BOOST_DATA_TEST_CASE(tracks_by_relative_path__valid_path__expected_ids, e::all_v
 }
 
 BOOST_TEST_DECORATOR(*utf::description("database::tracks_by_relative_path(), invalid path, all schema versions"))
-BOOST_DATA_TEST_CASE(tracks_by_relative_path__invalid_path__no_ids, e::all_versions, version)
+BOOST_DATA_TEST_CASE(tracks_by_relative_path__invalid_path__no_ids, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
 
     // Act
-    BOOST_TEST_CHECKPOINT("(" << version << ") Fetching tracks...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Fetching tracks...");
     auto results = db.tracks_by_relative_path("Does Not Exist.mp3");
 
     // Assert
@@ -207,22 +207,22 @@ BOOST_DATA_TEST_CASE(tracks_by_relative_path__invalid_path__no_ids, e::all_versi
 }
 
 BOOST_TEST_DECORATOR(*utf::description("database::track_by_id(), valid id, all schema versions"))
-BOOST_DATA_TEST_CASE(track_by_id__valid_id__expected_ids, e::all_versions, version)
+BOOST_DATA_TEST_CASE(track_by_id__valid_id__expected_ids, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
 
     djinterop::track_snapshot snapshot{};
     populate_track_snapshot(
         snapshot, example_track_data_variation::minimal_1,
-        example_track_data_usage::create, version);
+        example_track_data_usage::create, schema);
 
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating track...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating track...");
     auto track = db.create_track(snapshot);
 
     // Act
-    BOOST_TEST_CHECKPOINT("(" << version << ") Fetching tracks...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Fetching tracks...");
     auto result = db.track_by_id(track.id());
 
     // Assert
@@ -231,14 +231,14 @@ BOOST_DATA_TEST_CASE(track_by_id__valid_id__expected_ids, e::all_versions, versi
 }
 
 BOOST_TEST_DECORATOR(*utf::description("database::track_by_id(), invalid id, all schema versions"))
-BOOST_DATA_TEST_CASE(track_by_id__invalid_id__no_ids, e::all_versions, version)
+BOOST_DATA_TEST_CASE(track_by_id__invalid_id__no_ids, e::supported_schemas, schema)
 {
     // Arrange
-    BOOST_TEST_CHECKPOINT("(" << version << ") Creating temporary database...");
-    auto db = e::create_temporary_database(version);
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto db = e::create_temporary_database(schema);
 
     // Act
-    BOOST_TEST_CHECKPOINT("(" << version << ") Fetching tracks...");
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Fetching tracks...");
     auto result = db.track_by_id(123);
 
     // Assert

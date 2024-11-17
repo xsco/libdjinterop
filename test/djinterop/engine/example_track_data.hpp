@@ -75,7 +75,7 @@ inline std::ostream& operator<<(std::ostream& o, example_track_data_usage v)
 
 inline void populate_track_snapshot(
     djinterop::track_snapshot& s, example_track_data_variation variation,
-    example_track_data_usage usage, djinterop::engine::engine_version version)
+    example_track_data_usage usage, djinterop::engine::engine_schema schema)
 {
     using namespace std::string_literals;
     switch (variation)
@@ -193,8 +193,7 @@ inline void populate_track_snapshot(
             s.comment = "Other Comment"s;
             s.composer = "Other Composer"s;
             s.duration = std::chrono::milliseconds{365000};
-            if (version.schema_version >=
-                djinterop::engine::os_1_4_0.schema_version)
+            if (schema >= djinterop::engine::engine_schema::schema_1_15_0)
             {
                 s.file_bytes = 1048576;
             }
@@ -229,7 +228,7 @@ inline void populate_track_snapshot(
             s.track_number = 2;
             s.waveform.clear();
             auto waveform_extents =
-                version.is_v2_schema()
+                schema >= djinterop::engine::engine_schema::schema_2_18_0
                     ? djinterop::engine::calculate_overview_waveform_extents(
                           *s.sample_count, *s.sample_rate)
                     : djinterop::engine::
@@ -238,7 +237,7 @@ inline void populate_track_snapshot(
             s.waveform.reserve(waveform_extents.size);
             for (unsigned long long i = 0; i < waveform_extents.size; ++i)
             {
-                if (version.schema_version.maj < 2)
+                if (schema < djinterop::engine::engine_schema::schema_2_18_0)
                 {
                     s.waveform.push_back(
                         {{(uint8_t)(i * 255 / waveform_extents.size),

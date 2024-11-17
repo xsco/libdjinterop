@@ -110,7 +110,7 @@ int64_t track_table::add(const track_row& row)
             "and so it cannot be created again"};
     }
 
-    if (context_->version.schema_version >= semantic_version{2, 20, 3})
+    if (context_->schema >= engine_schema::schema_2_20_3)
     {
         context_->db << "INSERT INTO Track ("
                         "playOrder, length, bpm, year, "
@@ -182,7 +182,7 @@ int64_t track_table::add(const track_row& row)
                      << row.active_on_load_loops
                      << djinterop::util::to_timestamp(row.last_edit_time);
     }
-    else if (context_->version.schema_version >= semantic_version{2, 20, 1})
+    else if (context_->schema >= engine_schema::schema_2_20_1)
     {
         context_->db << "INSERT INTO Track ("
                         "playOrder, length, bpm, year, "
@@ -354,7 +354,7 @@ std::optional<track_row> track_table::get(int64_t id) const
 {
     std::optional<track_row> result;
 
-    if (context_->version.schema_version >= semantic_version{2, 20, 3})
+    if (context_->schema >= engine_schema::schema_2_20_3)
     {
         context_->db
                 << "SELECT id, playOrder, length, bpm, year, path, filename, "
@@ -462,7 +462,7 @@ std::optional<track_row> track_table::get(int64_t id) const
                 djinterop::util::to_time_point(last_edit_time)};
         };
     }
-    else if (context_->version.schema_version >= semantic_version{2, 20, 1})
+    else if (context_->schema >= engine_schema::schema_2_20_1)
     {
         context_->db
                 << "SELECT id, playOrder, length, bpm, year, path, filename, "
@@ -713,7 +713,7 @@ void track_table::update(const track_row& row)
             "The track row to update does not contain a track id"};
     }
 
-    if (context_->version.schema_version >= semantic_version{2, 20, 3})
+    if (context_->schema >= engine_schema::schema_2_20_3)
     {
         context_->db << "UPDATE Track SET "
                         "playOrder = ?, length = ?, bpm = ?, year = ?, "
@@ -763,7 +763,7 @@ void track_table::update(const track_row& row)
                      << djinterop::util::to_timestamp(row.last_edit_time)
                      << row.id;
     }
-    else if (context_->version.schema_version >= semantic_version{2, 20, 1})
+    else if (context_->schema >= engine_schema::schema_2_20_1)
     {
         context_->db << "UPDATE Track SET "
                         "playOrder = ?, length = ?, bpm = ?, year = ?, "
@@ -1388,7 +1388,7 @@ void track_table::set_explicit_lyrics(int64_t id, bool explicit_lyrics)
 
 std::optional<int64_t> track_table::get_active_on_load_loops(int64_t id)
 {
-    if (context_->version.schema_version < semantic_version{2, 20, 1})
+    if (context_->schema < engine_schema::schema_2_20_1)
         throw djinterop::unsupported_operation{
             "The `activeOnLoadLoops` column is not available for this "
             "database version"};
@@ -1400,7 +1400,7 @@ std::optional<int64_t> track_table::get_active_on_load_loops(int64_t id)
 void track_table::set_active_on_load_loops(
     int64_t id, std::optional<int64_t> active_on_load_loops)
 {
-    if (context_->version.schema_version < semantic_version{2, 20, 1})
+    if (context_->schema < engine_schema::schema_2_20_1)
         throw djinterop::unsupported_operation{
             "The `activeOnLoadLoops` column is not available for this "
             "database version"};
@@ -1412,7 +1412,7 @@ void track_table::set_active_on_load_loops(
 std::chrono::system_clock::time_point track_table::get_last_edit_time(
     int64_t id)
 {
-    if (context_->version.schema_version < semantic_version{2, 20, 3})
+    if (context_->schema < engine_schema::schema_2_20_3)
         throw djinterop::unsupported_operation{
             "The `lastEditTime` column is not available for this "
             "database version"};
@@ -1424,7 +1424,7 @@ std::chrono::system_clock::time_point track_table::get_last_edit_time(
 void track_table::set_last_edit_time(
     int64_t id, std::chrono::system_clock::time_point last_edit_time)
 {
-    if (context_->version.schema_version < semantic_version{2, 20, 3})
+    if (context_->schema < engine_schema::schema_2_20_3)
         throw djinterop::unsupported_operation{
             "The `lastEditTime` column is not available for this "
             "database version"};

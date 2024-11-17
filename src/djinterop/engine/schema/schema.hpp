@@ -17,13 +17,11 @@
 
 #pragma once
 
-#include <stdexcept>
-#include <string>
+#include <memory>
 
 #include <sqlite_modern_cpp.h>
 
-#include <djinterop/engine/engine_version.hpp>
-#include <djinterop/semantic_version.hpp>
+#include <djinterop/engine/engine_schema.hpp>
 
 namespace djinterop::engine::schema
 {
@@ -67,6 +65,9 @@ public:
 };
 
 std::unique_ptr<schema_creator_validator> make_schema_creator_validator(
-    const engine_version& version);
+    const engine_schema& schema);
+
+engine_schema detect_schema(
+    sqlite::database& db, const std::string& db_schema_name = "");
 
 }  // namespace djinterop::engine::schema

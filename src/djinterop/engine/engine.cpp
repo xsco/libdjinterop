@@ -25,7 +25,6 @@
 #include <djinterop/engine/v2/engine_library.hpp>
 
 #include "../util/filesystem.hpp"
-#include "schema/schema.hpp"
 #include "track_utils.hpp"
 #include "v1/engine_database_impl.hpp"
 
@@ -33,28 +32,7 @@ namespace djinterop::engine
 {
 namespace
 {
-inline std::optional<std::string> get_column_type(
-    sqlite::database& db, const std::string& table_name,
-    const std::string& column_name)
-{
-    std::optional<std::string> column_type;
-
-    db << "PRAGMA table_info('" + table_name + "')" >>
-        [&]([[maybe_unused]] int col_id, const std::string& col_name,
-            const std::string& col_type, [[maybe_unused]] int nullable,
-            [[maybe_unused]] const std::string& default_value,
-            [[maybe_unused]] int part_of_pk)
-    {
-        if (col_name == column_name)
-        {
-            column_type = col_type;
-        }
-    };
-
-    return column_type;
-}
-
-engine_version detect_version(const std::string& directory)
+bool detect_is_database2(const std::string& directory)
 {
     if (!djinterop::util::path_exists(directory))
     {
@@ -68,53 +46,20 @@ engine_version detect_version(const std::string& directory)
     auto v2_m_db_path = directory + "/Database2/m.db";
     auto v1_m_db_path_exists = djinterop::util::path_exists(v1_m_db_path);
     auto v2_m_db_path_exists = djinterop::util::path_exists(v2_m_db_path);
-    auto m_db_path = v1_m_db_path_exists ? v1_m_db_path : v2_m_db_path;
+
     if (!v1_m_db_path_exists && !v2_m_db_path_exists)
     {
         throw database_not_found{"Neither m.db nor Database2/m.db was found"};
     }
 
-    sqlite::database db{m_db_path};
-
-    // Check that the `Information` table has been created.
-    std::string sql =
-        "SELECT COUNT(*) AS rows "
-        "FROM sqlite_master "
-        "WHERE name = 'Information'";
-    int32_t table_count;
-    db << sql >> table_count;
-    if (table_count != 1)
+    if (v1_m_db_path_exists && v2_m_db_path_exists)
     {
-        throw database_inconsistency{
-            "Did not find an `Information` table in the database"};
+        throw database_not_found{
+            "Found m.db and Database2/m.db files, which is not supposed to "
+            "happen"};
     }
 
-    semantic_version schema_version;
-    db << "SELECT schemaVersionMajor, schemaVersionMinor, "
-          "schemaVersionPatch FROM Information" >>
-        std::tie(schema_version.maj, schema_version.min, schema_version.pat);
-
-    // Some schema versions have different variants, meaning that the version
-    // number alone is insufficient.  Detect the variant where required.
-    if (schema_version.maj == 1 && schema_version.min == 18 &&
-        schema_version.pat == 0)
-    {
-        auto has_numeric_bools =
-            get_column_type(db, "Track", "isExternalTrack") ==
-            std::string{"NUMERIC"};
-        return has_numeric_bools ? djinterop::engine::desktop_1_5_1
-                                 : djinterop::engine::os_1_6_0;
-    }
-
-    for (auto&& candidate_version : all_versions)
-    {
-        if (schema_version == candidate_version.schema_version)
-        {
-            return candidate_version;
-        }
-    }
-
-    throw unsupported_engine_database{schema_version};
+    return v2_m_db_path_exists;
 }
 
 inline void hydrate_database(
@@ -132,33 +77,33 @@ inline void hydrate_database(
 }  // anonymous namespace
 
 database create_database(
-    const std::string& directory, const engine_version& version)
+    const std::string& directory, const engine_schema& schema)
 {
-    if (version.version.maj >= 2)
+    if (schema >= engine_schema::schema_2_18_0)
     {
-        auto library = v2::engine_library::create(directory, version);
+        auto library = v2::engine_library::create(directory, schema);
         return library.database();
     }
 
-    auto storage = v1::engine_storage::create(directory, version);
+    auto storage = v1::engine_storage::create(directory, schema);
     return database{std::make_shared<v1::engine_database_impl>(storage)};
 }
 
-database create_temporary_database(const engine_version& version)
+database create_temporary_database(const engine_schema& schema)
 {
-    if (version.version.maj >= 2)
+    if (schema >= engine_schema::schema_2_18_0)
     {
-        auto library = v2::engine_library::create_temporary(version);
+        auto library = v2::engine_library::create_temporary(schema);
         return library.database();
     }
 
-    auto storage = v1::engine_storage::create_temporary(version);
+    auto storage = v1::engine_storage::create_temporary(schema);
     return database{std::make_shared<v1::engine_database_impl>(storage)};
 }
 
 database create_database_from_scripts(
     const std::string& db_directory, const std::string& script_directory,
-    engine_version& loaded_version)
+    engine_schema& loaded_schema)
 {
     if (!djinterop::util::path_exists(db_directory))
     {
@@ -197,22 +142,22 @@ database create_database_from_scripts(
         hydrate_database(v2_m_db_path, v2_m_db_sql_path);
     }
 
-    return load_database(db_directory, loaded_version);
+    return load_database(db_directory, loaded_schema);
 }
 
 database create_or_load_database(
-    const std::string& directory, const engine_version& version, bool& created,
-    engine_version& loaded_version)
+    const std::string& directory, const engine_schema& schema, bool& created,
+    engine_schema& loaded_schema)
 {
     try
     {
         created = false;
-        return load_database(directory, loaded_version);
+        return load_database(directory, loaded_schema);
     }
     catch ([[maybe_unused]] database_not_found& e)
     {
         created = true;
-        return create_database(directory, version);
+        return create_database(directory, schema);
     }
 }
 
@@ -231,18 +176,19 @@ bool database_exists(const std::string& directory)
 }
 
 database load_database(
-    const std::string& directory, engine_version& loaded_version)
+    const std::string& directory, engine_schema& loaded_schema)
 {
-    loaded_version = detect_version(directory);
-    if (loaded_version.version.maj >= 2)
+    const auto is_database2 = detect_is_database2(directory);
+
+    if (is_database2)
     {
-        // TODO (mr-smidge): inefficient as ctor reads the version again.
         auto library = v2::engine_library{directory};
+        loaded_schema = library.schema();
         return library.database();
     }
 
-    auto storage =
-        std::make_shared<v1::engine_storage>(directory, loaded_version);
+    auto storage = std::make_shared<v1::engine_storage>(directory);
+    loaded_schema = storage->schema;
     return database{std::make_shared<v1::engine_database_impl>(storage)};
 }
 
@@ -267,8 +213,7 @@ std::vector<beatgrid_marker> normalize_beatgrid(
 
     {
         auto after_first_marker_iter = std::find_if(
-            beatgrid.begin(), beatgrid.end(),
-            [](const beatgrid_marker& marker)
+            beatgrid.begin(), beatgrid.end(), [](const beatgrid_marker& marker)
             { return marker.sample_offset > 0; });
         if (after_first_marker_iter != beatgrid.begin())
         {

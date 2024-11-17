@@ -27,9 +27,9 @@ What is supported:
 
 The library supports the following firmware and application versions:
 
-* SC5000 Firmware from 1.0.3 to 3.4.0.
+* SC5000 Firmware from 1.0.3 to 4.1.0.
   * Other players (e.g. SC6000/M) may work, but this is currently untested.
-* Engine DJ Desktop (aka Engine Prime) from 1.0.1 to 3.4.0.
+* Engine DJ Desktop (aka Engine Prime) from 1.0.1 to 4.1.0.
 
 What is not supported (yet):
 

@@ -95,7 +95,7 @@ crate engine_database_impl::create_root_crate(const std::string& name)
     djinterop::util::sqlite_transaction trans{storage_->db};
 
     int64_t id;
-    if (storage_->version.schema_version >= desktop_1_1_1.schema_version)
+    if (storage_->schema >= engine_schema::schema_1_9_1)
     {
         // Newer schemas consider crates to be a kind of 'list', and so the
         // `Crate` table has been replaced with a VIEW onto `List`.  The main
@@ -145,7 +145,7 @@ std::string engine_database_impl::directory()
 void engine_database_impl::verify()
 {
     auto schema_creator_validator =
-        schema::make_schema_creator_validator(storage_->version);
+        schema::make_schema_creator_validator(storage_->schema);
     schema_creator_validator->verify(storage_->db);
 }
 
@@ -246,7 +246,7 @@ std::string engine_database_impl::uuid()
 
 std::string engine_database_impl::version_name()
 {
-    return storage_->version.name;
+    return to_string(storage_->schema);
 }
 
 }  // namespace djinterop::engine::v1

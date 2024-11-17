@@ -17,30 +17,29 @@
 
 #pragma once
 
-#include <string>
-
 #include <sqlite_modern_cpp.h>
 
-#include <djinterop/engine/engine_schema.hpp>
+#include <djinterop/semantic_version.hpp>
 
-namespace djinterop::engine::v2
+#include "schema_2_21_2.hpp"
+
+namespace djinterop::engine::schema
 {
-struct engine_library_context
+class schema_3_0_0 : public schema_2_21_2
 {
-    engine_library_context(
-        std::string directory, engine_schema schema, sqlite::database db) :
-        directory{std::move(directory)}, schema{schema}, db{std::move(db)}
-    {
-    }
+    // Note that despite having a new major version number, DB schema 3.x is
+    // sufficiently similar to 2.x to be modelled as an evolution of it rather
+    // than an entirely new schema.
+public:
+    static constexpr const semantic_version schema_version{3, 0, 0};
 
-    /// The directory in which the Engine DB files reside.
-    const std::string directory;
+    void verify(sqlite::database& db) const override;
+    void create(sqlite::database& db) override;
 
-    /// The schema version of the Engine database.
-    const engine_schema schema;
-
-    /// The main SQLite database holding Engine data.
-    sqlite::database db;
+protected:
+    void verify_master_list(sqlite::database& db) const override;
+    virtual void verify_performance_data(sqlite::database& db) const;
+    void verify_track(sqlite::database& db) const override;
 };
 
-}  // namespace djinterop::engine::v2
+}  // namespace djinterop::engine::schema
