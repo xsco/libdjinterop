@@ -32,7 +32,7 @@ int main()
     auto dir = "Engine Library";
     auto exists = ev2::engine_library::exists(dir);
     auto library = exists
-                       ? ev2::engine_library{dir}
+                       ? ev2::engine_library::load(dir)
                        : ev2::engine_library::create(dir, e::latest_v2_schema);
 
     std::cout << (exists ? "Loaded" : "Created")

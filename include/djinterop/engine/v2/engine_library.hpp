@@ -21,12 +21,8 @@
 #error This library needs at least a C++17 compliant compiler
 #endif
 
-#include <memory>
-#include <string>
-
 #include <djinterop/config.hpp>
-#include <djinterop/database.hpp>
-#include <djinterop/engine/engine_schema.hpp>
+#include <djinterop/engine/base_engine_library.hpp>
 #include <djinterop/engine/v2/change_log_table.hpp>
 #include <djinterop/engine/v2/information_table.hpp>
 #include <djinterop/engine/v2/playlist_entity_table.hpp>
@@ -35,26 +31,29 @@
 
 namespace djinterop::engine::v2
 {
-struct engine_library_context;
-
-/// Represents a version 2 Engine Library.
+/// Represents an Engine Library with schema version 2.x.
 ///
-/// A version 2 Engine Library is achieved by having a specific directory
+/// A library with this schema is achieved by having a specific directory
 /// structure in which one or more SQLite databases are stored.  The top-level
 /// directory is typically named `Engine Library`, and there must then be a
-/// sub-directory beneath that named `Database2`.  The main SQLite database
+/// subdirectory beneath that named `Database2`.  The main SQLite database
 /// resides in that directory, and is named `m.db`.
 ///
 /// Note that the directory that should be passed to constructors and member
 /// functions of this class must be the `Engine Library` directory, not the
 /// `Database2` directory.
-class DJINTEROP_PUBLIC engine_library
+class DJINTEROP_PUBLIC engine_library : public base_engine_library
 {
 public:
-    /// Construct by loading from an existing directory.
+    using base_engine_library::base_engine_library;
+
+    /// Load an existing library from a directory.
     ///
     /// \param directory Directory to load from.
-    explicit engine_library(const std::string& directory);
+    static engine_library load(const std::string& directory)
+    {
+        return engine_library{base_engine_library::load(directory)};
+    }
 
     /// Make a new, empty library of a given version.
     ///
@@ -62,7 +61,10 @@ public:
     /// \param schema Version to create.
     /// \return Returns the new Engine library.
     static engine_library create(
-        const std::string& directory, const engine_schema& schema);
+        const std::string& directory, const engine_schema& schema)
+    {
+        return engine_library{base_engine_library::create(directory, schema)};
+    }
 
     /// Make a new, empty, in-memory library of a given version.
     ///
@@ -71,30 +73,19 @@ public:
     ///
     /// \param schema Version to create.
     /// \return Returns the new temporary Engine library.
-    static engine_library create_temporary(const engine_schema& schema);
+    static engine_library create_temporary(const engine_schema& schema)
+    {
+        return engine_library{base_engine_library::create_temporary(schema)};
+    }
 
     /// Test whether an Engine Library already exists in the given directory.
     ///
     /// \param directory Directory to test.
     /// \return Returns a flag indicating whether an Engine library exists.
-    static bool exists(const std::string& directory);
-
-    /// Verify the correctness of the Engine library database schema for its
-    /// stated version.
-    void verify() const;
-
-    /// Get the unified database interface for this Engine library.
-    [[nodiscard]] djinterop::database database() const;
-
-    /// Get the Engine library top-level directory.
-    ///
-    /// \return Returns the top-level directory.
-    [[nodiscard]] std::string directory() const;
-
-    /// Get the schema version of the Engine library.
-    ///
-    /// \return Returns the Engine schema version.
-    [[nodiscard]] engine_schema schema() const;
+    static bool exists(const std::string& directory)
+    {
+        return base_engine_library::exists(directory);
+    }
 
     /// Get a class representing the `ChangeLog` table.
     [[nodiscard]] change_log_table change_log() const
@@ -123,11 +114,8 @@ public:
     /// Get a class representing the `Track` table.
     [[nodiscard]] track_table track() const { return track_table{context_}; }
 
-private:
-    explicit engine_library(std::shared_ptr<engine_library_context> context);
-
-    // Pimpl-like idiom, also used by other classes.
-    std::shared_ptr<engine_library_context> context_;
+    /// Get the unified database interface for this Engine library.
+    [[nodiscard]] djinterop::database database() const override;
 };
 
 }  // namespace djinterop::engine::v2

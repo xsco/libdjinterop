@@ -26,44 +26,16 @@
 #include <djinterop/exceptions.hpp>
 
 #include "../../util/filesystem.hpp"
+#include "../engine_library_dir_utils.hpp"
 #include "../schema/schema.hpp"
 
 namespace djinterop::engine::v1
 {
 namespace
 {
-sqlite::database make_attached_db(const std::string& directory, bool must_exist)
-{
-    if (!djinterop::util::path_exists(directory))
-    {
-        if (must_exist)
-        {
-            throw database_not_found{directory};
-        }
-        else
-        {
-            // Note: only creates leaf directory, not entire tree.
-            djinterop::util::create_dir(directory);
-        }
-    }
-
-    sqlite::database db{":memory:"};
-    db << "ATTACH ? as 'music'" << (directory + "/m.db");
-    db << "ATTACH ? as 'perfdata'" << (directory + "/p.db");
-    return db;
-}
-
-sqlite::database make_temporary_db()
-{
-    sqlite::database db{":memory:"};
-    db << "ATTACH ':memory:' as 'music'";
-    db << "ATTACH ':memory:' as 'perfdata'";
-    return db;
-}
-
 engine_storage load_existing(const std::string& directory)
 {
-    auto db = make_attached_db(directory, true);
+    auto db = load_legacy_sqlite_database(directory);
 
     const auto schema = schema::detect_schema(db, "music");
     return engine_storage{directory, schema, db};
@@ -87,7 +59,7 @@ engine_storage::engine_storage(
 std::shared_ptr<engine_storage> engine_storage::create(
     const std::string& directory, const engine_schema& schema)
 {
-    auto db = make_attached_db(directory, false);
+    auto db = create_legacy_sqlite_database(directory);
 
     // Create the desired schema on the new database.
     auto schema_creator = schema::make_schema_creator_validator(schema);
@@ -100,7 +72,7 @@ std::shared_ptr<engine_storage> engine_storage::create(
 std::shared_ptr<engine_storage> engine_storage::create_temporary(
     const engine_schema& schema)
 {
-    auto db = make_temporary_db();
+    auto db = create_temporary_legacy_sqlite_database();
 
     // Create the desired schema on the new database.
     auto schema_creator = schema::make_schema_creator_validator(schema);

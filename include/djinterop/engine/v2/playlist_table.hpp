@@ -34,9 +34,13 @@
 #include <djinterop/config.hpp>
 #include <djinterop/stream_helper.hpp>
 
-namespace djinterop::engine::v2
+namespace djinterop::engine
 {
 struct engine_library_context;
+}
+
+namespace djinterop::engine::v2
+{
 
 /// Thrown when the id on a playlist row is in an erroneous state for a given
 /// operation.
