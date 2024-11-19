@@ -28,9 +28,13 @@
 
 #include <djinterop/config.hpp>
 
-namespace djinterop::engine::v2
+namespace djinterop::engine
 {
 struct engine_library_context;
+}
+
+namespace djinterop::engine::v2
+{
 
 /// Represents a single row in the `ChangeLog` table.
 ///

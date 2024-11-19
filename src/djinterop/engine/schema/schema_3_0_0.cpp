@@ -359,9 +359,6 @@ void schema_3_0_0::create(sqlite::database& db)
           "INTEGER, 	schemaVersionPatch INTEGER, 	"
           "currentPlayedIndiciator INTEGER, 	"
           "lastRekordBoxLibraryImportReadCounter INTEGER);";
-    db << "INSERT INTO Information "
-          "VALUES(1,'43b432fc-8c09-40cd-8ef4-9fcb9a853f84',3,0,0,"
-          "8054931482920806910,NULL);";
     db << "CREATE TABLE AlbumArt ( 	id INTEGER PRIMARY KEY AUTOINCREMENT, 	"
           "hash TEXT, 	albumArt BLOB );";
     db << "CREATE TABLE Pack ( 	id INTEGER PRIMARY KEY AUTOINCREMENT, 	packId "
@@ -413,7 +410,6 @@ void schema_3_0_0::create(sqlite::database& db)
           "AUTOINCREMENT, 	trackId INTEGER, 	trackNumber INTEGER, 	"
           "FOREIGN KEY (trackId) REFERENCES Track (id) ON DELETE CASCADE );";
     db << "DELETE FROM sqlite_sequence;";
-    db << "INSERT INTO sqlite_sequence VALUES('Information',1);";
     db << "CREATE INDEX index_AlbumArt_hash ON AlbumArt (hash);";
     db << "CREATE INDEX index_PlaylistEntity_nextEntityId_listId ON "
           "PlaylistEntity(nextEntityId, listId);";

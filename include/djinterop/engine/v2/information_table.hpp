@@ -27,9 +27,13 @@
 
 #include <djinterop/config.hpp>
 
-namespace djinterop::engine::v2
+namespace djinterop::engine
 {
 struct engine_library_context;
+}
+
+namespace djinterop::engine::v2
+{
 
 /// Represents the single-row contents of the `Information` table.
 struct DJINTEROP_PUBLIC information_row

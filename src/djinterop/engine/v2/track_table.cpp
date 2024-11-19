@@ -21,11 +21,11 @@
 #include <cstddef>
 #include <utility>
 
-#include <djinterop/engine/v2/engine_library_context.hpp>
 #include <djinterop/exceptions.hpp>
 
 #include "../../util/chrono.hpp"
 #include "../../util/convert.hpp"
+#include "../engine_library_context.hpp"
 
 namespace djinterop::engine::v2
 {

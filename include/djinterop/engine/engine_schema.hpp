@@ -67,7 +67,7 @@ constexpr std::array<engine_schema, 18> supported_schemas{
     engine_schema::schema_2_20_3,    engine_schema::schema_2_21_0,
     engine_schema::schema_2_21_1,    engine_schema::schema_2_21_2};
 
-/// Set of supported legacy schema versions.
+/// Set of supported schema 1.x versions.
 constexpr std::array<engine_schema, 11> supported_v1_schemas{
     engine_schema::schema_1_6_0,    engine_schema::schema_1_7_1,
     engine_schema::schema_1_9_1,    engine_schema::schema_1_11_1,
@@ -76,7 +76,7 @@ constexpr std::array<engine_schema, 11> supported_v1_schemas{
     engine_schema::schema_1_17_0,   engine_schema::schema_1_18_0_desktop,
     engine_schema::schema_1_18_0_os};
 
-/// Set of supported "Database2" schema versions.
+/// Set of supported schema 2.x versions.
 constexpr std::array<engine_schema, 7> supported_v2_schemas{
     engine_schema::schema_2_18_0, engine_schema::schema_2_20_1,
     engine_schema::schema_2_20_2, engine_schema::schema_2_20_3,
@@ -86,10 +86,10 @@ constexpr std::array<engine_schema, 7> supported_v2_schemas{
 /// The most recent schema version supported by the library.
 constexpr engine_schema latest_schema = engine_schema::schema_2_21_2;
 
-/// The most recent legacy schema version supported by the library.
+/// The most recent schema 1.x version supported by the library.
 constexpr engine_schema latest_v1_schema = engine_schema::schema_1_18_0_os;
 
-/// The most recent "Database2" schema version supported by the library.
+/// The most recent schema 2.x version supported by the library.
 constexpr engine_schema latest_v2_schema = engine_schema::schema_2_21_2;
 
 /// Get a string representation of the schema.

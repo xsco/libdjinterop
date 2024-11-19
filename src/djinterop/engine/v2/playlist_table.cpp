@@ -25,7 +25,7 @@
 
 #include "../../util/chrono.hpp"
 #include "../../util/sqlite_transaction.hpp"
-#include "engine_library_context.hpp"
+#include "../engine_library_context.hpp"
 
 namespace djinterop::engine::v2
 {

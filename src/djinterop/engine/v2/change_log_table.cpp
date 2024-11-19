@@ -22,7 +22,7 @@
 
 #include <djinterop/exceptions.hpp>
 
-#include "engine_library_context.hpp"
+#include "../engine_library_context.hpp"
 
 namespace djinterop::engine::v2
 {

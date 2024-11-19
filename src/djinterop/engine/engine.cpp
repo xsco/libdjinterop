@@ -25,6 +25,8 @@
 #include <djinterop/engine/v2/engine_library.hpp>
 
 #include "../util/filesystem.hpp"
+#include "engine_library_context.hpp"
+#include "engine_library_dir_utils.hpp"
 #include "track_utils.hpp"
 #include "v1/engine_database_impl.hpp"
 
@@ -32,37 +34,7 @@ namespace djinterop::engine
 {
 namespace
 {
-bool detect_is_database2(const std::string& directory)
-{
-    if (!djinterop::util::path_exists(directory))
-    {
-        throw database_not_found{directory};
-    }
-
-    // Assume that all versions of engine libraries have a database called
-    // "m.db", containing a table called "Information", containing the schema
-    // version in some of its columns.
-    auto v1_m_db_path = directory + "/m.db";
-    auto v2_m_db_path = directory + "/Database2/m.db";
-    auto v1_m_db_path_exists = djinterop::util::path_exists(v1_m_db_path);
-    auto v2_m_db_path_exists = djinterop::util::path_exists(v2_m_db_path);
-
-    if (!v1_m_db_path_exists && !v2_m_db_path_exists)
-    {
-        throw database_not_found{"Neither m.db nor Database2/m.db was found"};
-    }
-
-    if (v1_m_db_path_exists && v2_m_db_path_exists)
-    {
-        throw database_not_found{
-            "Found m.db and Database2/m.db files, which is not supposed to "
-            "happen"};
-    }
-
-    return v2_m_db_path_exists;
-}
-
-inline void hydrate_database(
+void hydrate_database(
     const std::string& db_path, const std::string& script_path)
 {
     std::string stmt;
@@ -180,16 +152,36 @@ database load_database(
 {
     const auto is_database2 = detect_is_database2(directory);
 
-    if (is_database2)
+    if (!is_database2)
     {
-        auto library = v2::engine_library{directory};
-        loaded_schema = library.schema();
+        // Legacy-type directory structure is always schema 1.x.
+        auto storage = std::make_shared<v1::engine_storage>(directory);
+        loaded_schema = storage->schema;
+        return database{std::make_shared<v1::engine_database_impl>(storage)};
+    }
+
+    // A Database2-type directory structure could be schema 2.x or higher.
+    auto db = load_database2_sqlite_database(directory);
+    const auto detected_schema = schema::detect_schema(db);
+    auto context = std::make_shared<engine_library_context>(
+        directory, true, detected_schema, db);
+
+    // TODO(mr-smidge): Add support for schema 3.x libraries.
+    // if (detected_schema >= engine_schema::schema_3_0_0)
+    // {
+    //     throw unsupported_database{
+    //         "Unsupported database with schema " + to_string(detected_schema)};
+    // }
+
+    if (detected_schema >= engine_schema::schema_2_18_0)
+    {
+        auto library = v2::engine_library{context};
         return library.database();
     }
 
-    auto storage = std::make_shared<v1::engine_storage>(directory);
-    loaded_schema = storage->schema;
-    return database{std::make_shared<v1::engine_database_impl>(storage)};
+    throw database_inconsistency{
+        "Found a Database2-type Engine Library with schema " +
+        to_string(detected_schema) + ", which is not supported"};
 }
 
 std::vector<beatgrid_marker> normalize_beatgrid(
