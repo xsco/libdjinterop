@@ -39,58 +39,129 @@ find_package(ZLIB ${ZLIB_MIN_VERSION} REQUIRED)
 
 add_library(
     DjInterop
-    src/djinterop/impl/crate_impl.cpp
-    src/djinterop/impl/database_impl.cpp
-    src/djinterop/impl/track_impl.cpp
+    include/djinterop/album_art.hpp
+    include/djinterop/crate.hpp
+    include/djinterop/database.hpp
+    include/djinterop/djinterop.hpp
+    include/djinterop/engine/engine.hpp
+    include/djinterop/engine/engine_schema.hpp
+    include/djinterop/engine/v2/beat_data_blob.hpp
+    include/djinterop/engine/v2/change_log_table.hpp
+    include/djinterop/engine/v2/engine_library.hpp
+    include/djinterop/engine/v2/information_table.hpp
+    include/djinterop/engine/v2/loops_blob.hpp
+    include/djinterop/engine/v2/overview_waveform_data_blob.hpp
+    include/djinterop/engine/v2/playlist_entity_table.hpp
+    include/djinterop/engine/v2/playlist_table.hpp
+    include/djinterop/engine/v2/quick_cues_blob.hpp
+    include/djinterop/engine/v2/track_data_blob.hpp
+    include/djinterop/engine/v2/track_table.hpp
+    include/djinterop/exceptions.hpp
+    include/djinterop/musical_key.hpp
+    include/djinterop/pad_color.hpp
+    include/djinterop/performance_data.hpp
+    include/djinterop/semantic_version.hpp
+    include/djinterop/stream_helper.hpp
+    include/djinterop/track.hpp
+    include/djinterop/track_snapshot.hpp
+    src/djinterop/crate.cpp
+    src/djinterop/database.cpp
     src/djinterop/engine/base_engine_library.cpp
     src/djinterop/engine/encode_decode_utils.cpp
+    src/djinterop/engine/encode_decode_utils.hpp
     src/djinterop/engine/engine.cpp
+    src/djinterop/engine/engine_library_context.hpp
     src/djinterop/engine/engine_library_dir_utils.cpp
+    src/djinterop/engine/engine_library_dir_utils.hpp
+    src/djinterop/engine/metadata_types.hpp
     src/djinterop/engine/schema/schema_1_6_0.cpp
+    src/djinterop/engine/schema/schema_1_6_0.hpp
     src/djinterop/engine/schema/schema_1_7_1.cpp
+    src/djinterop/engine/schema/schema_1_7_1.hpp
     src/djinterop/engine/schema/schema_1_9_1.cpp
+    src/djinterop/engine/schema/schema_1_9_1.hpp
     src/djinterop/engine/schema/schema_1_11_1.cpp
+    src/djinterop/engine/schema/schema_1_11_1.hpp
     src/djinterop/engine/schema/schema_1_13_0.cpp
+    src/djinterop/engine/schema/schema_1_13_0.hpp
     src/djinterop/engine/schema/schema_1_13_1.cpp
+    src/djinterop/engine/schema/schema_1_13_1.hpp
     src/djinterop/engine/schema/schema_1_13_2.cpp
+    src/djinterop/engine/schema/schema_1_13_2.hpp
     src/djinterop/engine/schema/schema_1_15_0.cpp
+    src/djinterop/engine/schema/schema_1_15_0.hpp
     src/djinterop/engine/schema/schema_1_17_0.cpp
+    src/djinterop/engine/schema/schema_1_17_0.hpp
     src/djinterop/engine/schema/schema_1_18_0_desktop.cpp
+    src/djinterop/engine/schema/schema_1_18_0_desktop.hpp
     src/djinterop/engine/schema/schema_1_18_0_os.cpp
+    src/djinterop/engine/schema/schema_1_18_0_os.hpp
     src/djinterop/engine/schema/schema_2_18_0.cpp
+    src/djinterop/engine/schema/schema_2_18_0.hpp
     src/djinterop/engine/schema/schema_2_20_1.cpp
+    src/djinterop/engine/schema/schema_2_20_1.hpp
     src/djinterop/engine/schema/schema_2_20_2.cpp
+    src/djinterop/engine/schema/schema_2_20_2.hpp
     src/djinterop/engine/schema/schema_2_20_3.cpp
+    src/djinterop/engine/schema/schema_2_20_3.hpp
     src/djinterop/engine/schema/schema_2_21_0.cpp
+    src/djinterop/engine/schema/schema_2_21_0.hpp
     src/djinterop/engine/schema/schema_2_21_1.cpp
+    src/djinterop/engine/schema/schema_2_21_1.hpp
     src/djinterop/engine/schema/schema_2_21_2.cpp
+    src/djinterop/engine/schema/schema_2_21_2.hpp
     src/djinterop/engine/schema/schema_3_0_0.cpp
+    src/djinterop/engine/schema/schema_3_0_0.hpp
     src/djinterop/engine/schema/schema.cpp
+    src/djinterop/engine/schema/schema.hpp
+    src/djinterop/engine/schema/schema_validate_utils.hpp
     src/djinterop/engine/v1/engine_crate_impl.cpp
+    src/djinterop/engine/v1/engine_crate_impl.hpp
     src/djinterop/engine/v1/engine_database_impl.cpp
+    src/djinterop/engine/v1/engine_database_impl.hpp
     src/djinterop/engine/v1/engine_storage.cpp
+    src/djinterop/engine/v1/engine_storage.hpp
     src/djinterop/engine/v1/engine_track_impl.cpp
+    src/djinterop/engine/v1/engine_track_impl.hpp
     src/djinterop/engine/v1/performance_data_format.cpp
+    src/djinterop/engine/v1/performance_data_format.hpp
     src/djinterop/engine/v2/beat_data_blob.cpp
     src/djinterop/engine/v2/change_log_table.cpp
+    src/djinterop/engine/v2/convert_beatgrid.hpp
+    src/djinterop/engine/v2/convert_hot_cues.hpp
+    src/djinterop/engine/v2/convert_loops.hpp
+    src/djinterop/engine/v2/convert_track.hpp
+    src/djinterop/engine/v2/convert_waveform.hpp
     src/djinterop/engine/v2/crate_impl.cpp
+    src/djinterop/engine/v2/crate_impl.hpp
     src/djinterop/engine/v2/database_impl.cpp
+    src/djinterop/engine/v2/database_impl.hpp
     src/djinterop/engine/v2/engine_library.cpp
     src/djinterop/engine/v2/information_table.cpp
     src/djinterop/engine/v2/loops_blob.cpp
     src/djinterop/engine/v2/overview_waveform_data_blob.cpp
-    src/djinterop/engine/v2/playlist_table.cpp
     src/djinterop/engine/v2/playlist_entity_table.cpp
+    src/djinterop/engine/v2/playlist_table.cpp
     src/djinterop/engine/v2/quick_cues_blob.cpp
     src/djinterop/engine/v2/track_data_blob.cpp
     src/djinterop/engine/v2/track_table.cpp
     src/djinterop/engine/v2/track_impl.cpp
-    src/djinterop/crate.cpp
-    src/djinterop/database.cpp
+    src/djinterop/engine/v2/track_impl.hpp
+    src/djinterop/impl/crate_impl.cpp
+    src/djinterop/impl/crate_impl.hpp
+    src/djinterop/impl/database_impl.cpp
+    src/djinterop/impl/database_impl.hpp
+    src/djinterop/impl/track_impl.cpp
+    src/djinterop/impl/track_impl.hpp
     src/djinterop/track.cpp
     src/djinterop/util/chrono.cpp
+    src/djinterop/util/chrono.hpp
     src/djinterop/util/filesystem.cpp
-    src/djinterop/util/random.cpp)
+    src/djinterop/util/filesystem.hpp
+    src/djinterop/util/random.cpp
+    src/djinterop/util/random.hpp
+    src/djinterop/util/sqlite_transaction.hpp
+)
 
 set_target_properties(DjInterop PROPERTIES
     OUTPUT_NAME "djinterop"
@@ -163,8 +234,8 @@ install(TARGETS DjInterop
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 
 install(FILES
-    include/djinterop/album_art.hpp
     ${CMAKE_CURRENT_BINARY_DIR}/include/djinterop/config.hpp
+    include/djinterop/album_art.hpp
     include/djinterop/crate.hpp
     include/djinterop/database.hpp
     include/djinterop/djinterop.hpp
