@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.23.1
+        VERSION 0.23.2
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
@@ -56,6 +56,17 @@ add_library(
     include/djinterop/engine/v2/quick_cues_blob.hpp
     include/djinterop/engine/v2/track_data_blob.hpp
     include/djinterop/engine/v2/track_table.hpp
+    include/djinterop/engine/v3/beat_data_blob.hpp
+    include/djinterop/engine/v3/engine_library.hpp
+    include/djinterop/engine/v3/information_table.hpp
+    include/djinterop/engine/v3/loops_blob.hpp
+    include/djinterop/engine/v3/overview_waveform_data_blob.hpp
+    include/djinterop/engine/v3/performance_data_table.hpp
+    include/djinterop/engine/v3/playlist_entity_table.hpp
+    include/djinterop/engine/v3/playlist_table.hpp
+    include/djinterop/engine/v3/quick_cues_blob.hpp
+    include/djinterop/engine/v3/track_data_blob.hpp
+    include/djinterop/engine/v3/track_table.hpp
     include/djinterop/exceptions.hpp
     include/djinterop/musical_key.hpp
     include/djinterop/pad_color.hpp
@@ -147,6 +158,20 @@ add_library(
     src/djinterop/engine/v2/track_table.cpp
     src/djinterop/engine/v2/track_impl.cpp
     src/djinterop/engine/v2/track_impl.hpp
+    src/djinterop/engine/v3/convert_beatgrid.hpp
+    src/djinterop/engine/v3/convert_hot_cues.hpp
+    src/djinterop/engine/v3/convert_loops.hpp
+    src/djinterop/engine/v3/convert_track.hpp
+    src/djinterop/engine/v3/convert_waveform.hpp
+    src/djinterop/engine/v3/crate_impl.cpp
+    src/djinterop/engine/v3/crate_impl.hpp
+    src/djinterop/engine/v3/database_impl.cpp
+    src/djinterop/engine/v3/database_impl.hpp
+    src/djinterop/engine/v3/engine_library.cpp
+    src/djinterop/engine/v3/performance_data_table.cpp
+    src/djinterop/engine/v3/track_impl.cpp
+    src/djinterop/engine/v3/track_impl.hpp
+    src/djinterop/engine/v3/track_table.cpp
     src/djinterop/impl/crate_impl.cpp
     src/djinterop/impl/crate_impl.hpp
     src/djinterop/impl/database_impl.cpp
@@ -349,9 +374,11 @@ if (Boost_FOUND)
     add_djinterop_test(engine/ database_test)
     add_djinterop_test(engine/ engine_test)
     add_djinterop_test(engine/ track_test)
-    add_djinterop_test(engine/v2/ track_table_test)
     add_djinterop_test(engine/v2/ playlist_entity_table_test)
     add_djinterop_test(engine/v2/ playlist_table_test)
+    add_djinterop_test(engine/v2/ track_table_test)
+    add_djinterop_test(engine/v3/ performance_data_table_test)
+    add_djinterop_test(engine/v3/ track_table_test)
 
 else()
     message(STATUS "Unit tests not available, as Boost cannot be found")

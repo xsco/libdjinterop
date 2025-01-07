@@ -46,7 +46,7 @@ const std::vector<example_track_row_type> all_example_track_row_types{
 
 BOOST_TEST_DECORATOR(*utf::description("add() with valid track row"))
 BOOST_DATA_TEST_CASE(
-    add__valid__adds, e::supported_v2_schemas* all_example_track_row_types,
+    add_valid_row_adds, e::supported_v2_schemas* all_example_track_row_types,
     schema, row_type)
 {
     // Arrange
@@ -63,7 +63,8 @@ BOOST_DATA_TEST_CASE(
 }
 
 BOOST_TEST_DECORATOR(*utf::description("add() with an existing id"))
-BOOST_DATA_TEST_CASE(add__existing_id__throws, e::supported_v2_schemas, schema)
+BOOST_DATA_TEST_CASE(
+    add_with_existing_id_throws, e::supported_v2_schemas, schema)
 {
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
@@ -76,8 +77,8 @@ BOOST_DATA_TEST_CASE(add__existing_id__throws, e::supported_v2_schemas, schema)
 
 BOOST_TEST_DECORATOR(*utf::description("get() with a valid id"))
 BOOST_DATA_TEST_CASE(
-    get__valid__gets, e::supported_v2_schemas* all_example_track_row_types,
-    schema, row_type)
+    get_with_valid_track_gets,
+    e::supported_v2_schemas* all_example_track_row_types, schema, row_type)
 {
     // Arrange
     BOOST_TEST_CHECKPOINT(
@@ -114,7 +115,7 @@ BOOST_DATA_TEST_CASE(
 
 BOOST_TEST_DECORATOR(*utf::description("update() with valid data"))
 BOOST_DATA_TEST_CASE(
-    update__valid__updates,
+    update_with_valid_track_updates,
     e::supported_v2_schemas* all_example_track_row_types*
         all_example_track_row_types,
     schema, initial_row_type, update_row_type)
@@ -163,73 +164,74 @@ BOOST_DATA_TEST_CASE(
 // The act of defining very similar test cases for all the getters and setters
 // on the track table is highly tedious.  As such, some macros to generate these
 // more efficiently make for a more succinct way to define tests.
-#define DEFINE_GETTER_VALID_TEST_CASE(engine_column, min_schema)          \
-    BOOST_TEST_DECORATOR(                                                 \
-        *utf::description("get_" #engine_column "() with valid track"))   \
-    BOOST_DATA_TEST_CASE(                                                 \
-        get_##engine_column##__expected, e::supported_v2_schemas, schema) \
-    {                                                                     \
-        auto library = ev2::engine_library::create_temporary(schema);     \
-        auto track_tbl = library.track();                                 \
-        ev2::track_row row{0};                                            \
-        populate_track_row(                                               \
-            example_track_row_type::fully_analysed_1, row, schema);       \
-        auto id = track_tbl.add(row);                                     \
-        auto expected = row.engine_column;                                \
-                                                                          \
-        if (schema >= min_schema)                                         \
-        {                                                                 \
-            auto actual = track_tbl.get_##engine_column(id);              \
-            BOOST_CHECK_EQUAL(                                            \
-                make_printable(expected), make_printable(actual));        \
-        }                                                                 \
-        else                                                              \
-        {                                                                 \
-            BOOST_CHECK_THROW(                                            \
-                track_tbl.get_##engine_column(id),                        \
-                djinterop::unsupported_operation);                        \
-        }                                                                 \
+#define DEFINE_GETTER_VALID_TEST_CASE(engine_column, min_schema)              \
+    BOOST_TEST_DECORATOR(                                                     \
+        *utf::description("get_" #engine_column "() with valid track"))       \
+    BOOST_DATA_TEST_CASE(                                                     \
+        get_##engine_column##_with_valid_track_gets, e::supported_v2_schemas, \
+        schema)                                                               \
+    {                                                                         \
+        auto library = ev2::engine_library::create_temporary(schema);         \
+        auto track_tbl = library.track();                                     \
+        ev2::track_row row{0};                                                \
+        populate_track_row(                                                   \
+            example_track_row_type::fully_analysed_1, row, schema);           \
+        auto id = track_tbl.add(row);                                         \
+        auto expected = row.engine_column;                                    \
+                                                                              \
+        if (schema >= min_schema)                                             \
+        {                                                                     \
+            auto actual = track_tbl.get_##engine_column(id);                  \
+            BOOST_CHECK_EQUAL(                                                \
+                make_printable(expected), make_printable(actual));            \
+        }                                                                     \
+        else                                                                  \
+        {                                                                     \
+            BOOST_CHECK_THROW(                                                \
+                track_tbl.get_##engine_column(id),                            \
+                djinterop::unsupported_operation);                            \
+        }                                                                     \
     }
 
-#define DEFINE_SETTER_VALID_TEST_CASE(engine_column, min_schema)            \
-    BOOST_TEST_DECORATOR(                                                   \
-        *utf::description("set_" #engine_column "() with valid track"))     \
-    BOOST_DATA_TEST_CASE(                                                   \
-        set_##engine_column##__valid__expected, e::supported_v2_schemas,    \
-        schema)                                                             \
-    {                                                                       \
-        auto library = ev2::engine_library::create_temporary(schema);       \
-        auto track_tbl = library.track();                                   \
-        ev2::track_row row{0};                                              \
-        populate_track_row(example_track_row_type::minimal_1, row, schema); \
-        auto id = track_tbl.add(row);                                       \
-                                                                            \
-        populate_track_row(                                                 \
-            example_track_row_type::fully_analysed_1, row, schema);         \
-        auto expected = row.engine_column;                                  \
-                                                                            \
-        if (schema >= min_schema)                                           \
-        {                                                                   \
-            track_tbl.set_##engine_column(id, expected);                    \
-                                                                            \
-            auto actual = track_tbl.get_##engine_column(id);                \
-            BOOST_CHECK_EQUAL(                                              \
-                make_printable(expected), make_printable(actual));          \
-        }                                                                   \
-        else                                                                \
-        {                                                                   \
-            BOOST_CHECK_THROW(                                              \
-                track_tbl.set_##engine_column(id, expected),                \
-                djinterop::unsupported_operation);                          \
-        }                                                                   \
+#define DEFINE_SETTER_VALID_TEST_CASE(engine_column, min_schema)              \
+    BOOST_TEST_DECORATOR(                                                     \
+        *utf::description("set_" #engine_column "() with valid track"))       \
+    BOOST_DATA_TEST_CASE(                                                     \
+        set_##engine_column##_with_valid_track_sets, e::supported_v2_schemas, \
+        schema)                                                               \
+    {                                                                         \
+        auto library = ev2::engine_library::create_temporary(schema);         \
+        auto track_tbl = library.track();                                     \
+        ev2::track_row row{0};                                                \
+        populate_track_row(example_track_row_type::minimal_1, row, schema);   \
+        auto id = track_tbl.add(row);                                         \
+                                                                              \
+        populate_track_row(                                                   \
+            example_track_row_type::fully_analysed_1, row, schema);           \
+        auto expected = row.engine_column;                                    \
+                                                                              \
+        if (schema >= min_schema)                                             \
+        {                                                                     \
+            track_tbl.set_##engine_column(id, expected);                      \
+                                                                              \
+            auto actual = track_tbl.get_##engine_column(id);                  \
+            BOOST_CHECK_EQUAL(                                                \
+                make_printable(expected), make_printable(actual));            \
+        }                                                                     \
+        else                                                                  \
+        {                                                                     \
+            BOOST_CHECK_THROW(                                                \
+                track_tbl.set_##engine_column(id, expected),                  \
+                djinterop::unsupported_operation);                            \
+        }                                                                     \
     }
 
 #define DEFINE_GETTER_INVALID_TEST_CASE(engine_column, min_schema)        \
     BOOST_TEST_DECORATOR(                                                 \
         *utf::description("get_" #engine_column "() with invalid track")) \
     BOOST_DATA_TEST_CASE(                                                 \
-        get_##engine_column##__invalid__throws, e::supported_v2_schemas,  \
-        schema)                                                           \
+        get_##engine_column##_with_invalid_track_throws,                  \
+        e::supported_v2_schemas, schema)                                  \
     {                                                                     \
         auto library = ev2::engine_library::create_temporary(schema);     \
         auto track_tbl = library.track();                                 \
@@ -252,8 +254,8 @@ BOOST_DATA_TEST_CASE(
     BOOST_TEST_DECORATOR(                                                 \
         *utf::description("set_" #engine_column "() with invalid track")) \
     BOOST_DATA_TEST_CASE(                                                 \
-        set_##engine_column##__invalid__throws, e::supported_v2_schemas,  \
-        schema)                                                           \
+        set_##engine_column##_with_invalid_track_throws,                  \
+        e::supported_v2_schemas, schema)                                  \
     {                                                                     \
         auto library = ev2::engine_library::create_temporary(schema);     \
         auto track_tbl = library.track();                                 \
@@ -340,7 +342,7 @@ DEFINE_GETTER_SETTER_TEST_CASES(last_edit_time, es::schema_2_20_3)
 
 BOOST_TEST_DECORATOR(*utf::description("operator<<() with valid track row"))
 BOOST_DATA_TEST_CASE(
-    operator_stream_output__valid__outputs,
+    operator_stream_output_with_valid_track_outputs_non_empty,
     e::supported_v2_schemas* all_example_track_row_types, schema, row_type)
 {
     // Arrange

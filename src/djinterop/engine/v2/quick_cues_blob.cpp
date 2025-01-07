@@ -65,6 +65,17 @@ std::vector<std::byte> quick_cues_blob::to_blob() const
 
 quick_cues_blob quick_cues_blob::from_blob(const std::vector<std::byte>& blob)
 {
+    if (blob.empty())
+    {
+        return quick_cues_blob{
+            .quick_cues = {},
+            .adjusted_main_cue = 0,
+            .is_main_cue_adjusted = false,
+            .default_main_cue = 0,
+            .extra_data = {},
+        };
+    }
+
     const auto uncompressed = zlib_uncompress(blob);
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();

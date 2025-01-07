@@ -44,7 +44,7 @@ auto make_printable(const T& v)
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const printable<T>& obj) noexcept
 {
-    djinterop::stream_helper::print(os, obj);
+    djinterop::stream_helper::print(os, obj.value);
     return os;
 }
 

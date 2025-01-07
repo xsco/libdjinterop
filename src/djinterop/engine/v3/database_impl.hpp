@@ -19,11 +19,11 @@
 
 #include <memory>
 
-#include <djinterop/engine/v2/engine_library.hpp>
+#include <djinterop/engine/v3/engine_library.hpp>
 
 #include "../../impl/database_impl.hpp"
 
-namespace djinterop::engine::v2
+namespace djinterop::engine::v3
 {
 class database_impl : public djinterop::database_impl
 {
@@ -56,4 +56,4 @@ private:
     std::shared_ptr<engine_library> library_;
 };
 
-}  // namespace djinterop::engine::v2
+}  // namespace djinterop::engine::v3
