@@ -152,7 +152,7 @@ inline std::string to_application_version_string(const engine_schema& v)
             return "Engine DJ Desktop/OS 3.1.0 to 3.4.0";
         case engine_schema::schema_2_21_1: return "Engine DJ Desktop/OS 4.0.0";
         case engine_schema::schema_2_21_2: return "Engine DJ Desktop/OS 4.0.1";
-        case engine_schema::schema_3_0_0: return "Engine DJ Desktop/OS 4.1.0";
+        case engine_schema::schema_3_0_0: return "Engine DJ Desktop/OS 4.1.0 to 4.2.1";
     }
 
     return "Engine versions unknown (" + to_string(v) + ")";
