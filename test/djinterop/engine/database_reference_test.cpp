@@ -96,6 +96,10 @@ const std::vector<std::string> ref_script_dirs{
     "/ref/engine/desktop/desktop-4.0.1",
     "/ref/engine/sc5000/firmware-4.0.1",
     "/ref/engine/desktop/desktop-4.1.0",
+    "/ref/engine/sc5000/firmware-4.1.0",
+    "/ref/engine/desktop/desktop-4.2.0",
+    "/ref/engine/sc5000/firmware-4.2.0",
+    "/ref/engine/desktop/desktop-4.2.1",
 };
 }  // anonymous namespace
 
