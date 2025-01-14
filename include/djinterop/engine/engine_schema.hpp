@@ -56,7 +56,7 @@ enum class engine_schema
 };
 
 /// Set of supported schema versions.
-constexpr std::array<engine_schema, 18> supported_schemas{
+constexpr std::array<engine_schema, 19> supported_schemas{
     engine_schema::schema_1_6_0,     engine_schema::schema_1_7_1,
     engine_schema::schema_1_9_1,     engine_schema::schema_1_11_1,
     engine_schema::schema_1_13_0,    engine_schema::schema_1_13_1,
@@ -65,7 +65,8 @@ constexpr std::array<engine_schema, 18> supported_schemas{
     engine_schema::schema_1_18_0_os, engine_schema::schema_2_18_0,
     engine_schema::schema_2_20_1,    engine_schema::schema_2_20_2,
     engine_schema::schema_2_20_3,    engine_schema::schema_2_21_0,
-    engine_schema::schema_2_21_1,    engine_schema::schema_2_21_2};
+    engine_schema::schema_2_21_1,    engine_schema::schema_2_21_2,
+    engine_schema::schema_3_0_0};
 
 /// Set of supported schema 1.x versions.
 constexpr std::array<engine_schema, 11> supported_v1_schemas{
@@ -83,14 +84,21 @@ constexpr std::array<engine_schema, 7> supported_v2_schemas{
     engine_schema::schema_2_21_0, engine_schema::schema_2_21_1,
     engine_schema::schema_2_21_2};
 
+/// Set of supported schema 3.x versions.
+constexpr std::array<engine_schema, 1> supported_v3_schemas{
+    engine_schema::schema_3_0_0};
+
 /// The most recent schema version supported by the library.
-constexpr engine_schema latest_schema = engine_schema::schema_2_21_2;
+constexpr engine_schema latest_schema = engine_schema::schema_3_0_0;
 
 /// The most recent schema 1.x version supported by the library.
 constexpr engine_schema latest_v1_schema = engine_schema::schema_1_18_0_os;
 
 /// The most recent schema 2.x version supported by the library.
 constexpr engine_schema latest_v2_schema = engine_schema::schema_2_21_2;
+
+/// The most recent schema 3.x version supported by the library.
+constexpr engine_schema latest_v3_schema = engine_schema::schema_3_0_0;
 
 /// Get a string representation of the schema.
 inline std::string to_string(const engine_schema& v)

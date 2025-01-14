@@ -37,7 +37,7 @@ ColumnType get_column(
 {
     std::optional<ColumnType> result;
     auto sql = "SELECT " + column_name + " FROM Track WHERE id = ?";
-    db << sql << id >> [&](ColumnType value) { result = value; };
+    db << sql << id >> [&](ColumnType value) { result = std::move(value); };
 
     if (result)
         return *result;

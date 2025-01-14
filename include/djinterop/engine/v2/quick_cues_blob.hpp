@@ -36,7 +36,7 @@ constexpr const size_t MAX_QUICK_CUES = 8;
 
 /// Sentinel value for a quick cue sample offset indicating that the quick cue
 /// is not set.
-static const double QUICK_CUE_SAMPLE_OFFSET_EMPTY = -1;
+constexpr double QUICK_CUE_SAMPLE_OFFSET_EMPTY = -1;
 
 /// Represents a quick cue in the quick cues blob.
 struct DJINTEROP_PUBLIC quick_cue_blob

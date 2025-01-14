@@ -23,6 +23,7 @@
 #include <string>
 
 #include <djinterop/engine/v2/engine_library.hpp>
+#include <djinterop/engine/v3/engine_library.hpp>
 
 #include "../util/filesystem.hpp"
 #include "engine_library_context.hpp"
@@ -51,6 +52,12 @@ void hydrate_database(
 database create_database(
     const std::string& directory, const engine_schema& schema)
 {
+    if (schema >= engine_schema::schema_3_0_0)
+    {
+        auto library = v3::engine_library::create(directory, schema);
+        return library.database();
+    }
+
     if (schema >= engine_schema::schema_2_18_0)
     {
         auto library = v2::engine_library::create(directory, schema);
@@ -63,6 +70,12 @@ database create_database(
 
 database create_temporary_database(const engine_schema& schema)
 {
+    if (schema >= engine_schema::schema_3_0_0)
+    {
+        auto library = v3::engine_library::create_temporary(schema);
+        return library.database();
+    }
+
     if (schema >= engine_schema::schema_2_18_0)
     {
         auto library = v2::engine_library::create_temporary(schema);
@@ -166,12 +179,11 @@ database load_database(
     auto context = std::make_shared<engine_library_context>(
         directory, true, detected_schema, db);
 
-    // TODO(mr-smidge): Add support for schema 3.x libraries.
-    // if (detected_schema >= engine_schema::schema_3_0_0)
-    // {
-    //     throw unsupported_database{
-    //         "Unsupported database with schema " + to_string(detected_schema)};
-    // }
+    if (detected_schema >= engine_schema::schema_3_0_0)
+    {
+        auto library = v3::engine_library{context};
+        return library.database();
+    }
 
     if (detected_schema >= engine_schema::schema_2_18_0)
     {
