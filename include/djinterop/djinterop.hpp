@@ -20,6 +20,12 @@
 #define DJINTEROP_DJINTEROP_HPP
 
 #if __cplusplus < 202002L
+#if defined(__GNUC__) && !defined(__clang__)
+#define XSTR(x) STR(x)
+#define STR(x) #x
+#pragma message "__cplusplus = " XSTR(__cplusplus)
+#endif
+
 #error This library needs at least a C++20 compliant compiler
 #endif
 
