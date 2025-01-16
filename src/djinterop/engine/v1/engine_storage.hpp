@@ -98,12 +98,12 @@ struct performance_data_row
 class engine_storage
 {
 public:
-    /// Construct by loading from an existing DB directory.
-    engine_storage(const std::string& directory);
-
     engine_storage(
         const std::string& directory, const engine_schema& schema,
         sqlite::database db);
+
+    /// Construct by loading from an existing DB directory.
+    static std::shared_ptr<engine_storage> load(const std::string& directory);
 
     /// Make a new, empty DB of a given version.
     static std::shared_ptr<engine_storage> create(
