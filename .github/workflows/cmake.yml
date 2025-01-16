@@ -13,7 +13,8 @@ env:
 jobs:
   build:
     strategy:
-      fail-fast: false
+      # Can be uncommented if wishing to test stability-impacting changes.
+      #fail-fast: false
 
       matrix:
         config: [
@@ -32,7 +33,7 @@ jobs:
 
     - name: Install dependencies (Windows)
       if: runner.os == 'Windows'
-      run: vcpkg install zlib
+      run: vcpkg install zlib sqlite3
 
     - name: Install dependencies (Ubuntu)
       if: runner.os == 'Linux'
