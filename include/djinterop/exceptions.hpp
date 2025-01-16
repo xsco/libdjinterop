@@ -19,14 +19,11 @@
 #ifndef DJINTEROP_EXCEPTIONS_HPP
 #define DJINTEROP_EXCEPTIONS_HPP
 
-#if __cplusplus < 202002L
-#error This library needs at least a C++20 compliant compiler
-#endif
-
 #include <cstdint>
 #include <stdexcept>
 #include <string>
 
+#include <djinterop/config.hpp>
 #include <djinterop/semantic_version.hpp>
 
 namespace djinterop

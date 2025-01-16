@@ -19,15 +19,13 @@
 #ifndef DJINTEROP_STREAM_HELPER_HPP
 #define DJINTEROP_STREAM_HELPER_HPP
 
-#if __cplusplus < 202002L
-#error This library needs at least a C++20 compliant compiler
-#endif
-
 #include <array>
 #include <chrono>
 #include <optional>
 #include <ostream>
 #include <vector>
+
+#include <djinterop/config.hpp>
 
 namespace djinterop::stream_helper
 {

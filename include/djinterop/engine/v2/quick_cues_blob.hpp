@@ -17,10 +17,6 @@
 
 #pragma once
 
-#if __cplusplus < 202002L
-#error This library needs at least a C++20 compliant compiler
-#endif
-
 #include <cstddef>
 #include <ostream>
 #include <string>

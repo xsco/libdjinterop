@@ -19,10 +19,6 @@
 #ifndef DJINTEROP_CRATE_HPP
 #define DJINTEROP_CRATE_HPP
 
-#if __cplusplus < 202002L
-#error This library needs at least a C++20 compliant compiler
-#endif
-
 #include <cstdint>
 #include <memory>
 #include <optional>
