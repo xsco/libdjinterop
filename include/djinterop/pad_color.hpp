@@ -19,12 +19,10 @@
 #ifndef DJINTEROP_PAD_COLOR_HPP
 #define DJINTEROP_PAD_COLOR_HPP
 
-#if __cplusplus < 201703L
-#error This library needs at least a C++17 compliant compiler
-#endif
-
 #include <cstdint>
 #include <ostream>
+
+#include <djinterop/config.hpp>
 
 namespace djinterop
 {

@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <memory>
 #include <utility>
 
 #include <djinterop/database.hpp>
@@ -31,29 +32,21 @@
 
 namespace djinterop::engine::v1
 {
-namespace
-{
-engine_storage load_existing(const std::string& directory)
-{
-    auto db = load_legacy_sqlite_database(directory);
-
-    const auto schema = schema::detect_schema(db, "music");
-    return engine_storage{directory, schema, db};
-}
-
-}  // anonymous namespace
-
-engine_storage::engine_storage(const std::string& directory) :
-    engine_storage{load_existing(directory)}
-{
-}
-
 engine_storage::engine_storage(
     const std::string& directory, const engine_schema& schema,
     sqlite::database db) :
     directory{directory},
     db{std::move(db)}, schema{schema}
 {
+}
+
+std::shared_ptr<engine_storage> engine_storage::load(
+    const std::string& directory)
+{
+    auto db = load_legacy_sqlite_database(directory);
+
+    const auto schema = schema::detect_schema(db, "music");
+    return std::make_shared<engine_storage>(directory, schema, db);
 }
 
 std::shared_ptr<engine_storage> engine_storage::create(
@@ -65,8 +58,7 @@ std::shared_ptr<engine_storage> engine_storage::create(
     auto schema_creator = schema::make_schema_creator_validator(schema);
     schema_creator->create(db);
 
-    return std::shared_ptr<engine_storage>{
-        new engine_storage{directory, schema, std::move(db)}};
+    return std::make_shared<engine_storage>(directory, schema, std::move(db));
 }
 
 std::shared_ptr<engine_storage> engine_storage::create_temporary(

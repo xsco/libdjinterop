@@ -168,7 +168,7 @@ database load_database(
     if (!is_database2)
     {
         // Legacy-type directory structure is always schema 1.x.
-        auto storage = std::make_shared<v1::engine_storage>(directory);
+        auto storage = v1::engine_storage::load(directory);
         loaded_schema = storage->schema;
         return database{std::make_shared<v1::engine_database_impl>(storage)};
     }

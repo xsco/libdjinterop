@@ -17,10 +17,7 @@
 
 #pragma once
 
-#if __cplusplus < 201703L
-#error This library needs at least a C++17 compliant compiler
-#endif
-
+#include <djinterop/config.hpp>
 #include <djinterop/engine/v2/loops_blob.hpp>
 
 namespace djinterop::engine::v3

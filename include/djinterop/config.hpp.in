@@ -19,8 +19,12 @@
 #ifndef DJINTEROP_CONFIG_HPP
 #define DJINTEROP_CONFIG_HPP
 
-#if __cplusplus < 201703L
-#error This library needs at least a C++17 compliant compiler
+#if __cplusplus < 202002L
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ == 10
+#pragma message "g++-10 detected - partial support for C++20 should be OK..."
+#else
+#error This library needs at least a C++20 compliant compiler
+#endif
 #endif
 
 // Statement about whether the library was built/installed as static or shared.

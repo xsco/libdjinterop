@@ -19,13 +19,11 @@
 #ifndef DJINTEROP_ENGINE_ENGINE_SCHEMA_HPP
 #define DJINTEROP_ENGINE_ENGINE_SCHEMA_HPP
 
-#if __cplusplus < 201703L
-#error This library needs at least a C++17 compliant compiler
-#endif
-
 #include <array>
 #include <ostream>
 #include <string>
+
+#include <djinterop/config.hpp>
 
 namespace djinterop::engine
 {
