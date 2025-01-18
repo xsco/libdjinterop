@@ -27,7 +27,9 @@ if(MSVC)
 else()
     # Disabling -Wunused-variable needed as the library implementation doesn't
     # use every variable in the public headers.  Is there a better way?
-    add_compile_options("-Wall" "-Wpedantic" "-Wno-unused-variable" "-Werror")
+    # Disabling -Wunused-but-set-variable owing to XCode triggering on this
+    # in the SQLite amalgamation.
+    add_compile_options("-Wall" "-Wpedantic" "-Wno-unused-variable" "-Wno-unused-but-set-variable" "-Werror")
 endif()
 
 # Build shared a library by default.
