@@ -28,7 +28,7 @@
 namespace djinterop::engine
 {
 /// Enumeration of Engine database schemas.
-enum class engine_schema
+enum class DJINTEROP_PUBLIC engine_schema
 {
     schema_1_6_0,
     schema_1_7_1,
@@ -54,7 +54,7 @@ enum class engine_schema
 };
 
 /// Set of supported schema versions.
-constexpr std::array<engine_schema, 19> supported_schemas{
+constexpr std::array supported_schemas{
     engine_schema::schema_1_6_0,     engine_schema::schema_1_7_1,
     engine_schema::schema_1_9_1,     engine_schema::schema_1_11_1,
     engine_schema::schema_1_13_0,    engine_schema::schema_1_13_1,
@@ -67,7 +67,7 @@ constexpr std::array<engine_schema, 19> supported_schemas{
     engine_schema::schema_3_0_0};
 
 /// Set of supported schema 1.x versions.
-constexpr std::array<engine_schema, 11> supported_v1_schemas{
+constexpr std::array supported_v1_schemas{
     engine_schema::schema_1_6_0,    engine_schema::schema_1_7_1,
     engine_schema::schema_1_9_1,    engine_schema::schema_1_11_1,
     engine_schema::schema_1_13_0,   engine_schema::schema_1_13_1,
@@ -76,14 +76,14 @@ constexpr std::array<engine_schema, 11> supported_v1_schemas{
     engine_schema::schema_1_18_0_os};
 
 /// Set of supported schema 2.x versions.
-constexpr std::array<engine_schema, 7> supported_v2_schemas{
+constexpr std::array supported_v2_schemas{
     engine_schema::schema_2_18_0, engine_schema::schema_2_20_1,
     engine_schema::schema_2_20_2, engine_schema::schema_2_20_3,
     engine_schema::schema_2_21_0, engine_schema::schema_2_21_1,
     engine_schema::schema_2_21_2};
 
 /// Set of supported schema 3.x versions.
-constexpr std::array<engine_schema, 1> supported_v3_schemas{
+constexpr std::array supported_v3_schemas{
     engine_schema::schema_3_0_0};
 
 /// The most recent schema version supported by the library.

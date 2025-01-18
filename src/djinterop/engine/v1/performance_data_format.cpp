@@ -23,7 +23,7 @@
 #include <djinterop/musical_key.hpp>
 
 #include "../../util/convert.hpp"
-#include "djinterop/engine/encode_decode_utils.hpp"
+#include "../encode_decode_utils.hpp"
 #include "performance_data_format.hpp"
 
 namespace djinterop::engine::v1
