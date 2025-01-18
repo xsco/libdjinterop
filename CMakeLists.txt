@@ -194,7 +194,10 @@ set_target_properties(DjInterop PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR})
 
-target_compile_definitions(DjInterop PUBLIC DJINTEROP_SOURCE)
+# Note: sqlite_modern_cpp uses deprecated codecvt facets
+target_compile_definitions(DjInterop PUBLIC
+    DJINTEROP_SOURCE
+    _SILENCE_CXX20_CODECVT_FACETS_DEPRECATION_WARNING)
 
 get_target_property(DJINTEROP_LIBRARY_TYPE DjInterop TYPE)
 if(DJINTEROP_LIBRARY_TYPE STREQUAL "STATIC_LIBRARY")

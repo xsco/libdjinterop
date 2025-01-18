@@ -14,16 +14,21 @@ jobs:
   build:
     strategy:
       # Can be uncommented if wishing to test stability-impacting changes.
-      #fail-fast: false
+      fail-fast: false
 
       matrix:
         config: [
           { os: ubuntu-20.04, c_compiler: gcc-10, cpp_compiler: g++-10 },
+          { os: ubuntu-22.04, c_compiler: clang-14, cpp_compiler: clang++-14 },
+          { os: ubuntu-22.04, c_compiler: clang-15, cpp_compiler: clang++-15 },
           { os: ubuntu-22.04, c_compiler: gcc-11, cpp_compiler: g++-11 },
           { os: ubuntu-22.04, c_compiler: gcc-12, cpp_compiler: g++-12 },
+          { os: ubuntu-24.04, c_compiler: clang-16, cpp_compiler: clang++-16 },
+          { os: ubuntu-24.04, c_compiler: clang-17, cpp_compiler: clang++-17 },
           { os: ubuntu-24.04, c_compiler: gcc-13, cpp_compiler: g++-13 },
           { os: ubuntu-24.04, c_compiler: gcc-14, cpp_compiler: g++-14 },
-          #{ os: windows-2019, c_compiler: cl, cpp_compiler: cl },
+          { os: macos-13, c_compiler: cc, cpp_compiler: c++, cmake_args: "-DSYSTEM_SQLITE=OFF" },
+          { os: windows-2019, c_compiler: cl, cpp_compiler: cl, cmake_args: "-DSYSTEM_SQLITE=OFF" },
         ]
 
     runs-on: ${{ matrix.config.os }}
@@ -31,9 +36,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install dependencies (Windows)
-      if: runner.os == 'Windows'
-      run: vcpkg install zlib sqlite3
+    - name: Install dependencies (macOS)
+      if: runner.os == 'macOS'
+      run: brew install zlib
 
     - name: Install dependencies (Ubuntu)
       if: runner.os == 'Linux'
@@ -41,8 +46,12 @@ jobs:
         sudo apt-get update
         sudo apt-get install --yes libz-dev libsqlite3-dev
 
+    - name: Install dependencies (Windows)
+      if: runner.os == 'Windows'
+      run: vcpkg install zlib sqlite3
+
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_C_COMPILER=${{matrix.config.c_compiler}} -DCMAKE_CXX_COMPILER=${{matrix.config.cpp_compiler}}
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_C_COMPILER=${{matrix.config.c_compiler}} -DCMAKE_CXX_COMPILER=${{matrix.config.cpp_compiler}} ${{matrix.config.cmake_args}}
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
