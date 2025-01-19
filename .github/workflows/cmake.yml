@@ -14,7 +14,7 @@ jobs:
   build:
     strategy:
       # Can be uncommented if wishing to test stability-impacting changes.
-      fail-fast: false
+      #fail-fast: false
 
       matrix:
         config: [
@@ -28,7 +28,7 @@ jobs:
           { os: ubuntu-24.04, c_compiler: gcc-13, cpp_compiler: g++-13 },
           { os: ubuntu-24.04, c_compiler: gcc-14, cpp_compiler: g++-14 },
           { os: macos-13, c_compiler: cc, cpp_compiler: c++, cmake_args: "-DSYSTEM_SQLITE=OFF" },
-          { os: windows-2019, c_compiler: cl, cpp_compiler: cl, cmake_args: "-DSYSTEM_SQLITE=OFF" },
+          { os: windows-2019, c_compiler: cl, cpp_compiler: cl },
         ]
 
     runs-on: ${{ matrix.config.os }}
@@ -50,8 +50,13 @@ jobs:
       if: runner.os == 'Windows'
       run: vcpkg install zlib sqlite3
 
-    - name: Configure CMake
+    - name: Configure CMake (non-Windows)
+      if: runner.os != 'Windows'
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_C_COMPILER=${{matrix.config.c_compiler}} -DCMAKE_CXX_COMPILER=${{matrix.config.cpp_compiler}} ${{matrix.config.cmake_args}}
+
+    - name: Configure CMake (Windows)
+      if: runner.os == 'Windows'
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_C_COMPILER=${{matrix.config.c_compiler}} -DCMAKE_CXX_COMPILER=${{matrix.config.cpp_compiler}} ${{matrix.config.cmake_args}}
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
