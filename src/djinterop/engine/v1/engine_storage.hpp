@@ -29,9 +29,9 @@
 #include <djinterop/engine/engine_schema.hpp>
 #include <djinterop/exceptions.hpp>
 
-#include "djinterop/engine/metadata_types.hpp"
-#include "performance_data_format.hpp"
+#include "../metadata_types.hpp"
 #include "../schema/schema.hpp"
+#include "performance_data_format.hpp"
 
 namespace djinterop::engine::v1
 {

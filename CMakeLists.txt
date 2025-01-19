@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.24.0
+        VERSION 0.24.1
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
@@ -25,7 +25,11 @@ if(MSVC)
     # Ask MSVC to populate the __cplusplus macro properly.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus")
 else()
-    add_compile_options("$<$<CONFIG:DEBUG>:-Wall>" "-Wpedantic" "-Werror")
+    # Disabling -Wunused-variable needed as the library implementation doesn't
+    # use every variable in the public headers.  Is there a better way?
+    # Disabling -Wunused-but-set-variable owing to XCode triggering on this
+    # in the SQLite amalgamation.
+    add_compile_options("-Wall" "-Wpedantic" "-Wno-unused-variable" "-Wno-unused-but-set-variable" "-Werror")
 endif()
 
 # Build shared a library by default.
@@ -215,11 +219,10 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${DJINTEROP_INSTALL_INCLUDEDIR}>)
 target_include_directories(
-        DjInterop PRIVATE
+        DjInterop PRIVATE SYSTEM
         ${ZLIB_INCLUDE_DIRS}
         ext/sqlite_modern_cpp
-        ext/date
-        src)
+        ext/date)
 
 target_link_libraries(
     DjInterop PUBLIC
@@ -231,7 +234,7 @@ if(SYSTEM_SQLITE)
     set(SQLITE_MIN_VERSION 3.11)
     find_package(SQLite3 ${SQLITE_MIN_VERSION} REQUIRED)
     target_include_directories(
-        DjInterop PRIVATE
+        DjInterop PRIVATE SYSTEM
         ${SQLite3_INCLUDE_DIRS})
     target_link_libraries(
         DjInterop PUBLIC
@@ -246,7 +249,7 @@ else()
         DjInterop PUBLIC
         SQLITE_OMIT_LOAD_EXTENSION)
     target_include_directories(
-        DjInterop PRIVATE
+        DjInterop PRIVATE SYSTEM
         ext/sqlite-amalgamation)
 endif()
 
@@ -291,6 +294,18 @@ install(FILES
     include/djinterop/engine/v2/track_data_blob.hpp
     include/djinterop/engine/v2/track_table.hpp
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/engine/v2")
+install(FILES
+    include/djinterop/engine/v3/beat_data_blob.hpp
+    include/djinterop/engine/v3/engine_library.hpp
+    include/djinterop/engine/v3/information_table.hpp
+    include/djinterop/engine/v3/loops_blob.hpp
+    include/djinterop/engine/v3/overview_waveform_data_blob.hpp
+    include/djinterop/engine/v3/playlist_entity_table.hpp
+    include/djinterop/engine/v3/playlist_table.hpp
+    include/djinterop/engine/v3/quick_cues_blob.hpp
+    include/djinterop/engine/v3/track_data_blob.hpp
+    include/djinterop/engine/v3/track_table.hpp
+    DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/engine/v3")
 
 
 if (UNIX)

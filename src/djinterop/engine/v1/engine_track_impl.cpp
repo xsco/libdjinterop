@@ -28,7 +28,7 @@
 #include "../../util/convert.hpp"
 #include "../../util/filesystem.hpp"
 #include "../../util/sqlite_transaction.hpp"
-#include "djinterop/engine/track_utils.hpp"
+#include "../track_utils.hpp"
 #include "engine_crate_impl.hpp"
 #include "engine_database_impl.hpp"
 #include "engine_track_impl.hpp"

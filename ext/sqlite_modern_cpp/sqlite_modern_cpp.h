@@ -18,7 +18,6 @@
 #include "sqlite_modern_cpp/errors.h"
 #include "sqlite_modern_cpp/utility/function_traits.h"
 #include "sqlite_modern_cpp/utility/uncaught_exceptions.h"
-#include "sqlite_modern_cpp/utility/utf16_utf8.h"
 
 namespace sqlite {
 
@@ -107,10 +106,6 @@ namespace sqlite {
 			return ++_inx;
 		}
 
-		sqlite3_stmt* _prepare(u16str_ref sql) {
-			return _prepare(utility::utf16_to_utf8(sql));
-		}
-
 		sqlite3_stmt* _prepare(str_ref sql) {
 			int hresult;
 			sqlite3_stmt* tmp = nullptr;
@@ -128,12 +123,6 @@ namespace sqlite {
 		friend void operator++(database_binder& db, int);
 
 	public:
-
-		database_binder(std::shared_ptr<sqlite3> db, u16str_ref sql):
-			_db(db),
-			_stmt(_prepare(sql), sqlite3_finalize),
-			_inx(0) {
-		}
 
 		database_binder(std::shared_ptr<sqlite3> db, str_ref sql):
 			_db(db),
@@ -396,19 +385,10 @@ namespace sqlite {
 				*this << R"(PRAGMA encoding = "UTF-16";)";
 		}
 
-		database(const std::u16string &db_name, const sqlite_config &config = {}): database(utility::utf16_to_utf8(db_name), config) {
-			if (config.encoding == Encoding::ANY)
-				*this << R"(PRAGMA encoding = "UTF-16";)";
-		}
-
 		database(std::shared_ptr<sqlite3> db):
 			_db(db) {}
 
 		database_binder operator<<(str_ref sql) {
-			return database_binder(_db, sql);
-		}
-
-		database_binder operator<<(u16str_ref sql) {
 			return database_binder(_db, sql);
 		}
 

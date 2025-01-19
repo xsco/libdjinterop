@@ -28,7 +28,7 @@
 namespace djinterop
 {
 // Artwork for tracks
-class album_art
+class DJINTEROP_PUBLIC album_art
 {
 public:
     using image_data_type = uint_least8_t;
