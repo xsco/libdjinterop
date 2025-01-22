@@ -65,16 +65,21 @@ inline overview_waveform_data_blob waveform(
     std::optional<unsigned long long> sample_count,
     std::optional<double> sample_rate)
 {
-    overview_waveform_data_blob result;
     if (w.empty())
     {
-        result.maximum_point = overview_waveform_point{0, 0, 0};
-        return result;
+        return overview_waveform_data_blob
+        {
+            .samples_per_waveform_point = 0,
+            .waveform_points = {},
+            .maximum_point = {0, 0, 0},
+            .extra_data = {},
+        };
     }
 
     auto extents =
         util::calculate_overview_waveform_extents(*sample_count, *sample_rate);
 
+    overview_waveform_data_blob result;
     result.samples_per_waveform_point = extents.samples_per_entry;
 
     uint8_t max_low = 0;
