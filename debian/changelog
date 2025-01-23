@@ -1,3 +1,9 @@
+libdjinterop (0.24.3-0ubuntu1) jammy; urgency=medium
+
+  * Version bump for fixed Ubuntu package (#145)
+
+ -- Adam Szmigin <smidge@xsco.net>  Thu, 23 Jan 2025 23:13:47 +0000
+
 libdjinterop (0.24.2-0ubuntu1) jammy; urgency=medium
 
   [ Dylan Corrales ]
