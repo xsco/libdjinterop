@@ -9,7 +9,7 @@ Build package
 Pbuilder is recommended for this.
 
 ```
-$ DIST=bionic gbp buildpackage
+$ DIST=focal gbp buildpackage
 ```
 
 Build source package

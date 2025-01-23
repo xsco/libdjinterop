@@ -1,3 +1,20 @@
+libdjinterop (0.24.2-0ubuntu1) jammy; urgency=medium
+
+  [ Dylan Corrales ]
+  * Doxygen: Build documentation and host on GitHub Pages (#128)
+
+  [ Adam Szmigin ]
+  * Simplify Engine schema, add schema for desktop 3.x (#130)
+  * Separate Engine Database2/schema concepts (#131)
+  * Include headers in CMake library sources (#136)
+  * Additional schema 3.0.0 dumps (#137)
+  * Engine DB 3.0.0 schema support (#138)
+  * Upgrade to C++ 20 (#140)
+  * Fix cross-platform build issues (#142)
+  * Fix uninitialised var in Engine waveform code (#144)
+
+ -- Adam Szmigin <smidge@xsco.net>  Thu, 23 Jan 2025 21:28:57 +0000
+
 libdjinterop (0.22.1-0ubuntu1) bionic; urgency=medium
 
   * Use std::optional (#121)
