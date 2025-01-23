@@ -17,10 +17,6 @@
 
 #pragma once
 
-#if __cplusplus < 201703L
-#error This library needs at least a C++17 compliant compiler
-#endif
-
 #include <chrono>
 #include <cstdint>
 #include <memory>
@@ -37,9 +33,13 @@
 #include <djinterop/engine/v2/track_data_blob.hpp>
 #include <djinterop/stream_helper.hpp>
 
-namespace djinterop::engine::v2
+namespace djinterop::engine
 {
 struct engine_library_context;
+}
+
+namespace djinterop::engine::v2
+{
 
 /// Thrown when the id on a track row is in an erroneous state for a given
 /// operation.
@@ -545,8 +545,7 @@ public:
     std::optional<std::string> get_album_art(int64_t id);
 
     /// Set the `albumArt` column for a given track.
-    void set_album_art(
-        int64_t id, const std::optional<std::string>& album_art);
+    void set_album_art(int64_t id, const std::optional<std::string>& album_art);
 
     /// Get the `timeLastPlayed` column for a given track.
     std::optional<std::chrono::system_clock::time_point> get_time_last_played(
@@ -598,8 +597,8 @@ public:
     /// Set the `dateAdded` column for a given track, representing the time at
     /// which the track was added to the database.
     void set_date_added(
-        int64_t id, const std::optional<std::chrono::system_clock::time_point>&
-                        date_added);
+        int64_t id,
+        const std::optional<std::chrono::system_clock::time_point>& date_added);
 
     /// Get the `isAvailable` column for a given track, indicating if the file
     /// underlying the track entry is available.

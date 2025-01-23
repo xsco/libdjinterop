@@ -56,6 +56,16 @@ std::vector<std::byte> overview_waveform_data_blob::to_blob() const
 overview_waveform_data_blob overview_waveform_data_blob::from_blob(
     const std::vector<std::byte>& blob)
 {
+    if (blob.empty())
+    {
+        return overview_waveform_data_blob{
+            .samples_per_waveform_point = 0,
+            .waveform_points = {},
+            .maximum_point = {0, 0, 0},
+            .extra_data = {},
+        };
+    }
+
     const auto raw_data = zlib_uncompress(blob);
     auto ptr = raw_data.data();
     const auto end = ptr + raw_data.size();

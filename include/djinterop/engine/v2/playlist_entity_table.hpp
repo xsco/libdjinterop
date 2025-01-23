@@ -17,10 +17,6 @@
 
 #pragma once
 
-#if __cplusplus < 201703L
-#error This library needs at least a C++17 compliant compiler
-#endif
-
 #include <cstdint>
 #include <list>
 #include <memory>
@@ -31,9 +27,13 @@
 
 #include <djinterop/config.hpp>
 
-namespace djinterop::engine::v2
+namespace djinterop::engine
 {
 struct engine_library_context;
+}
+
+namespace djinterop::engine::v2
+{
 
 /// Thrown when the id on a playlist entity row is in an erroneous state for a
 /// given operation.

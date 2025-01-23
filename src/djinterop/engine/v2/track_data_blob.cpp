@@ -45,6 +45,19 @@ std::vector<std::byte> track_data_blob::to_blob() const
 
 track_data_blob track_data_blob::from_blob(const std::vector<std::byte>& blob)
 {
+    if (blob.empty())
+    {
+        return track_data_blob{
+            .sample_rate = 0,
+            .samples = 0,
+            .key = 0,
+            .average_loudness_low = 0,
+            .average_loudness_mid = 0,
+            .average_loudness_high = 0,
+            .extra_data = {},
+        };
+    }
+
     const auto uncompressed = zlib_uncompress(blob);
     auto ptr = uncompressed.data();
     const auto end = ptr + uncompressed.size();

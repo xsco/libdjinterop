@@ -88,6 +88,18 @@ std::vector<std::byte> beat_data_blob::to_blob() const
 
 beat_data_blob beat_data_blob::from_blob(const std::vector<std::byte>& blob)
 {
+    if (blob.empty())
+    {
+        return beat_data_blob{
+            .sample_rate = 0,
+            .samples = 0,
+            .is_beatgrid_set = false,
+            .default_beat_grid = {},
+            .adjusted_beat_grid = {},
+            .extra_data = {},
+        };
+    }
+
     const auto raw_data = zlib_uncompress(blob);
     auto ptr = raw_data.data();
     const auto end = ptr + raw_data.size();

@@ -35,7 +35,7 @@ inline djinterop::beatgrid_marker beatgrid_marker(
         beat_grid_marker.sample_offset};
 }
 
-std::vector<djinterop::beatgrid_marker> beatgrid_markers(
+inline std::vector<djinterop::beatgrid_marker> beatgrid_markers(
     const beat_data_blob::beat_grid_marker_blobs_type& beat_grid)
 {
     std::vector<djinterop::beatgrid_marker> converted;

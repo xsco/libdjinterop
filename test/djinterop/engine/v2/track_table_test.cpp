@@ -3,7 +3,7 @@
 
     libdjinterop is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
+    the Free Software Foundation, either schema 3 of the License, or
     (at your option) any later version.
 
     libdjinterop is distributed in the hope that it will be useful,
@@ -23,6 +23,7 @@
 
 #include <djinterop/engine/engine.hpp>
 #include <djinterop/engine/v2/engine_library.hpp>
+#include <djinterop/exceptions.hpp>
 
 #include "../../boost_test_printable.hpp"
 #include "../../boost_test_utils.hpp"
@@ -32,6 +33,7 @@
 namespace utf = boost::unit_test;
 namespace e = djinterop::engine;
 namespace ev2 = djinterop::engine::v2;
+using es = djinterop::engine::engine_schema;
 
 namespace
 {
@@ -44,14 +46,14 @@ const std::vector<example_track_row_type> all_example_track_row_types{
 
 BOOST_TEST_DECORATOR(*utf::description("add() with valid track row"))
 BOOST_DATA_TEST_CASE(
-    add__valid__adds, e::all_v2_versions* all_example_track_row_types, version,
-    row_type)
+    add_valid_row_adds, e::supported_v2_schemas* all_example_track_row_types,
+    schema, row_type)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto track_tbl = library.track();
     ev2::track_row row{0};
-    populate_track_row(row_type, row, version);
+    populate_track_row(row_type, row, schema);
 
     // Act
     auto id = track_tbl.add(row);
@@ -61,10 +63,11 @@ BOOST_DATA_TEST_CASE(
 }
 
 BOOST_TEST_DECORATOR(*utf::description("add() with an existing id"))
-BOOST_DATA_TEST_CASE(add__existing_id__throws, e::all_v2_versions, version)
+BOOST_DATA_TEST_CASE(
+    add_with_existing_id_throws, e::supported_v2_schemas, schema)
 {
     // Arrange
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
     auto track_tbl = library.track();
     ev2::track_row row{123};
 
@@ -74,21 +77,21 @@ BOOST_DATA_TEST_CASE(add__existing_id__throws, e::all_v2_versions, version)
 
 BOOST_TEST_DECORATOR(*utf::description("get() with a valid id"))
 BOOST_DATA_TEST_CASE(
-    get__valid__gets, e::all_v2_versions* all_example_track_row_types, version,
-    row_type)
+    get_with_valid_track_gets,
+    e::supported_v2_schemas* all_example_track_row_types, schema, row_type)
 {
     // Arrange
     BOOST_TEST_CHECKPOINT(
-        "(" << version << ", " << row_type
+        "(" << schema << ", " << row_type
             << ") Creating temporary database...");
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
 
     auto track_tbl = library.track();
     ev2::track_row expected{0};
-    populate_track_row(row_type, expected, version);
+    populate_track_row(row_type, expected, schema);
 
     BOOST_TEST_CHECKPOINT(
-        "(" << version << ", " << row_type << ") Creating track...");
+        "(" << schema << ", " << row_type << ") Creating track...");
     auto id = track_tbl.add(expected);
     expected.id = id;
 
@@ -101,7 +104,7 @@ BOOST_DATA_TEST_CASE(
 
     // Act
     BOOST_TEST_CHECKPOINT(
-        "(" << version << ", " << row_type << ") Fetching track...");
+        "(" << schema << ", " << row_type << ") Fetching track...");
     auto actual = track_tbl.get(id);
 
     // Assert
@@ -112,32 +115,32 @@ BOOST_DATA_TEST_CASE(
 
 BOOST_TEST_DECORATOR(*utf::description("update() with valid data"))
 BOOST_DATA_TEST_CASE(
-    update__valid__updates,
-    e::all_v2_versions* all_example_track_row_types*
+    update_with_valid_track_updates,
+    e::supported_v2_schemas* all_example_track_row_types*
         all_example_track_row_types,
-    version, initial_row_type, update_row_type)
+    schema, initial_row_type, update_row_type)
 {
     // Arrange
     BOOST_TEST_CHECKPOINT(
-        "(" << version << ", " << initial_row_type << ", " << update_row_type
+        "(" << schema << ", " << initial_row_type << ", " << update_row_type
             << ") Creating temporary database...");
-    auto library = ev2::engine_library::create_temporary(version);
+    auto library = ev2::engine_library::create_temporary(schema);
 
     auto track_tbl = library.track();
     ev2::track_row initial{0};
-    populate_track_row(initial_row_type, initial, version);
+    populate_track_row(initial_row_type, initial, schema);
 
     BOOST_TEST_CHECKPOINT(
-        "(" << version << ", " << initial_row_type << ", " << update_row_type
+        "(" << schema << ", " << initial_row_type << ", " << update_row_type
             << ") Creating initial track...");
     auto id = track_tbl.add(initial);
 
     ev2::track_row expected{id};
-    populate_track_row(update_row_type, expected, version);
+    populate_track_row(update_row_type, expected, schema);
 
     // Act
     BOOST_TEST_CHECKPOINT(
-        "(" << version << ", " << initial_row_type << ", " << update_row_type
+        "(" << schema << ", " << initial_row_type << ", " << update_row_type
             << ") Updating track...");
     track_tbl.update(expected);
 
@@ -150,7 +153,7 @@ BOOST_DATA_TEST_CASE(
     }
 
     BOOST_TEST_CHECKPOINT(
-        "(" << version << ", " << initial_row_type << ", " << update_row_type
+        "(" << schema << ", " << initial_row_type << ", " << update_row_type
             << ") Fetching track...");
     auto actual = track_tbl.get(id);
     BOOST_REQUIRE(actual != std::nullopt);
@@ -161,176 +164,175 @@ BOOST_DATA_TEST_CASE(
 // The act of defining very similar test cases for all the getters and setters
 // on the track table is highly tedious.  As such, some macros to generate these
 // more efficiently make for a more succinct way to define tests.
-#define DEFINE_GETTER_VALID_TEST_CASE(engine_column, min_schema_version) \
-    BOOST_TEST_DECORATOR(                                                \
-        *utf::description("get_" #engine_column "() with valid track"))  \
-    BOOST_DATA_TEST_CASE(                                                \
-        get_##engine_column##__expected, e::all_v2_versions, version)    \
-    {                                                                    \
-        auto library = ev2::engine_library::create_temporary(version);   \
-        auto track_tbl = library.track();                                \
-        ev2::track_row row{0};                                           \
-        populate_track_row(                                              \
-            example_track_row_type::fully_analysed_1, row, version);     \
-        auto id = track_tbl.add(row);                                    \
-        auto expected = row.engine_column;                               \
-                                                                         \
-        if (version.schema_version >= min_schema_version)                \
-        {                                                                \
-            auto actual = track_tbl.get_##engine_column(id);             \
-            BOOST_CHECK_EQUAL(                                           \
-                make_printable(expected), make_printable(actual));       \
-        }                                                                \
-        else                                                             \
-        {                                                                \
-            BOOST_CHECK_THROW(                                           \
-                track_tbl.get_##engine_column(id),                       \
-                djinterop::unsupported_operation);                       \
-        }                                                                \
+#define DEFINE_GETTER_VALID_TEST_CASE(engine_column, min_schema)              \
+    BOOST_TEST_DECORATOR(                                                     \
+        *utf::description("get_" #engine_column "() with valid track"))       \
+    BOOST_DATA_TEST_CASE(                                                     \
+        get_##engine_column##_with_valid_track_gets, e::supported_v2_schemas, \
+        schema)                                                               \
+    {                                                                         \
+        auto library = ev2::engine_library::create_temporary(schema);         \
+        auto track_tbl = library.track();                                     \
+        ev2::track_row row{0};                                                \
+        populate_track_row(                                                   \
+            example_track_row_type::fully_analysed_1, row, schema);           \
+        auto id = track_tbl.add(row);                                         \
+        auto expected = row.engine_column;                                    \
+                                                                              \
+        if (schema >= min_schema)                                             \
+        {                                                                     \
+            auto actual = track_tbl.get_##engine_column(id);                  \
+            BOOST_CHECK_EQUAL(                                                \
+                make_printable(expected), make_printable(actual));            \
+        }                                                                     \
+        else                                                                  \
+        {                                                                     \
+            BOOST_CHECK_THROW(                                                \
+                track_tbl.get_##engine_column(id),                            \
+                djinterop::unsupported_operation);                            \
+        }                                                                     \
     }
 
-#define DEFINE_SETTER_VALID_TEST_CASE(engine_column, min_schema_version)     \
-    BOOST_TEST_DECORATOR(                                                    \
-        *utf::description("set_" #engine_column "() with valid track"))      \
-    BOOST_DATA_TEST_CASE(                                                    \
-        set_##engine_column##__valid__expected, e::all_v2_versions, version) \
-    {                                                                        \
-        auto library = ev2::engine_library::create_temporary(version);       \
-        auto track_tbl = library.track();                                    \
-        ev2::track_row row{0};                                               \
-        populate_track_row(example_track_row_type::minimal_1, row, version); \
-        auto id = track_tbl.add(row);                                        \
-                                                                             \
-        populate_track_row(                                                  \
-            example_track_row_type::fully_analysed_1, row, version);         \
-        auto expected = row.engine_column;                                   \
-                                                                             \
-        if (version.schema_version >= min_schema_version)                    \
-        {                                                                    \
-            track_tbl.set_##engine_column(id, expected);                     \
-                                                                             \
-            auto actual = track_tbl.get_##engine_column(id);                 \
-            BOOST_CHECK_EQUAL(                                               \
-                make_printable(expected), make_printable(actual));           \
-        }                                                                    \
-        else                                                                 \
-        {                                                                    \
-            BOOST_CHECK_THROW(                                               \
-                track_tbl.set_##engine_column(id, expected),                 \
-                djinterop::unsupported_operation);                           \
-        }                                                                    \
+#define DEFINE_SETTER_VALID_TEST_CASE(engine_column, min_schema)              \
+    BOOST_TEST_DECORATOR(                                                     \
+        *utf::description("set_" #engine_column "() with valid track"))       \
+    BOOST_DATA_TEST_CASE(                                                     \
+        set_##engine_column##_with_valid_track_sets, e::supported_v2_schemas, \
+        schema)                                                               \
+    {                                                                         \
+        auto library = ev2::engine_library::create_temporary(schema);         \
+        auto track_tbl = library.track();                                     \
+        ev2::track_row row{0};                                                \
+        populate_track_row(example_track_row_type::minimal_1, row, schema);   \
+        auto id = track_tbl.add(row);                                         \
+                                                                              \
+        populate_track_row(                                                   \
+            example_track_row_type::fully_analysed_1, row, schema);           \
+        auto expected = row.engine_column;                                    \
+                                                                              \
+        if (schema >= min_schema)                                             \
+        {                                                                     \
+            track_tbl.set_##engine_column(id, expected);                      \
+                                                                              \
+            auto actual = track_tbl.get_##engine_column(id);                  \
+            BOOST_CHECK_EQUAL(                                                \
+                make_printable(expected), make_printable(actual));            \
+        }                                                                     \
+        else                                                                  \
+        {                                                                     \
+            BOOST_CHECK_THROW(                                                \
+                track_tbl.set_##engine_column(id, expected),                  \
+                djinterop::unsupported_operation);                            \
+        }                                                                     \
     }
 
-#define DEFINE_GETTER_INVALID_TEST_CASE(engine_column, min_schema_version)   \
-    BOOST_TEST_DECORATOR(                                                    \
-        *utf::description("get_" #engine_column "() with invalid track"))    \
-    BOOST_DATA_TEST_CASE(                                                    \
-        get_##engine_column##__invalid__throws, e::all_v2_versions, version) \
-    {                                                                        \
-        auto library = ev2::engine_library::create_temporary(version);       \
-        auto track_tbl = library.track();                                    \
-                                                                             \
-        if (version.schema_version >= min_schema_version)                    \
-        {                                                                    \
-            BOOST_CHECK_THROW(                                               \
-                track_tbl.get_##engine_column(12345),                        \
-                ev2::track_row_id_error);                                    \
-        }                                                                    \
-        else                                                                 \
-        {                                                                    \
-            BOOST_CHECK_THROW(                                               \
-                track_tbl.get_##engine_column(12345),                        \
-                djinterop::unsupported_operation);                           \
-        }                                                                    \
+#define DEFINE_GETTER_INVALID_TEST_CASE(engine_column, min_schema)        \
+    BOOST_TEST_DECORATOR(                                                 \
+        *utf::description("get_" #engine_column "() with invalid track")) \
+    BOOST_DATA_TEST_CASE(                                                 \
+        get_##engine_column##_with_invalid_track_throws,                  \
+        e::supported_v2_schemas, schema)                                  \
+    {                                                                     \
+        auto library = ev2::engine_library::create_temporary(schema);     \
+        auto track_tbl = library.track();                                 \
+                                                                          \
+        if (schema >= min_schema)                                         \
+        {                                                                 \
+            BOOST_CHECK_THROW(                                            \
+                track_tbl.get_##engine_column(12345),                     \
+                ev2::track_row_id_error);                                 \
+        }                                                                 \
+        else                                                              \
+        {                                                                 \
+            BOOST_CHECK_THROW(                                            \
+                track_tbl.get_##engine_column(12345),                     \
+                djinterop::unsupported_operation);                        \
+        }                                                                 \
     }
 
-#define DEFINE_SETTER_INVALID_TEST_CASE(engine_column, min_schema_version)   \
-    BOOST_TEST_DECORATOR(                                                    \
-        *utf::description("set_" #engine_column "() with invalid track"))    \
-    BOOST_DATA_TEST_CASE(                                                    \
-        set_##engine_column##__invalid__throws, e::all_v2_versions, version) \
-    {                                                                        \
-        auto library = ev2::engine_library::create_temporary(version);       \
-        auto track_tbl = library.track();                                    \
-        ev2::track_row row{0};                                               \
-        populate_track_row(                                                  \
-            example_track_row_type::fully_analysed_1, row, version);         \
-                                                                             \
-        if (version.schema_version >= min_schema_version)                    \
-        {                                                                    \
-            BOOST_CHECK_THROW(                                               \
-                track_tbl.set_##engine_column(12345, row.engine_column),     \
-                ev2::track_row_id_error);                                    \
-        }                                                                    \
-        else                                                                 \
-        {                                                                    \
-            BOOST_CHECK_THROW(                                               \
-                track_tbl.set_##engine_column(12345, row.engine_column),     \
-                djinterop::unsupported_operation);                           \
-        }                                                                    \
+#define DEFINE_SETTER_INVALID_TEST_CASE(engine_column, min_schema)        \
+    BOOST_TEST_DECORATOR(                                                 \
+        *utf::description("set_" #engine_column "() with invalid track")) \
+    BOOST_DATA_TEST_CASE(                                                 \
+        set_##engine_column##_with_invalid_track_throws,                  \
+        e::supported_v2_schemas, schema)                                  \
+    {                                                                     \
+        auto library = ev2::engine_library::create_temporary(schema);     \
+        auto track_tbl = library.track();                                 \
+        ev2::track_row row{0};                                            \
+        populate_track_row(                                               \
+            example_track_row_type::fully_analysed_1, row, schema);       \
+                                                                          \
+        if (schema >= min_schema)                                         \
+        {                                                                 \
+            BOOST_CHECK_THROW(                                            \
+                track_tbl.set_##engine_column(12345, row.engine_column),  \
+                ev2::track_row_id_error);                                 \
+        }                                                                 \
+        else                                                              \
+        {                                                                 \
+            BOOST_CHECK_THROW(                                            \
+                track_tbl.set_##engine_column(12345, row.engine_column),  \
+                djinterop::unsupported_operation);                        \
+        }                                                                 \
     }
 
-#define DEFINE_GETTER_SETTER_TEST_CASES(engine_column, min_schema_version) \
-    DEFINE_GETTER_VALID_TEST_CASE(engine_column, min_schema_version)       \
-    DEFINE_GETTER_INVALID_TEST_CASE(engine_column, min_schema_version)     \
-    DEFINE_SETTER_VALID_TEST_CASE(engine_column, min_schema_version)       \
-    DEFINE_SETTER_INVALID_TEST_CASE(engine_column, min_schema_version)
+#define DEFINE_GETTER_SETTER_TEST_CASES(engine_column, min_schema) \
+    DEFINE_GETTER_VALID_TEST_CASE(engine_column, min_schema)       \
+    DEFINE_GETTER_INVALID_TEST_CASE(engine_column, min_schema)     \
+    DEFINE_SETTER_VALID_TEST_CASE(engine_column, min_schema)       \
+    DEFINE_SETTER_INVALID_TEST_CASE(engine_column, min_schema)
 
-DEFINE_GETTER_SETTER_TEST_CASES(play_order, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(length, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(bpm, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(year, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(path, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(filename, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(bitrate, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(bpm_analyzed, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(album_art_id, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(file_bytes, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(title, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(artist, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(album, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(genre, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(comment, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(label, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(composer, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(remixer, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(key, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(rating, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(album_art, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(time_last_played, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(is_played, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(file_type, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(is_analyzed, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(date_created, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(date_added, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(is_available, e::os_2_0_0.schema_version)
+DEFINE_GETTER_SETTER_TEST_CASES(play_order, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(length, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(bpm, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(year, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(path, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(filename, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(bitrate, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(bpm_analyzed, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(album_art_id, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(file_bytes, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(title, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(artist, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(album, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(genre, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(comment, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(label, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(composer, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(remixer, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(key, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(rating, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(album_art, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(time_last_played, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(is_played, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(file_type, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(is_analyzed, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(date_created, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(date_added, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(is_available, es::schema_2_18_0)
 DEFINE_GETTER_SETTER_TEST_CASES(
-    is_metadata_of_packed_track_changed, e::os_2_0_0.schema_version)
+    is_metadata_of_packed_track_changed, es::schema_2_18_0)
 DEFINE_GETTER_SETTER_TEST_CASES(
-    is_performance_data_of_packed_track_changed, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(played_indicator, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(
-    is_metadata_imported, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(pdb_import_key, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(streaming_source, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(uri, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(is_beat_grid_locked, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(
-    origin_database_uuid, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(origin_track_id, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(track_data, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(
-    overview_waveform_data, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(beat_data, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(quick_cues, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(loops, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(
-    third_party_source_id, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(streaming_flags, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(explicit_lyrics, e::os_2_0_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(
-    active_on_load_loops, e::os_2_2_0.schema_version)
-DEFINE_GETTER_SETTER_TEST_CASES(last_edit_time, e::os_3_0_0.schema_version)
+    is_performance_data_of_packed_track_changed, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(played_indicator, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(is_metadata_imported, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(pdb_import_key, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(streaming_source, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(uri, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(is_beat_grid_locked, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(origin_database_uuid, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(origin_track_id, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(track_data, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(overview_waveform_data, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(beat_data, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(quick_cues, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(loops, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(third_party_source_id, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(streaming_flags, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(explicit_lyrics, es::schema_2_18_0)
+DEFINE_GETTER_SETTER_TEST_CASES(active_on_load_loops, es::schema_2_20_1)
+DEFINE_GETTER_SETTER_TEST_CASES(last_edit_time, es::schema_2_20_3)
 
 #undef DEFINE_GETTER_SETTER_TEST_CASES
 #undef DEFINE_SETTER_INVALID_TEST_CASE
@@ -340,12 +342,12 @@ DEFINE_GETTER_SETTER_TEST_CASES(last_edit_time, e::os_3_0_0.schema_version)
 
 BOOST_TEST_DECORATOR(*utf::description("operator<<() with valid track row"))
 BOOST_DATA_TEST_CASE(
-    operator_stream_output__valid__outputs,
-    e::all_v2_versions* all_example_track_row_types, version, row_type)
+    operator_stream_output_with_valid_track_outputs_non_empty,
+    e::supported_v2_schemas* all_example_track_row_types, schema, row_type)
 {
     // Arrange
     ev2::track_row row{0};
-    populate_track_row(row_type, row, version);
+    populate_track_row(row_type, row, schema);
     std::stringstream ss;
 
     // Act

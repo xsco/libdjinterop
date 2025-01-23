@@ -31,12 +31,13 @@ int main()
 
     auto dir = "Engine Library";
     auto exists = ev2::engine_library::exists(dir);
-    auto library = exists ? ev2::engine_library{dir}
-                          : ev2::engine_library::create(dir, e::latest_v2);
+    auto library = exists
+                       ? ev2::engine_library::load(dir)
+                       : ev2::engine_library::create(dir, e::latest_v2_schema);
 
     std::cout << (exists ? "Loaded" : "Created")
               << " engine library:" << std::endl;
-    std::cout << "Version: " << library.version().name << std::endl;
+    std::cout << "Version: " << library.schema() << std::endl;
     std::cout << "Path:    " << dir << std::endl;
     std::cout << "UUID:    " << library.information().get().uuid << std::endl;
 

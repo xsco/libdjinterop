@@ -19,8 +19,6 @@
 
 #include <memory>
 
-#include <sqlite_modern_cpp.h>
-
 #include <djinterop/engine/v2/engine_library.hpp>
 
 #include "../../impl/database_impl.hpp"

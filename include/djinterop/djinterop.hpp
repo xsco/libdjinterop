@@ -19,9 +19,7 @@
 #ifndef DJINTEROP_DJINTEROP_HPP
 #define DJINTEROP_DJINTEROP_HPP
 
-#if __cplusplus < 201703L
-#error This library needs at least a C++17 compliant compiler
-#endif
+#include <djinterop/config.hpp>
 
 #include <djinterop/album_art.hpp>
 #include <djinterop/crate.hpp>

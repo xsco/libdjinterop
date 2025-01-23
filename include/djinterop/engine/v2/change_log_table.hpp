@@ -17,10 +17,6 @@
 
 #pragma once
 
-#if __cplusplus < 201703L
-#error This library needs at least a C++17 compliant compiler
-#endif
-
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -28,9 +24,13 @@
 
 #include <djinterop/config.hpp>
 
-namespace djinterop::engine::v2
+namespace djinterop::engine
 {
 struct engine_library_context;
+}
+
+namespace djinterop::engine::v2
+{
 
 /// Represents a single row in the `ChangeLog` table.
 ///

@@ -17,7 +17,9 @@
 
 #include "engine_storage.hpp"
 
+#include <algorithm>
 #include <cstddef>
+#include <memory>
 #include <utility>
 
 #include <djinterop/database.hpp>
@@ -25,81 +27,51 @@
 #include <djinterop/exceptions.hpp>
 
 #include "../../util/filesystem.hpp"
+#include "../engine_library_dir_utils.hpp"
 #include "../schema/schema.hpp"
 
 namespace djinterop::engine::v1
 {
-namespace
-{
-sqlite::database make_attached_db(const std::string& directory, bool must_exist)
-{
-    if (!djinterop::util::path_exists(directory))
-    {
-        if (must_exist)
-        {
-            throw database_not_found{directory};
-        }
-        else
-        {
-            // Note: only creates leaf directory, not entire tree.
-            djinterop::util::create_dir(directory);
-        }
-    }
-
-    sqlite::database db{":memory:"};
-    db << "ATTACH ? as 'music'" << (directory + "/m.db");
-    db << "ATTACH ? as 'perfdata'" << (directory + "/p.db");
-    return db;
-}
-
-sqlite::database make_temporary_db()
-{
-    sqlite::database db{":memory:"};
-    db << "ATTACH ':memory:' as 'music'";
-    db << "ATTACH ':memory:' as 'perfdata'";
-    return db;
-}
-
-}  // anonymous namespace
-
 engine_storage::engine_storage(
-    const std::string& directory, const engine_version& version) :
-    engine_storage{directory, version, make_attached_db(directory, true)}
-{
-}
-
-engine_storage::engine_storage(
-    const std::string& directory, const engine_version& version,
+    const std::string& directory, const engine_schema& schema,
     sqlite::database db) :
     directory{directory},
-    db{std::move(db)}, version{version}
+    db{std::move(db)}, schema{schema}
 {
+}
+
+std::shared_ptr<engine_storage> engine_storage::load(
+    const std::string& directory)
+{
+    auto db = load_legacy_sqlite_database(directory);
+
+    const auto schema = schema::detect_schema(db, "music");
+    return std::make_shared<engine_storage>(directory, schema, db);
 }
 
 std::shared_ptr<engine_storage> engine_storage::create(
-    const std::string& directory, const engine_version& version)
+    const std::string& directory, const engine_schema& schema)
 {
-    auto db = make_attached_db(directory, false);
+    auto db = create_legacy_sqlite_database(directory);
 
     // Create the desired schema on the new database.
-    auto schema_creator = schema::make_schema_creator_validator(version);
+    auto schema_creator = schema::make_schema_creator_validator(schema);
     schema_creator->create(db);
 
-    return std::shared_ptr<engine_storage>{
-        new engine_storage{directory, version, std::move(db)}};
+    return std::make_shared<engine_storage>(directory, schema, std::move(db));
 }
 
 std::shared_ptr<engine_storage> engine_storage::create_temporary(
-    const engine_version& version)
+    const engine_schema& schema)
 {
-    auto db = make_temporary_db();
+    auto db = create_temporary_legacy_sqlite_database();
 
     // Create the desired schema on the new database.
-    auto schema_creator = schema::make_schema_creator_validator(version);
+    auto schema_creator = schema::make_schema_creator_validator(schema);
     schema_creator->create(db);
 
     return std::shared_ptr<engine_storage>{
-        new engine_storage{":memory:", version, std::move(db)}};
+        new engine_storage{":memory:", schema, std::move(db)}};
 }
 
 int64_t engine_storage::create_track(
@@ -118,7 +90,7 @@ int64_t engine_storage::create_track(
     const std::optional<std::string>& uri,
     std::optional<int64_t> is_beatgrid_locked)
 {
-    if (version.schema_version >= os_1_6_0.schema_version)
+    if (schema >= engine_schema::schema_1_18_0_desktop)
     {
         db << "INSERT INTO Track (playOrder, length, "
               "lengthCalculated, bpm, year, path, filename, bitrate, "
@@ -141,7 +113,7 @@ int64_t engine_storage::create_track(
            << uri                  // Added in 1.15.0
            << is_beatgrid_locked;  // Added in 1.18.0
     }
-    else if (version.schema_version >= os_1_4_0.schema_version)
+    else if (schema >= engine_schema::schema_1_15_0)
     {
         db << "INSERT INTO Track (playOrder, length, "
               "lengthCalculated, bpm, year, path, filename, bitrate, "
@@ -161,7 +133,7 @@ int64_t engine_storage::create_track(
            << pdb_import_key  // Added in 1.7.1
            << uri;            // Added in 1.15.0
     }
-    else if (version.schema_version >= os_1_0_3.schema_version)
+    else if (schema >= engine_schema::schema_1_7_1)
     {
         db << "INSERT INTO Track (playOrder, length, "
               "lengthCalculated, bpm, year, path, filename, bitrate, "
@@ -203,7 +175,7 @@ int64_t engine_storage::create_track(
 track_row engine_storage::get_track(int64_t id)
 {
     std::optional<track_row> result;
-    if (version.schema_version >= os_1_6_0.schema_version)
+    if (schema >= engine_schema::schema_1_18_0_desktop)
     {
         db << ("SELECT playOrder, length, lengthCalculated, bpm, year, path, "
                "filename, bitrate, bpmAnalyzed, trackType, isExternalTrack, "
@@ -254,7 +226,7 @@ track_row engine_storage::get_track(int64_t id)
                     is_beatgrid_locked};
             };
     }
-    else if (version.schema_version >= os_1_4_0.schema_version)
+    else if (schema >= engine_schema::schema_1_15_0)
     {
         db << ("SELECT playOrder, length, lengthCalculated, bpm, year, path, "
                "filename, bitrate, bpmAnalyzed, trackType, isExternalTrack, "
@@ -303,7 +275,7 @@ track_row engine_storage::get_track(int64_t id)
                     std::move(uri)};
             };
     }
-    else if (version.schema_version >= os_1_0_3.schema_version)
+    else if (schema >= engine_schema::schema_1_7_1)
     {
         db << ("SELECT playOrder, length, lengthCalculated, bpm, year, path, "
                "filename, bitrate, bpmAnalyzed, trackType, isExternalTrack, "
@@ -416,7 +388,7 @@ void engine_storage::update_track(
     const std::optional<std::string>& uri,
     std::optional<int64_t> is_beatgrid_locked)
 {
-    if (version.schema_version >= os_1_6_0.schema_version)
+    if (schema >= engine_schema::schema_1_18_0_desktop)
     {
         db << "UPDATE Track SET "
               "playOrder = ?, length = ?, lengthCalculated = ?, bpm = ?, "
@@ -435,7 +407,7 @@ void engine_storage::update_track(
            << is_beatgrid_locked  // Added in 1.18.0
            << id;
     }
-    else if (version.schema_version >= os_1_4_0.schema_version)
+    else if (schema >= engine_schema::schema_1_15_0)
     {
         db << "UPDATE Track SET "
               "playOrder = ?, length = ?, lengthCalculated = ?, bpm = ?, "
@@ -453,7 +425,7 @@ void engine_storage::update_track(
            << uri             // Added in 1.15.0
            << id;
     }
-    else if (version.schema_version >= os_1_0_3.schema_version)
+    else if (schema >= engine_schema::schema_1_7_1)
     {
         db << "UPDATE Track SET "
               "playOrder = ?, length = ?, lengthCalculated = ?, bpm = ?, "
@@ -556,7 +528,7 @@ void engine_storage::set_meta_data(
 {
     // Note that rows are created even for null values.
     std::optional<std::string> no_value;
-    if (version.schema_version >= os_1_4_0.schema_version)
+    if (schema >= engine_schema::schema_1_15_0)
     {
         // A new unknown entry of type 17 may appear from 1.15.0 onwards.
         db << "INSERT OR REPLACE INTO MetaData(id, type, text) VALUES "
@@ -694,7 +666,7 @@ void engine_storage::set_meta_data_integer(
     // order 4, 5, 1, 2, 3, 6, 8, 7, 9, 10, 11, for reasons unknown.  The code
     // below replicates this order for maximum compatibility.
     std::optional<int64_t> no_value;
-    if (version.schema_version >= os_1_2_0.schema_version)
+    if (schema >= engine_schema::schema_1_11_1)
     {
         // A new unknown entry of type 12 may appear from 1.11.1 onwards.
         db << "INSERT OR REPLACE INTO MetaDataInteger (id, type, value) VALUES "
@@ -774,7 +746,7 @@ void engine_storage::clear_performance_data(int64_t id)
 performance_data_row engine_storage::get_performance_data(int64_t id)
 {
     std::optional<performance_data_row> result;
-    if (version.schema_version >= os_1_2_0.schema_version)
+    if (schema >= engine_schema::schema_1_11_1)
     {
         db << "SELECT id, isAnalyzed, isRendered, "
               "trackData, highResolutionWaveFormData, "
@@ -812,7 +784,7 @@ performance_data_row engine_storage::get_performance_data(int64_t id)
                     has_traktor_values};
             };
     }
-    else if (version.schema_version >= os_1_0_3.schema_version)
+    else if (schema >= engine_schema::schema_1_7_1)
     {
         db << "SELECT id, isAnalyzed, isRendered, "
               "trackData, highResolutionWaveFormData, "
@@ -906,7 +878,7 @@ void engine_storage::set_performance_data(
 {
     // TODO (mr-smidge): check encoding/decoding invariants.
 
-    if (version.schema_version >= os_1_2_0.schema_version)
+    if (schema >= engine_schema::schema_1_11_1)
     {
         db << "INSERT OR REPLACE INTO PerformanceData ("
               "id, isAnalyzed, isRendered, "
@@ -923,7 +895,7 @@ void engine_storage::set_performance_data(
            << loops_data.encode() << has_serato_values << has_rekordbox_values
            << has_traktor_values;
     }
-    else if (version.schema_version >= os_1_0_3.schema_version)
+    else if (schema >= engine_schema::schema_1_7_1)
     {
         db << "INSERT OR REPLACE INTO PerformanceData ("
               "id, isAnalyzed, isRendered, "

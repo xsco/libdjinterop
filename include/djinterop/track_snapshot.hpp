@@ -19,10 +19,6 @@
 #ifndef DJINTEROP_TRACK_SNAPSHOT_HPP
 #define DJINTEROP_TRACK_SNAPSHOT_HPP
 
-#if __cplusplus < 201703L
-#error This library needs at least a C++17 compliant compiler
-#endif
-
 #include <chrono>
 #include <cstdint>
 #include <optional>
@@ -30,6 +26,7 @@
 #include <tuple>
 #include <vector>
 
+#include <djinterop/config.hpp>
 #include <djinterop/musical_key.hpp>
 #include <djinterop/performance_data.hpp>
 #include <djinterop/stream_helper.hpp>

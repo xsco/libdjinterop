@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.22.1
+        VERSION 0.24.2
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
@@ -15,16 +15,21 @@ if(POLICY CMP0076)
     cmake_policy(SET CMP0076 NEW)
 endif()
 
-# Require C++17
-set(CMAKE_CXX_STANDARD 17)
+# Require C++20
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_EXTENSIONS OFF)
 if(MSVC)
     add_compile_options("/W4" "/wd4251" "/wd4275" "$<$<CONFIG:RELEASE>:/O2>")
 
     # Ask MSVC to populate the __cplusplus macro properly.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus")
 else()
-    add_compile_options("$<$<CONFIG:DEBUG>:-Wall>")
+    # Disabling -Wunused-variable needed as the library implementation doesn't
+    # use every variable in the public headers.  Is there a better way?
+    # Disabling -Wunused-but-set-variable owing to XCode triggering on this
+    # in the SQLite amalgamation.
+    add_compile_options("-Wall" "-Wpedantic" "-Wno-unused-variable" "-Wno-unused-but-set-variable" "-Werror")
 endif()
 
 # Build shared a library by default.
@@ -39,55 +44,154 @@ find_package(ZLIB ${ZLIB_MIN_VERSION} REQUIRED)
 
 add_library(
     DjInterop
-    src/djinterop/impl/crate_impl.cpp
-    src/djinterop/impl/database_impl.cpp
-    src/djinterop/impl/track_impl.cpp
+    include/djinterop/album_art.hpp
+    include/djinterop/crate.hpp
+    include/djinterop/database.hpp
+    include/djinterop/djinterop.hpp
+    include/djinterop/engine/engine.hpp
+    include/djinterop/engine/engine_schema.hpp
+    include/djinterop/engine/v2/beat_data_blob.hpp
+    include/djinterop/engine/v2/change_log_table.hpp
+    include/djinterop/engine/v2/engine_library.hpp
+    include/djinterop/engine/v2/information_table.hpp
+    include/djinterop/engine/v2/loops_blob.hpp
+    include/djinterop/engine/v2/overview_waveform_data_blob.hpp
+    include/djinterop/engine/v2/playlist_entity_table.hpp
+    include/djinterop/engine/v2/playlist_table.hpp
+    include/djinterop/engine/v2/quick_cues_blob.hpp
+    include/djinterop/engine/v2/track_data_blob.hpp
+    include/djinterop/engine/v2/track_table.hpp
+    include/djinterop/engine/v3/beat_data_blob.hpp
+    include/djinterop/engine/v3/engine_library.hpp
+    include/djinterop/engine/v3/information_table.hpp
+    include/djinterop/engine/v3/loops_blob.hpp
+    include/djinterop/engine/v3/overview_waveform_data_blob.hpp
+    include/djinterop/engine/v3/performance_data_table.hpp
+    include/djinterop/engine/v3/playlist_entity_table.hpp
+    include/djinterop/engine/v3/playlist_table.hpp
+    include/djinterop/engine/v3/quick_cues_blob.hpp
+    include/djinterop/engine/v3/track_data_blob.hpp
+    include/djinterop/engine/v3/track_table.hpp
+    include/djinterop/exceptions.hpp
+    include/djinterop/musical_key.hpp
+    include/djinterop/pad_color.hpp
+    include/djinterop/performance_data.hpp
+    include/djinterop/semantic_version.hpp
+    include/djinterop/stream_helper.hpp
+    include/djinterop/track.hpp
+    include/djinterop/track_snapshot.hpp
+    src/djinterop/crate.cpp
+    src/djinterop/database.cpp
+    src/djinterop/engine/base_engine_library.cpp
     src/djinterop/engine/encode_decode_utils.cpp
+    src/djinterop/engine/encode_decode_utils.hpp
     src/djinterop/engine/engine.cpp
+    src/djinterop/engine/engine_library_context.hpp
+    src/djinterop/engine/engine_library_dir_utils.cpp
+    src/djinterop/engine/engine_library_dir_utils.hpp
+    src/djinterop/engine/metadata_types.hpp
     src/djinterop/engine/schema/schema_1_6_0.cpp
+    src/djinterop/engine/schema/schema_1_6_0.hpp
     src/djinterop/engine/schema/schema_1_7_1.cpp
+    src/djinterop/engine/schema/schema_1_7_1.hpp
     src/djinterop/engine/schema/schema_1_9_1.cpp
+    src/djinterop/engine/schema/schema_1_9_1.hpp
     src/djinterop/engine/schema/schema_1_11_1.cpp
+    src/djinterop/engine/schema/schema_1_11_1.hpp
     src/djinterop/engine/schema/schema_1_13_0.cpp
+    src/djinterop/engine/schema/schema_1_13_0.hpp
     src/djinterop/engine/schema/schema_1_13_1.cpp
+    src/djinterop/engine/schema/schema_1_13_1.hpp
     src/djinterop/engine/schema/schema_1_13_2.cpp
+    src/djinterop/engine/schema/schema_1_13_2.hpp
     src/djinterop/engine/schema/schema_1_15_0.cpp
+    src/djinterop/engine/schema/schema_1_15_0.hpp
     src/djinterop/engine/schema/schema_1_17_0.cpp
+    src/djinterop/engine/schema/schema_1_17_0.hpp
     src/djinterop/engine/schema/schema_1_18_0_desktop.cpp
+    src/djinterop/engine/schema/schema_1_18_0_desktop.hpp
     src/djinterop/engine/schema/schema_1_18_0_os.cpp
+    src/djinterop/engine/schema/schema_1_18_0_os.hpp
     src/djinterop/engine/schema/schema_2_18_0.cpp
+    src/djinterop/engine/schema/schema_2_18_0.hpp
     src/djinterop/engine/schema/schema_2_20_1.cpp
+    src/djinterop/engine/schema/schema_2_20_1.hpp
     src/djinterop/engine/schema/schema_2_20_2.cpp
+    src/djinterop/engine/schema/schema_2_20_2.hpp
     src/djinterop/engine/schema/schema_2_20_3.cpp
+    src/djinterop/engine/schema/schema_2_20_3.hpp
     src/djinterop/engine/schema/schema_2_21_0.cpp
+    src/djinterop/engine/schema/schema_2_21_0.hpp
     src/djinterop/engine/schema/schema_2_21_1.cpp
+    src/djinterop/engine/schema/schema_2_21_1.hpp
     src/djinterop/engine/schema/schema_2_21_2.cpp
+    src/djinterop/engine/schema/schema_2_21_2.hpp
+    src/djinterop/engine/schema/schema_3_0_0.cpp
+    src/djinterop/engine/schema/schema_3_0_0.hpp
     src/djinterop/engine/schema/schema.cpp
+    src/djinterop/engine/schema/schema.hpp
+    src/djinterop/engine/schema/schema_validate_utils.hpp
     src/djinterop/engine/v1/engine_crate_impl.cpp
+    src/djinterop/engine/v1/engine_crate_impl.hpp
     src/djinterop/engine/v1/engine_database_impl.cpp
+    src/djinterop/engine/v1/engine_database_impl.hpp
     src/djinterop/engine/v1/engine_storage.cpp
+    src/djinterop/engine/v1/engine_storage.hpp
     src/djinterop/engine/v1/engine_track_impl.cpp
+    src/djinterop/engine/v1/engine_track_impl.hpp
     src/djinterop/engine/v1/performance_data_format.cpp
+    src/djinterop/engine/v1/performance_data_format.hpp
     src/djinterop/engine/v2/beat_data_blob.cpp
     src/djinterop/engine/v2/change_log_table.cpp
+    src/djinterop/engine/v2/convert_beatgrid.hpp
+    src/djinterop/engine/v2/convert_hot_cues.hpp
+    src/djinterop/engine/v2/convert_loops.hpp
+    src/djinterop/engine/v2/convert_track.hpp
+    src/djinterop/engine/v2/convert_waveform.hpp
     src/djinterop/engine/v2/crate_impl.cpp
+    src/djinterop/engine/v2/crate_impl.hpp
     src/djinterop/engine/v2/database_impl.cpp
+    src/djinterop/engine/v2/database_impl.hpp
     src/djinterop/engine/v2/engine_library.cpp
     src/djinterop/engine/v2/information_table.cpp
     src/djinterop/engine/v2/loops_blob.cpp
     src/djinterop/engine/v2/overview_waveform_data_blob.cpp
-    src/djinterop/engine/v2/playlist_table.cpp
     src/djinterop/engine/v2/playlist_entity_table.cpp
+    src/djinterop/engine/v2/playlist_table.cpp
     src/djinterop/engine/v2/quick_cues_blob.cpp
     src/djinterop/engine/v2/track_data_blob.cpp
     src/djinterop/engine/v2/track_table.cpp
     src/djinterop/engine/v2/track_impl.cpp
-    src/djinterop/crate.cpp
-    src/djinterop/database.cpp
+    src/djinterop/engine/v2/track_impl.hpp
+    src/djinterop/engine/v3/convert_beatgrid.hpp
+    src/djinterop/engine/v3/convert_hot_cues.hpp
+    src/djinterop/engine/v3/convert_loops.hpp
+    src/djinterop/engine/v3/convert_track.hpp
+    src/djinterop/engine/v3/convert_waveform.hpp
+    src/djinterop/engine/v3/crate_impl.cpp
+    src/djinterop/engine/v3/crate_impl.hpp
+    src/djinterop/engine/v3/database_impl.cpp
+    src/djinterop/engine/v3/database_impl.hpp
+    src/djinterop/engine/v3/engine_library.cpp
+    src/djinterop/engine/v3/performance_data_table.cpp
+    src/djinterop/engine/v3/track_impl.cpp
+    src/djinterop/engine/v3/track_impl.hpp
+    src/djinterop/engine/v3/track_table.cpp
+    src/djinterop/impl/crate_impl.cpp
+    src/djinterop/impl/crate_impl.hpp
+    src/djinterop/impl/database_impl.cpp
+    src/djinterop/impl/database_impl.hpp
+    src/djinterop/impl/track_impl.cpp
+    src/djinterop/impl/track_impl.hpp
     src/djinterop/track.cpp
     src/djinterop/util/chrono.cpp
+    src/djinterop/util/chrono.hpp
     src/djinterop/util/filesystem.cpp
-    src/djinterop/util/random.cpp)
+    src/djinterop/util/filesystem.hpp
+    src/djinterop/util/random.cpp
+    src/djinterop/util/random.hpp
+    src/djinterop/util/sqlite_transaction.hpp
+)
 
 set_target_properties(DjInterop PROPERTIES
     OUTPUT_NAME "djinterop"
@@ -115,11 +219,10 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${DJINTEROP_INSTALL_INCLUDEDIR}>)
 target_include_directories(
-        DjInterop PRIVATE
+        DjInterop PRIVATE SYSTEM
         ${ZLIB_INCLUDE_DIRS}
         ext/sqlite_modern_cpp
-        ext/date
-        src)
+        ext/date)
 
 target_link_libraries(
     DjInterop PUBLIC
@@ -131,7 +234,7 @@ if(SYSTEM_SQLITE)
     set(SQLITE_MIN_VERSION 3.11)
     find_package(SQLite3 ${SQLITE_MIN_VERSION} REQUIRED)
     target_include_directories(
-        DjInterop PRIVATE
+        DjInterop PRIVATE SYSTEM
         ${SQLite3_INCLUDE_DIRS})
     target_link_libraries(
         DjInterop PUBLIC
@@ -146,7 +249,7 @@ else()
         DjInterop PUBLIC
         SQLITE_OMIT_LOAD_EXTENSION)
     target_include_directories(
-        DjInterop PRIVATE
+        DjInterop PRIVATE SYSTEM
         ext/sqlite-amalgamation)
 endif()
 
@@ -160,8 +263,8 @@ install(TARGETS DjInterop
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 
 install(FILES
-    include/djinterop/album_art.hpp
     ${CMAKE_CURRENT_BINARY_DIR}/include/djinterop/config.hpp
+    include/djinterop/album_art.hpp
     include/djinterop/crate.hpp
     include/djinterop/database.hpp
     include/djinterop/djinterop.hpp
@@ -176,7 +279,7 @@ install(FILES
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}")
 install(FILES
     include/djinterop/engine/engine.hpp
-    include/djinterop/engine/engine_version.hpp
+    include/djinterop/engine/engine_schema.hpp
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/engine")
 install(FILES
     include/djinterop/engine/v2/beat_data_blob.hpp
@@ -191,6 +294,18 @@ install(FILES
     include/djinterop/engine/v2/track_data_blob.hpp
     include/djinterop/engine/v2/track_table.hpp
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/engine/v2")
+install(FILES
+    include/djinterop/engine/v3/beat_data_blob.hpp
+    include/djinterop/engine/v3/engine_library.hpp
+    include/djinterop/engine/v3/information_table.hpp
+    include/djinterop/engine/v3/loops_blob.hpp
+    include/djinterop/engine/v3/overview_waveform_data_blob.hpp
+    include/djinterop/engine/v3/playlist_entity_table.hpp
+    include/djinterop/engine/v3/playlist_table.hpp
+    include/djinterop/engine/v3/quick_cues_blob.hpp
+    include/djinterop/engine/v3/track_data_blob.hpp
+    include/djinterop/engine/v3/track_table.hpp
+    DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/engine/v3")
 
 
 if (UNIX)
@@ -275,9 +390,11 @@ if (Boost_FOUND)
     add_djinterop_test(engine/ database_test)
     add_djinterop_test(engine/ engine_test)
     add_djinterop_test(engine/ track_test)
-    add_djinterop_test(engine/v2/ track_table_test)
     add_djinterop_test(engine/v2/ playlist_entity_table_test)
     add_djinterop_test(engine/v2/ playlist_table_test)
+    add_djinterop_test(engine/v2/ track_table_test)
+    add_djinterop_test(engine/v3/ performance_data_table_test)
+    add_djinterop_test(engine/v3/ track_table_test)
 
 else()
     message(STATUS "Unit tests not available, as Boost cannot be found")
@@ -287,3 +404,24 @@ endif()
 include(InstallRequiredSystemLibraries)
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 include(CPack)
+
+# Add documentation option
+option(BUILD_DOC "Build documentation" ON)
+
+# Check if Doxygen is installed
+find_package(Doxygen OPTIONAL_COMPONENTS dot dia)
+if (DOXYGEN_FOUND)
+    set(DOXYGEN_HTML_OUTPUT docs)
+    set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
+
+    message("Doxygen build started")
+
+    doxygen_add_docs(
+            docs
+            include
+            README.md
+            COMMENT "Generate docs"
+    )
+else (DOXYGEN_FOUND)
+    message("Doxygen need to be installed to generate the doxygen documentation")
+endif (DOXYGEN_FOUND)

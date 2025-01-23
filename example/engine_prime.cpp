@@ -27,9 +27,9 @@ int main()
     using namespace std::string_literals;
 
     auto dir = "Engine Library"s;
-    auto version = e::latest;
+    auto schema = e::latest_schema;
     bool created;
-    auto db = e::create_or_load_database(dir, version, created);
+    auto db = e::create_or_load_database(dir, schema, created);
     std::cout << (created ? "Created " : "Loaded ") << "database in directory "
               << dir << std::endl;
     std::cout << "DB version is " << db.version_name() << std::endl;

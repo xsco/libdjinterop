@@ -66,6 +66,14 @@ std::vector<std::byte> loops_blob::to_blob() const
 
 loops_blob loops_blob::from_blob(const std::vector<std::byte>& blob)
 {
+    if (blob.empty())
+    {
+        return loops_blob{
+            .loops = {},
+            .extra_data = {},
+        };
+    }
+
     // Note that loops are not compressed, unlike all the other fields.
     auto ptr = blob.data();
     const auto end = ptr + blob.size();

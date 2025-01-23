@@ -19,18 +19,16 @@
 #ifndef DJINTEROP_ALBUM_ART_HPP
 #define DJINTEROP_ALBUM_ART_HPP
 
-#if __cplusplus < 201703L
-#error This library needs at least a C++17 compliant compiler
-#endif
-
 #include <cstdint>
 #include <string>
 #include <vector>
 
+#include <djinterop/config.hpp>
+
 namespace djinterop
 {
 // Artwork for tracks
-class album_art
+class DJINTEROP_PUBLIC album_art
 {
 public:
     using image_data_type = uint_least8_t;

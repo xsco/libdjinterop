@@ -26,12 +26,12 @@
 #include <sqlite_modern_cpp.h>
 
 #include <djinterop/engine/engine.hpp>
-#include <djinterop/engine/engine_version.hpp>
+#include <djinterop/engine/engine_schema.hpp>
 #include <djinterop/exceptions.hpp>
 
-#include "djinterop/engine/metadata_types.hpp"
-#include "performance_data_format.hpp"
+#include "../metadata_types.hpp"
 #include "../schema/schema.hpp"
+#include "performance_data_format.hpp"
 
 namespace djinterop::engine::v1
 {
@@ -98,19 +98,23 @@ struct performance_data_row
 class engine_storage
 {
 public:
+    engine_storage(
+        const std::string& directory, const engine_schema& schema,
+        sqlite::database db);
+
     /// Construct by loading from an existing DB directory.
-    engine_storage(const std::string& directory, const engine_version& version);
+    static std::shared_ptr<engine_storage> load(const std::string& directory);
 
     /// Make a new, empty DB of a given version.
     static std::shared_ptr<engine_storage> create(
-        const std::string& directory, const engine_version& version);
+        const std::string& directory, const engine_schema& schema);
 
     /// Make a new, empty, in-memory DB of a given version.
     ///
     /// Any changes made to the database will not persist beyond destruction
     /// of the class instance.
     static std::shared_ptr<engine_storage> create_temporary(
-        const engine_version& version);
+        const engine_schema& schema);
 
     /// Create an entry in the `Track` table.
     int64_t create_track(
@@ -328,7 +332,7 @@ public:
                << loops_data{}.encode()              //
                << 0.0;                               // hasSeratoValues
 
-            if (version.schema_version >= os_1_0_3.schema_version)
+            if (schema >= engine_schema::schema_1_7_1)
             {
                 db << "UPDATE PerformanceData SET hasRekordboxValues = 0 "
                       "WHERE id = ?"
@@ -347,17 +351,12 @@ public:
     /// SQLite database handle, with both music and performance DBs attached.
     sqlite::database db;
 
-    /// The version of the Engine database.
-    const engine_version version;
+    /// The schema version of the Engine database.
+    const engine_schema schema;
 
     /// Pointer to the schema creator/validator.
     const std::unique_ptr<schema::schema_creator_validator>
         schema_creator_validator;
-
-private:
-    engine_storage(
-        const std::string& directory, const engine_version& version,
-        sqlite::database db);
 };
 
 }  // namespace djinterop::engine::v1

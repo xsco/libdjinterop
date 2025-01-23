@@ -28,7 +28,7 @@
 #include "../../util/convert.hpp"
 #include "../../util/filesystem.hpp"
 #include "../../util/sqlite_transaction.hpp"
-#include "djinterop/engine/track_utils.hpp"
+#include "../track_utils.hpp"
 #include "engine_crate_impl.hpp"
 #include "engine_database_impl.hpp"
 #include "engine_track_impl.hpp"
@@ -1094,6 +1094,11 @@ void engine_track_impl::set_waveform(std::vector<waveform_entry> waveform)
         high_res_waveform_d.samples_per_entry =
             high_res_extents.samples_per_entry;
         high_res_waveform_d.waveform = std::move(waveform);
+    }
+    else
+    {
+        overview_waveform_d.samples_per_entry = 0;
+        high_res_waveform_d.samples_per_entry = 0;
     }
 
     set_overview_waveform_data(std::move(overview_waveform_d));

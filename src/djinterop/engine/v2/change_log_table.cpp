@@ -22,7 +22,7 @@
 
 #include <djinterop/exceptions.hpp>
 
-#include "engine_library_context.hpp"
+#include "../engine_library_context.hpp"
 
 namespace djinterop::engine::v2
 {
@@ -30,7 +30,7 @@ change_log_table::change_log_table(
     std::shared_ptr<engine_library_context> context) :
     context_{std::move(context)}
 {
-    if (context_->version.schema_version >= semantic_version{2, 20, 3})
+    if (context_->schema >= engine_schema::schema_2_20_3)
     {
         throw djinterop::unsupported_operation{
             "The ChangeLog table is removed in firmware 3.0 and above"};

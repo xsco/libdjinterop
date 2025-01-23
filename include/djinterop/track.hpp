@@ -19,10 +19,6 @@
 #ifndef DJINTEROP_TRACK_HPP
 #define DJINTEROP_TRACK_HPP
 
-#if __cplusplus < 201703L
-#error This library needs at least a C++17 compliant compiler
-#endif
-
 #include <chrono>
 #include <cstdint>
 #include <memory>

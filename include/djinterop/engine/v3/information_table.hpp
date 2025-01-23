@@ -13,35 +13,22 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #pragma once
 
-#include <string>
+#include <djinterop/config.hpp>
+#include <djinterop/engine/v2/information_table.hpp>
 
-#include <sqlite_modern_cpp.h>
-
-#include <djinterop/engine/engine_version.hpp>
-#include <utility>
-
-namespace djinterop::engine::v2
+namespace djinterop::engine::v3
 {
-struct engine_library_context
-{
-    engine_library_context(
-        std::string directory, engine_version version, sqlite::database db) :
-        directory{std::move(directory)}, version{version}, db{std::move(db)}
-    {
-    }
+/// Represents the single-row contents of the `Information` table.
+using information_row = djinterop::engine::v2::information_row;
 
-    /// The directory in which the Engine DB files reside.
-    const std::string directory;
+/// Represents the `Information` table in an Engine v2 database.
+///
+/// Note that the `Information` table in a valid database always has exactly
+/// one row.  Zero rows or more than one is considered an invalid database.
+using information_table = djinterop::engine::v2::information_table;
 
-    /// The version of the Engine database.
-    const engine_version version;
-
-    /// The main SQLite database holding Engine data.
-    sqlite::database db;
-};
-
-}  // namespace djinterop::engine::v2
+}  // namespace djinterop::engine::v3
