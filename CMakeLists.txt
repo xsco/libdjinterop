@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.24.4
+        VERSION 0.25.0
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
@@ -80,6 +80,7 @@ add_library(
     include/djinterop/musical_key.hpp
     include/djinterop/pad_color.hpp
     include/djinterop/performance_data.hpp
+    include/djinterop/playlist.hpp
     include/djinterop/semantic_version.hpp
     include/djinterop/stream_helper.hpp
     include/djinterop/track.hpp
@@ -161,6 +162,8 @@ add_library(
     src/djinterop/engine/v2/loops_blob.cpp
     src/djinterop/engine/v2/overview_waveform_data_blob.cpp
     src/djinterop/engine/v2/playlist_entity_table.cpp
+    src/djinterop/engine/v2/playlist_impl.cpp
+    src/djinterop/engine/v2/playlist_impl.hpp
     src/djinterop/engine/v2/playlist_table.cpp
     src/djinterop/engine/v2/quick_cues_blob.cpp
     src/djinterop/engine/v2/track_data_blob.cpp
@@ -183,10 +186,11 @@ add_library(
     src/djinterop/engine/v3/track_table.cpp
     src/djinterop/impl/crate_impl.cpp
     src/djinterop/impl/crate_impl.hpp
-    src/djinterop/impl/database_impl.cpp
     src/djinterop/impl/database_impl.hpp
+    src/djinterop/impl/playlist_impl.hpp
     src/djinterop/impl/track_impl.cpp
     src/djinterop/impl/track_impl.hpp
+    src/djinterop/playlist.cpp
     src/djinterop/track.cpp
     src/djinterop/util/chrono.cpp
     src/djinterop/util/chrono.hpp

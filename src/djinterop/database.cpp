@@ -31,6 +31,11 @@ database::~database() = default;
 
 database& database::operator=(const database& db) = default;
 
+std::bitset<64> database::features() const
+{
+    return pimpl_->features();
+}
+
 std::optional<crate> database::crate_by_id(int64_t id) const
 {
     return pimpl_->crate_by_id(id);
@@ -46,12 +51,22 @@ std::vector<crate> database::crates_by_name(const std::string& name) const
     return pimpl_->crates_by_name(name);
 }
 
+playlist database::create_playlist(const std::string& name)
+{
+    return pimpl_->create_playlist(name);
+}
+
+playlist database::create_playlist_after(const std::string& name, const playlist& after)
+{
+    return pimpl_->create_playlist_after(name, after);
+}
+
 crate database::create_root_crate(const std::string& name)
 {
     return pimpl_->create_root_crate(name);
 }
 
-crate database::create_root_crate_after(const std::string &name, const crate &after)
+crate database::create_root_crate_after(const std::string& name, const crate& after)
 {
     return pimpl_->create_root_crate_after(name, after);
 }
@@ -71,9 +86,24 @@ void database::verify() const
     pimpl_->verify();
 }
 
+std::vector<playlist> database::playlists() const
+{
+    return pimpl_->playlists();
+}
+
+std::vector<playlist> database::playlists_by_name(const std::string& name) const
+{
+    return pimpl_->playlists_by_name(name);
+}
+
 void database::remove_crate(crate cr) const
 {
     pimpl_->remove_crate(cr);
+}
+
+void database::remove_playlist(playlist pl) const
+{
+    pimpl_->remove_playlist(pl);
 }
 
 void database::remove_track(track tr) const

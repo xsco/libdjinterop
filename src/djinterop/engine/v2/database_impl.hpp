@@ -34,13 +34,19 @@ public:
     std::vector<djinterop::crate> crates() override;
     std::vector<djinterop::crate> crates_by_name(
         const std::string& name) override;
+    playlist create_playlist(const std::string& name) override;
+    playlist create_playlist_after(
+        const std::string& name, const playlist& after) override;
     crate create_root_crate(const std::string& name) override;
     crate create_root_crate_after(
         const std::string& name, const crate& after) override;
     track create_track(const track_snapshot& snapshot) override;
     std::string directory() override;
     void verify() override;
+    std::optional<playlist> playlist_by_name(const std::string& name) override;
+    std::vector<playlist> playlists() override;
     void remove_crate(djinterop::crate cr) override;
+    void remove_playlist(playlist pl) override;
     void remove_track(djinterop::track tr) override;
     std::vector<djinterop::crate> root_crates() override;
     std::optional<djinterop::crate> root_crate_by_name(

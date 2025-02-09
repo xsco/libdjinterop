@@ -114,7 +114,7 @@ public:
 
     /// Returns the parent crate, if this crate has one
     ///
-    /// If the crate doesn't have a parent, then `djinterop::nullopt` is
+    /// If the crate doesn't have a parent, then `std::nullopt` is
     /// returned.
     std::optional<crate> parent() const;
 
@@ -129,7 +129,7 @@ public:
 
     /// Sets this crate's parent
     ///
-    /// If `djinterop::nullopt` is given, then this crate will have no parent.
+    /// If `std::nullopt` is given, then this crate will have no parent.
     /// That is, it becomes a root crate.
     void set_parent(std::optional<crate> parent) const;
 
@@ -138,7 +138,7 @@ public:
     /// Note that descendants of sub-crates are not found by this method, i.e.
     /// the search does not recurse into the immediate sub-crates of this crate.
     ///
-    /// If no such crate is found, then `djinterop::nullopt` is returned.
+    /// If no such crate is found, then `std::nullopt` is returned.
     std::optional<crate> sub_crate_by_name(const std::string& name) const;
 
     /// Returns the crate's contained tracks.

@@ -26,8 +26,19 @@
 
 namespace djinterop::engine::v2
 {
+namespace
+{
+std::bitset<64> make_features()
+{
+    std::bitset<64> features;
+    features.set(features::SUPPORTS_NESTED_CRATES);
+    features.set(features::SUPPORTS_NESTED_PLAYLISTS);
+    return features;
+}
+}  // namespace
+
 database_impl::database_impl(std::shared_ptr<engine_library> library) :
-    library_{std::move(library)}
+    djinterop::database_impl{make_features()}, library_{std::move(library)}
 {
 }
 
@@ -67,6 +78,61 @@ std::vector<crate> database_impl::crates_by_name(const std::string& name)
     }
 
     return results;
+}
+
+playlist database_impl::create_playlist(const std::string& name)
+{
+    if (library_->playlist().find_root_id(name))
+    {
+        throw playlist_already_exists{
+            "Cannot create a playlist with name '" + name +
+            "', because a playlist with that name already exists"};
+    }
+
+    playlist_row row{
+        PLAYLIST_ROW_ID_NONE,
+        name,
+        PARENT_LIST_ID_NONE,
+        true,
+        PLAYLIST_NO_NEXT_LIST_ID,
+        std::chrono::system_clock::now(),
+        true};
+
+    auto id = library_->playlist().add(row);
+    return crate{std::make_shared<crate_impl>(library_, id)};
+}
+
+playlist database_impl::create_playlist_after(
+    const std::string& name, const crate& after)
+{
+    if (library_->playlist().find_root_id(name))
+    {
+        throw crate_already_exists{
+            "Cannot create a crate with name '" + name +
+            "' as a root crate, because a crate with that name already exists"};
+    }
+
+    auto after_row = library_->playlist().get(after.id());
+    if (after_row->parent_list_id != PARENT_LIST_ID_NONE)
+    {
+        throw crate_invalid_parent{
+            "Cannot create a root crate after crate " + after_row->title +
+            ", because it is not a root crate"};
+    }
+
+    // DB triggers will take care of massaging the next-list-id columns.  We
+    // only need to work out what the new "next" list should be.
+    playlist_row row{
+        PLAYLIST_ROW_ID_NONE,
+        name,
+        PARENT_LIST_ID_NONE,
+        true,
+        after_row->next_list_id,
+        std::chrono::system_clock::now(),
+        true};
+
+    auto id = library_->playlist().add(row);
+    return crate{std::make_shared<crate_impl>(library_, id)};
 }
 
 crate database_impl::create_root_crate(const std::string& name)

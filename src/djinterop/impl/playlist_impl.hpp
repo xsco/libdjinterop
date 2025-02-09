@@ -15,10 +15,30 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "database_impl.hpp"
+#pragma once
+
+#include <string>
+#include <vector>
+
+#include <djinterop/database.hpp>
+#include <djinterop/playlist.hpp>
+#include <djinterop/track.hpp>
 
 namespace djinterop
 {
-database_impl::~database_impl() = default;
+class playlist_impl
+{
+public:
+    virtual ~playlist_impl() noexcept = default;
+
+    virtual void add_track_back(track tr) const = 0;
+    virtual void add_track_after(track tr, track after) const = 0;
+    virtual void clear_tracks() const = 0;
+    virtual database db() const = 0;
+    virtual std::string name() const = 0;
+    virtual void remove_track(track tr) const = 0;
+    virtual void set_name(const std::string& name) const = 0;
+    virtual std::vector<track> tracks() const = 0;
+};
 
 }  // namespace djinterop
