@@ -26,6 +26,10 @@ namespace djinterop::engine::v3
 /// operation.
 using playlist_row_id_error = djinterop::engine::v2::playlist_row_id_error;
 
+/// Thrown when the title of a playlist row is invalid in some way.
+using playlist_row_invalid_title =
+    djinterop::engine::v2::playlist_row_invalid_title;
+
 /// Special value for id to indicate that a given row is not currently persisted
 /// in the database.
 constexpr int64_t PLAYLIST_ROW_ID_NONE = djinterop::engine::v2::PLAYLIST_ROW_ID_NONE;

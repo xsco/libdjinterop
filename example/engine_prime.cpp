@@ -34,6 +34,12 @@ int main()
               << dir << std::endl;
     std::cout << "DB version is " << db.version_name() << std::endl;
 
+    for (auto& pl : db.root_playlists())
+    {
+        std::cout << "Removing prior playlist " << pl.name() << std::endl;
+        db.remove_playlist(pl);
+    }
+
     for (auto& cr : db.crates())
     {
         std::cout << "Removing prior crate " << cr.name() << std::endl;
@@ -98,4 +104,8 @@ int main()
     auto cr = db.create_root_crate("My Example Crate");
     cr.add_track(tr);
     std::cout << "Added tr to crate " << cr.name() << std::endl;
+
+    auto pl = db.create_root_playlist("My Example Playlist");
+    pl.add_track_back(tr);
+    std::cout << "Added tr to playlist " << pl.name() << std::endl;
 }

@@ -17,9 +17,10 @@
 
 #include <djinterop/engine/v2/playlist_entity_table.hpp>
 
-#include <stdexcept>
 #include <unordered_map>
 #include <utility>
+
+#include <djinterop/exceptions.hpp>
 
 #include "../../util/sqlite_transaction.hpp"
 #include "../engine_library_context.hpp"
@@ -33,7 +34,7 @@ playlist_entity_table::playlist_entity_table(
 {
 }
 
-int64_t playlist_entity_table::add_back(
+int64_t playlist_entity_table::add(
     const playlist_entity_row& row, bool throw_if_duplicate)
 {
     if (row.id != PLAYLIST_ENTITY_ROW_ID_NONE)
@@ -49,36 +50,33 @@ int64_t playlist_entity_table::add_back(
                  << row.list_id << row.track_id << row.database_uuid >>
         [&](int64_t id) { existing_id = id; };
 
-    if (existing_id)
+    if (existing_id.has_value())
     {
         if (throw_if_duplicate)
         {
-            throw std::invalid_argument{
-                "The provided playlist entity already exists for the given "
-                "playlist, and duplicate entries are not permitted"};
+            throw track_already_in_playlist{
+                "There is already a playlist entity for the given track, and "
+                "duplicate entries are not permitted"};
         }
 
         return *existing_id;
     }
-
-    // The last entity in a playlist always has next entity id zero.
-    int64_t next_entity_id = 0;
 
     util::sqlite_transaction trans{context_->db};
     context_->db
         << "INSERT INTO PlaylistEntity ("
            "listId, trackId, databaseUuid, nextEntityId, membershipReference)"
            "VALUES (?, ?, ?, ?, ?)"
-        << row.list_id << row.track_id << row.database_uuid << next_entity_id
-        << row.membership_reference;
+        << row.list_id << row.track_id << row.database_uuid
+        << row.next_entity_id << row.membership_reference;
 
     auto id = context_->db.last_insert_rowid();
 
-    // The entity that was previously last in the playlist must now point to
-    // the new entity as its 'next entity'.
+    // The entity that the new entity goes after in the playlist must now point
+    // to the new entity as its 'next entity'.
     context_->db << "UPDATE PlaylistEntity SET nextEntityId = ? WHERE listId = "
-                    "? AND nextEntityId = 0 AND id <> ?"
-                 << id << row.list_id << id;
+                    "? AND nextEntityId = ? AND id <> ?"
+                 << id << row.list_id << row.next_entity_id << id;
     trans.commit();
 
     return id;
@@ -97,7 +95,7 @@ std::optional<playlist_entity_row> playlist_entity_table::get(
                     "membershipReference FROM PlaylistEntity WHERE listId = ? "
                     "AND trackId = ?"
                  << list_id << track_id >>
-        [&](int64_t id, int64_t list_id, int64_t track_id,
+        [&result](int64_t id, int64_t list_id, int64_t track_id,
             std::string database_uuid, int64_t next_entity_id,
             int64_t membership_reference)
     {
@@ -121,7 +119,7 @@ std::list<playlist_entity_row> playlist_entity_table::get_for_list(
     context_->db << "SELECT id, listId, trackId, databaseUuid, nextEntityId, "
                     "membershipReference FROM PlaylistEntity WHERE listId = ? "
                  << list_id >>
-        [&](int64_t id, int64_t list_id, int64_t track_id,
+        [&next_entity_id_map](int64_t id, int64_t list_id, int64_t track_id,
             std::string database_uuid, int64_t next_entity_id,
             int64_t membership_reference)
     {

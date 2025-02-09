@@ -22,12 +22,25 @@
 #include <djinterop/djinterop.hpp>
 
 #include "crate_impl.hpp"
+#include "playlist_impl.hpp"
 #include "track_impl.hpp"
 
 namespace djinterop::engine::v2
 {
+namespace
+{
+std::bitset<64> make_features()
+{
+    std::bitset<64> features;
+    features.set(features::SUPPORTS_NESTED_CRATES);
+    features.set(features::SUPPORTS_NESTED_PLAYLISTS);
+    return features;
+}
+}  // namespace
+
 database_impl::database_impl(std::shared_ptr<engine_library> library) :
-    library_{std::move(library)}
+    djinterop::database_impl{make_features()},
+    base_engine_impl{std::move(library)}
 {
 }
 
@@ -47,6 +60,7 @@ std::vector<crate> database_impl::crates()
 {
     auto ids = library_->playlist().all_ids();
     std::vector<crate> results;
+    results.reserve(ids.size());
 
     for (auto&& id : ids)
     {
@@ -60,6 +74,7 @@ std::vector<crate> database_impl::crates_by_name(const std::string& name)
 {
     auto ids = library_->playlist().find_ids(name);
     std::vector<crate> results;
+    results.reserve(ids.size());
 
     for (auto&& id : ids)
     {
@@ -67,6 +82,63 @@ std::vector<crate> database_impl::crates_by_name(const std::string& name)
     }
 
     return results;
+}
+
+playlist database_impl::create_root_playlist(const std::string& name)
+{
+    if (library_->playlist().find_root_id(name))
+    {
+        throw playlist_already_exists{
+            "Cannot create a playlist with name '" + name +
+            "', because a playlist with that name already exists"};
+    }
+
+    playlist_row row{
+        PLAYLIST_ROW_ID_NONE,
+        name,
+        PARENT_LIST_ID_NONE,
+        true,
+        PLAYLIST_NO_NEXT_LIST_ID,
+        std::chrono::system_clock::now(),
+        true};
+
+    auto id = library_->playlist().add(row);
+    return playlist{std::make_shared<playlist_impl>(library_, id)};
+}
+
+playlist database_impl::create_root_playlist_after(
+    const std::string& name, const djinterop::playlist_impl& after_base)
+{
+    if (library_->playlist().find_root_id(name))
+    {
+        throw playlist_already_exists{
+            "Cannot create a playlist with name '" + name +
+            "' as a root playlist, because a playlist with that name already "
+            "exists"};
+    }
+
+    const auto& after = context_cast<playlist_impl>(after_base);
+    auto after_row = library_->playlist().get(after.id());
+    if (after_row->parent_list_id != PARENT_LIST_ID_NONE)
+    {
+        throw playlist_invalid_parent{
+            "Cannot create a root playlist after playlist " + after_row->title +
+            ", because it is not a root playlist"};
+    }
+
+    // DB triggers will take care of massaging the next-list-id columns.  We
+    // only need to work out what the new "next" list should be.
+    playlist_row row{
+        PLAYLIST_ROW_ID_NONE,
+        name,
+        PARENT_LIST_ID_NONE,
+        true,
+        after_row->next_list_id,
+        std::chrono::system_clock::now(),
+        true};
+
+    auto id = library_->playlist().add(row);
+    return playlist{std::make_shared<playlist_impl>(library_, id)};
 }
 
 crate database_impl::create_root_crate(const std::string& name)
@@ -139,9 +211,43 @@ void database_impl::verify()
     library_->verify();
 }
 
+std::vector<playlist> database_impl::playlists()
+{
+    auto ids = library_->playlist().all_ids();
+    std::vector<playlist> results;
+    results.reserve(ids.size());
+
+    for (auto&& id : ids)
+    {
+        results.emplace_back(std::make_shared<playlist_impl>(library_, id));
+    }
+
+    return results;
+}
+
+std::vector<playlist> database_impl::playlists_by_name(const std::string& name)
+{
+    auto ids = library_->playlist().find_ids(name);
+    std::vector<playlist> results;
+    results.reserve(ids.size());
+
+    for (auto&& id : ids)
+    {
+        results.emplace_back(std::make_shared<playlist_impl>(library_, id));
+    }
+
+    return results;
+}
+
 void database_impl::remove_crate(crate cr)
 {
     library_->playlist().remove(cr.id());
+}
+
+void database_impl::remove_playlist(const djinterop::playlist_impl& pl_base)
+{
+    const auto& pl = context_cast<playlist_impl>(pl_base);
+    library_->playlist().remove(pl.id());
 }
 
 void database_impl::remove_track(track tr)
@@ -153,6 +259,7 @@ std::vector<crate> database_impl::root_crates()
 {
     auto ids = library_->playlist().root_ids();
     std::vector<crate> results;
+    results.reserve(ids.size());
 
     for (auto&& id : ids)
     {
@@ -174,10 +281,36 @@ std::optional<crate> database_impl::root_crate_by_name(const std::string& name)
     return std::make_optional<crate>(crate{impl});
 }
 
+std::vector<playlist> database_impl::root_playlists()
+{
+    auto ids = library_->playlist().root_ids();
+    std::vector<playlist> results;
+    results.reserve(ids.size());
+
+    for (auto&& id : ids)
+    {
+        results.emplace_back(std::make_shared<playlist_impl>(library_, id));
+    }
+
+    return results;
+}
+
+std::optional<playlist> database_impl::root_playlist_by_name(
+    const std::string& name)
+{
+    auto id_maybe = library_->playlist().find_root_id(name);
+    if (!id_maybe)
+    {
+        return std::nullopt;
+    }
+
+    auto impl = std::make_shared<playlist_impl>(library_, *id_maybe);
+    return std::make_optional<playlist>(playlist{impl});
+}
+
 std::optional<track> database_impl::track_by_id(int64_t id)
 {
-    auto track_table = library_->track();
-    if (track_table.exists(id))
+    if (library_->track().exists(id))
     {
         auto impl = std::make_shared<track_impl>(library_, id);
         return std::make_optional<track>(track{impl});
@@ -189,8 +322,7 @@ std::optional<track> database_impl::track_by_id(int64_t id)
 std::vector<track> database_impl::tracks()
 {
     std::vector<track> results;
-    auto track_table = library_->track();
-    for (auto&& id : track_table.all_ids())
+    for (auto&& id : library_->track().all_ids())
     {
         results.emplace_back(std::make_shared<track_impl>(library_, id));
     }
@@ -202,8 +334,7 @@ std::vector<track> database_impl::tracks_by_relative_path(
     const std::string& relative_path)
 {
     std::vector<track> results;
-    auto track_table = library_->track();
-    auto id_maybe = track_table.find_id_by_path(relative_path);
+    auto id_maybe = library_->track().find_id_by_path(relative_path);
     if (id_maybe)
     {
         results.emplace_back(std::make_shared<track_impl>(library_, *id_maybe));

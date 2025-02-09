@@ -19,6 +19,7 @@
 #ifndef DJINTEROP_DATABASE_HPP
 #define DJINTEROP_DATABASE_HPP
 
+#include <bitset>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -34,8 +35,28 @@ namespace djinterop
 //  include any public header and get to work!
 class crate;
 class database_impl;
+class playlist;
 class track;
 struct track_snapshot;
+
+/// Set of features that can be tested against a database's feature bitset.
+namespace features
+{
+    /// Does the database support nested crates?  If true, operations may be performed involving sub-crates.  If false,
+    /// only root-level crates are operable.
+    constexpr size_t SUPPORTS_NESTED_CRATES = 1;
+
+    /// Does the database support nested playlists?  If true, operations may be performed involving sub-playlists.  If
+    /// false, only root-level playlists are operable.
+    constexpr size_t SUPPORTS_NESTED_PLAYLISTS = 2;
+
+    /// Are playlists and crates distinct entities in the database?  If false, crate and playlist operations access the
+    /// same underlying data.
+    constexpr size_t PLAYLISTS_AND_CRATES_ARE_DISTINCT = 3;
+
+    /// Do playlists support the same track being added multiple times?
+    constexpr size_t PLAYLISTS_SUPPORT_DUPLICATE_TRACKS = 4;
+};
 
 class DJINTEROP_PUBLIC database
 {
@@ -49,6 +70,11 @@ public:
     /// Copy assignment operator
     database& operator=(const database& db);
 
+    /// Get a bitset of features supported by this database.
+    ///
+    /// Individual features may be tested using the constants in the `djinterop::features` namespace.
+    std::bitset<64> features() const;
+
     /// Returns the crate with the given ID
     ///
     /// If no such crate exists in the database, then `std::nullopt`
@@ -60,6 +86,12 @@ public:
 
     /// Returns all crates with the given name
     std::vector<crate> crates_by_name(const std::string& name) const;
+
+    /// Create a new playlist with the given name.
+    playlist create_root_playlist(const std::string& name);
+
+    /// Create a new playlist with the given name, after the given playlist in order.
+    playlist create_root_playlist_after(const std::string& name, const playlist& after);
 
     /// Create a new root crate with the given name.  The created crate has no parent.
     crate create_root_crate(const std::string& name);
@@ -88,10 +120,18 @@ public:
     /// Returns a descriptive name for the database version.
     std::string version_name() const;
 
+    /// Returns the playlists with the given name.
+    std::vector<playlist> playlists_by_name(const std::string& name) const;
+
     /// Removes a crate from the database
     ///
     /// All handles to that crate become invalid.
     void remove_crate(crate cr) const;
+
+    /// Removes a playlist from the database
+    ///
+    /// All handles to that playlist become invalid.
+    void remove_playlist(playlist pl) const;
 
     /// Removes a track from the database
     ///
@@ -107,6 +147,14 @@ public:
     ///
     /// A root crate is a crate that has no parent.
     std::vector<crate> root_crates() const;
+
+    /// Returns all root playlists contained in the database.
+    std::vector<playlist> root_playlists() const;
+
+    /// Returns the root-level playlist with the given name.
+    ///
+    /// If no such playlist exists, then `std::nullopt` is returned.
+    std::optional<playlist> root_playlist_by_name(const std::string& name) const;
 
     /// Returns the track with the given id
     ///

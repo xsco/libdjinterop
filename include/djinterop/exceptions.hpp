@@ -153,6 +153,79 @@ private:
     std::string name_;
 };
 
+/// The `playlist_already_exists` exception is thrown when a request is made to
+/// create a playlist with a name that already exists.
+class playlist_already_exists : public std::runtime_error
+{
+public:
+    /// Construct the exception.
+    explicit playlist_already_exists(const std::string& what_arg) noexcept :
+        runtime_error{what_arg.c_str()}
+    {
+    }
+};
+
+/// The `playlist_database_inconsistency` exception is thrown when a database
+/// inconsistency is found that correlates to a playlist.
+class playlist_database_inconsistency : public database_inconsistency
+{
+public:
+    /// Construct the exception for a given crate ID
+    explicit playlist_database_inconsistency(
+        const std::string& what_arg) noexcept : database_inconsistency{what_arg}
+    {
+    }
+};
+
+/// The `playlist_deleted` exception is thrown when an invalid `playlist` object
+/// is used, i.e. one that does not exist in the database anymore.
+class playlist_deleted : public std::runtime_error
+{
+public:
+    /// Constructs the exception for a given playlist ID
+    explicit playlist_deleted(int64_t id) noexcept :
+        runtime_error{"Playlist does not exist in database anymore"}, id_{id}
+    {
+    }
+
+    /// Returns the playlist ID that was deemed non-existent
+    [[nodiscard]] int64_t id() const noexcept { return id_; }
+
+private:
+    int64_t id_;
+};
+
+/// The `playlist_invalid_parent` exception is thrown when a playlist parent is found
+/// to be invalid.
+class playlist_invalid_parent : public std::runtime_error
+{
+public:
+    /// Construct the exception.
+    explicit playlist_invalid_parent(const std::string& what_arg) noexcept :
+        runtime_error{what_arg.c_str()}
+    {
+    }
+};
+
+/// The `playlist_invalid_name` exception is thrown when a playlist name is found to
+/// be invalid.
+class playlist_invalid_name : public std::runtime_error
+{
+public:
+    /// Construct the exception for a given playlist name.
+    explicit playlist_invalid_name(
+        const std::string& what_arg, const std::string& name) noexcept :
+        runtime_error{what_arg.c_str()}, name_{name}
+    {
+    }
+
+    /// The name that was deemed invalid.
+    [[nodiscard]] std::string name() const noexcept { return name_; }
+
+private:
+    std::string name_;
+};
+
 /// The `track_deleted` exception is thrown when an invalid `track` object is
 /// used, i.e. one that does not exist in the database anymore.
 class track_deleted : public std::invalid_argument
@@ -200,6 +273,29 @@ public:
 
 private:
     int64_t id_;
+};
+
+/// The `track_already_in_playlist` exception is thrown when a request is made
+/// to add a track a playlist it is already in.
+class track_already_in_playlist : public std::invalid_argument
+{
+public:
+    explicit track_already_in_playlist(const std::string& what_arg) noexcept :
+        std::invalid_argument{what_arg}
+    {
+    }
+};
+
+/// The `track_not_in_playlist` exception is thrown when a reference is made to
+/// a track that is supposed to be in a playlist, but actually is not in the
+/// playlist.
+class track_not_in_playlist : public std::invalid_argument
+{
+public:
+    explicit track_not_in_playlist(const std::string& what_arg) noexcept :
+        std::invalid_argument{what_arg}
+    {
+    }
 };
 
 /// The `hot_cues_overflow` exception is thrown when more hot cues are provided

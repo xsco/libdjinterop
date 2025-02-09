@@ -16,9 +16,12 @@
  */
 #include "engine_database_impl.hpp"
 
+#include <djinterop/playlist.hpp>
+
 #include "../../util/sqlite_transaction.hpp"
 #include "../schema/schema.hpp"
 #include "engine_crate_impl.hpp"
+#include "engine_playlist_impl.hpp"
 #include "engine_storage.hpp"
 #include "engine_track_impl.hpp"
 
@@ -29,6 +32,15 @@ using djinterop::track;
 
 namespace
 {
+std::bitset<64> make_features()
+{
+    std::bitset<64> features;
+    features.set(features::SUPPORTS_NESTED_CRATES);
+    features.set(features::PLAYLISTS_AND_CRATES_ARE_DISTINCT);
+    features.set(features::PLAYLISTS_SUPPORT_DUPLICATE_TRACKS);
+    return features;
+}
+
 void ensure_valid_crate_name(const std::string& name)
 {
     if (name == "")
@@ -43,10 +55,24 @@ void ensure_valid_crate_name(const std::string& name)
     }
 }
 
+void ensure_valid_playlist_name(const std::string& name)
+{
+    if (name == "")
+    {
+        throw djinterop::playlist_invalid_name{
+            "Playlist names must be non-empty", name};
+    }
+    else if (name.find_first_of(';') != std::string::npos)
+    {
+        throw djinterop::playlist_invalid_name{
+            "Playlist names must not contain semicolons", name};
+    }
+}
+
 }  // namespace
 
 engine_database_impl::engine_database_impl(std::shared_ptr<engine_storage> storage) :
-    storage_{std::move(storage)}
+    djinterop::database_impl{make_features()}, storage_{std::move(storage)}
 {
 }
 
@@ -129,7 +155,46 @@ crate engine_database_impl::create_root_crate_after(
     const std::string& name, [[maybe_unused]] const crate& after)
 {
     // TODO (mr-smidge): Back-port sorted crate functionality to Engine V1.
-   return create_root_crate(name);
+    return create_root_crate(name);
+}
+
+playlist engine_database_impl::create_root_playlist(const std::string& name)
+{
+    ensure_valid_playlist_name(name);
+    djinterop::util::sqlite_transaction trans{storage_->db};
+
+    int64_t id;
+    if (storage_->schema >= engine_schema::schema_1_9_1)
+    {
+        // Newer schemas consider playlists to be a kind of 'list', and so the
+        // `Playlist` table has been replaced with a VIEW onto `List`.  The main
+        // difference is that `List` does not have an integer primary key, so
+        // the new id will need to be determined in advance.
+        storage_->db << "SELECT IFNULL(MAX(id), 0) + 1 FROM List" >> id;
+        storage_->db << "INSERT INTO Playlist (id, title) VALUES (?, ?)" << id
+                     << name.data();
+    }
+    else
+    {
+        // Older schema versions have a dedicated table for playlists that has
+        // an integer primary key, which will be filled automatically.
+        storage_->db << "INSERT INTO Playlist (title) VALUES (?)"
+                     << name.data();
+        id = storage_->db.last_insert_rowid();
+    }
+
+    playlist pl{std::make_shared<engine_playlist_impl>(storage_, id)};
+
+    trans.commit();
+
+    return pl;
+}
+
+playlist engine_database_impl::create_root_playlist_after(
+    const std::string& name, const playlist_impl& after_base)
+{
+    // TODO (mr-smidge): Back-port sorted playlist functionality to Engine V1.
+    return create_root_playlist(name);
 }
 
 track engine_database_impl::create_track(const track_snapshot& snapshot)
@@ -149,9 +214,36 @@ void engine_database_impl::verify()
     schema_creator_validator->verify(storage_->db);
 }
 
+std::vector<playlist> engine_database_impl::playlists_by_name(const std::string& name)
+{
+    // Engine V1 only supports root-level playlists.
+    std::vector<playlist> results;
+    if (const auto result = root_playlist_by_name(name))
+        results.push_back(result.value());
+
+    return results;
+}
+
+std::vector<playlist> engine_database_impl::playlists()
+{
+    // Engine V1 only supports root-level playlists.
+    return root_playlists();
+}
+
 void engine_database_impl::remove_crate(crate cr)
 {
     storage_->db << "DELETE FROM Crate WHERE id = ?" << cr.id();
+}
+
+void engine_database_impl::remove_playlist(const djinterop::playlist_impl& pl_base)
+{
+    const auto* pl = dynamic_cast<const engine_playlist_impl*>(&pl_base);
+    if (!pl)
+    {
+        throw std::invalid_argument{"Supplied playlist does not belong to this database"};
+    }
+
+    storage_->db << "DELETE FROM Playlist WHERE id = ?" << pl->id();
 }
 
 void engine_database_impl::remove_track(track tr)
@@ -188,6 +280,29 @@ std::optional<crate> engine_database_impl::root_crate_by_name(
             cr = crate{std::make_shared<engine_crate_impl>(storage_, id)};
         };
     return cr;
+}
+
+std::vector<playlist> engine_database_impl::root_playlists()
+{
+    std::vector<playlist> results;
+    storage_->db << "SELECT id FROM Playlist" >> [&](int64_t id)
+    {
+        results.push_back(
+            playlist{std::make_shared<engine_playlist_impl>(storage_, id)});
+    };
+    return results;
+}
+
+std::optional<playlist> engine_database_impl::root_playlist_by_name(
+    const std::string& name)
+{
+    std::optional<playlist> result;
+    storage_->db << "SELECT id FROM Playlist WHERE title = ?" << name >>
+        [&](int64_t id)
+    {
+        result = playlist{std::make_shared<engine_playlist_impl>(storage_, id)};
+    };
+    return result;
 }
 
 std::optional<track> engine_database_impl::track_by_id(int64_t id)

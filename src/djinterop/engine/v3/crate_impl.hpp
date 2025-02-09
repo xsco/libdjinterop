@@ -21,8 +21,6 @@
 #include <vector>
 
 #include <djinterop/engine/v3/engine_library.hpp>
-#include <djinterop/engine/v3/playlist_entity_table.hpp>
-#include <djinterop/engine/v3/playlist_table.hpp>
 
 #include "../../impl/crate_impl.hpp"
 
@@ -57,8 +55,6 @@ public:
 
 private:
     std::shared_ptr<engine_library> library_;
-    playlist_entity_table playlist_entity_;
-    playlist_table playlist_;
 };
 
 }  // namespace engine::v3

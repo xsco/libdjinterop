@@ -36,13 +36,22 @@ public:
     crate create_root_crate(const std::string& name) override;
     crate create_root_crate_after(
         const std::string& name, const crate& after) override;
+    playlist create_root_playlist(const std::string& name) override;
+    playlist create_root_playlist_after(
+        const std::string& name, const playlist_impl& after_base) override;
     track create_track(const track_snapshot& snapshot) override;
     std::string directory() override;
     void verify() override;
+    std::vector<playlist> playlists_by_name(const std::string& name) override;
+    std::vector<playlist> playlists() override;
     void remove_crate(djinterop::crate cr) override;
+    void remove_playlist(const djinterop::playlist_impl& pl_base) override;
     void remove_track(djinterop::track tr) override;
     std::vector<djinterop::crate> root_crates() override;
     std::optional<djinterop::crate> root_crate_by_name(
+        const std::string& name) override;
+    std::vector<playlist> root_playlists() override;
+    std::optional<djinterop::playlist> root_playlist_by_name(
         const std::string& name) override;
     std::optional<djinterop::track> track_by_id(int64_t id) override;
     std::vector<djinterop::track> tracks() override;

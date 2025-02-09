@@ -111,8 +111,6 @@ public:
 
 private:
     std::shared_ptr<engine_library> library_;
-    track_table track_;
-    performance_data_table performance_data_;
 };
 
 track create_track(

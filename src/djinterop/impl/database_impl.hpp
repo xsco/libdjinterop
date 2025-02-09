@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <bitset>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -25,27 +26,42 @@
 namespace djinterop
 {
 class crate;
+class playlist;
+class playlist_impl;
 class track;
 struct track_snapshot;
 
 class database_impl
 {
 public:
-    virtual ~database_impl();
+    explicit database_impl(std::bitset<64> features) : features_{features} {}
+    virtual ~database_impl() = default;
+
+    [[nodiscard]] std::bitset<64> features() const { return features_; };
 
     virtual std::optional<crate> crate_by_id(int64_t id) = 0;
     virtual std::vector<crate> crates() = 0;
     virtual std::vector<crate> crates_by_name(const std::string& name) = 0;
+    virtual playlist create_root_playlist(const std::string& name) = 0;
+    virtual playlist create_root_playlist_after(
+        const std::string& name, const playlist_impl& after) = 0;
     virtual crate create_root_crate(const std::string& name) = 0;
     virtual crate create_root_crate_after(
         const std::string& name, const crate& after) = 0;
     virtual track create_track(const track_snapshot& snapshot) = 0;
     virtual std::string directory() = 0;
     virtual void verify() = 0;
+    virtual std::vector<playlist> playlists_by_name(
+        const std::string& name) = 0;
+    virtual std::vector<playlist> playlists() = 0;
     virtual void remove_crate(crate cr) = 0;
+    virtual void remove_playlist(const playlist_impl& pl) = 0;
     virtual void remove_track(track tr) = 0;
     virtual std::vector<crate> root_crates() = 0;
     virtual std::optional<crate> root_crate_by_name(
+        const std::string& name) = 0;
+    virtual std::vector<playlist> root_playlists() = 0;
+    virtual std::optional<playlist> root_playlist_by_name(
         const std::string& name) = 0;
     virtual std::optional<track> track_by_id(int64_t id) = 0;
     virtual std::vector<track> tracks() = 0;
@@ -53,6 +69,9 @@ public:
         const std::string& relative_path) = 0;
     virtual std::string uuid() = 0;
     virtual std::string version_name() = 0;
+
+private:
+    std::bitset<64> features_;
 };
 
 }  // namespace djinterop
