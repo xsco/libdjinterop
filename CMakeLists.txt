@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.24.3
+        VERSION 0.24.4
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
@@ -13,6 +13,10 @@ endif()
 if(POLICY CMP0076)
     # CMP0076: target_sources() command converts relative paths to absolute.
     cmake_policy(SET CMP0076 NEW)
+endif()
+if(POLICY CMP0167)
+    # CMP0167: Don't use FindBoost() any longer.
+    cmake_policy(SET CMP0167 NEW)
 endif()
 
 # Require C++20
@@ -358,7 +362,7 @@ add_djinterop_example(engine_library_v2_low_level)
 
 # Unit tests.
 include(CTest)
-find_package(Boost 1.65.1 QUIET COMPONENTS filesystem system)
+find_package(Boost 1.71.0 QUIET COMPONENTS filesystem system)
 if (Boost_FOUND)
     set(TESTDATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/testdata")
 
