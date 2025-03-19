@@ -50,7 +50,7 @@ public:
         const std::string& name) = 0;
     virtual std::vector<track> tracks() const = 0;
 
-    virtual bool operator==(const playlist_impl&) = 0;
+    virtual bool operator==(const playlist_impl&) const = 0;
 };
 
 }  // namespace djinterop

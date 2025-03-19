@@ -54,7 +54,7 @@ public:
     void set_parent(const djinterop::playlist_impl* parent_base_maybe) override;
     std::vector<track> tracks() const override;
 
-    bool operator==(const djinterop::playlist_impl& other_base) override
+    bool operator==(const djinterop::playlist_impl& other_base) const override
     {
         const auto* other =
             dynamic_cast<const engine_playlist_impl*>(&other_base);

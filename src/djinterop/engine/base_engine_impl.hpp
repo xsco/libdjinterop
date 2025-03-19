@@ -33,25 +33,25 @@ public:
     virtual ~base_engine_impl() = default;
 
 protected:
-    const TThis* context_cast_maybe(const auto* base_maybe)
+    const TThis* context_cast_maybe(const auto* base_maybe) const
     {
         return context_cast_maybe<TThis>(base_maybe);
     }
 
-    const TThis* context_cast_maybe(const auto& base)
+    const TThis* context_cast_maybe(const auto& base) const
     {
         return context_cast_maybe<TThis>(base);
     }
 
     template<typename TDerived>
-    const TDerived* context_cast_maybe(const auto* base_maybe)
+    const TDerived* context_cast_maybe(const auto* base_maybe) const
     {
         return base_maybe != nullptr ? context_cast_maybe<TDerived>(*base_maybe)
                                      : nullptr;
     }
 
     template<typename TDerived>
-    const TDerived* context_cast_maybe(const auto& base)
+    const TDerived* context_cast_maybe(const auto& base) const
     {
         const auto* derived = dynamic_cast<const TDerived*>(&base);
 
@@ -66,7 +66,7 @@ protected:
     }
 
     template<typename TDerived>
-    const TDerived& context_cast(const auto& base)
+    const TDerived& context_cast(const auto& base) const
     {
         const auto* derived_maybe = context_cast_maybe<TDerived>(base);
         if (derived_maybe == nullptr)

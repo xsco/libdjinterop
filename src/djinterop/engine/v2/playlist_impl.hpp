@@ -58,7 +58,7 @@ public:
     void set_parent(const djinterop::playlist_impl* parent_base_maybe) override;
     std::vector<track> tracks() const override;
 
-    bool operator==(const djinterop::playlist_impl& other_base) override
+    bool operator==(const djinterop::playlist_impl& other_base) const override
     {
         const auto* other = context_cast_maybe(other_base);
         return other != nullptr && id_ == other->id_;
