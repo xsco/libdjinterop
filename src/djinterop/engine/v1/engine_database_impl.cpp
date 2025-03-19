@@ -32,15 +32,6 @@ using djinterop::track;
 
 namespace
 {
-std::bitset<64> make_features()
-{
-    std::bitset<64> features;
-    features.set(features::SUPPORTS_NESTED_CRATES);
-    features.set(features::PLAYLISTS_AND_CRATES_ARE_DISTINCT);
-    features.set(features::PLAYLISTS_SUPPORT_DUPLICATE_TRACKS);
-    return features;
-}
-
 void ensure_valid_crate_name(const std::string& name)
 {
     if (name == "")
@@ -71,8 +62,13 @@ void ensure_valid_playlist_name(const std::string& name)
 
 }  // namespace
 
-engine_database_impl::engine_database_impl(std::shared_ptr<engine_storage> storage) :
-    djinterop::database_impl{make_features()}, storage_{std::move(storage)}
+engine_database_impl::engine_database_impl(
+    std::shared_ptr<engine_storage> storage) :
+    djinterop::database_impl{
+        {feature::supports_nested_crates,
+         feature::playlists_and_crates_are_distinct,
+         feature::playlists_support_duplicate_tracks}},
+    storage_{std::move(storage)}
 {
 }
 

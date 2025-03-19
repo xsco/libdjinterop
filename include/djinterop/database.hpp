@@ -19,7 +19,6 @@
 #ifndef DJINTEROP_DATABASE_HPP
 #define DJINTEROP_DATABASE_HPP
 
-#include <bitset>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -40,24 +39,25 @@ class track;
 struct track_snapshot;
 
 /// Set of features that can be tested against a database's feature bitset.
-namespace features
+enum class feature : size_t
 {
     /// Does the database support nested crates?  If true, operations may be performed involving sub-crates.  If false,
     /// only root-level crates are operable.
-    constexpr size_t SUPPORTS_NESTED_CRATES = 1;
+    supports_nested_crates = 1,
 
     /// Does the database support nested playlists?  If true, operations may be performed involving sub-playlists.  If
     /// false, only root-level playlists are operable.
-    constexpr size_t SUPPORTS_NESTED_PLAYLISTS = 2;
+    supports_nested_playlists = 2,
 
     /// Are playlists and crates distinct entities in the database?  If false, crate and playlist operations access the
     /// same underlying data.
-    constexpr size_t PLAYLISTS_AND_CRATES_ARE_DISTINCT = 3;
+    playlists_and_crates_are_distinct = 3,
 
     /// Do playlists support the same track being added multiple times?
-    constexpr size_t PLAYLISTS_SUPPORT_DUPLICATE_TRACKS = 4;
+    playlists_support_duplicate_tracks = 4,
 };
 
+/// Represents a database of DJ information.
 class DJINTEROP_PUBLIC database
 {
 public:
@@ -70,10 +70,8 @@ public:
     /// Copy assignment operator
     database& operator=(const database& db);
 
-    /// Get a bitset of features supported by this database.
-    ///
-    /// Individual features may be tested using the constants in the `djinterop::features` namespace.
-    std::bitset<64> features() const;
+    /// Test whether the database supports a given feature.
+    bool supports_feature(const feature& feature) const noexcept;
 
     /// Returns the crate with the given ID
     ///

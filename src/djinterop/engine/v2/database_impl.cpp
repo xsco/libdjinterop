@@ -27,19 +27,9 @@
 
 namespace djinterop::engine::v2
 {
-namespace
-{
-std::bitset<64> make_features()
-{
-    std::bitset<64> features;
-    features.set(features::SUPPORTS_NESTED_CRATES);
-    features.set(features::SUPPORTS_NESTED_PLAYLISTS);
-    return features;
-}
-}  // namespace
-
 database_impl::database_impl(std::shared_ptr<engine_library> library) :
-    djinterop::database_impl{make_features()},
+    djinterop::database_impl{
+        {feature::supports_nested_crates, feature::supports_nested_playlists}},
     base_engine_impl{std::move(library)}
 {
 }

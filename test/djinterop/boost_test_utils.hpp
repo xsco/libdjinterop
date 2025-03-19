@@ -26,7 +26,7 @@
 
 /// Macro to skip a test if required database features are not met.
 #define DJINTEROP_TEST_NEEDS_FEATURE(db, feature) \
-    if (!db.features().test(feature))              \
-    {                                              \
-        return;                                    \
+    if (!db.supports_feature(feature))            \
+    {                                             \
+        return;                                   \
     }

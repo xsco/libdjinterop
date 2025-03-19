@@ -156,7 +156,7 @@ BOOST_DATA_TEST_CASE(
     auto track1 = db.create_track(snapshot1);
     playlist.add_track_back(track1);
 
-    if (db.features().test(djinterop::features::PLAYLISTS_SUPPORT_DUPLICATE_TRACKS))
+    if (db.supports_feature(djinterop::feature::playlists_support_duplicate_tracks))
     {
         // Act
         playlist.add_track_back(track1);
@@ -282,7 +282,7 @@ BOOST_DATA_TEST_CASE(children__empty__none, e::supported_schemas, schema)
     // Arrange
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
     auto db = e::create_temporary_database(schema);
-    DJINTEROP_TEST_NEEDS_FEATURE(db, djinterop::features::SUPPORTS_NESTED_PLAYLISTS);
+    DJINTEROP_TEST_NEEDS_FEATURE(db, djinterop::feature::supports_nested_playlists);
 
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example playlist...");
     auto playlist = db.create_root_playlist("Example Root Playlist");
@@ -347,7 +347,7 @@ BOOST_DATA_TEST_CASE(create_sub_playlist__creates, e::supported_schemas, schema)
     // Arrange
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
     auto db = e::create_temporary_database(schema);
-    DJINTEROP_TEST_NEEDS_FEATURE(db, djinterop::features::SUPPORTS_NESTED_PLAYLISTS);
+    DJINTEROP_TEST_NEEDS_FEATURE(db, djinterop::feature::supports_nested_playlists);
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example playlist...");
     auto playlist = db.create_root_playlist("Example Root Playlist");
 
@@ -464,7 +464,7 @@ BOOST_DATA_TEST_CASE(
     // Arrange
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
     auto db = e::create_temporary_database(schema);
-    DJINTEROP_TEST_NEEDS_FEATURE(db, djinterop::features::SUPPORTS_NESTED_PLAYLISTS);
+    DJINTEROP_TEST_NEEDS_FEATURE(db, djinterop::feature::supports_nested_playlists);
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example playlist...");
     auto playlist = db.create_root_playlist("Moveable Playlist");
 
@@ -485,7 +485,7 @@ BOOST_DATA_TEST_CASE(
     // Arrange
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
     auto db = e::create_temporary_database(schema);
-    DJINTEROP_TEST_NEEDS_FEATURE(db, djinterop::features::SUPPORTS_NESTED_PLAYLISTS);
+    DJINTEROP_TEST_NEEDS_FEATURE(db, djinterop::feature::supports_nested_playlists);
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example playlist...");
     auto playlist = db.create_root_playlist("Moveable Playlist");
     BOOST_TEST_CHECKPOINT(
@@ -510,7 +510,7 @@ BOOST_DATA_TEST_CASE(
     // Arrange
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
     auto db = e::create_temporary_database(schema);
-    DJINTEROP_TEST_NEEDS_FEATURE(db, djinterop::features::SUPPORTS_NESTED_PLAYLISTS);
+    DJINTEROP_TEST_NEEDS_FEATURE(db, djinterop::feature::supports_nested_playlists);
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example playlist...");
     auto original_parent_playlist = db.create_root_playlist("Example Root Playlist");
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example sub playlist...");
@@ -533,7 +533,7 @@ BOOST_DATA_TEST_CASE(
     // Arrange
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
     auto db = e::create_temporary_database(schema);
-    DJINTEROP_TEST_NEEDS_FEATURE(db, djinterop::features::SUPPORTS_NESTED_PLAYLISTS);
+    DJINTEROP_TEST_NEEDS_FEATURE(db, djinterop::feature::supports_nested_playlists);
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example playlist...");
     auto original_parent_playlist = db.create_root_playlist("Example Root Playlist");
     BOOST_TEST_CHECKPOINT(
@@ -558,7 +558,7 @@ BOOST_DATA_TEST_CASE(set_parent__self__throws, e::supported_schemas, schema)
     // Arrange
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
     auto db = e::create_temporary_database(schema);
-    DJINTEROP_TEST_NEEDS_FEATURE(db, djinterop::features::SUPPORTS_NESTED_PLAYLISTS);
+    DJINTEROP_TEST_NEEDS_FEATURE(db, djinterop::feature::supports_nested_playlists);
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example playlist...");
     auto playlist = db.create_root_playlist("Example Root Playlist");
 
@@ -579,7 +579,7 @@ BOOST_DATA_TEST_CASE(sub_playlist_by_name__valid__finds, e::supported_schemas, s
     // Arrange
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
     auto db = e::create_temporary_database(schema);
-    DJINTEROP_TEST_NEEDS_FEATURE(db, djinterop::features::SUPPORTS_NESTED_PLAYLISTS);
+    DJINTEROP_TEST_NEEDS_FEATURE(db, djinterop::feature::supports_nested_playlists);
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example playlist...");
     auto playlist = db.create_root_playlist("Example Root Playlist");
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example sub-playlist...");
@@ -601,7 +601,7 @@ BOOST_DATA_TEST_CASE(sub_playlist_by_name__invalid__none, e::supported_schemas, 
     // Arrange
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
     auto db = e::create_temporary_database(schema);
-    DJINTEROP_TEST_NEEDS_FEATURE(db, djinterop::features::SUPPORTS_NESTED_PLAYLISTS);
+    DJINTEROP_TEST_NEEDS_FEATURE(db, djinterop::feature::supports_nested_playlists);
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example playlist...");
     auto playlist = db.create_root_playlist("Example Root Playlist");
     BOOST_TEST_CHECKPOINT("(" << schema << ") Creating example sub-playlist...");

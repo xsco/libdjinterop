@@ -31,9 +31,9 @@ database::~database() = default;
 
 database& database::operator=(const database& db) = default;
 
-std::bitset<64> database::features() const
+bool database::supports_feature(const feature& feature) const noexcept
 {
-    return pimpl_->features();
+    return pimpl_->supports_feature(feature);
 }
 
 std::optional<crate> database::crate_by_id(int64_t id) const

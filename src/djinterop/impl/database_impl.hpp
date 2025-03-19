@@ -19,9 +19,12 @@
 
 #include <bitset>
 #include <cstdint>
+#include <initializer_list>
 #include <optional>
 #include <string>
 #include <vector>
+
+#include <djinterop/database.hpp>
 
 namespace djinterop
 {
@@ -34,10 +37,17 @@ struct track_snapshot;
 class database_impl
 {
 public:
-    explicit database_impl(std::bitset<64> features) : features_{features} {}
+    explicit database_impl(std::initializer_list<djinterop::feature> features)
+    {
+        for (auto&& feat : features)
+            features_.set(static_cast<size_t>(feat));
+    }
     virtual ~database_impl() = default;
 
-    [[nodiscard]] std::bitset<64> features() const { return features_; };
+    bool supports_feature(const feature& feature) const noexcept
+    {
+        return features_.test(static_cast<size_t>(feature));
+    }
 
     virtual std::optional<crate> crate_by_id(int64_t id) = 0;
     virtual std::vector<crate> crates() = 0;
