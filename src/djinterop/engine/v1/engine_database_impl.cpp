@@ -187,7 +187,7 @@ playlist engine_database_impl::create_root_playlist(const std::string& name)
 }
 
 playlist engine_database_impl::create_root_playlist_after(
-    const std::string& name, const playlist_impl& after_base)
+    const std::string& name, const playlist_impl& /*after_base*/)
 {
     // TODO (mr-smidge): Back-port sorted playlist functionality to Engine V1.
     return create_root_playlist(name);

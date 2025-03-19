@@ -27,7 +27,7 @@
 namespace djinterop::engine::v2
 {
 class database_impl : public djinterop::database_impl,
-                      base_engine_impl<database_impl, engine_library>
+                      base_engine_impl<engine_library>
 {
 public:
     explicit database_impl(std::shared_ptr<engine_library> library);

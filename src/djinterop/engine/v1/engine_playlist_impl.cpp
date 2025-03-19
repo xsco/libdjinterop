@@ -115,14 +115,14 @@ void engine_playlist_impl::clear_tracks()
                  << id();
 }
 
-playlist engine_playlist_impl::create_sub_playlist(const std::string& name)
+playlist engine_playlist_impl::create_sub_playlist(const std::string&)
 {
     throw unsupported_operation{
         "Engine V1 databases do not support nested playlists"};
 }
 
 playlist engine_playlist_impl::create_sub_playlist_after(
-    const std::string& name, const djinterop::playlist_impl& after_base)
+    const std::string&, const djinterop::playlist_impl&)
 {
     throw unsupported_operation{
         "Engine V1 databases do not support nested playlists"};
@@ -176,15 +176,14 @@ void engine_playlist_impl::set_name(const std::string& name)
                  << id();
 }
 
-void engine_playlist_impl::set_parent(
-    const djinterop::playlist_impl* parent_base_maybe)
+void engine_playlist_impl::set_parent(const djinterop::playlist_impl*)
 {
     throw unsupported_operation{
         "Engine V1 databases do not support nested playlists"};
 }
 
 std::optional<playlist> engine_playlist_impl::sub_playlist_by_name(
-    const std::string& name)
+    const std::string&)
 {
     throw unsupported_operation{
         "Engine V1 databases do not support nested playlists"};

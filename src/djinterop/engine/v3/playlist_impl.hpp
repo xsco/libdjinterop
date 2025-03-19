@@ -33,7 +33,7 @@
 namespace djinterop::engine::v3
 {
 class playlist_impl : public djinterop::playlist_impl,
-                      base_engine_impl<playlist_impl, engine_library>
+                      public base_engine_impl<engine_library>
 {
 public:
     playlist_impl(std::shared_ptr<engine_library> library, int64_t id);
@@ -61,7 +61,7 @@ public:
 
     bool operator==(const djinterop::playlist_impl& other_base) const override
     {
-        const auto* other = context_cast_maybe(other_base);
+        const auto* other = context_cast_maybe<playlist_impl>(other_base);
         return other != nullptr && id_ == other->id_;
     }
 

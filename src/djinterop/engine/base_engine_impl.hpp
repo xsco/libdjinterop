@@ -21,7 +21,7 @@
 
 namespace djinterop::engine
 {
-template <typename TThis, typename TEngineLibrary>
+template <typename TEngineLibrary>
 class base_engine_impl
 {
 public:
@@ -33,16 +33,6 @@ public:
     virtual ~base_engine_impl() = default;
 
 protected:
-    const TThis* context_cast_maybe(const auto* base_maybe) const
-    {
-        return context_cast_maybe<TThis>(base_maybe);
-    }
-
-    const TThis* context_cast_maybe(const auto& base) const
-    {
-        return context_cast_maybe<TThis>(base);
-    }
-
     template<typename TDerived>
     const TDerived* context_cast_maybe(const auto* base_maybe) const
     {
@@ -58,11 +48,6 @@ protected:
         // TODO(mr-smidge): Need to obtain UUID from library for proper
         //  contextual cast, and compare it against downcasted impl.
         return derived;
-    }
-
-    const TThis& context_cast(const auto& base)
-    {
-        return context_cast<TThis>(base);
     }
 
     template<typename TDerived>

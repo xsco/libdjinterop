@@ -119,7 +119,7 @@ playlist playlist_impl::create_sub_playlist(const std::string& name)
 playlist playlist_impl::create_sub_playlist_after(
     const std::string& name, const djinterop::playlist_impl& after_base)
 {
-    const auto& after = context_cast(after_base);
+    const auto& after = context_cast<playlist_impl>(after_base);
 
     if (library_->playlist().find_id(id_, name))
     {
@@ -203,7 +203,8 @@ void playlist_impl::set_name(const std::string& name)
 void playlist_impl::set_parent(
     const djinterop::playlist_impl* parent_base_maybe)
 {
-    const auto* parent_maybe = context_cast_maybe(parent_base_maybe);
+    const auto* parent_maybe =
+        context_cast_maybe<playlist_impl>(parent_base_maybe);
     if (parent_maybe && parent_maybe->id_ == id_)
     {
         throw playlist_invalid_parent{"Cannot set playlist parent to itself"};
