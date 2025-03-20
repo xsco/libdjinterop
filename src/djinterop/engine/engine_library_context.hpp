@@ -45,6 +45,9 @@ struct engine_library_context
     /// database files immediately under the main directory.
     const bool is_database2;
 
+    // TODO(mr-smidge): Add `uuid`, a sufficiently important identifier that
+    //  it should be stored for all Engine-wide contexts.
+
     /// The schema version of the Engine database.
     const engine_schema schema;
 

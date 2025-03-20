@@ -24,6 +24,7 @@
 #include <djinterop/engine/v2/playlist_entity_table.hpp>
 #include <djinterop/engine/v2/playlist_table.hpp>
 #include <djinterop/engine/v2/track_table.hpp>
+#include <utility>
 
 namespace djinterop::engine::v2
 {
@@ -41,14 +42,32 @@ namespace djinterop::engine::v2
 class DJINTEROP_PUBLIC engine_library : public base_engine_library
 {
 public:
-    using base_engine_library::base_engine_library;
+    /// Gets a class representing the `ChangeLog` table.
+    change_log_table change_log() const noexcept { return change_log_; }
 
-    /// Load an existing library from a directory.
-    ///
-    /// \param directory Directory to load from.
-    static engine_library load(const std::string& directory)
+    /// Gets a class representing the `Information` table.
+    information_table information() const noexcept { return information_; }
+
+    /// Gets a class representing the `PlaylistEntity` table.
+    playlist_entity_table playlist_entity() const noexcept
     {
-        return engine_library{base_engine_library::load(directory)};
+        return playlist_entity_;
+    }
+
+    /// Gets a class representing the `Playlist` table.
+    playlist_table playlist() const noexcept { return playlist_; }
+
+    /// Gets a class representing the `Track` table.
+    track_table track() const noexcept { return track_; }
+
+    /// Construct an instance of the class using an Engine library context.
+    ///
+    /// \param context Engine library context.
+    explicit engine_library(std::shared_ptr<engine_library_context> context) :
+        base_engine_library{std::move(context)}, change_log_{context_},
+        information_{context_}, playlist_entity_{context_}, playlist_{context_},
+        track_{context_}
+    {
     }
 
     /// Make a new, empty library of a given version.
@@ -83,35 +102,23 @@ public:
         return base_engine_library::exists(directory);
     }
 
-    /// Get a class representing the `ChangeLog` table.
-    [[nodiscard]] change_log_table change_log() const
+    /// Load an existing library from a directory.
+    ///
+    /// \param directory Directory to load from.
+    static engine_library load(const std::string& directory)
     {
-        return change_log_table{context_};
+        return engine_library{base_engine_library::load(directory)};
     }
-
-    /// Get a class representing the `Information` table.
-    [[nodiscard]] information_table information() const
-    {
-        return information_table{context_};
-    }
-
-    /// Get a class representing the `PlaylistEntity` table.
-    [[nodiscard]] playlist_entity_table playlist_entity() const
-    {
-        return playlist_entity_table{context_};
-    }
-
-    /// Get a class representing the `Playlist` table.
-    [[nodiscard]] playlist_table playlist() const
-    {
-        return playlist_table{context_};
-    }
-
-    /// Get a class representing the `Track` table.
-    [[nodiscard]] track_table track() const { return track_table{context_}; }
 
     /// Get the unified database interface for this Engine library.
     [[nodiscard]] djinterop::database database() const override;
+
+private:
+    change_log_table change_log_;
+    information_table information_;
+    playlist_entity_table playlist_entity_;
+    playlist_table playlist_;
+    track_table track_;
 };
 
 }  // namespace djinterop::engine::v2

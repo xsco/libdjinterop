@@ -29,6 +29,7 @@
 #include <djinterop/musical_key.hpp>
 #include <djinterop/pad_color.hpp>
 #include <djinterop/performance_data.hpp>
+#include <djinterop/playlist.hpp>
 #include <djinterop/semantic_version.hpp>
 #include <djinterop/track.hpp>
 #include <djinterop/track_snapshot.hpp>

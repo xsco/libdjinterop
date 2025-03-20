@@ -59,9 +59,6 @@ public:
     [[nodiscard]] virtual djinterop::database database() const = 0;
 
 protected:
-    static std::shared_ptr<engine_library_context> load(
-        const std::string& directory);
-
     static std::shared_ptr<engine_library_context> create(
         const std::string& directory, const engine_schema& schema);
 
@@ -69,6 +66,9 @@ protected:
         const engine_schema& schema);
 
     static bool exists(const std::string& directory);
+
+    static std::shared_ptr<engine_library_context> load(
+        const std::string& directory);
 
     // Pimpl-like idiom, also used by other classes.
     std::shared_ptr<engine_library_context> context_;
