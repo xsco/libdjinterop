@@ -46,34 +46,6 @@ std::optional<crate> database_impl::crate_by_id(int64_t id)
     return std::make_optional<crate>(crate{impl});
 }
 
-std::vector<crate> database_impl::crates()
-{
-    auto ids = library_->playlist().all_ids();
-    std::vector<crate> results;
-    results.reserve(ids.size());
-
-    for (auto&& id : ids)
-    {
-        results.emplace_back(std::make_shared<crate_impl>(library_, id));
-    }
-
-    return results;
-}
-
-std::vector<crate> database_impl::crates_by_name(const std::string& name)
-{
-    auto ids = library_->playlist().find_ids(name);
-    std::vector<crate> results;
-    results.reserve(ids.size());
-
-    for (auto&& id : ids)
-    {
-        results.emplace_back(std::make_shared<crate_impl>(library_, id));
-    }
-
-    return results;
-}
-
 playlist database_impl::create_root_playlist(const std::string& name)
 {
     if (library_->playlist().find_root_id(name))
@@ -199,34 +171,6 @@ std::string database_impl::directory()
 void database_impl::verify()
 {
     library_->verify();
-}
-
-std::vector<playlist> database_impl::playlists()
-{
-    auto ids = library_->playlist().all_ids();
-    std::vector<playlist> results;
-    results.reserve(ids.size());
-
-    for (auto&& id : ids)
-    {
-        results.emplace_back(std::make_shared<playlist_impl>(library_, id));
-    }
-
-    return results;
-}
-
-std::vector<playlist> database_impl::playlists_by_name(const std::string& name)
-{
-    auto ids = library_->playlist().find_ids(name);
-    std::vector<playlist> results;
-    results.reserve(ids.size());
-
-    for (auto&& id : ids)
-    {
-        results.emplace_back(std::make_shared<playlist_impl>(library_, id));
-    }
-
-    return results;
 }
 
 void database_impl::remove_crate(crate cr)

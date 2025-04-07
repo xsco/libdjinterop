@@ -33,9 +33,6 @@ public:
     explicit database_impl(std::shared_ptr<engine_library> library);
 
     std::optional<djinterop::crate> crate_by_id(int64_t id) override;
-    std::vector<djinterop::crate> crates() override;
-    std::vector<djinterop::crate> crates_by_name(
-        const std::string& name) override;
     crate create_root_crate(const std::string& name) override;
     crate create_root_crate_after(
         const std::string& name, const crate& after) override;
@@ -46,8 +43,6 @@ public:
     track create_track(const track_snapshot& snapshot) override;
     std::string directory() override;
     void verify() override;
-    std::vector<playlist> playlists_by_name(const std::string& name) override;
-    std::vector<playlist> playlists() override;
     void remove_crate(djinterop::crate cr) override;
     void remove_playlist(const djinterop::playlist_impl& pl_base) override;
     void remove_track(djinterop::track tr) override;

@@ -90,27 +90,6 @@ std::optional<crate> engine_database_impl::crate_by_id(int64_t id)
     return cr;
 }
 
-std::vector<crate> engine_database_impl::crates()
-{
-    std::vector<crate> results;
-    storage_->db << "SELECT id FROM Crate ORDER BY id" >> [&](int64_t id) {
-        results.push_back(crate{std::make_shared<engine_crate_impl>(storage_, id)});
-    };
-    return results;
-}
-
-std::vector<crate> engine_database_impl::crates_by_name(const std::string& name)
-{
-    std::vector<crate> results;
-    storage_->db << "SELECT id FROM Crate WHERE title = ? ORDER BY id"
-                 << name.data() >>
-        [&](int64_t id) {
-            results.push_back(
-                crate{std::make_shared<engine_crate_impl>(storage_, id)});
-        };
-    return results;
-}
-
 crate engine_database_impl::create_root_crate(const std::string& name)
 {
     ensure_valid_crate_name(name);
@@ -208,22 +187,6 @@ void engine_database_impl::verify()
     auto schema_creator_validator =
         schema::make_schema_creator_validator(storage_->schema);
     schema_creator_validator->verify(storage_->db);
-}
-
-std::vector<playlist> engine_database_impl::playlists_by_name(const std::string& name)
-{
-    // Engine V1 only supports root-level playlists.
-    std::vector<playlist> results;
-    if (const auto result = root_playlist_by_name(name))
-        results.push_back(result.value());
-
-    return results;
-}
-
-std::vector<playlist> engine_database_impl::playlists()
-{
-    // Engine V1 only supports root-level playlists.
-    return root_playlists();
 }
 
 void engine_database_impl::remove_crate(crate cr)

@@ -79,12 +79,6 @@ public:
     /// is returned.
     std::optional<crate> crate_by_id(int64_t id) const;
 
-    /// Returns all crates contained in the database
-    std::vector<crate> crates() const;
-
-    /// Returns all crates with the given name
-    std::vector<crate> crates_by_name(const std::string& name) const;
-
     /// Create a new playlist with the given name.
     playlist create_root_playlist(const std::string& name);
 
@@ -117,9 +111,6 @@ public:
 
     /// Returns a descriptive name for the database version.
     std::string version_name() const;
-
-    /// Returns the playlists with the given name.
-    std::vector<playlist> playlists_by_name(const std::string& name) const;
 
     /// Removes a crate from the database
     ///

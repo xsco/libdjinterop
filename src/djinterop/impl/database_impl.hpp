@@ -50,8 +50,6 @@ public:
     }
 
     virtual std::optional<crate> crate_by_id(int64_t id) = 0;
-    virtual std::vector<crate> crates() = 0;
-    virtual std::vector<crate> crates_by_name(const std::string& name) = 0;
     virtual playlist create_root_playlist(const std::string& name) = 0;
     virtual playlist create_root_playlist_after(
         const std::string& name, const playlist_impl& after) = 0;
@@ -61,9 +59,6 @@ public:
     virtual track create_track(const track_snapshot& snapshot) = 0;
     virtual std::string directory() = 0;
     virtual void verify() = 0;
-    virtual std::vector<playlist> playlists_by_name(
-        const std::string& name) = 0;
-    virtual std::vector<playlist> playlists() = 0;
     virtual void remove_crate(crate cr) = 0;
     virtual void remove_playlist(const playlist_impl& pl) = 0;
     virtual void remove_track(track tr) = 0;

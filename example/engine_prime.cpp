@@ -40,7 +40,7 @@ int main()
         db.remove_playlist(pl);
     }
 
-    for (auto& cr : db.crates())
+    for (auto& cr : db.root_crates())
     {
         std::cout << "Removing prior crate " << cr.name() << std::endl;
         db.remove_crate(cr);
