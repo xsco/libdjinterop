@@ -41,16 +41,6 @@ std::optional<crate> database::crate_by_id(int64_t id) const
     return pimpl_->crate_by_id(id);
 }
 
-std::vector<crate> database::crates() const
-{
-    return pimpl_->crates();
-}
-
-std::vector<crate> database::crates_by_name(const std::string& name) const
-{
-    return pimpl_->crates_by_name(name);
-}
-
 playlist database::create_root_playlist(const std::string& name)
 {
     return pimpl_->create_root_playlist(name);
@@ -84,11 +74,6 @@ std::string database::directory() const
 void database::verify() const
 {
     pimpl_->verify();
-}
-
-std::vector<playlist> database::playlists_by_name(const std::string& name) const
-{
-    return pimpl_->playlists_by_name(name);
 }
 
 void database::remove_crate(crate cr) const
