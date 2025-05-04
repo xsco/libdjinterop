@@ -1,3 +1,12 @@
+libdjinterop (0.26.1-0ubuntu1) jammy; urgency=medium
+
+  * Stop CMake FindBoost deprecation warning (#148)
+  * Playlist support (#151)
+  * Remove deprecated crate/playlist methods (#152)
+  * Add missing headers for install (#153)
+
+ -- Adam Szmigin <smidge@xsco.net>  Sun, 04 May 2025 18:29:49 +0100
+
 libdjinterop (0.24.3-0ubuntu1) jammy; urgency=medium
 
   * Version bump for fixed Ubuntu package (#145)
