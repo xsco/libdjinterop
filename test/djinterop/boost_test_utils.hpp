@@ -19,9 +19,14 @@
 
 #include <cassert>
 
-#include <djinterop/track_snapshot.hpp>
-
-#include "boost_test_printable.hpp"
+#include <djinterop/database.hpp>
 
 /// Assertion macro allowing a custom message to be printed in case of failure.
 #define assertm(exp, msg) assert(((void)msg, exp))
+
+/// Macro to skip a test if required database features are not met.
+#define DJINTEROP_TEST_NEEDS_FEATURE(db, feature) \
+    if (!db.supports_feature(feature))            \
+    {                                             \
+        return;                                   \
+    }

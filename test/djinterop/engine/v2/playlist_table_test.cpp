@@ -68,14 +68,13 @@ BOOST_DATA_TEST_CASE(add__empty_root__adds, e::supported_v2_schemas, schema)
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
-    auto playlist_tbl = library.playlist();
     auto row = make_playlist_row("Example");
 
     // Act
-    auto id = playlist_tbl.add(row);
+    auto id = library.playlist().add(row);
 
     // Assert
-    auto all_ids = playlist_tbl.all_ids();
+    auto all_ids = library.playlist().all_ids();
     std::set<int64_t> all_ids_set{all_ids.begin(), all_ids.end()};
     BOOST_CHECK_EQUAL(1, all_ids_set.size());
     BOOST_CHECK(all_ids_set.find(id) != all_ids_set.end());
@@ -88,16 +87,15 @@ BOOST_DATA_TEST_CASE(add__nonempty_root__adds, e::supported_v2_schemas, schema)
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
-    auto playlist_tbl = library.playlist();
     auto prior_row = make_playlist_row("Example (Prior)");
-    auto prior_id = playlist_tbl.add(prior_row);
+    auto prior_id = library.playlist().add(prior_row);
     auto row = make_playlist_row("Example");
 
     // Act
-    auto id = playlist_tbl.add(row);
+    auto id = library.playlist().add(row);
 
     // Assert
-    auto all_ids = playlist_tbl.all_ids();
+    auto all_ids = library.playlist().all_ids();
     std::set<int64_t> all_ids_set{all_ids.begin(), all_ids.end()};
     BOOST_CHECK_EQUAL(2, all_ids_set.size());
     BOOST_CHECK(all_ids_set.find(prior_id) != all_ids_set.end());
@@ -111,16 +109,15 @@ BOOST_DATA_TEST_CASE(add__empty_nonroot__adds, e::supported_v2_schemas, schema)
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
-    auto playlist_tbl = library.playlist();
     auto parent_row = make_playlist_row("Parent");
-    auto parent_id = playlist_tbl.add(parent_row);
+    auto parent_id = library.playlist().add(parent_row);
     auto row = make_playlist_row("Example", parent_id);
 
     // Act
-    auto id = playlist_tbl.add(row);
+    auto id = library.playlist().add(row);
 
     // Assert
-    auto all_ids = playlist_tbl.all_ids();
+    auto all_ids = library.playlist().all_ids();
     std::set<int64_t> all_ids_set{all_ids.begin(), all_ids.end()};
     BOOST_CHECK_EQUAL(2, all_ids_set.size());
     BOOST_CHECK(all_ids_set.find(parent_id) != all_ids_set.end());
@@ -134,18 +131,17 @@ BOOST_DATA_TEST_CASE(add__nonempty_nonroot__adds, e::supported_v2_schemas, schem
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
-    auto playlist_tbl = library.playlist();
     auto parent_row = make_playlist_row("Parent");
-    auto parent_id = playlist_tbl.add(parent_row);
+    auto parent_id = library.playlist().add(parent_row);
     auto prior_row = make_playlist_row("Example (Prior)", parent_id);
-    auto prior_id = playlist_tbl.add(prior_row);
+    auto prior_id = library.playlist().add(prior_row);
     auto row = make_playlist_row("Example", parent_id);
 
     // Act
-    auto id = playlist_tbl.add(row);
+    auto id = library.playlist().add(row);
 
     // Assert
-    auto all_ids = playlist_tbl.all_ids();
+    auto all_ids = library.playlist().all_ids();
     std::set<int64_t> all_ids_set{all_ids.begin(), all_ids.end()};
     BOOST_CHECK_EQUAL(3, all_ids_set.size());
     BOOST_CHECK(all_ids_set.find(parent_id) != all_ids_set.end());
@@ -160,19 +156,18 @@ BOOST_DATA_TEST_CASE(
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
-    auto playlist_tbl = library.playlist();
     auto prior_row_1 = make_playlist_row("A");
-    auto prior_id_1 = playlist_tbl.add(prior_row_1);
+    auto prior_id_1 = library.playlist().add(prior_row_1);
     auto prior_row_2 = make_playlist_row("B");
-    auto prior_id_2 = playlist_tbl.add(prior_row_2);
+    auto prior_id_2 = library.playlist().add(prior_row_2);
     auto row = make_playlist_row(
         "Example", ev2::PARENT_LIST_ID_NONE, ev2::PLAYLIST_NO_NEXT_LIST_ID);
 
     // Act
-    auto id = playlist_tbl.add(row);
+    auto id = library.playlist().add(row);
 
     // Assert
-    auto root_ids = playlist_tbl.root_ids();
+    auto root_ids = library.playlist().root_ids();
     auto iter = std::begin(root_ids);
     BOOST_REQUIRE(iter != std::end(root_ids));
     BOOST_CHECK_EQUAL(prior_id_1, *iter++);
@@ -191,19 +186,18 @@ BOOST_DATA_TEST_CASE(
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
-    auto playlist_tbl = library.playlist();
     auto prior_row_1 = make_playlist_row("A");
-    auto prior_id_1 = playlist_tbl.add(prior_row_1);
+    auto prior_id_1 = library.playlist().add(prior_row_1);
     auto prior_row_2 = make_playlist_row("B");
-    auto prior_id_2 = playlist_tbl.add(prior_row_2);
+    auto prior_id_2 = library.playlist().add(prior_row_2);
     auto row =
         make_playlist_row("Example", ev2::PARENT_LIST_ID_NONE, prior_id_1);
 
     // Act
-    auto id = playlist_tbl.add(row);
+    auto id = library.playlist().add(row);
 
     // Assert
-    auto root_ids = playlist_tbl.root_ids();
+    auto root_ids = library.playlist().root_ids();
     auto iter = std::begin(root_ids);
     BOOST_REQUIRE(iter != std::end(root_ids));
     BOOST_CHECK_EQUAL(id, *iter++);
@@ -221,19 +215,18 @@ BOOST_DATA_TEST_CASE(
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
-    auto playlist_tbl = library.playlist();
     auto prior_row_1 = make_playlist_row("A");
-    auto prior_id_1 = playlist_tbl.add(prior_row_1);
+    auto prior_id_1 = library.playlist().add(prior_row_1);
     auto prior_row_2 = make_playlist_row("B");
-    auto prior_id_2 = playlist_tbl.add(prior_row_2);
+    auto prior_id_2 = library.playlist().add(prior_row_2);
     auto row =
         make_playlist_row("Example", ev2::PARENT_LIST_ID_NONE, prior_id_2);
 
     // Act
-    auto id = playlist_tbl.add(row);
+    auto id = library.playlist().add(row);
 
     // Assert
-    auto root_ids = playlist_tbl.root_ids();
+    auto root_ids = library.playlist().root_ids();
     auto iter = std::begin(root_ids);
     BOOST_REQUIRE(iter != std::end(root_ids));
     BOOST_CHECK_EQUAL(prior_id_1, *iter++);
@@ -251,21 +244,20 @@ BOOST_DATA_TEST_CASE(
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
-    auto playlist_tbl = library.playlist();
     auto parent_row = make_playlist_row("Parent");
-    auto parent_id = playlist_tbl.add(parent_row);
+    auto parent_id = library.playlist().add(parent_row);
     auto prior_row_1 = make_playlist_row("A", parent_id);
-    auto prior_id_1 = playlist_tbl.add(prior_row_1);
+    auto prior_id_1 = library.playlist().add(prior_row_1);
     auto prior_row_2 = make_playlist_row("B", parent_id);
-    auto prior_id_2 = playlist_tbl.add(prior_row_2);
+    auto prior_id_2 = library.playlist().add(prior_row_2);
     auto row =
         make_playlist_row("Example", parent_id, ev2::PLAYLIST_NO_NEXT_LIST_ID);
 
     // Act
-    auto id = playlist_tbl.add(row);
+    auto id = library.playlist().add(row);
 
     // Assert
-    auto child_ids = playlist_tbl.child_ids(parent_id);
+    auto child_ids = library.playlist().child_ids(parent_id);
     auto iter = std::begin(child_ids);
     BOOST_REQUIRE(iter != std::end(child_ids));
     BOOST_CHECK_EQUAL(prior_id_1, *iter++);
@@ -284,21 +276,20 @@ BOOST_DATA_TEST_CASE(
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
-    auto playlist_tbl = library.playlist();
     auto parent_row = make_playlist_row("Parent");
-    auto parent_id = playlist_tbl.add(parent_row);
+    auto parent_id = library.playlist().add(parent_row);
     auto prior_row_1 = make_playlist_row("A", parent_id);
-    auto prior_id_1 = playlist_tbl.add(prior_row_1);
+    auto prior_id_1 = library.playlist().add(prior_row_1);
     auto prior_row_2 = make_playlist_row("B", parent_id);
-    auto prior_id_2 = playlist_tbl.add(prior_row_2);
+    auto prior_id_2 = library.playlist().add(prior_row_2);
     auto row =
         make_playlist_row("Example", parent_id, prior_id_1);
 
     // Act
-    auto id = playlist_tbl.add(row);
+    auto id = library.playlist().add(row);
 
     // Assert
-    auto child_ids = playlist_tbl.child_ids(parent_id);
+    auto child_ids = library.playlist().child_ids(parent_id);
     auto iter = std::begin(child_ids);
     BOOST_REQUIRE(iter != std::end(child_ids));
     BOOST_CHECK_EQUAL(id, *iter++);
@@ -316,21 +307,20 @@ BOOST_DATA_TEST_CASE(
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
-    auto playlist_tbl = library.playlist();
     auto parent_row = make_playlist_row("Parent");
-    auto parent_id = playlist_tbl.add(parent_row);
+    auto parent_id = library.playlist().add(parent_row);
     auto prior_row_1 = make_playlist_row("A", parent_id);
-    auto prior_id_1 = playlist_tbl.add(prior_row_1);
+    auto prior_id_1 = library.playlist().add(prior_row_1);
     auto prior_row_2 = make_playlist_row("B", parent_id);
-    auto prior_id_2 = playlist_tbl.add(prior_row_2);
+    auto prior_id_2 = library.playlist().add(prior_row_2);
     auto row =
         make_playlist_row("Example", parent_id, prior_id_2);
 
     // Act
-    auto id = playlist_tbl.add(row);
+    auto id = library.playlist().add(row);
 
     // Assert
-    auto child_ids = playlist_tbl.child_ids(parent_id);
+    auto child_ids = library.playlist().child_ids(parent_id);
     auto iter = std::begin(child_ids);
     BOOST_REQUIRE(iter != std::end(child_ids));
     BOOST_CHECK_EQUAL(prior_id_1, *iter++);
@@ -349,20 +339,19 @@ BOOST_DATA_TEST_CASE(
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
-    auto playlist_tbl = library.playlist();
     auto row_1 = make_playlist_row("A");
-    auto id_1 = playlist_tbl.add(row_1);
+    auto id_1 = library.playlist().add(row_1);
     auto row_2 = make_playlist_row("B");
-    auto id_2 = playlist_tbl.add(row_2);
+    auto id_2 = library.playlist().add(row_2);
     auto row_3 = make_playlist_row("C");
-    auto id_3 = playlist_tbl.add(row_3);
+    auto id_3 = library.playlist().add(row_3);
     auto row = make_playlist_row(id_1, "A", ev2::PARENT_LIST_ID_NONE, id_3);
 
     // Act
-    playlist_tbl.update(row);
+    library.playlist().update(row);
 
     // Assert
-    auto root_ids = playlist_tbl.root_ids();
+    auto root_ids = library.playlist().root_ids();
     auto iter = std::begin(root_ids);
     BOOST_REQUIRE(iter != std::end(root_ids));
     BOOST_CHECK_EQUAL(id_2, *iter++);
@@ -381,20 +370,19 @@ BOOST_DATA_TEST_CASE(
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
-    auto playlist_tbl = library.playlist();
     auto row_1 = make_playlist_row("A");
-    auto id_1 = playlist_tbl.add(row_1);
+    auto id_1 = library.playlist().add(row_1);
     auto row_2 = make_playlist_row("B");
-    auto id_2 = playlist_tbl.add(row_2);
+    auto id_2 = library.playlist().add(row_2);
     auto row_3 = make_playlist_row("C");
-    auto id_3 = playlist_tbl.add(row_3);
+    auto id_3 = library.playlist().add(row_3);
     auto row = make_playlist_row(id_3, "C", ev2::PARENT_LIST_ID_NONE, id_2);
 
     // Act
-    playlist_tbl.update(row);
+    library.playlist().update(row);
 
     // Assert
-    auto root_ids = playlist_tbl.root_ids();
+    auto root_ids = library.playlist().root_ids();
     auto iter = std::begin(root_ids);
     BOOST_REQUIRE(iter != std::end(root_ids));
     BOOST_CHECK_EQUAL(id_1, *iter++);
@@ -413,20 +401,19 @@ BOOST_DATA_TEST_CASE(
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
-    auto playlist_tbl = library.playlist();
     auto row_1 = make_playlist_row("A");
-    auto id_1 = playlist_tbl.add(row_1);
+    auto id_1 = library.playlist().add(row_1);
     auto row_2 = make_playlist_row("B");
-    auto id_2 = playlist_tbl.add(row_2);
+    auto id_2 = library.playlist().add(row_2);
     auto row_3 = make_playlist_row("C");
-    auto id_3 = playlist_tbl.add(row_3);
+    auto id_3 = library.playlist().add(row_3);
     auto row = make_playlist_row(id_2, "B", ev2::PARENT_LIST_ID_NONE, id_1);
 
     // Act
-    playlist_tbl.update(row);
+    library.playlist().update(row);
 
     // Assert
-    auto root_ids = playlist_tbl.root_ids();
+    auto root_ids = library.playlist().root_ids();
     auto iter = std::begin(root_ids);
     BOOST_REQUIRE(iter != std::end(root_ids));
     BOOST_CHECK_EQUAL(id_2, *iter++);
@@ -445,21 +432,20 @@ BOOST_DATA_TEST_CASE(
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
-    auto playlist_tbl = library.playlist();
     auto row_1 = make_playlist_row("A");
-    auto id_1 = playlist_tbl.add(row_1);
+    auto id_1 = library.playlist().add(row_1);
     auto row_2 = make_playlist_row("B");
-    auto id_2 = playlist_tbl.add(row_2);
+    auto id_2 = library.playlist().add(row_2);
     auto row_3 = make_playlist_row("C");
-    auto id_3 = playlist_tbl.add(row_3);
+    auto id_3 = library.playlist().add(row_3);
     auto row = make_playlist_row(
         id_2, "B", ev2::PARENT_LIST_ID_NONE, ev2::PLAYLIST_NO_NEXT_LIST_ID);
 
     // Act
-    playlist_tbl.update(row);
+    library.playlist().update(row);
 
     // Assert
-    auto root_ids = playlist_tbl.root_ids();
+    auto root_ids = library.playlist().root_ids();
     auto iter = std::begin(root_ids);
     BOOST_REQUIRE(iter != std::end(root_ids));
     BOOST_CHECK_EQUAL(id_1, *iter++);
@@ -478,20 +464,19 @@ BOOST_DATA_TEST_CASE(
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
-    auto playlist_tbl = library.playlist();
     auto parent_row = make_playlist_row("Parent");
-    auto parent_id = playlist_tbl.add(parent_row);
+    auto parent_id = library.playlist().add(parent_row);
     auto row_1 = make_playlist_row("A", parent_id);
-    auto id_1 = playlist_tbl.add(row_1);
+    auto id_1 = library.playlist().add(row_1);
     auto row = make_playlist_row(
         id_1, "A", ev2::PARENT_LIST_ID_NONE, ev2::PLAYLIST_NO_NEXT_LIST_ID);
 
     // Act
-    playlist_tbl.update(row);
+    library.playlist().update(row);
 
     // Assert
     {
-        auto root_ids = playlist_tbl.root_ids();
+        auto root_ids = library.playlist().root_ids();
         auto iter = std::begin(root_ids);
         BOOST_REQUIRE(iter != std::end(root_ids));
         BOOST_CHECK_EQUAL(parent_id, *iter++);
@@ -500,7 +485,7 @@ BOOST_DATA_TEST_CASE(
         BOOST_REQUIRE(iter == std::end(root_ids));
     }
     {
-        auto child_ids = playlist_tbl.child_ids(parent_id);
+        auto child_ids = library.playlist().child_ids(parent_id);
         auto iter = std::begin(child_ids);
         BOOST_REQUIRE(iter == std::end(child_ids));
     }
@@ -514,22 +499,21 @@ BOOST_DATA_TEST_CASE(
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
-    auto playlist_tbl = library.playlist();
     auto parent_row = make_playlist_row("Parent");
-    auto parent_id = playlist_tbl.add(parent_row);
+    auto parent_id = library.playlist().add(parent_row);
     auto row_1 = make_playlist_row("A", parent_id);
-    auto id_1 = playlist_tbl.add(row_1);
+    auto id_1 = library.playlist().add(row_1);
     auto row_2 = make_playlist_row("B", parent_id);
-    auto id_2 = playlist_tbl.add(row_2);
+    auto id_2 = library.playlist().add(row_2);
     auto row = make_playlist_row(
         id_1, "A", ev2::PARENT_LIST_ID_NONE, ev2::PLAYLIST_NO_NEXT_LIST_ID);
 
     // Act
-    playlist_tbl.update(row);
+    library.playlist().update(row);
 
     // Assert
     {
-        auto root_ids = playlist_tbl.root_ids();
+        auto root_ids = library.playlist().root_ids();
         auto iter = std::begin(root_ids);
         BOOST_REQUIRE(iter != std::end(root_ids));
         BOOST_CHECK_EQUAL(parent_id, *iter++);
@@ -538,7 +522,7 @@ BOOST_DATA_TEST_CASE(
         BOOST_REQUIRE(iter == std::end(root_ids));
     }
     {
-        auto child_ids = playlist_tbl.child_ids(parent_id);
+        auto child_ids = library.playlist().child_ids(parent_id);
         auto iter = std::begin(child_ids);
         BOOST_REQUIRE(iter != std::end(child_ids));
         BOOST_CHECK_EQUAL(id_2, *iter++);
@@ -554,22 +538,21 @@ BOOST_DATA_TEST_CASE(
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto db_uuid = library.information().get().uuid;
-    auto playlist_tbl = library.playlist();
     auto parent_row = make_playlist_row("Parent");
-    auto parent_id = playlist_tbl.add(parent_row);
+    auto parent_id = library.playlist().add(parent_row);
     auto row_1 = make_playlist_row("A", parent_id);
-    auto id_1 = playlist_tbl.add(row_1);
+    auto id_1 = library.playlist().add(row_1);
     auto row_2 = make_playlist_row("B", parent_id);
-    auto id_2 = playlist_tbl.add(row_2);
+    auto id_2 = library.playlist().add(row_2);
     auto row = make_playlist_row(
         id_2, "B", ev2::PARENT_LIST_ID_NONE, parent_id);
 
     // Act
-    playlist_tbl.update(row);
+    library.playlist().update(row);
 
     // Assert
     {
-        auto root_ids = playlist_tbl.root_ids();
+        auto root_ids = library.playlist().root_ids();
         auto iter = std::begin(root_ids);
         BOOST_REQUIRE(iter != std::end(root_ids));
         BOOST_CHECK_EQUAL(id_2, *iter++);
@@ -578,7 +561,7 @@ BOOST_DATA_TEST_CASE(
         BOOST_REQUIRE(iter == std::end(root_ids));
     }
     {
-        auto child_ids = playlist_tbl.child_ids(parent_id);
+        auto child_ids = library.playlist().child_ids(parent_id);
         auto iter = std::begin(child_ids);
         BOOST_REQUIRE(iter != std::end(child_ids));
         BOOST_CHECK_EQUAL(id_1, *iter++);

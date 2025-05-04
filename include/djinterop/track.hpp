@@ -36,6 +36,7 @@ namespace djinterop
 {
 class database;
 class crate;
+class playlist;
 class track_impl;
 struct track_snapshot;
 
@@ -268,6 +269,8 @@ public:
 
     // TODO (haslersn): non public?
     track(std::shared_ptr<track_impl> pimpl);
+
+    friend playlist;
 
 private:
     std::shared_ptr<track_impl> pimpl_;

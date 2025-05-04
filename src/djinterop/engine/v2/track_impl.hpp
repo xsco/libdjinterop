@@ -23,7 +23,6 @@
 #include <string>
 #include <vector>
 
-#include <djinterop/engine/v2/track_table.hpp>
 #include <djinterop/track_snapshot.hpp>
 
 #include "../../impl/track_impl.hpp"
@@ -110,7 +109,6 @@ public:
 
 private:
     std::shared_ptr<engine_library> library_;
-    track_table track_;
 };
 
 track create_track(

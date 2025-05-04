@@ -37,7 +37,6 @@ struct engine_library_context;
 
 namespace djinterop::engine::v2
 {
-
 /// Thrown when the id on a playlist row is in an erroneous state for a given
 /// operation.
 struct DJINTEROP_PUBLIC playlist_row_id_error : public std::runtime_error
@@ -46,6 +45,18 @@ struct DJINTEROP_PUBLIC playlist_row_id_error : public std::runtime_error
         runtime_error{what_arg}
     {
     }
+};
+
+/// Thrown when the title of a playlist row is invalid in some way.
+struct DJINTEROP_PUBLIC playlist_row_invalid_title: public std::runtime_error
+{
+    explicit playlist_row_invalid_title(
+        const std::string& what_arg, const std::string& title) noexcept :
+        runtime_error{what_arg}, title{title}
+    {
+    }
+
+    const std::string title;
 };
 
 /// Special value for id to indicate that a given row is not currently persisted

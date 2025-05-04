@@ -179,15 +179,14 @@ track_row snapshot_to_row(
 }  // namespace
 
 track_impl::track_impl(std::shared_ptr<engine_library> library, int64_t id) :
-    djinterop::track_impl{id}, library_{std::move(library)},
-    track_{library_->track()}
+    djinterop::track_impl{id}, library_{std::move(library)}
 {
 }
 
 track_snapshot track_impl::snapshot() const
 {
     auto information = library_->information().get();
-    auto row_maybe = track_.get(id());
+    auto row_maybe = library_->track().get(id());
     if (!row_maybe)
         throw djinterop::track_deleted{id()};
 
@@ -241,105 +240,107 @@ void track_impl::update(const track_snapshot& snapshot)
     auto row = snapshot_to_row(snapshot, information);
     row.id = id();
 
-    track_.update(row);
+    library_->track().update(row);
 }
 
 std::optional<std::string> track_impl::album()
 {
-    return track_.get_album(id());
+    return library_->track().get_album(id());
 }
 
 void track_impl::set_album(std::optional<std::string> album)
 {
-    track_.set_album(id(), album);
+    library_->track().set_album(id(), album);
 }
 
 std::optional<std::string> track_impl::artist()
 {
-    return track_.get_artist(id());
+    return library_->track().get_artist(id());
 }
 
 void track_impl::set_artist(std::optional<std::string> artist)
 {
-    track_.set_artist(id(), artist);
+    library_->track().set_artist(id(), artist);
 }
 
 std::optional<double> track_impl::average_loudness()
 {
-    auto track_data = track_.get_track_data(id());
+    auto track_data = library_->track().get_track_data(id());
     return convert::read::average_loudness(track_data);
 }
 
 void track_impl::set_average_loudness(std::optional<double> average_loudness)
 {
-    auto track_data = track_.get_track_data(id());
+    auto track_data = library_->track().get_track_data(id());
     auto converted = convert::write::average_loudness(average_loudness);
     track_data.average_loudness_low = converted;
     track_data.average_loudness_mid = converted;
     track_data.average_loudness_high = converted;
-    track_.set_track_data(id(), track_data);
+    library_->track().set_track_data(id(), track_data);
 }
 
 std::vector<beatgrid_marker> track_impl::beatgrid()
 {
-    auto beat_data = track_.get_beat_data(id());
+    auto beat_data = library_->track().get_beat_data(id());
     return convert::read::beatgrid_markers(beat_data.adjusted_beat_grid);
 }
 
 void track_impl::set_beatgrid(std::vector<beatgrid_marker> beatgrid)
 {
-    auto beat_data = track_.get_beat_data(id());
+    auto beat_data = library_->track().get_beat_data(id());
 
     auto converted_beatgrid = convert::write::beatgrid(beatgrid);
     beat_data.adjusted_beat_grid = converted_beatgrid.adjusted_beat_grid;
     beat_data.default_beat_grid = converted_beatgrid.default_beat_grid;
     beat_data.is_beatgrid_set = converted_beatgrid.is_beatgrid_set;
 
-    track_.set_beat_data(id(), beat_data);
+    library_->track().set_beat_data(id(), beat_data);
 }
 
 std::optional<int> track_impl::bitrate()
 {
-    return djinterop::util::optional_static_cast<int>(track_.get_bitrate(id()));
+    return djinterop::util::optional_static_cast<int>(
+        library_->track().get_bitrate(id()));
 }
 
 void track_impl::set_bitrate(std::optional<int> bitrate)
 {
-    track_.set_bitrate(
+    library_->track().set_bitrate(
         id(), djinterop::util::optional_static_cast<int64_t>(bitrate));
 }
 
 std::optional<double> track_impl::bpm()
 {
     return convert::read::bpm(
-        track_.get_bpm_analyzed(id()), track_.get_bpm(id()));
+        library_->track().get_bpm_analyzed(id()),
+        library_->track().get_bpm(id()));
 }
 
 void track_impl::set_bpm(std::optional<double> bpm)
 {
     auto fields = convert::write::bpm(bpm);
-    track_.set_bpm_analyzed(id(), fields.bpm_analyzed);
-    track_.set_bpm(id(), fields.bpm);
+    library_->track().set_bpm_analyzed(id(), fields.bpm_analyzed);
+    library_->track().set_bpm(id(), fields.bpm);
 }
 
 std::optional<std::string> track_impl::comment()
 {
-    return track_.get_comment(id());
+    return library_->track().get_comment(id());
 }
 
 void track_impl::set_comment(std::optional<std::string> comment)
 {
-    track_.set_comment(id(), comment);
+    library_->track().set_comment(id(), comment);
 }
 
 std::optional<std::string> track_impl::composer()
 {
-    return track_.get_composer(id());
+    return library_->track().get_composer(id());
 }
 
 void track_impl::set_composer(std::optional<std::string> composer)
 {
-    track_.set_composer(id(), composer);
+    library_->track().set_composer(id(), composer);
 }
 
 database track_impl::db()
@@ -355,14 +356,13 @@ std::vector<crate> track_impl::containing_crates()
 
 std::optional<milliseconds> track_impl::duration()
 {
-    auto length = track_.get_length(id());
+    auto length = library_->track().get_length(id());
     return convert::read::duration(length);
 }
 
-void track_impl::set_duration(
-    std::optional<std::chrono::milliseconds> duration)
+void track_impl::set_duration(std::optional<std::chrono::milliseconds> duration)
 {
-    track_.set_length(id(), convert::write::duration(duration));
+    library_->track().set_length(id(), convert::write::duration(duration));
 }
 
 std::string track_impl::file_extension()
@@ -380,17 +380,17 @@ std::string track_impl::filename()
 
 std::optional<std::string> track_impl::genre()
 {
-    return track_.get_genre(id());
+    return library_->track().get_genre(id());
 }
 
 void track_impl::set_genre(std::optional<std::string> genre)
 {
-    track_.set_genre(id(), genre);
+    library_->track().set_genre(id(), genre);
 }
 
 std::optional<hot_cue> track_impl::hot_cue_at(int index)
 {
-    auto quick_cues = track_.get_quick_cues(id());
+    auto quick_cues = library_->track().get_quick_cues(id());
     if (index < 0 || (unsigned)index > quick_cues.quick_cues.size())
     {
         throw std::out_of_range{
@@ -403,7 +403,7 @@ std::optional<hot_cue> track_impl::hot_cue_at(int index)
 
 void track_impl::set_hot_cue_at(int index, std::optional<hot_cue> cue)
 {
-    auto quick_cues = track_.get_quick_cues(id());
+    auto quick_cues = library_->track().get_quick_cues(id());
     if (index < 0 || (unsigned)index > quick_cues.quick_cues.size())
     {
         throw std::out_of_range{
@@ -412,56 +412,56 @@ void track_impl::set_hot_cue_at(int index, std::optional<hot_cue> cue)
     }
 
     quick_cues.quick_cues[index] = convert::write::hot_cue(cue);
-    track_.set_quick_cues(id(), quick_cues);
+    library_->track().set_quick_cues(id(), quick_cues);
 }
 
 std::vector<std::optional<hot_cue>> track_impl::hot_cues()
 {
-    auto quick_cues = track_.get_quick_cues(id());
+    auto quick_cues = library_->track().get_quick_cues(id());
     return convert::read::hot_cues(quick_cues);
 }
 
 void track_impl::set_hot_cues(std::vector<std::optional<hot_cue>> cues)
 {
-    auto quick_cues = track_.get_quick_cues(id());
+    auto quick_cues = library_->track().get_quick_cues(id());
     quick_cues.quick_cues = convert::write::hot_cues(cues);
-    track_.set_quick_cues(id(), quick_cues);
+    library_->track().set_quick_cues(id(), quick_cues);
 }
 
 bool track_impl::is_valid()
 {
-    return track_.exists(id());
+    return library_->track().exists(id());
 }
 
 std::optional<musical_key> track_impl::key()
 {
-    return convert::read::key(track_.get_key(id()));
+    return convert::read::key(library_->track().get_key(id()));
 }
 
 void track_impl::set_key(std::optional<musical_key> key)
 {
     auto converted = convert::write::key(key);
-    track_.set_key(id(), converted.key);
+    library_->track().set_key(id(), converted.key);
 
-    auto track_data = track_.get_track_data(id());
+    auto track_data = library_->track().get_track_data(id());
     track_data.key = converted.track_data_key;
-    track_.set_track_data(id(), track_data);
+    library_->track().set_track_data(id(), track_data);
 }
 
 std::optional<system_clock::time_point> track_impl::last_played_at()
 {
-    return track_.get_time_last_played(id());
+    return library_->track().get_time_last_played(id());
 }
 
 void track_impl::set_last_played_at(
     std::optional<system_clock::time_point> played_at)
 {
-    track_.set_time_last_played(id(), played_at);
+    library_->track().set_time_last_played(id(), played_at);
 }
 
 std::optional<loop> track_impl::loop_at(int index)
 {
-    auto loops = track_.get_loops(id());
+    auto loops = library_->track().get_loops(id());
     if (index < 0 || (unsigned)index > loops.loops.size())
     {
         throw std::out_of_range{
@@ -474,7 +474,7 @@ std::optional<loop> track_impl::loop_at(int index)
 
 void track_impl::set_loop_at(int index, std::optional<loop> l)
 {
-    auto loops = track_.get_loops(id());
+    auto loops = library_->track().get_loops(id());
     if (index < 0 || (unsigned)index > loops.loops.size())
     {
         throw std::out_of_range{
@@ -483,23 +483,23 @@ void track_impl::set_loop_at(int index, std::optional<loop> l)
     }
 
     loops.loops[index] = convert::write::loop(l);
-    track_.set_loops(id(), loops);
+    library_->track().set_loops(id(), loops);
 }
 
 std::vector<std::optional<loop>> track_impl::loops()
 {
-    return convert::read::loops(track_.get_loops(id()));
+    return convert::read::loops(library_->track().get_loops(id()));
 }
 
 void track_impl::set_loops(std::vector<std::optional<loop>> loops)
 {
     auto converted = convert::write::loops(loops);
-    track_.set_loops(id(), converted);
+    library_->track().set_loops(id(), converted);
 }
 
 std::optional<double> track_impl::main_cue()
 {
-    auto quick_cues = track_.get_quick_cues(id());
+    auto quick_cues = library_->track().get_quick_cues(id());
     auto cue = quick_cues.adjusted_main_cue;
     if (cue == 0)
         return std::nullopt;
@@ -509,47 +509,47 @@ std::optional<double> track_impl::main_cue()
 
 void track_impl::set_main_cue(std::optional<double> sample_offset)
 {
-    auto quick_cues = track_.get_quick_cues(id());
+    auto quick_cues = library_->track().get_quick_cues(id());
     quick_cues.adjusted_main_cue = sample_offset.value_or(0);
     quick_cues.default_main_cue = sample_offset.value_or(0);
     quick_cues.is_main_cue_adjusted = true;
-    track_.set_quick_cues(id(), quick_cues);
+    library_->track().set_quick_cues(id(), quick_cues);
 }
 
 std::optional<std::string> track_impl::publisher()
 {
-    return track_.get_label(id());
+    return library_->track().get_label(id());
 }
 
 void track_impl::set_publisher(std::optional<std::string> publisher)
 {
-    track_.set_label(id(), publisher);
+    library_->track().set_label(id(), publisher);
 }
 
 std::optional<int> track_impl::rating()
 {
-    auto rating = track_.get_rating(id());
+    auto rating = library_->track().get_rating(id());
     return convert::read::rating(rating);
 }
 
 void track_impl::set_rating(std::optional<int> rating)
 {
-    track_.set_rating(id(), convert::write::rating(rating));
+    library_->track().set_rating(id(), convert::write::rating(rating));
 }
 
 std::string track_impl::relative_path()
 {
-    return track_.get_path(id());
+    return library_->track().get_path(id());
 }
 
 void track_impl::set_relative_path(std::string relative_path)
 {
-    track_.set_path(id(), relative_path);
+    library_->track().set_path(id(), relative_path);
 }
 
 std::optional<unsigned long long> track_impl::sample_count()
 {
-    auto track_data = track_.get_track_data(id());
+    auto track_data = library_->track().get_track_data(id());
     return convert::read::sample_count(track_data);
 }
 
@@ -558,19 +558,19 @@ void track_impl::set_sample_count(
 {
     auto converted = convert::write::sample_count(sample_count);
 
-    auto track_data = track_.get_track_data(id());
+    auto track_data = library_->track().get_track_data(id());
     track_data.samples = converted.track_data_samples;
 
-    auto beat_data = track_.get_beat_data(id());
+    auto beat_data = library_->track().get_beat_data(id());
     beat_data.samples = converted.beat_data_samples;
 
-    track_.set_track_data(id(), track_data);
-    track_.set_beat_data(id(), beat_data);
+    library_->track().set_track_data(id(), track_data);
+    library_->track().set_beat_data(id(), beat_data);
 }
 
 std::optional<double> track_impl::sample_rate()
 {
-    auto track_data = track_.get_track_data(id());
+    auto track_data = library_->track().get_track_data(id());
     return convert::read::sample_rate(track_data);
 }
 
@@ -578,42 +578,43 @@ void track_impl::set_sample_rate(std::optional<double> sample_rate)
 {
     auto converted = convert::write::sample_rate(sample_rate);
 
-    auto track_data = track_.get_track_data(id());
+    auto track_data = library_->track().get_track_data(id());
     track_data.sample_rate = converted;
 
-    auto beat_data = track_.get_beat_data(id());
+    auto beat_data = library_->track().get_beat_data(id());
     beat_data.sample_rate = converted;
 
-    track_.set_track_data(id(), track_data);
-    track_.set_beat_data(id(), beat_data);
+    library_->track().set_track_data(id(), track_data);
+    library_->track().set_beat_data(id(), beat_data);
 }
 
 std::optional<std::string> track_impl::title()
 {
-    return track_.get_title(id());
+    return library_->track().get_title(id());
 }
 
 void track_impl::set_title(std::optional<std::string> title)
 {
-    track_.set_title(id(), title);
+    library_->track().set_title(id(), title);
 }
 
 std::optional<int> track_impl::track_number()
 {
     return djinterop::util::optional_static_cast<int>(
-        track_.get_play_order(id()));
+        library_->track().get_play_order(id()));
 }
 
 void track_impl::set_track_number(std::optional<int> track_number)
 {
-    track_.set_play_order(
+    library_->track().set_play_order(
         id(), djinterop::util::optional_static_cast<int64_t>(track_number));
 }
 
 std::vector<waveform_entry> track_impl::waveform()
 {
     // Engine 2.x only has an overview waveform.
-    auto overview_waveform_data = track_.get_overview_waveform_data(id());
+    auto overview_waveform_data =
+        library_->track().get_overview_waveform_data(id());
     return convert::read::waveform(overview_waveform_data);
 }
 
@@ -622,17 +623,19 @@ void track_impl::set_waveform(std::vector<waveform_entry> waveform)
     // Engine 2.x only has an overview waveform.
     auto overview_waveform_data =
         convert::write::waveform(waveform, sample_count(), sample_rate());
-    track_.set_overview_waveform_data(id(), overview_waveform_data);
+    library_->track().set_overview_waveform_data(id(), overview_waveform_data);
 }
 
 std::optional<int> track_impl::year()
 {
-    return djinterop::util::optional_static_cast<int>(track_.get_year(id()));
+    return djinterop::util::optional_static_cast<int>(
+        library_->track().get_year(id()));
 }
 
 void track_impl::set_year(std::optional<int> year)
 {
-    track_.set_year(id(), djinterop::util::optional_static_cast<int64_t>(year));
+    library_->track().set_year(
+        id(), djinterop::util::optional_static_cast<int64_t>(year));
 }
 
 track create_track(

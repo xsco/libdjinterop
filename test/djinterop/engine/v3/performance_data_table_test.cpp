@@ -55,16 +55,14 @@ BOOST_DATA_TEST_CASE(
 
     // Act
     BOOST_TEST_CHECKPOINT("(" << schema << ") Adding track...");
-    auto track_tbl = library.track();
     ev3::track_row track{ev3::TRACK_ROW_ID_NONE};
     populate_track_row(example_track_row_type::minimal_1, track, schema);
-    const auto track_id = track_tbl.add(track);
+    const auto track_id = library.track().add(track);
 
     // Assert
     BOOST_TEST_CHECKPOINT(
         "(" << schema << ") Checking for presence of performance data row...");
-    auto performance_data_tbl = library.performance_data();
-    BOOST_CHECK(performance_data_tbl.exists(track_id));
+    BOOST_CHECK(library.performance_data().exists(track_id));
 }
 
 BOOST_TEST_DECORATOR(*utf::description("get() with a valid id"))
@@ -81,18 +79,15 @@ BOOST_DATA_TEST_CASE(
 
     BOOST_TEST_CHECKPOINT(
         "(" << schema << ", " << row_type << ") Adding track...");
-    auto track_tbl = library.track();
     ev3::track_row track{ev3::TRACK_ROW_ID_NONE};
     populate_track_row(example_track_row_type::minimal_1, track, schema);
-    const auto track_id = track_tbl.add(track);
-
-    auto performance_data_tbl = library.performance_data();
+    const auto track_id = library.track().add(track);
 
     // Act
     BOOST_TEST_CHECKPOINT(
         "(" << schema << ", " << row_type
             << ") Getting performance data row...");
-    auto actual = performance_data_tbl.get(track_id);
+    auto actual = library.performance_data().get(track_id);
 
     // Assert
     BOOST_REQUIRE(actual != std::nullopt);
@@ -113,12 +108,9 @@ BOOST_DATA_TEST_CASE(
 
     BOOST_TEST_CHECKPOINT(
         "(" << schema << ", " << update_row_type << ") Adding track...");
-    auto track_tbl = library.track();
     ev3::track_row track{ev3::TRACK_ROW_ID_NONE};
     populate_track_row(example_track_row_type::minimal_1, track, schema);
-    const auto track_id = track_tbl.add(track);
-
-    auto performance_data_tbl = library.performance_data();
+    const auto track_id = library.track().add(track);
 
     ev3::performance_data_row expected{track_id};
     populate_performance_data_row(update_row_type, expected, schema);
@@ -127,13 +119,13 @@ BOOST_DATA_TEST_CASE(
     BOOST_TEST_CHECKPOINT(
         "(" << schema << ", " << update_row_type
             << ") Updating performance data...");
-    performance_data_tbl.update(expected);
+    library.performance_data().update(expected);
 
     // Assert
     BOOST_TEST_CHECKPOINT(
         "(" << schema << ", " << update_row_type
             << ") Getting performance data...");
-    auto actual = performance_data_tbl.get(track_id);
+    auto actual = library.performance_data().get(track_id);
     BOOST_REQUIRE(actual != std::nullopt);
     BOOST_CHECK_EQUAL(expected, *actual);
 }
@@ -149,28 +141,27 @@ BOOST_DATA_TEST_CASE(
         e::supported_v3_schemas, schema)                                       \
     {                                                                          \
         auto library = ev3::engine_library::create_temporary(schema);          \
-        auto track_tbl = library.track();                                      \
         ev3::track_row track{ev3::TRACK_ROW_ID_NONE};                          \
         populate_track_row(example_track_row_type::minimal_1, track, schema);  \
-        const auto track_id = track_tbl.add(track);                            \
+        const auto track_id = library.track().add(track);                      \
                                                                                \
-        auto performance_data_tbl = library.performance_data();                \
         ev3::performance_data_row row{track_id};                               \
         populate_performance_data_row(                                         \
             example_performance_data_row_type::fully_analysed_1, row, schema); \
-        performance_data_tbl.update(row);                                      \
+        library.performance_data().update(row);                                \
         auto expected = row.engine_column;                                     \
                                                                                \
         if (schema >= min_schema)                                              \
         {                                                                      \
-            auto actual = performance_data_tbl.get_##engine_column(track_id);  \
+            auto actual =                                                      \
+                library.performance_data().get_##engine_column(track_id);      \
             BOOST_CHECK_EQUAL(                                                 \
                 make_printable(expected), make_printable(actual));             \
         }                                                                      \
         else                                                                   \
         {                                                                      \
             BOOST_CHECK_THROW(                                                 \
-                performance_data_tbl.get_##engine_column(track_id),            \
+                library.performance_data().get_##engine_column(track_id),      \
                 djinterop::unsupported_operation);                             \
         }                                                                      \
     }
@@ -183,12 +174,10 @@ BOOST_DATA_TEST_CASE(
         e::supported_v3_schemas, schema)                                       \
     {                                                                          \
         auto library = ev3::engine_library::create_temporary(schema);          \
-        auto track_tbl = library.track();                                      \
         ev3::track_row track{ev3::TRACK_ROW_ID_NONE};                          \
         populate_track_row(example_track_row_type::minimal_1, track, schema);  \
-        const auto track_id = track_tbl.add(track);                            \
+        const auto track_id = library.track().add(track);                      \
                                                                                \
-        auto performance_data_tbl = library.performance_data();                \
         ev3::performance_data_row row{track_id};                               \
         populate_performance_data_row(                                         \
             example_performance_data_row_type::minimal_1, row, schema);        \
@@ -199,16 +188,19 @@ BOOST_DATA_TEST_CASE(
                                                                                \
         if (schema >= min_schema)                                              \
         {                                                                      \
-            performance_data_tbl.set_##engine_column(track_id, expected);      \
+            library.performance_data().set_##engine_column(                    \
+                track_id, expected);                                           \
                                                                                \
-            auto actual = performance_data_tbl.get_##engine_column(track_id);  \
+            auto actual =                                                      \
+                library.performance_data().get_##engine_column(track_id);      \
             BOOST_CHECK_EQUAL(                                                 \
                 make_printable(expected), make_printable(actual));             \
         }                                                                      \
         else                                                                   \
         {                                                                      \
             BOOST_CHECK_THROW(                                                 \
-                performance_data_tbl.set_##engine_column(track_id, expected),  \
+                library.performance_data().set_##engine_column(                \
+                    track_id, expected),                                       \
                 djinterop::unsupported_operation);                             \
         }                                                                      \
     }
@@ -221,18 +213,17 @@ BOOST_DATA_TEST_CASE(
         e::supported_v3_schemas, schema)                                  \
     {                                                                     \
         auto library = ev3::engine_library::create_temporary(schema);     \
-        auto performance_data_tbl = library.performance_data();           \
                                                                           \
         if (schema >= min_schema)                                         \
         {                                                                 \
             BOOST_CHECK_THROW(                                            \
-                performance_data_tbl.get_##engine_column(12345),          \
+                library.performance_data().get_##engine_column(12345),    \
                 ev3::performance_data_row_id_error);                      \
         }                                                                 \
         else                                                              \
         {                                                                 \
             BOOST_CHECK_THROW(                                            \
-                performance_data_tbl.get_##engine_column(12345),          \
+                library.performance_data().get_##engine_column(12345),    \
                 djinterop::unsupported_operation);                        \
         }                                                                 \
     }
@@ -245,7 +236,6 @@ BOOST_DATA_TEST_CASE(
         e::supported_v3_schemas, schema)                                       \
     {                                                                          \
         auto library = ev3::engine_library::create_temporary(schema);          \
-        auto performance_data_tbl = library.performance_data();                \
         ev3::performance_data_row row{0};                                      \
         populate_performance_data_row(                                         \
             example_performance_data_row_type::fully_analysed_1, row, schema); \
@@ -253,14 +243,14 @@ BOOST_DATA_TEST_CASE(
         if (schema >= min_schema)                                              \
         {                                                                      \
             BOOST_CHECK_THROW(                                                 \
-                performance_data_tbl.set_##engine_column(                      \
+                library.performance_data().set_##engine_column(                \
                     12345, row.engine_column),                                 \
                 ev3::performance_data_row_id_error);                           \
         }                                                                      \
         else                                                                   \
         {                                                                      \
             BOOST_CHECK_THROW(                                                 \
-                performance_data_tbl.set_##engine_column(                      \
+                library.performance_data().set_##engine_column(                \
                     12345, row.engine_column),                                 \
                 djinterop::unsupported_operation);                             \
         }                                                                      \

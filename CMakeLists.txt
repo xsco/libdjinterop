@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.24.3
+        VERSION 0.26.1
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
@@ -13,6 +13,10 @@ endif()
 if(POLICY CMP0076)
     # CMP0076: target_sources() command converts relative paths to absolute.
     cmake_policy(SET CMP0076 NEW)
+endif()
+if(POLICY CMP0167)
+    # CMP0167: Don't use FindBoost() any longer.
+    cmake_policy(SET CMP0167 NEW)
 endif()
 
 # Require C++20
@@ -76,6 +80,7 @@ add_library(
     include/djinterop/musical_key.hpp
     include/djinterop/pad_color.hpp
     include/djinterop/performance_data.hpp
+    include/djinterop/playlist.hpp
     include/djinterop/semantic_version.hpp
     include/djinterop/stream_helper.hpp
     include/djinterop/track.hpp
@@ -83,6 +88,7 @@ add_library(
     src/djinterop/crate.cpp
     src/djinterop/database.cpp
     src/djinterop/engine/base_engine_library.cpp
+    src/djinterop/engine/base_engine_impl.hpp
     src/djinterop/engine/encode_decode_utils.cpp
     src/djinterop/engine/encode_decode_utils.hpp
     src/djinterop/engine/engine.cpp
@@ -135,6 +141,8 @@ add_library(
     src/djinterop/engine/v1/engine_crate_impl.hpp
     src/djinterop/engine/v1/engine_database_impl.cpp
     src/djinterop/engine/v1/engine_database_impl.hpp
+    src/djinterop/engine/v1/engine_playlist_impl.cpp
+    src/djinterop/engine/v1/engine_playlist_impl.hpp
     src/djinterop/engine/v1/engine_storage.cpp
     src/djinterop/engine/v1/engine_storage.hpp
     src/djinterop/engine/v1/engine_track_impl.cpp
@@ -157,6 +165,8 @@ add_library(
     src/djinterop/engine/v2/loops_blob.cpp
     src/djinterop/engine/v2/overview_waveform_data_blob.cpp
     src/djinterop/engine/v2/playlist_entity_table.cpp
+    src/djinterop/engine/v2/playlist_impl.cpp
+    src/djinterop/engine/v2/playlist_impl.hpp
     src/djinterop/engine/v2/playlist_table.cpp
     src/djinterop/engine/v2/quick_cues_blob.cpp
     src/djinterop/engine/v2/track_data_blob.cpp
@@ -174,15 +184,18 @@ add_library(
     src/djinterop/engine/v3/database_impl.hpp
     src/djinterop/engine/v3/engine_library.cpp
     src/djinterop/engine/v3/performance_data_table.cpp
+    src/djinterop/engine/v3/playlist_impl.cpp
+    src/djinterop/engine/v3/playlist_impl.hpp
     src/djinterop/engine/v3/track_impl.cpp
     src/djinterop/engine/v3/track_impl.hpp
     src/djinterop/engine/v3/track_table.cpp
     src/djinterop/impl/crate_impl.cpp
     src/djinterop/impl/crate_impl.hpp
-    src/djinterop/impl/database_impl.cpp
     src/djinterop/impl/database_impl.hpp
+    src/djinterop/impl/playlist_impl.hpp
     src/djinterop/impl/track_impl.cpp
     src/djinterop/impl/track_impl.hpp
+    src/djinterop/playlist.cpp
     src/djinterop/track.cpp
     src/djinterop/util/chrono.cpp
     src/djinterop/util/chrono.hpp
@@ -272,12 +285,14 @@ install(FILES
     include/djinterop/musical_key.hpp
     include/djinterop/pad_color.hpp
     include/djinterop/performance_data.hpp
+    include/djinterop/playlist.hpp
     include/djinterop/semantic_version.hpp
     include/djinterop/stream_helper.hpp
     include/djinterop/track.hpp
     include/djinterop/track_snapshot.hpp
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}")
 install(FILES
+    include/djinterop/engine/base_engine_library.hpp
     include/djinterop/engine/engine.hpp
     include/djinterop/engine/engine_schema.hpp
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/engine")
@@ -358,7 +373,7 @@ add_djinterop_example(engine_library_v2_low_level)
 
 # Unit tests.
 include(CTest)
-find_package(Boost 1.65.1 QUIET COMPONENTS filesystem system)
+find_package(Boost 1.71.0 QUIET COMPONENTS filesystem system)
 if (Boost_FOUND)
     set(TESTDATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/testdata")
 
@@ -389,6 +404,7 @@ if (Boost_FOUND)
     add_djinterop_test(engine/ database_reference_test)
     add_djinterop_test(engine/ database_test)
     add_djinterop_test(engine/ engine_test)
+    add_djinterop_test(engine/ playlist_test)
     add_djinterop_test(engine/ track_test)
     add_djinterop_test(engine/v2/ playlist_entity_table_test)
     add_djinterop_test(engine/v2/ playlist_table_test)

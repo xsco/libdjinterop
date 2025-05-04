@@ -27,14 +27,16 @@
 namespace djinterop::engine::v3
 {
 crate_impl::crate_impl(std::shared_ptr<engine_library> library, int64_t id) :
-    djinterop::crate_impl{id}, library_{std::move(library)},
-    playlist_entity_{library_->playlist_entity()},
-    playlist_{library_->playlist()}
+    djinterop::crate_impl{id}, library_{std::move(library)}
 {
 }
 
 void crate_impl::add_track(int64_t track_id)
 {
+    // Crates have no fixed ordering, so tracks are added arbitrarily to the
+    // end of the playlist.
+    int64_t next_entity_id = PLAYLIST_ENTITY_NO_NEXT_ENTITY_ID;
+
     playlist_entity_row row{
         PLAYLIST_ENTITY_ROW_ID_NONE,
         id(),
@@ -42,12 +44,10 @@ void crate_impl::add_track(int64_t track_id)
         library_->information()
             .get()
             .uuid,  // TODO (mr-smidge): Avoid repeated DB UUID lookup.
-        PLAYLIST_ENTITY_NO_NEXT_ENTITY_ID,
+        next_entity_id,
         PLAYLIST_ENTITY_DEFAULT_MEMBERSHIP_REFERENCE};
 
-    // Crates have no fixed ordering, so tracks are added arbitrarily to the
-    // end of the playlist.
-    playlist_entity_.add_back(row);
+    library_->playlist_entity().add(row);
 }
 
 void crate_impl::add_track(track tr)
@@ -59,7 +59,7 @@ std::vector<crate> crate_impl::children()
 {
     std::vector<crate> results;
 
-    auto ids = playlist_.child_ids(id());
+    auto ids = library_->playlist().child_ids(id());
     for (auto&& id : ids)
     {
         results.emplace_back(std::make_shared<crate_impl>(library_, id));
@@ -70,7 +70,7 @@ std::vector<crate> crate_impl::children()
 
 void crate_impl::clear_tracks()
 {
-    playlist_entity_.clear(id());
+    library_->playlist_entity().clear(id());
 }
 
 crate crate_impl::create_sub_crate(const std::string& name)
@@ -140,7 +140,8 @@ std::vector<crate> crate_impl::descendants()
 {
     std::vector<crate> results;
 
-    auto ids = playlist_.descendant_ids(id());
+    auto ids = library_->playlist().descendant_ids(id());
+    results.reserve(ids.size());
     for (auto&& id : ids)
     {
         results.emplace_back(std::make_shared<crate_impl>(library_, id));
@@ -151,18 +152,18 @@ std::vector<crate> crate_impl::descendants()
 
 bool crate_impl::is_valid()
 {
-    return playlist_.exists(id());
+    return library_->playlist().exists(id());
 }
 
 std::string crate_impl::name()
 {
-    auto row = playlist_.get(id());
+    auto row = library_->playlist().get(id());
     return row->title;
 }
 
 std::optional<crate> crate_impl::parent()
 {
-    auto row = playlist_.get(id());
+    auto row = library_->playlist().get(id());
     if (row->parent_list_id == PARENT_LIST_ID_NONE)
     {
         return std::nullopt;
@@ -174,19 +175,26 @@ std::optional<crate> crate_impl::parent()
 
 void crate_impl::remove_track(track tr)
 {
-    playlist_entity_.remove(id(), tr.id());
+    library_->playlist_entity().remove(id(), tr.id());
 }
 
 void crate_impl::set_name(std::string name)
 {
-    auto row = playlist_.get(id());
+    auto row = library_->playlist().get(id());
     if (!row)
     {
         throw crate_deleted{id()};
     }
 
     row->title = name;
-    playlist_.update(*row);
+    try
+    {
+        library_->playlist().update(*row);
+    }
+    catch (const playlist_row_invalid_title& e)
+    {
+        throw crate_invalid_name{std::string{e.what()}, name};
+    }
 }
 
 void crate_impl::set_parent(std::optional<crate> parent)
@@ -196,14 +204,14 @@ void crate_impl::set_parent(std::optional<crate> parent)
         throw crate_invalid_parent{"Cannot set crate parent to itself"};
     }
 
-    auto row = playlist_.get(id());
+    auto row = library_->playlist().get(id());
     if (!row)
     {
         throw crate_deleted{id()};
     }
 
     row->parent_list_id = parent ? parent->id() : PARENT_LIST_ID_NONE;
-    playlist_.update(*row);
+    library_->playlist().update(*row);
 }
 
 std::optional<crate> crate_impl::sub_crate_by_name(const std::string& name)
@@ -222,7 +230,8 @@ std::vector<track> crate_impl::tracks()
 {
     std::vector<track> results;
 
-    auto track_ids = playlist_entity_.track_ids(id());
+    auto track_ids = library_->playlist_entity().track_ids(id());
+    results.reserve(track_ids.size());
     for (auto&& id : track_ids)
     {
         results.emplace_back(std::make_shared<track_impl>(library_, id));

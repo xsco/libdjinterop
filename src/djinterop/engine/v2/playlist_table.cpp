@@ -35,12 +35,12 @@ void ensure_valid_name(const std::string& name)
 {
     if (name.empty())
     {
-        throw djinterop::crate_invalid_name{
+        throw playlist_row_invalid_title{
             "Crate names must be non-empty", name};
     }
     else if (name.find_first_of(';') != std::string::npos)
     {
-        throw djinterop::crate_invalid_name{
+        throw playlist_row_invalid_title{
             "Crate names must not contain semicolons", name};
     }
 }

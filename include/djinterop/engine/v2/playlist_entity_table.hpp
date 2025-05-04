@@ -98,18 +98,24 @@ public:
     explicit playlist_entity_table(
         std::shared_ptr<engine_library_context> context);
 
-    /// Add a new entity to the back of a playlist.
+    /// Add a new entity to a playlist.
     ///
-    /// If the entity already exists in the playlist, and `throw_if_duplicate`
-    /// is set to `false`, then no action is taken, and the value of the
-    /// existing row is returned.
+    /// A track may not be added to a playlist more than once.  If the track
+    /// already exists in the playlist and `throw_if_duplicate` is `true`, an
+    /// exception will be thrown.  If the track already exists in the playlist
+    /// and `throw_if_duplicate` is `false`, then no action is taken, and the
+    /// value of the existing row is returned.
+    ///
+    /// This function will take care of modifying the `next_entity_id` field
+    /// of any preceding playlist entity.
     ///
     /// \param row Playlist entity row to add.
     /// \param throw_if_duplicate Flag indicating whether to throw an exception
     ///                           if the same track is added to the same
-    ///                           playlist more than once.
+    ///                           playlist more than once (as opposed to doing
+    ///                           nothing and returning the existing row).
     /// \return Returns the `id` column of the newly-added row.
-    int64_t add_back(
+    int64_t add(
         const playlist_entity_row& row, bool throw_if_duplicate = false);
 
     /// Remove all entities in a given playlist.
