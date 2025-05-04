@@ -22,8 +22,9 @@ What is supported:
 * Beat grids
 * Hot cues
 * Loops
-* Waveforms (overview and high-resolution)
+* Waveforms
 * Crates
+* Playlists
 
 The library supports the following firmware and application versions:
 
@@ -34,9 +35,7 @@ The library supports the following firmware and application versions:
 What is not supported (yet):
 
 * Album art
-* Playlists
 * Play history
-* Engine Library formats associated with other firmware versions
 * DJ record libraries in formats other than Engine Prime
 
 How Do I Use It?
@@ -62,8 +61,8 @@ dependencies in place, and the build tools, you can issue the following
 commands:
 
 ```shell
-$ mkdir cmake_build
-$ cd cmake_build
+$ mkdir cmake-build
+$ cd cmake-build
 $ cmake ..
 $ cmake --build .
 $ ctest   # To run unit tests
