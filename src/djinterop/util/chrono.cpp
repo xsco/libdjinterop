@@ -22,15 +22,7 @@
 #include <stdexcept>
 #include <string>
 
-#if (__cpp_lib_chrono < 201907L)
 #include <date.h>
-#else
-namespace date {
-    using std::chrono::sys_time;
-    using std::chrono::parse;
-    using std::format;
-}
-#endif
 
 namespace djinterop::util
 {
