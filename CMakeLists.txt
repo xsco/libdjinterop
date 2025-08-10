@@ -4,8 +4,6 @@ project(libdjinterop
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-
 if(POLICY CMP0074)
     # CMP0074: find_package() uses <PackageName>_ROOT variables.
     cmake_policy(SET CMP0074 NEW)
