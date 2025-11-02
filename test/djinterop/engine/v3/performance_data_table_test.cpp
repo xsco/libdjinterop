@@ -262,13 +262,13 @@ BOOST_DATA_TEST_CASE(
     DEFINE_SETTER_VALID_TEST_CASE(engine_column, min_schema)       \
     DEFINE_SETTER_INVALID_TEST_CASE(engine_column, min_schema)
 
-DEFINE_GETTER_SETTER_TEST_CASES(track_data, es::schema_3_0_0)
-DEFINE_GETTER_SETTER_TEST_CASES(overview_waveform_data, es::schema_3_0_0)
-DEFINE_GETTER_SETTER_TEST_CASES(beat_data, es::schema_3_0_0)
-DEFINE_GETTER_SETTER_TEST_CASES(quick_cues, es::schema_3_0_0)
-DEFINE_GETTER_SETTER_TEST_CASES(loops, es::schema_3_0_0)
-DEFINE_GETTER_SETTER_TEST_CASES(third_party_source_id, es::schema_3_0_0)
-DEFINE_GETTER_SETTER_TEST_CASES(active_on_load_loops, es::schema_3_0_0)
+DEFINE_GETTER_SETTER_TEST_CASES(track_data, es::schema_3_1_0)
+DEFINE_GETTER_SETTER_TEST_CASES(overview_waveform_data, es::schema_3_1_0)
+DEFINE_GETTER_SETTER_TEST_CASES(beat_data, es::schema_3_1_0)
+DEFINE_GETTER_SETTER_TEST_CASES(quick_cues, es::schema_3_1_0)
+DEFINE_GETTER_SETTER_TEST_CASES(loops, es::schema_3_1_0)
+DEFINE_GETTER_SETTER_TEST_CASES(third_party_source_id, es::schema_3_1_0)
+DEFINE_GETTER_SETTER_TEST_CASES(active_on_load_loops, es::schema_3_1_0)
 
 #undef DEFINE_GETTER_SETTER_TEST_CASES
 #undef DEFINE_SETTER_INVALID_TEST_CASE
