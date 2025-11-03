@@ -236,7 +236,9 @@ engine_schema detect_schema(
         case 3:
             switch (version.min)
             {
-                case 0: return engine_schema::schema_3_0_0;
+                case 0: 
+                    REQUIRE_PATCH_VERSION(version, 0);
+                    return engine_schema::schema_3_0_0;
                 case 1:
                     REQUIRE_PATCH_VERSION(version, 0);
                     return engine_schema::schema_3_1_0;
