@@ -28,7 +28,7 @@
 
 namespace djinterop
 {
-class database_not_found : public std::runtime_error
+class DJINTEROP_PUBLIC database_not_found : public std::runtime_error
 {
 public:
     explicit database_not_found(const std::string& what_arg) noexcept :
@@ -40,7 +40,7 @@ public:
 /// The `database_inconsistency` exception is thrown when the schema of a
 /// database does not match the expectations suggested by its reported version
 /// number.
-class database_inconsistency : public std::runtime_error
+class DJINTEROP_PUBLIC database_inconsistency : public std::runtime_error
 {
 public:
     explicit database_inconsistency(const std::string& what_arg) noexcept :
@@ -51,7 +51,7 @@ public:
 
 /// The `unsupported_database` exception is thrown when a database is
 /// encountered that is not yet supported by this version of the library.
-class unsupported_database : public std::runtime_error
+class DJINTEROP_PUBLIC unsupported_database : public std::runtime_error
 {
 public:
     explicit unsupported_database(const std::string& what_arg) noexcept :
@@ -64,7 +64,7 @@ public:
 /// perform an operation that is not supported by the database, such as a
 /// missing feature on the high-level API, or a feature only available in
 /// certain database versions.
-class unsupported_operation : public std::runtime_error
+class DJINTEROP_PUBLIC unsupported_operation : public std::runtime_error
 {
 public:
     explicit unsupported_operation(const std::string& what_arg) noexcept :
@@ -75,7 +75,7 @@ public:
 
 /// The `crate_deleted` exception is thrown when an invalid `crate` object is
 /// used, i.e. one that does not exist in the database anymore.
-class crate_deleted : public std::runtime_error
+class DJINTEROP_PUBLIC crate_deleted : public std::runtime_error
 {
 public:
     /// Constructs the exception for a given crate ID
@@ -93,7 +93,7 @@ private:
 
 /// The `crate_database_inconsistency` exception is thrown when a database
 /// inconsistency is found that correlates to a crate.
-class crate_database_inconsistency : public database_inconsistency
+class DJINTEROP_PUBLIC crate_database_inconsistency : public database_inconsistency
 {
 public:
     /// Construct the exception for a given crate ID
@@ -112,7 +112,7 @@ private:
 
 /// The `crate_already_exists` exception is thrown when a request is made to
 /// create a crate with a name that already exists.
-class crate_already_exists : public std::runtime_error
+class DJINTEROP_PUBLIC crate_already_exists : public std::runtime_error
 {
 public:
     /// Construct the exception.
@@ -124,7 +124,7 @@ public:
 
 /// The `crate_invalid_parent` exception is thrown when a crate parent is found
 /// to be invalid.
-class crate_invalid_parent : public std::runtime_error
+class DJINTEROP_PUBLIC crate_invalid_parent : public std::runtime_error
 {
 public:
     /// Construct the exception.
@@ -136,7 +136,7 @@ public:
 
 /// The `crate_invalid_name` exception is thrown when a crate name is found to
 /// be invalid.
-class crate_invalid_name : public std::runtime_error
+class DJINTEROP_PUBLIC crate_invalid_name : public std::runtime_error
 {
 public:
     /// Construct the exception for a given crate name.
@@ -155,7 +155,7 @@ private:
 
 /// The `playlist_already_exists` exception is thrown when a request is made to
 /// create a playlist with a name that already exists.
-class playlist_already_exists : public std::runtime_error
+class DJINTEROP_PUBLIC playlist_already_exists : public std::runtime_error
 {
 public:
     /// Construct the exception.
@@ -167,7 +167,7 @@ public:
 
 /// The `playlist_database_inconsistency` exception is thrown when a database
 /// inconsistency is found that correlates to a playlist.
-class playlist_database_inconsistency : public database_inconsistency
+class DJINTEROP_PUBLIC playlist_database_inconsistency : public database_inconsistency
 {
 public:
     /// Construct the exception for a given crate ID
@@ -179,7 +179,7 @@ public:
 
 /// The `playlist_deleted` exception is thrown when an invalid `playlist` object
 /// is used, i.e. one that does not exist in the database anymore.
-class playlist_deleted : public std::runtime_error
+class DJINTEROP_PUBLIC playlist_deleted : public std::runtime_error
 {
 public:
     /// Constructs the exception for a given playlist ID
@@ -197,7 +197,7 @@ private:
 
 /// The `playlist_invalid_parent` exception is thrown when a playlist parent is found
 /// to be invalid.
-class playlist_invalid_parent : public std::runtime_error
+class DJINTEROP_PUBLIC playlist_invalid_parent : public std::runtime_error
 {
 public:
     /// Construct the exception.
@@ -209,7 +209,7 @@ public:
 
 /// The `playlist_invalid_name` exception is thrown when a playlist name is found to
 /// be invalid.
-class playlist_invalid_name : public std::runtime_error
+class DJINTEROP_PUBLIC playlist_invalid_name : public std::runtime_error
 {
 public:
     /// Construct the exception for a given playlist name.
@@ -228,7 +228,7 @@ private:
 
 /// The `track_deleted` exception is thrown when an invalid `track` object is
 /// used, i.e. one that does not exist in the database anymore.
-class track_deleted : public std::invalid_argument
+class DJINTEROP_PUBLIC track_deleted : public std::invalid_argument
 {
 public:
     /// Constructs the exception for a given track ID
@@ -246,7 +246,7 @@ private:
 
 /// The `invalid_track_snapshot` exception is thrown when there is a problem
 /// with a track snapshot.
-class invalid_track_snapshot : public std::invalid_argument
+class DJINTEROP_PUBLIC invalid_track_snapshot : public std::invalid_argument
 {
 public:
     /// Initialise a new instance of the exception with a custom message.
@@ -258,7 +258,7 @@ public:
 
 /// The `track_database_inconsistency` exception is thrown when a database
 /// inconsistency is found that correlates to a track.
-class track_database_inconsistency : public database_inconsistency
+class DJINTEROP_PUBLIC track_database_inconsistency : public database_inconsistency
 {
 public:
     /// Construct the exception for a given track ID
@@ -277,7 +277,7 @@ private:
 
 /// The `track_already_in_playlist` exception is thrown when a request is made
 /// to add a track a playlist it is already in.
-class track_already_in_playlist : public std::invalid_argument
+class DJINTEROP_PUBLIC track_already_in_playlist : public std::invalid_argument
 {
 public:
     explicit track_already_in_playlist(const std::string& what_arg) noexcept :
@@ -289,7 +289,7 @@ public:
 /// The `track_not_in_playlist` exception is thrown when a reference is made to
 /// a track that is supposed to be in a playlist, but actually is not in the
 /// playlist.
-class track_not_in_playlist : public std::invalid_argument
+class DJINTEROP_PUBLIC track_not_in_playlist : public std::invalid_argument
 {
 public:
     explicit track_not_in_playlist(const std::string& what_arg) noexcept :
@@ -300,7 +300,7 @@ public:
 
 /// The `hot_cues_overflow` exception is thrown when more hot cues are provided
 /// than are supported by the database.
-class hot_cues_overflow : public std::invalid_argument
+class DJINTEROP_PUBLIC hot_cues_overflow : public std::invalid_argument
 {
 public:
     /// Constructs the exception.
@@ -312,7 +312,7 @@ public:
 
 /// The `loops_overflow` exception is thrown when more loops are provided than
 /// are supported by the database.
-class loops_overflow : public std::invalid_argument
+class DJINTEROP_PUBLIC loops_overflow : public std::invalid_argument
 {
 public:
     /// Constructs the exception.
