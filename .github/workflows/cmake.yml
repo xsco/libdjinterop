@@ -26,7 +26,8 @@ jobs:
           { os: ubuntu-24.04, c_compiler: clang-17, cpp_compiler: clang++-17 },
           { os: ubuntu-24.04, c_compiler: gcc-13, cpp_compiler: g++-13 },
           { os: ubuntu-24.04, c_compiler: gcc-14, cpp_compiler: g++-14 },
-          { os: macos-13, c_compiler: cc, cpp_compiler: c++, cmake_args: "-DSYSTEM_SQLITE=OFF" },
+          { os: macos-14, c_compiler: cc, cpp_compiler: c++, cmake_args: "-DSYSTEM_SQLITE=OFF" },
+          { os: macos-15, c_compiler: cc, cpp_compiler: c++, cmake_args: "-DSYSTEM_SQLITE=OFF" },
           { os: windows-2022, c_compiler: cl, cpp_compiler: cl },
           { os: windows-2025, c_compiler: cl, cpp_compiler: cl },
         ]
@@ -38,17 +39,24 @@ jobs:
 
     - name: Install dependencies (macOS)
       if: runner.os == 'macOS'
-      run: brew install zlib
+      # Note: separate commands for main deps and test deps
+      run: |
+        brew install zlib
+        brew install boost
 
     - name: Install dependencies (Ubuntu)
       if: runner.os == 'Linux'
+      # Note: separate commands for main deps and test deps
       run: |
         sudo apt-get update
         sudo apt-get install --yes libz-dev libsqlite3-dev
+        sudo apt-get install --yes libboost-filesystem-dev libboost-test-dev
 
     - name: Install dependencies (Windows)
       if: runner.os == 'Windows'
-      run: vcpkg install zlib sqlite3
+      # Note: test deps not currently installed for Windows as unit testing currently not supported for this platform.
+      run: |
+        vcpkg install zlib sqlite3
 
     - name: Configure CMake (non-Windows)
       if: runner.os != 'Windows'
@@ -64,5 +72,10 @@ jobs:
     - name: Test
       if: runner.os != 'Windows'
       working-directory: ${{github.workspace}}/build
-      run: ctest -C ${{env.BUILD_TYPE}}
-      
+      run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure
+
+    - name: Install (non-Windows)
+      if: runner.os != 'Windows'
+      working-directory: ${{github.workspace}}/build
+      run: DESTDIR=. cmake --install .
+
