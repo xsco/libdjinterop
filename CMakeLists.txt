@@ -354,9 +354,6 @@ write_basic_package_version_file(
 install(FILES
         "${CMAKE_CURRENT_BINARY_DIR}/DjInteropConfig.cmake"
         "${CMAKE_CURRENT_BINARY_DIR}/DjInteropConfigVersion.cmake"
-        cmake/FindPackageHandleStandardArgs.cmake
-        cmake/FindPackageMessage.cmake
-        cmake/FindSQLite3.cmake
         DESTINATION "${DJINTEROP_INSTALL_CMAKEDIR}")
 
 # Example programs demonstrating usage.
