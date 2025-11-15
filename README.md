@@ -28,9 +28,9 @@ What is supported:
 
 The library supports the following firmware and application versions:
 
-* SC5000 Firmware from 1.0.3 to 4.1.0.
-  * Other players (e.g. SC6000/M) may work, but this is currently untested.
-* Engine DJ Desktop (aka Engine Prime) from 1.0.1 to 4.1.0.
+* Engine DJ OS from 1.0.3 to 4.3.3.
+  * Tested on Denon SC5000 and Numark Mixstream Pro. Other players (e.g. SC6000/M) may work, but this is currently untested.
+* Engine DJ Desktop (aka Engine Prime) from 1.0.1 to 4.3.0.
 
 What is not supported (yet):
 
