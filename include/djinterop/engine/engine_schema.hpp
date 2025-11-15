@@ -51,7 +51,7 @@ enum class DJINTEROP_PUBLIC engine_schema
     schema_2_21_2,
 
     schema_3_0_0,
-    schema_3_1_0,
+    schema_3_0_1,
 };
 
 /// Set of supported schema versions.
@@ -65,7 +65,7 @@ constexpr std::array supported_schemas{
     engine_schema::schema_2_20_1,    engine_schema::schema_2_20_2,
     engine_schema::schema_2_20_3,    engine_schema::schema_2_21_0,
     engine_schema::schema_2_21_1,    engine_schema::schema_2_21_2,
-    engine_schema::schema_3_0_0,     engine_schema::schema_3_1_0};
+    engine_schema::schema_3_0_0,     engine_schema::schema_3_0_1};
 
 /// Set of supported schema 1.x versions.
 constexpr std::array supported_v1_schemas{
@@ -85,10 +85,10 @@ constexpr std::array supported_v2_schemas{
 
 /// Set of supported schema 3.x versions.
 constexpr std::array supported_v3_schemas{
-    engine_schema::schema_3_0_0, engine_schema::schema_3_1_0};
+    engine_schema::schema_3_0_0, engine_schema::schema_3_0_1};
 
 /// The most recent schema version supported by the library.
-constexpr engine_schema latest_schema = engine_schema::schema_3_1_0;
+constexpr engine_schema latest_schema = engine_schema::schema_3_0_1;
 
 /// The most recent schema 1.x version supported by the library.
 constexpr engine_schema latest_v1_schema = engine_schema::schema_1_18_0_os;
@@ -97,7 +97,7 @@ constexpr engine_schema latest_v1_schema = engine_schema::schema_1_18_0_os;
 constexpr engine_schema latest_v2_schema = engine_schema::schema_2_21_2;
 
 /// The most recent schema 3.x version supported by the library.
-constexpr engine_schema latest_v3_schema = engine_schema::schema_3_1_0;
+constexpr engine_schema latest_v3_schema = engine_schema::schema_3_0_1;
 
 /// Get a string representation of the schema.
 inline std::string to_string(const engine_schema& v)
@@ -123,7 +123,7 @@ inline std::string to_string(const engine_schema& v)
         case engine_schema::schema_2_21_1: return "2.21.1";
         case engine_schema::schema_2_21_2: return "2.21.2";
         case engine_schema::schema_3_0_0: return "3.0.0";
-        case engine_schema::schema_3_1_0: return "3.1.0";
+        case engine_schema::schema_3_0_1: return "3.0.1";
     }
 
     return "(unknown schema with ordinal " +
@@ -161,7 +161,7 @@ inline std::string to_application_version_string(const engine_schema& v)
         case engine_schema::schema_2_21_1: return "Engine DJ Desktop/OS 4.0.0";
         case engine_schema::schema_2_21_2: return "Engine DJ Desktop/OS 4.0.1";
         case engine_schema::schema_3_0_0: return "Engine DJ Desktop/OS 4.1.0 to 4.2.1";
-        case engine_schema::schema_3_1_0: return "Engine DJ Desktop/OS 4.3.0";
+        case engine_schema::schema_3_0_1: return "Engine DJ Desktop/OS 4.3.0";
     }
 
     return "Engine versions unknown (" + to_string(v) + ")";

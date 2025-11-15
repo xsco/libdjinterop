@@ -132,8 +132,8 @@ add_library(
     src/djinterop/engine/schema/schema_2_21_2.hpp
     src/djinterop/engine/schema/schema_3_0_0.cpp
     src/djinterop/engine/schema/schema_3_0_0.hpp
-    src/djinterop/engine/schema/schema_3_1_0.cpp
-    src/djinterop/engine/schema/schema_3_1_0.hpp
+    src/djinterop/engine/schema/schema_3_0_1.cpp
+    src/djinterop/engine/schema/schema_3_0_1.hpp
     src/djinterop/engine/schema/schema.cpp
     src/djinterop/engine/schema/schema.hpp
     src/djinterop/engine/schema/schema_validate_utils.hpp

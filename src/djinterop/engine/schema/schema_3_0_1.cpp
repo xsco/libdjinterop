@@ -18,13 +18,13 @@
 #include <sqlite_modern_cpp.h>
 
 #include "../../util/random.hpp"
-#include "schema_3_1_0.hpp"
+#include "schema_3_0_1.hpp"
 
 namespace djinterop::engine::schema
 {
-void schema_3_1_0::create(sqlite::database& db)
+void schema_3_0_1::create(sqlite::database& db)
 {
-      // Schema 3.1.0 modifies trigger definitions on the Track and
+      // Schema 3.0.1 modifies trigger definitions on the Track and
       // PerformanceData tables.
     db << "CREATE TABLE Information ( 	id INTEGER PRIMARY KEY AUTOINCREMENT, "
           "	uuid TEXT, 	schemaVersionMajor INTEGER, 	schemaVersionMinor "
