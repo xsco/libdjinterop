@@ -30,6 +30,7 @@ jobs:
           { os: macos-15, c_compiler: cc, cpp_compiler: c++, cmake_args: "-DSYSTEM_SQLITE=OFF" },
           { os: windows-2022, c_compiler: cl, cpp_compiler: cl },
           { os: windows-2025, c_compiler: cl, cpp_compiler: cl },
+          { os: windows-11-arm, c_compiler: cl, cpp_compiler: cl },
         ]
 
     runs-on: ${{ matrix.config.os }}
