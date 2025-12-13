@@ -244,6 +244,10 @@ high_res_waveform_data to_high_res_waveform_data(
     std::optional<double> sample_rate,
     const std::vector<waveform_entry>& waveform)
 {
+    if (!sample_count || !sample_rate)
+    {
+        return high_res_waveform_data{0};
+    }
     // Make the assumption that the client has respected the required number
     // of samples per entry when constructing the waveform.
     auto extents = util::calculate_high_resolution_waveform_extents(
