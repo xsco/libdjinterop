@@ -1,3 +1,28 @@
+libdjinterop (0.27.0-0ubuntu1) jammy; urgency=medium
+
+  [ Adam Szmigin ]
+  * Update README for playlist support (#158)
+  * Remove deprecated Ubuntu Focal build runner (#159)
+
+  [ Marcin Serwin ]
+  * Use the C++20 date functions when available (#161)
+
+  [ Adam Szmigin ]
+  * Remove deprecated Windows 2019 runner, use newer (#162)
+  * Updated nix files (#164)
+  * Remove non-existent files from install stage (#169)
+  * Unit tests now run in Github CI (#170)
+  * Engine schemas up to version 4.3.2 (#172)
+  * Fix null optional deref in 1.x code (#174)
+
+  [ Daniel Kinahan ]
+  * Engine DB 3.0.1 schema support (#166)
+
+  [ Adam Szmigin ]
+  * Version bump to 0.27.0 (#175)
+
+ -- Adam Szmigin <smidge@xsco.net>  Sun, 14 Dec 2025 20:30:46 +0000
+
 libdjinterop (0.26.1-0ubuntu1) jammy; urgency=medium
 
   * Stop CMake FindBoost deprecation warning (#148)
