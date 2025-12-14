@@ -1,10 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.26.1
+        VERSION 0.27.0
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
-
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 if(POLICY CMP0074)
     # CMP0074: find_package() uses <PackageName>_ROOT variables.
@@ -134,6 +132,8 @@ add_library(
     src/djinterop/engine/schema/schema_2_21_2.hpp
     src/djinterop/engine/schema/schema_3_0_0.cpp
     src/djinterop/engine/schema/schema_3_0_0.hpp
+    src/djinterop/engine/schema/schema_3_0_1.cpp
+    src/djinterop/engine/schema/schema_3_0_1.hpp
     src/djinterop/engine/schema/schema.cpp
     src/djinterop/engine/schema/schema.hpp
     src/djinterop/engine/schema/schema_validate_utils.hpp
@@ -354,9 +354,6 @@ write_basic_package_version_file(
 install(FILES
         "${CMAKE_CURRENT_BINARY_DIR}/DjInteropConfig.cmake"
         "${CMAKE_CURRENT_BINARY_DIR}/DjInteropConfigVersion.cmake"
-        cmake/FindPackageHandleStandardArgs.cmake
-        cmake/FindPackageMessage.cmake
-        cmake/FindSQLite3.cmake
         DESTINATION "${DJINTEROP_INSTALL_CMAKEDIR}")
 
 # Example programs demonstrating usage.

@@ -22,21 +22,20 @@ What is supported:
 * Beat grids
 * Hot cues
 * Loops
-* Waveforms (overview and high-resolution)
+* Waveforms
 * Crates
+* Playlists
 
 The library supports the following firmware and application versions:
 
-* SC5000 Firmware from 1.0.3 to 4.1.0.
-  * Other players (e.g. SC6000/M) may work, but this is currently untested.
-* Engine DJ Desktop (aka Engine Prime) from 1.0.1 to 4.1.0.
+* Engine DJ OS from 1.0.3 to 4.3.3.
+  * Tested on Denon SC5000 and Numark Mixstream Pro. Other players (e.g. SC6000/M) may work, but this is currently untested.
+* Engine DJ Desktop (aka Engine Prime) from 1.0.1 to 4.3.0.
 
 What is not supported (yet):
 
 * Album art
-* Playlists
 * Play history
-* Engine Library formats associated with other firmware versions
 * DJ record libraries in formats other than Engine Prime
 
 How Do I Use It?
@@ -62,8 +61,8 @@ dependencies in place, and the build tools, you can issue the following
 commands:
 
 ```shell
-$ mkdir cmake_build
-$ cd cmake_build
+$ mkdir cmake-build
+$ cd cmake-build
 $ cmake ..
 $ cmake --build .
 $ ctest   # To run unit tests
