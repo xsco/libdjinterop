@@ -28,7 +28,7 @@ namespace djinterop::engine::schema
 class schema_3_0_1 : public schema_3_0_0
 {
 public:
-    static constexpr const semantic_version schema_version{3, 1, 0};
+    static constexpr const semantic_version schema_version{3, 0, 1};
 
     void create(sqlite::database& db) override;
 };
