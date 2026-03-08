@@ -4,17 +4,11 @@ Overview
 `libdjinterop` is a C++ library that allows access to database formats used to
 store information about DJ record libraries.
 
-This library currently supports:
-
-* Engine Library, as used on "Prime"-series DJ equipment.
-
-Documentation can be viewed on [GitHub Pages](https://xsco.github.io/libdjinterop/)
-
 State of Support
 ================
 
-The library is currently in an early beta stage, and not all features are
-implemented yet.  It currently supports only the Engine Library format.
+The library is currently in development, and not all features are implemented
+yet.  It currently supports only the Engine Library format.
 
 What is supported:
 
@@ -29,7 +23,8 @@ What is supported:
 The library supports the following firmware and application versions:
 
 * Engine DJ OS from 1.0.3 to 4.3.3.
-  * Tested on Denon SC5000 and Numark Mixstream Pro. Other players (e.g. SC6000/M) may work, but this is currently untested.
+  * Tested on Denon SC5000 and Numark Mixstream Pro. Other players (e.g.
+    SC6000/M) may work, but this is currently untested.
 * Engine DJ Desktop (aka Engine Prime) from 1.0.1 to 4.3.0.
 
 What is not supported (yet):
@@ -41,8 +36,14 @@ What is not supported (yet):
 How Do I Use It?
 ================
 
-The library is not ready for prime-time yet, but if you are willing to read
-source code, example applications can be found in the `example` directory.
+If you are new to the library, see the [introductory guide](GUIDE.md) for an
+explanation of how the library is structured and how to get started.
+
+The [examples/](example) directory contains some small self-contained
+applications that use the library.
+
+Detailed reference documentation for the public API can be viewed on
+[GitHub Pages](https://xsco.github.io/libdjinterop/).
 
 How Do I Build It?
 ============================
