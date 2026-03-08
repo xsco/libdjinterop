@@ -1,3 +1,15 @@
+libdjinterop (0.27.1-0ubuntu1) jammy; urgency=medium
+
+  [ JoergAtGithub ]
+  * Add Windows 11 ARM configuration to CI workflow (#176)
+
+  [ Adam Szmigin ]
+  * Usage guide and contribution docs (#180)
+  * Fix semver typo for Engine schema 3.0.1 (#182)
+  * Version bump to 0.27.1 (#183)
+
+ -- Adam Szmigin <smidge@xsco.net>  Sun, 08 Mar 2026 23:52:24 +0000
+
 libdjinterop (0.27.0-0ubuntu1) jammy; urgency=medium
 
   [ Adam Szmigin ]
