@@ -22,15 +22,15 @@
 #include <stdexcept>
 #include <string>
 
-#include <date.h>
+#include <date/date.h>
 
 namespace djinterop::util
 {
 std::chrono::system_clock::time_point parse_ft(const std::string& save)
 {
     std::istringstream in{save};
-    date::sys_time<std::chrono::seconds> tp;
-    in >> date::parse("%F %T", tp);
+    date::sys_seconds tp;
+    date::from_stream(in, "%F %T", tp);
     if (in.fail())
     {
         throw std::invalid_argument{
@@ -44,14 +44,14 @@ std::chrono::system_clock::time_point parse_ft(const std::string& save)
 std::chrono::system_clock::time_point parse_iso8601(const std::string& save)
 {
     std::istringstream in{save};
-    date::sys_time<std::chrono::seconds> tp;
-    in >> date::parse("%FT%TZ", tp);
+    date::sys_seconds tp;
+    date::from_stream(in, "%FT%TZ", tp);
     if (in.fail())
     {
         in.clear();
         in.exceptions(std::ios::failbit);
         in.str(save);
-        in >> date::parse("%FT%T", tp);
+        date::from_stream(in, "%FT%T", tp);
 
         if (in.fail())
         {

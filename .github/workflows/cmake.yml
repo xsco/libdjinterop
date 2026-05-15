@@ -28,9 +28,9 @@ jobs:
           { os: ubuntu-24.04, c_compiler: gcc-14, cpp_compiler: g++-14 },
           { os: macos-14, c_compiler: cc, cpp_compiler: c++, cmake_args: "-DSYSTEM_SQLITE=OFF" },
           { os: macos-15, c_compiler: cc, cpp_compiler: c++, cmake_args: "-DSYSTEM_SQLITE=OFF" },
-          { os: windows-2022, c_compiler: cl, cpp_compiler: cl },
-          { os: windows-2025, c_compiler: cl, cpp_compiler: cl },
-          { os: windows-11-arm, c_compiler: cl, cpp_compiler: cl },
+          { os: windows-2022, c_compiler: cl, cpp_compiler: cl, "-DSYSTEM_DATE_H=ON -DSYSTEM_SQLITE_MODERN_CPP=ON" },
+          { os: windows-2025, c_compiler: cl, cpp_compiler: cl, "-DSYSTEM_DATE_H=ON -DSYSTEM_SQLITE_MODERN_CPP=ON" },
+          { os: windows-11-arm, c_compiler: cl, cpp_compiler: cl, "-DSYSTEM_DATE_H=ON -DSYSTEM_SQLITE_MODERN_CPP=ON" },
         ]
 
     runs-on: ${{ matrix.config.os }}
@@ -56,8 +56,9 @@ jobs:
     - name: Install dependencies (Windows)
       if: runner.os == 'Windows'
       # Note: test deps not currently installed for Windows as unit testing currently not supported for this platform.
+      # Also note: vcpkg provides all dependencies, so attempt a fully devendored build.
       run: |
-        vcpkg install zlib sqlite3
+        vcpkg install zlib date sqlite3 sqlite-modern-cpp
 
     - name: Configure CMake (non-Windows)
       if: runner.os != 'Windows'

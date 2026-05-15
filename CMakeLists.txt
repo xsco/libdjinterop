@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.27.1
+        VERSION 0.27.2
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
@@ -30,19 +30,24 @@ else()
     # Disabling -Wunused-variable needed as the library implementation doesn't
     # use every variable in the public headers.  Is there a better way?
     # Disabling -Wunused-but-set-variable owing to XCode triggering on this
-    # in the SQLite amalgamation.
+    # in the bundled SQLite amalgamation.
     add_compile_options("-Wall" "-Wpedantic" "-Wno-unused-variable" "-Wno-unused-but-set-variable" "-Werror")
 endif()
 
 # Build shared a library by default.
 option(BUILD_SHARED_LIBS "Build shared library" ON)
 
-# Option to use either system SQLite or embedded SQLite.
+# libdjinterop is dependent on several other libraries, some of which are
+# readily available on all major OSes, and others which are not so easy to
+# find.  For the less readily-available dependencies, these are bundled
+# alongside the main code, in the `ext/` directory, for convenience.
+#
+# The below options offer the choice of using the bundled dependencies,
+# or attempting to use a system installation (for a so-called 'devendored'
+# build).
+option(SYSTEM_DATE_H "Use system installation of date.h" OFF)
 option(SYSTEM_SQLITE "Use system installation of SQLite" ON)
-
-# Require zlib >= 1.2.8
-set(ZLIB_MIN_VERSION 1.2.8)
-find_package(ZLIB ${ZLIB_MIN_VERSION} REQUIRED)
+option(SYSTEM_SQLITE_MODERN_CPP "Use system installation of sqlite_modern_cpp" OFF)
 
 add_library(
     DjInterop
@@ -231,16 +236,30 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${DJINTEROP_INSTALL_INCLUDEDIR}>)
-target_include_directories(
-        DjInterop PRIVATE SYSTEM
-        ${ZLIB_INCLUDE_DIRS}
-        ext/sqlite_modern_cpp
-        ext/date)
 
+# Always rely on system installation of zlib.
+set(ZLIB_MIN_VERSION 1.2.8)
+find_package(ZLIB ${ZLIB_MIN_VERSION} REQUIRED)
+target_include_directories(
+    DjInterop PRIVATE SYSTEM
+    ${ZLIB_INCLUDE_DIRS})
 target_link_libraries(
     DjInterop PUBLIC
     ${ZLIB_LIBRARIES})
 
+if(SYSTEM_DATE_H)
+    # Search for system installation of date.h and use that.
+    find_package(date CONFIG REQUIRED)
+    target_link_libraries(
+        DjInterop PUBLIC
+        date::date)
+else()
+    # Use bundled date.h (a header-only library).
+    message(STATUS "Using bundled date.h...")
+    target_include_directories(
+        DjInterop PRIVATE SYSTEM
+        ext/date)
+endif()
 
 if(SYSTEM_SQLITE)
     # Search for system installation of SQLite and use that.
@@ -253,8 +272,8 @@ if(SYSTEM_SQLITE)
         DjInterop PUBLIC
         ${SQLite3_LIBRARIES})
 else()
-    # Use embedded SQLite amalgamation sources.
-    message(STATUS "Using embedded SQLite")
+    # Use bundled SQLite amalgamation sources.
+    message(STATUS "Using bundled SQLite...")
     target_sources(
         DjInterop PRIVATE
         ext/sqlite-amalgamation/sqlite3.c)
@@ -264,6 +283,21 @@ else()
     target_include_directories(
         DjInterop PRIVATE SYSTEM
         ext/sqlite-amalgamation)
+endif()
+
+if(SYSTEM_SQLITE_MODERN_CPP)
+    # Search for system installation of sqlite-modern-cpp and use that.
+    find_path(SQLITE_MODERN_CPP_INCLUDE_DIRS "sqlite_modern_cpp.h")
+    message(STATUS "Found sqlite-modern-cpp at ${SQLITE_MODERN_CPP_INCLUDE_DIRS}")
+    target_include_directories(
+        DjInterop PRIVATE SYSTEM
+        ${SQLITE_MODERN_CPP_INCLUDE_DIRS})
+else()
+    # Use bundled sqlite-modern-cpp (a header-only library).
+    message(STATUS "Using bundled sqlite-modern-cpp...")
+    target_include_directories(
+        DjInterop PRIVATE SYSTEM
+        ext/sqlite_modern_cpp)
 endif()
 
 set_target_properties(DjInterop PROPERTIES C_VISIBILITY_PRESET hidden)
