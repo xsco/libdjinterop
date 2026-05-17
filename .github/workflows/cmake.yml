@@ -28,6 +28,7 @@ jobs:
           { os: ubuntu-24.04, c_compiler: gcc-14, cpp_compiler: g++-14 },
           { os: macos-14, c_compiler: cc, cpp_compiler: c++, cmake_args: "-DSYSTEM_SQLITE=OFF" },
           { os: macos-15, c_compiler: cc, cpp_compiler: c++, cmake_args: "-DSYSTEM_SQLITE=OFF" },
+          { os: macos-26, c_compiler: cc, cpp_compiler: c++, cmake_args: "-DSYSTEM_SQLITE=OFF" },
           { os: windows-2022, c_compiler: cl, cpp_compiler: cl, "-DSYSTEM_DATE_H=ON -DSYSTEM_SQLITE_MODERN_CPP=ON" },
           { os: windows-2025, c_compiler: cl, cpp_compiler: cl, "-DSYSTEM_DATE_H=ON -DSYSTEM_SQLITE_MODERN_CPP=ON" },
           { os: windows-11-arm, c_compiler: cl, cpp_compiler: cl, "-DSYSTEM_DATE_H=ON -DSYSTEM_SQLITE_MODERN_CPP=ON" },
