@@ -19,6 +19,7 @@
 
 #include <cmath>
 #include <fstream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -44,7 +45,21 @@ void hydrate_database(
     sqlite::database m_db{db_path};
     while (std::getline(script, stmt))
     {
-        m_db << stmt;
+        try
+        {
+            m_db << stmt;
+        }
+        catch (std::exception& e)
+        {
+            std::stringstream msg;
+            msg << "Error in script ";
+            msg << script_path;
+            msg << " whilst executing line \"";
+            msg << stmt;
+            msg << "\": ";
+            msg << e.what();
+            throw std::runtime_error{msg.str()};
+        }
     }
 }
 }  // anonymous namespace

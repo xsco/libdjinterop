@@ -41,6 +41,7 @@
 #include "schema_2_21_2.hpp"
 #include "schema_3_0_0.hpp"
 #include "schema_3_0_1.hpp"
+#include "schema_3_0_2.hpp"
 
 namespace djinterop::engine::schema
 {
@@ -113,6 +114,8 @@ std::unique_ptr<schema_creator_validator> make_schema_creator_validator(
             return std::make_unique<schema_3_0_0>();
         case engine_schema::schema_3_0_1:
             return std::make_unique<schema_3_0_1>();
+        case engine_schema::schema_3_0_2:
+            return std::make_unique<schema_3_0_2>();
     }
 
     throw unsupported_operation{
@@ -241,6 +244,7 @@ engine_schema detect_schema(
                     {
                         case 0: return engine_schema::schema_3_0_0;
                         case 1: return engine_schema::schema_3_0_1;
+                        case 2: return engine_schema::schema_3_0_2;
                     }
                 default: throw unsupported_database{make_err_message(version)};
             }

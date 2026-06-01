@@ -52,6 +52,7 @@ enum class DJINTEROP_PUBLIC engine_schema
 
     schema_3_0_0,
     schema_3_0_1,
+    schema_3_0_2,
 };
 
 /// Set of supported schema versions.
@@ -124,6 +125,7 @@ inline std::string to_string(const engine_schema& v)
         case engine_schema::schema_2_21_2: return "2.21.2";
         case engine_schema::schema_3_0_0: return "3.0.0";
         case engine_schema::schema_3_0_1: return "3.0.1";
+        case engine_schema::schema_3_0_2: return "3.0.2";
     }
 
     return "(unknown schema with ordinal " +
@@ -162,6 +164,7 @@ inline std::string to_application_version_string(const engine_schema& v)
         case engine_schema::schema_2_21_2: return "Engine DJ Desktop/OS 4.0.1";
         case engine_schema::schema_3_0_0: return "Engine DJ Desktop/OS 4.1.0 to 4.2.1";
         case engine_schema::schema_3_0_1: return "Engine DJ Desktop/OS 4.3.x";
+        case engine_schema::schema_3_0_2: return "Engine DJ Desktop/OS 4.5.0/5.0.x";
     }
 
     return "Engine versions unknown (" + to_string(v) + ")";
