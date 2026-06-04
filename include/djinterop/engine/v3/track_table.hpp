@@ -231,6 +231,9 @@ struct DJINTEROP_PUBLIC track_row
     /// trigger when certain fields are updated.
     std::chrono::system_clock::time_point last_edit_time;
 
+    /// 'albumArtSourceHash` column, added in schema 3.0.2.
+    std::vector<std::byte> album_art_source_hash;
+
     friend bool operator==(const track_row& lhs, const track_row& rhs) noexcept
     {
         return std::tie(
@@ -247,7 +250,8 @@ struct DJINTEROP_PUBLIC track_row
                    lhs.pdb_import_key, lhs.streaming_source, lhs.uri,
                    lhs.is_beat_grid_locked, lhs.origin_database_uuid,
                    lhs.origin_track_id, lhs.streaming_flags,
-                   lhs.explicit_lyrics, lhs.last_edit_time) ==
+                   lhs.explicit_lyrics, lhs.last_edit_time,
+                   lhs.album_art_source_hash) ==
                std::tie(
                    rhs.id, rhs.play_order, rhs.length, rhs.bpm, rhs.year,
                    rhs.path, rhs.filename, rhs.bitrate, rhs.bpm_analyzed,
@@ -262,7 +266,8 @@ struct DJINTEROP_PUBLIC track_row
                    rhs.pdb_import_key, rhs.streaming_source, rhs.uri,
                    rhs.is_beat_grid_locked, rhs.origin_database_uuid,
                    rhs.origin_track_id, rhs.streaming_flags,
-                   rhs.explicit_lyrics, rhs.last_edit_time);
+                   rhs.explicit_lyrics, rhs.last_edit_time,
+                   rhs.album_art_source_hash);
     }
 
     friend bool operator!=(const track_row& lhs, const track_row& rhs) noexcept
@@ -316,6 +321,8 @@ struct DJINTEROP_PUBLIC track_row
         PRINT_FIELD(streaming_flags);
         PRINT_FIELD(explicit_lyrics);
         PRINT_FIELD(last_edit_time);
+        os << ", album_art_source_hash=(" << obj.album_art_source_hash.size()
+           << " bytes)";
         os << "}";
         return os;
 #undef PRINT_FIELD
@@ -511,8 +518,7 @@ public:
     std::optional<std::string> get_album_art(int64_t id);
 
     /// Set the `albumArt` column for a given track.
-    void set_album_art(
-        int64_t id, const std::optional<std::string>& album_art);
+    void set_album_art(int64_t id, const std::optional<std::string>& album_art);
 
     /// Get the `timeLastPlayed` column for a given track.
     std::optional<std::chrono::system_clock::time_point> get_time_last_played(
@@ -564,8 +570,8 @@ public:
     /// Set the `dateAdded` column for a given track, representing the time at
     /// which the track was added to the database.
     void set_date_added(
-        int64_t id, const std::optional<std::chrono::system_clock::time_point>&
-                        date_added);
+        int64_t id,
+        const std::optional<std::chrono::system_clock::time_point>& date_added);
 
     /// Get the `isAvailable` column for a given track, indicating if the file
     /// underlying the track entry is available.
@@ -682,6 +688,17 @@ public:
     /// Set the `lastEditTime` column for a given track.
     void set_last_edit_time(
         int64_t id, std::chrono::system_clock::time_point last_edit_time);
+
+    /// Get the `albumArtSourceHash` column for a given track.
+    ///
+    /// This column was added in schema 3.0.2.
+    std::vector<std::byte> get_album_art_source_hash(int64_t id);
+
+    /// Set the `albumArtSourceHash` column for a given track.
+    ///
+    /// This column was added in schema 3.0.2.
+    void set_album_art_source_hash(
+        int64_t id, const std::vector<std::byte>& album_art_source_hash);
 
     /// Remove an entry from the track table.
     ///

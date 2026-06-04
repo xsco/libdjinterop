@@ -66,7 +66,8 @@ constexpr std::array supported_schemas{
     engine_schema::schema_2_20_1,    engine_schema::schema_2_20_2,
     engine_schema::schema_2_20_3,    engine_schema::schema_2_21_0,
     engine_schema::schema_2_21_1,    engine_schema::schema_2_21_2,
-    engine_schema::schema_3_0_0,     engine_schema::schema_3_0_1};
+    engine_schema::schema_3_0_0,     engine_schema::schema_3_0_1,
+    engine_schema::schema_3_0_2};
 
 /// Set of supported schema 1.x versions.
 constexpr std::array supported_v1_schemas{
@@ -86,10 +87,11 @@ constexpr std::array supported_v2_schemas{
 
 /// Set of supported schema 3.x versions.
 constexpr std::array supported_v3_schemas{
-    engine_schema::schema_3_0_0, engine_schema::schema_3_0_1};
+    engine_schema::schema_3_0_0, engine_schema::schema_3_0_1,
+    engine_schema::schema_3_0_2};
 
 /// The most recent schema version supported by the library.
-constexpr engine_schema latest_schema = engine_schema::schema_3_0_1;
+constexpr engine_schema latest_schema = engine_schema::schema_3_0_2;
 
 /// The most recent schema 1.x version supported by the library.
 constexpr engine_schema latest_v1_schema = engine_schema::schema_1_18_0_os;
@@ -98,7 +100,7 @@ constexpr engine_schema latest_v1_schema = engine_schema::schema_1_18_0_os;
 constexpr engine_schema latest_v2_schema = engine_schema::schema_2_21_2;
 
 /// The most recent schema 3.x version supported by the library.
-constexpr engine_schema latest_v3_schema = engine_schema::schema_3_0_1;
+constexpr engine_schema latest_v3_schema = engine_schema::schema_3_0_2;
 
 /// Get a string representation of the schema.
 inline std::string to_string(const engine_schema& v)
@@ -162,9 +164,11 @@ inline std::string to_application_version_string(const engine_schema& v)
             return "Engine DJ Desktop/OS 3.1.0 to 3.4.0";
         case engine_schema::schema_2_21_1: return "Engine DJ Desktop/OS 4.0.0";
         case engine_schema::schema_2_21_2: return "Engine DJ Desktop/OS 4.0.1";
-        case engine_schema::schema_3_0_0: return "Engine DJ Desktop/OS 4.1.0 to 4.2.1";
+        case engine_schema::schema_3_0_0:
+            return "Engine DJ Desktop/OS 4.1.0 to 4.2.1";
         case engine_schema::schema_3_0_1: return "Engine DJ Desktop/OS 4.3.x";
-        case engine_schema::schema_3_0_2: return "Engine DJ Desktop/OS 4.5.0/5.0.x";
+        case engine_schema::schema_3_0_2:
+            return "Engine DJ Desktop/OS 4.5.0/5.0.x";
     }
 
     return "Engine versions unknown (" + to_string(v) + ")";

@@ -114,6 +114,7 @@ inline void populate_track_row(
             r.streaming_flags = 0;
             r.explicit_lyrics = false;
             r.last_edit_time = ev3::LAST_EDIT_TIME_NONE;
+            r.album_art_source_hash = {};
 
             break;
         }
@@ -161,6 +162,22 @@ inline void populate_track_row(
             r.streaming_flags = 0;
             r.explicit_lyrics = false;
             r.last_edit_time = ev3::LAST_EDIT_TIME_NONE;
+
+            if (schema >= djinterop::engine::engine_schema::schema_3_0_2)
+            {
+                r.album_art_source_hash = {
+                    std::byte{0x49}, std::byte{0x93}, std::byte{0xa6},
+                    std::byte{0xf7}, std::byte{0x17}, std::byte{0x0e},
+                    std::byte{0x00}, std::byte{0x98}, std::byte{0xa2},
+                    std::byte{0x69}, std::byte{0xec}, std::byte{0x49},
+                    std::byte{0x48}, std::byte{0x7d}, std::byte{0xf1},
+                    std::byte{0x47}, std::byte{0xed}, std::byte{0x16},
+                    std::byte{0x1b}, std::byte{0xce}};
+            }
+            else
+            {
+                r.album_art_source_hash = {};
+            }
 
             break;
         }
