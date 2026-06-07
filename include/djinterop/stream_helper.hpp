@@ -94,6 +94,16 @@ std::ostream& print(std::ostream& os, const std::array<T, N>& obj)
     return os;
 }
 
+inline std::ostream& print(std::ostream& os, const std::vector<std::byte>& obj)
+{
+    if (obj.empty())
+    {
+        return os << "[]";
+    }
+
+    return os << "[(" << obj.size() << " bytes)]";
+}
+
 template <typename T>
 std::ostream& print(std::ostream& os, const std::vector<T>& obj)
 {

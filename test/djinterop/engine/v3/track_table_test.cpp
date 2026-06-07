@@ -112,7 +112,7 @@ BOOST_DATA_TEST_CASE(
 BOOST_TEST_DECORATOR(*utf::description("update() with valid data"))
 BOOST_DATA_TEST_CASE(
     update_with_valid_data_updates,
-    e::supported_v3_schemas* all_example_track_row_types*
+    e::supported_v3_schemas * all_example_track_row_types *
         all_example_track_row_types,
     schema, initial_row_type, update_row_type)
 {
@@ -170,19 +170,19 @@ BOOST_DATA_TEST_CASE(
         ev3::track_row row{0};                                          \
         populate_track_row(                                             \
             example_track_row_type::fully_analysed_1, row, schema);     \
-        auto id = library.track().add(row);                               \
+        auto id = library.track().add(row);                             \
         auto expected = row.engine_column;                              \
                                                                         \
         if (schema >= min_schema)                                       \
         {                                                               \
-            auto actual = library.track().get_##engine_column(id);        \
+            auto actual = library.track().get_##engine_column(id);      \
             BOOST_CHECK_EQUAL(                                          \
                 make_printable(expected), make_printable(actual));      \
         }                                                               \
         else                                                            \
         {                                                               \
             BOOST_CHECK_THROW(                                          \
-                library.track().get_##engine_column(id),                  \
+                library.track().get_##engine_column(id),                \
                 djinterop::unsupported_operation);                      \
         }                                                               \
     }
@@ -197,7 +197,7 @@ BOOST_DATA_TEST_CASE(
         auto library = ev3::engine_library::create_temporary(schema);       \
         ev3::track_row row{0};                                              \
         populate_track_row(example_track_row_type::minimal_1, row, schema); \
-        auto id = library.track().add(row);                                   \
+        auto id = library.track().add(row);                                 \
                                                                             \
         populate_track_row(                                                 \
             example_track_row_type::fully_analysed_1, row, schema);         \
@@ -205,16 +205,16 @@ BOOST_DATA_TEST_CASE(
                                                                             \
         if (schema >= min_schema)                                           \
         {                                                                   \
-            library.track().set_##engine_column(id, expected);                \
+            library.track().set_##engine_column(id, expected);              \
                                                                             \
-            auto actual = library.track().get_##engine_column(id);            \
+            auto actual = library.track().get_##engine_column(id);          \
             BOOST_CHECK_EQUAL(                                              \
                 make_printable(expected), make_printable(actual));          \
         }                                                                   \
         else                                                                \
         {                                                                   \
             BOOST_CHECK_THROW(                                              \
-                library.track().set_##engine_column(id, expected),            \
+                library.track().set_##engine_column(id, expected),          \
                 djinterop::unsupported_operation);                          \
         }                                                                   \
     }
@@ -231,41 +231,41 @@ BOOST_DATA_TEST_CASE(
         if (schema >= min_schema)                                         \
         {                                                                 \
             BOOST_CHECK_THROW(                                            \
-                library.track().get_##engine_column(12345),                 \
+                library.track().get_##engine_column(12345),               \
                 ev3::track_row_id_error);                                 \
         }                                                                 \
         else                                                              \
         {                                                                 \
             BOOST_CHECK_THROW(                                            \
-                library.track().get_##engine_column(12345),                 \
+                library.track().get_##engine_column(12345),               \
                 djinterop::unsupported_operation);                        \
         }                                                                 \
     }
 
-#define DEFINE_SETTER_INVALID_TEST_CASE(engine_column, min_schema)           \
-    BOOST_TEST_DECORATOR(                                                    \
-        *utf::description("set_" #engine_column "() with invalid track"))    \
-    BOOST_DATA_TEST_CASE(                                                    \
-        set_##engine_column##_with_invalid_track_throws,                     \
-        e::supported_v3_schemas, schema)                                     \
-    {                                                                        \
-        auto library = ev3::engine_library::create_temporary(schema);        \
-        ev3::track_row row{0};                                               \
-        populate_track_row(                                                  \
-            example_track_row_type::fully_analysed_1, row, schema);          \
-                                                                             \
-        if (schema >= min_schema)                                            \
-        {                                                                    \
-            BOOST_CHECK_THROW(                                               \
+#define DEFINE_SETTER_INVALID_TEST_CASE(engine_column, min_schema)             \
+    BOOST_TEST_DECORATOR(                                                      \
+        *utf::description("set_" #engine_column "() with invalid track"))      \
+    BOOST_DATA_TEST_CASE(                                                      \
+        set_##engine_column##_with_invalid_track_throws,                       \
+        e::supported_v3_schemas, schema)                                       \
+    {                                                                          \
+        auto library = ev3::engine_library::create_temporary(schema);          \
+        ev3::track_row row{0};                                                 \
+        populate_track_row(                                                    \
+            example_track_row_type::fully_analysed_1, row, schema);            \
+                                                                               \
+        if (schema >= min_schema)                                              \
+        {                                                                      \
+            BOOST_CHECK_THROW(                                                 \
                 library.track().set_##engine_column(12345, row.engine_column), \
-                ev3::track_row_id_error);                                    \
-        }                                                                    \
-        else                                                                 \
-        {                                                                    \
-            BOOST_CHECK_THROW(                                               \
+                ev3::track_row_id_error);                                      \
+        }                                                                      \
+        else                                                                   \
+        {                                                                      \
+            BOOST_CHECK_THROW(                                                 \
                 library.track().set_##engine_column(12345, row.engine_column), \
-                djinterop::unsupported_operation);                           \
-        }                                                                    \
+                djinterop::unsupported_operation);                             \
+        }                                                                      \
     }
 
 #define DEFINE_GETTER_SETTER_TEST_CASES(engine_column, min_schema) \
@@ -317,6 +317,7 @@ DEFINE_GETTER_SETTER_TEST_CASES(origin_track_id, es::schema_3_0_0)
 DEFINE_GETTER_SETTER_TEST_CASES(streaming_flags, es::schema_3_0_0)
 DEFINE_GETTER_SETTER_TEST_CASES(explicit_lyrics, es::schema_3_0_0)
 DEFINE_GETTER_SETTER_TEST_CASES(last_edit_time, es::schema_3_0_0)
+DEFINE_GETTER_SETTER_TEST_CASES(album_art_source_hash, es::schema_3_0_2)
 
 #undef DEFINE_GETTER_SETTER_TEST_CASES
 #undef DEFINE_SETTER_INVALID_TEST_CASE

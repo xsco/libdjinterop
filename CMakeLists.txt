@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(libdjinterop
-        VERSION 0.27.2
+        VERSION 0.28.0
         DESCRIPTION "C++ library providing access to DJ record libraries")
 set(PROJECT_HOMEPAGE_URL "https://github.com/xsco/libdjinterop")
 
@@ -139,6 +139,8 @@ add_library(
     src/djinterop/engine/schema/schema_3_0_0.hpp
     src/djinterop/engine/schema/schema_3_0_1.cpp
     src/djinterop/engine/schema/schema_3_0_1.hpp
+    src/djinterop/engine/schema/schema_3_0_2.cpp
+    src/djinterop/engine/schema/schema_3_0_2.hpp
     src/djinterop/engine/schema/schema.cpp
     src/djinterop/engine/schema/schema.hpp
     src/djinterop/engine/schema/schema_validate_utils.hpp
