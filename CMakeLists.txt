@@ -238,6 +238,7 @@ add_library(
     src/djinterop/util/sqlcipher.hpp
     src/djinterop/util/sqlite_query.hpp
     src/djinterop/util/sqlite_transaction.hpp
+    src/djinterop/onelibrary/schema.cpp
 )
 
 # Encrypted OneLibrary databases are opened with SQLCipher, where the build has
