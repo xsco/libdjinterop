@@ -212,6 +212,7 @@ add_library(
     src/djinterop/util/random.cpp
     src/djinterop/util/random.hpp
     src/djinterop/util/sqlite_transaction.hpp
+    src/djinterop/onelibrary/onelibrary_context.hpp
 )
 
 set_target_properties(DjInterop PROPERTIES
