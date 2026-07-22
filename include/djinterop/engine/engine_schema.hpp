@@ -28,7 +28,7 @@
 namespace djinterop::engine
 {
 /// Enumeration of Engine database schemas.
-enum class DJINTEROP_PUBLIC engine_schema
+enum class engine_schema
 {
     schema_1_6_0,
     schema_1_7_1,
