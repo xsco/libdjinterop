@@ -392,17 +392,22 @@ install(FILES
         "${CMAKE_CURRENT_BINARY_DIR}/DjInteropConfigVersion.cmake"
         DESTINATION "${DJINTEROP_INSTALL_CMAKEDIR}")
 
-# Example programs demonstrating usage.
-function(add_djinterop_example example_name)
-    add_executable(example_${example_name} example/${example_name}.cpp)
-    target_include_directories(example_${example_name} PUBLIC
-            ${CMAKE_CURRENT_BINARY_DIR}/include
-            include)
-    target_link_libraries(example_${example_name} PUBLIC DjInterop)
-endfunction()
+# Build example programs by default.
+option(BUILD_EXAMPLES "Build example programs" ON)
 
-add_djinterop_example(engine_prime)
-add_djinterop_example(engine_library_v2_low_level)
+if (BUILD_EXAMPLES)
+    # Example programs demonstrating usage.
+    function(add_djinterop_example example_name)
+        add_executable(example_${example_name} example/${example_name}.cpp)
+        target_include_directories(example_${example_name} PUBLIC
+                ${CMAKE_CURRENT_BINARY_DIR}/include
+                include)
+        target_link_libraries(example_${example_name} PUBLIC DjInterop)
+    endfunction()
+
+    add_djinterop_example(engine_prime)
+    add_djinterop_example(engine_library_v2_low_level)
+endif()
 
 # Unit tests.
 include(CTest)
