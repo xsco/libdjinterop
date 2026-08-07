@@ -37,10 +37,12 @@ target_link_libraries(
     OpenSSL::Crypto)
 
 # Suppress warnings in the vendored amalgamation -- not our code to fix.
-target_compile_options(
-    sqlcipher PRIVATE
-    -Wno-pointer-arith
-    -Wno-error)
+if(NOT MSVC)
+    target_compile_options(
+        sqlcipher PRIVATE
+        -Wno-pointer-arith
+        -Wno-error)
+endif()
 
 # Must be position-independent to link into a shared library.
 set_target_properties(sqlcipher PROPERTIES POSITION_INDEPENDENT_CODE ON)

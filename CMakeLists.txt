@@ -47,6 +47,7 @@ option(BUILD_SHARED_LIBS "Build shared library" ON)
 # build).
 option(SYSTEM_DATE_H "Use system installation of date.h" OFF)
 option(SYSTEM_SQLITE "Use system installation of SQLite" ON)
+option(EXPERIMENTAL_ENABLE_SQLCIPHER "Use SQLCipher in place of SQLite" OFF)
 option(SYSTEM_SQLITE_MODERN_CPP "Use system installation of sqlite_modern_cpp" OFF)
 
 add_library(
@@ -263,7 +264,19 @@ else()
         ext/date)
 endif()
 
-if(SYSTEM_SQLITE)
+if(EXPERIMENTAL_ENABLE_SQLCIPHER)
+    if(SYSTEM_SQLITE)
+        message(FATAL_ERROR
+            "EXPERIMENTAL_ENABLE_SQLCIPHER cannot be combined with "
+            "SYSTEM_SQLITE=ON; set SYSTEM_SQLITE=OFF to use the vendored "
+            "SQLCipher amalgamation")
+    endif()
+    message(STATUS "Using vendored SQLCipher (experimental)...")
+    add_subdirectory(ext/sqlcipher)
+    target_link_libraries(
+        DjInterop PRIVATE
+        sqlcipher)
+elseif(SYSTEM_SQLITE)
     # Search for system installation of SQLite and use that.
     set(SQLITE_MIN_VERSION 3.11)
     find_package(SQLite3 ${SQLITE_MIN_VERSION} REQUIRED)
