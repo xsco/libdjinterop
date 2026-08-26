@@ -27,6 +27,7 @@
 #include <djinterop/engine/engine.hpp>
 #include <djinterop/exceptions.hpp>
 #include <djinterop/musical_key.hpp>
+#include <djinterop/onelibrary/onelibrary.hpp>
 #include <djinterop/pad_color.hpp>
 #include <djinterop/performance_data.hpp>
 #include <djinterop/playlist.hpp>

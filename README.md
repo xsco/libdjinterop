@@ -8,7 +8,8 @@ State of Support
 ================
 
 The library is currently in development, and not all features are implemented
-yet.  It currently supports only the Engine Library format.
+yet.  It supports the Engine Library format, and can read the AlphaTheta
+OneLibrary format.
 
 What is supported:
 
@@ -27,11 +28,20 @@ The library supports the following firmware and application versions:
     SC6000/M) may work, but this is currently untested.
 * Engine DJ Desktop (aka Engine Prime) from 1.0.1 to 4.3.0.
 
+The library also reads the AlphaTheta OneLibrary format, which rekordbox 7
+writes to USB media as `PIONEER/rekordbox/exportLibrary.db`, and which players
+from the CDJ-3000X, XDJ-AZ, OPUS-QUAD and OMNIS-DUO onwards read, as does the
+CDJ-3000 from firmware 3.15.  Track metadata, playlists and crates can be read.
+Writing is not supported yet, and beat grids, waveforms, hot cues and loops are
+not held in the database at all, as rekordbox leaves them in the ANLZ files
+beside it.  The format is also documented under the name Device Library Plus.
+
 What is not supported (yet):
 
 * Album art
 * Play history
-* DJ record libraries in formats other than Engine Prime
+* Writing OneLibrary databases
+* DJ record libraries in formats other than Engine Prime and OneLibrary
 
 How Do I Use It?
 ================

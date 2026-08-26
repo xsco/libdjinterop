@@ -44,6 +44,15 @@ bool path_exists(const std::string& directory)
     return (stat(directory.c_str(), &buf) == 0);
 }
 
+bool path_is_directory(const std::string& path)
+{
+    struct stat buf;
+    if (stat(path.c_str(), &buf) != 0)
+        return false;
+
+    return (buf.st_mode & S_IFMT) == S_IFDIR;
+}
+
 std::string get_filename(const std::string& file_path)
 {
     // TODO (haslersn): How to handle Windows path separator?
