@@ -76,10 +76,10 @@ inline std::ostream& operator<<(
         case musical_key::a_flat_minor: os << "A♭m"; break;
         case musical_key::f_sharp_major: os << "F♯"; break;
         case musical_key::e_flat_minor: os << "E♭m"; break;
-        case musical_key::d_flat_major: os << "D♭m"; break;
+        case musical_key::d_flat_major: os << "D♭"; break;
         case musical_key::b_flat_minor: os << "B♭m"; break;
         case musical_key::a_flat_major: os << "A♭"; break;
-        case musical_key::f_minor: os << "F"; break;
+        case musical_key::f_minor: os << "Fm"; break;
         case musical_key::e_flat_major: os << "E♭"; break;
         case musical_key::c_minor: os << "Cm"; break;
         case musical_key::b_flat_major: os << "B♭"; break;
