@@ -73,9 +73,42 @@ As such, in order to create a new library or load an existing library with the
 intention of operating on it using the high-level API, it is always necessary
 to start with format-specific functions to do so:
 
-| Library Type | Include Path                             |
-|--------------|------------------------------------------|
-| Engine       | `#include <djinterop/engine/engine.hpp>` |
+| Library Type | Include Path                                     |
+|--------------|--------------------------------------------------|
+| Engine       | `#include <djinterop/engine/engine.hpp>`         |
+| OneLibrary   | `#include <djinterop/onelibrary/onelibrary.hpp>` |
+
+OneLibrary
+----------
+
+The AlphaTheta OneLibrary format, also documented as Device Library Plus, is
+the successor to the DeviceSQL `export.pdb` library that rekordbox wrote to USB
+media.  A database is loaded by way of `onelibrary::load_database()`, given
+either the root directory of a device or the database file itself.  A number of
+aspects of the format are worth noting:
+
+* Support is currently read-only, and everything that would change a database
+  throws `djinterop::unsupported_operation`.
+* Beat grids, waveforms, hot cues and loops are not held in the database.
+  rekordbox leaves them in the ANLZ files that `content.analysisDataFilePath`
+  points at, and does not populate the `cue` table on export.  Those accessors
+  therefore return nothing rather than throwing.  A caller that reads ANLZ
+  files itself can load the device as an `onelibrary::library`, whose
+  `analysis_path()` gives the path recorded for a track, relative to the root
+  of the device; `library::db()` then gives the same database that
+  `load_database()` would have.
+* `onelibrary::library` also reaches the two other things a device carries
+  that the format-agnostic interface has nowhere to put: `key_name()` gives
+  the musical key in the notation rekordbox wrote, which may be Camelot and
+  which `track::key()` cannot represent, and `color_id()` gives the colour the
+  DJ marked a track with, numbered as `export.pdb` numbers them.
+* The format has a single tree that serves as both playlists and crates, so
+  `playlists_and_crates_are_distinct` is false and the two views show the same
+  rows.
+* A device is read by decrypting it into memory.  rekordbox writes the library
+  in write-ahead-logged mode, and the log has to be folded in before SQLite
+  sees the file, so reading one needs SQLite 3.36 or newer, built without
+  `SQLITE_OMIT_DESERIALIZE`.
 
 
 Stable API/ABI

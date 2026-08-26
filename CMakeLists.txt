@@ -82,6 +82,7 @@ add_library(
     include/djinterop/engine/v3/track_table.hpp
     include/djinterop/exceptions.hpp
     include/djinterop/musical_key.hpp
+    include/djinterop/onelibrary/onelibrary.hpp
     include/djinterop/pad_color.hpp
     include/djinterop/performance_data.hpp
     include/djinterop/playlist.hpp
@@ -203,10 +204,32 @@ add_library(
     src/djinterop/impl/playlist_impl.hpp
     src/djinterop/impl/track_impl.cpp
     src/djinterop/impl/track_impl.hpp
+    src/djinterop/onelibrary/content_table.cpp
+    src/djinterop/onelibrary/content_table.hpp
+    src/djinterop/onelibrary/crate_impl.cpp
+    src/djinterop/onelibrary/crate_impl.hpp
+    src/djinterop/onelibrary/database_impl.cpp
+    src/djinterop/onelibrary/database_impl.hpp
+    src/djinterop/onelibrary/onelibrary.cpp
+    src/djinterop/onelibrary/onelibrary_context.hpp
+    src/djinterop/onelibrary/playlist_impl.cpp
+    src/djinterop/onelibrary/playlist_impl.hpp
+    src/djinterop/onelibrary/playlist_table.cpp
+    src/djinterop/onelibrary/playlist_table.hpp
+    src/djinterop/onelibrary/track_impl.cpp
+    src/djinterop/onelibrary/track_impl.hpp
     src/djinterop/playlist.cpp
     src/djinterop/track.cpp
     src/djinterop/util/chrono.cpp
     src/djinterop/util/chrono.hpp
+    src/djinterop/util/crypto/aes.cpp
+    src/djinterop/util/crypto/aes.hpp
+    src/djinterop/util/crypto/sha512.cpp
+    src/djinterop/util/crypto/sha512.hpp
+    src/djinterop/util/crypto/sqlcipher_codec.cpp
+    src/djinterop/util/crypto/sqlcipher_codec.hpp
+    src/djinterop/util/crypto/sqlcipher_wal.cpp
+    src/djinterop/util/crypto/sqlcipher_wal.hpp
     src/djinterop/util/filesystem.cpp
     src/djinterop/util/filesystem.hpp
     src/djinterop/util/random.cpp
@@ -370,6 +393,9 @@ install(FILES
     include/djinterop/engine/v3/track_data_blob.hpp
     include/djinterop/engine/v3/track_table.hpp
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/engine/v3")
+install(FILES
+    include/djinterop/onelibrary/onelibrary.hpp
+    DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/onelibrary")
 
 
 if (UNIX)
@@ -420,6 +446,7 @@ if (BUILD_EXAMPLES)
 
     add_djinterop_example(engine_prime)
     add_djinterop_example(engine_library_v2_low_level)
+    add_djinterop_example(onelibrary)
 endif()
 
 # Unit tests.
@@ -444,6 +471,10 @@ if (Boost_FOUND AND Boost_filesystem_FOUND AND Boost_system_FOUND)
                 ${Boost_INCLUDE_DIRS}
                 ${CMAKE_CURRENT_BINARY_DIR}/include
                 include)
+        # A test that compiles library sources into itself, rather than only
+        # linking, needs the headers that those sources include.
+        target_include_directories(${test_executable_name} PRIVATE SYSTEM
+                $<TARGET_PROPERTY:DjInterop,INCLUDE_DIRECTORIES>)
         target_link_libraries(${test_executable_name} PUBLIC
                 DjInterop
                 ${Boost_LIBRARIES})
@@ -465,6 +496,28 @@ if (Boost_FOUND AND Boost_filesystem_FOUND AND Boost_system_FOUND)
     add_djinterop_test(engine/v3/ performance_data_table_test)
     add_djinterop_test(engine/v3/ track_table_test)
 
+    # Some parts of the library are internal, and its symbols are hidden, so
+    # tests of them compile those sources into themselves rather than linking.
+    add_djinterop_test(onelibrary/ content_table_test)
+    target_sources(onelibrary_content_table_test PRIVATE
+            src/djinterop/onelibrary/content_table.cpp)
+
+    add_djinterop_test(onelibrary/ database_test)
+    target_sources(onelibrary_database_test PRIVATE
+            src/djinterop/util/crypto/aes.cpp
+            src/djinterop/util/crypto/sha512.cpp
+            src/djinterop/util/crypto/sqlcipher_codec.cpp
+            src/djinterop/util/filesystem.cpp)
+
+    add_djinterop_test(onelibrary/ playlist_table_test)
+    target_sources(onelibrary_playlist_table_test PRIVATE
+            src/djinterop/onelibrary/playlist_table.cpp)
+
+    add_djinterop_test(util/ crypto_test)
+    target_sources(util_crypto_test PRIVATE
+            src/djinterop/util/crypto/aes.cpp
+            src/djinterop/util/crypto/sha512.cpp
+            src/djinterop/util/crypto/sqlcipher_codec.cpp)
 else()
     message(STATUS
             "Unit tests not available, as the Boost.Filesystem and Boost.System "
