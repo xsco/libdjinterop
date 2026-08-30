@@ -569,21 +569,46 @@ if (Boost_FOUND)
 
     # Some parts of the library are internal, and its symbols are hidden, so
     # tests of them compile those sources into themselves rather than linking.
+    #
+    # A test that talks to SQLite directly cannot borrow it from the library
+    # either, for the same reason: with the bundled amalgamation, SQLite is
+    # compiled into the library and hidden along with everything else, leaving
+    # nothing to link against.  Such a test compiles SQLite as well.  A system
+    # installation is a library in its own right, and linking it is enough.
+    if(SYSTEM_SQLITE)
+        set(DJINTEROP_TEST_SQLITE_SOURCES "")
+    else()
+        set(DJINTEROP_TEST_SQLITE_SOURCES ext/sqlite-amalgamation/sqlite3.c)
+    endif()
+
     add_djinterop_test(onelibrary/ content_table_test)
     target_sources(onelibrary_content_table_test PRIVATE
-            src/djinterop/onelibrary/content_table.cpp)
+            src/djinterop/onelibrary/content_table.cpp
+            ${DJINTEROP_TEST_SQLITE_SOURCES})
 
-    add_djinterop_test(onelibrary/ database_test)
-    target_sources(onelibrary_database_test PRIVATE
-            src/djinterop/util/crypto/aes.cpp
-            src/djinterop/util/crypto/aes_hardware.cpp
-            src/djinterop/util/crypto/sha512.cpp
-            src/djinterop/util/crypto/sqlcipher_codec.cpp
-            src/djinterop/util/filesystem.cpp)
+    # A decrypted database is handed to SQLite through `sqlite3_deserialize`,
+    # which arrived in 3.36.  Built against anything older -- the bundled
+    # amalgamation is 3.33 -- the library reports the format unsupported, and
+    # this test would only be watching it say so.
+    if(SYSTEM_SQLITE AND NOT SQLite3_VERSION VERSION_LESS 3.36)
+        add_djinterop_test(onelibrary/ database_test)
+        target_sources(onelibrary_database_test PRIVATE
+                src/djinterop/util/crypto/aes.cpp
+                src/djinterop/util/crypto/aes_hardware.cpp
+                src/djinterop/util/crypto/sha512.cpp
+                src/djinterop/util/crypto/sqlcipher_codec.cpp
+                src/djinterop/util/filesystem.cpp)
+    else()
+        message(
+            STATUS
+            "OneLibrary database test not available, as reading the format "
+            "needs SQLite 3.36 or newer")
+    endif()
 
     add_djinterop_test(onelibrary/ playlist_table_test)
     target_sources(onelibrary_playlist_table_test PRIVATE
-            src/djinterop/onelibrary/playlist_table.cpp)
+            src/djinterop/onelibrary/playlist_table.cpp
+            ${DJINTEROP_TEST_SQLITE_SOURCES})
 
     add_djinterop_test(util/ crypto_test)
     target_sources(util_crypto_test PRIVATE
