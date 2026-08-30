@@ -17,8 +17,12 @@
 
 #include "sqlcipher_wal.hpp"
 
+#include <algorithm>
 #include <cstring>
+#include <exception>
 #include <fstream>
+#include <thread>
+#include <utility>
 
 namespace djinterop::util::crypto
 {
@@ -51,14 +55,25 @@ uint32_t load_le32(const uint8_t* p) noexcept
            (static_cast<uint32_t>(p[1]) << 8) | static_cast<uint32_t>(p[0]);
 }
 
+/// Read a whole file, or nothing if it cannot be read.
 std::vector<uint8_t> read_file(const std::string& path)
 {
-    std::ifstream file{path, std::ios::binary};
+    std::ifstream file{path, std::ios::binary | std::ios::ate};
     if (!file)
         return {};
 
-    return std::vector<uint8_t>{
-        std::istreambuf_iterator<char>{file}, std::istreambuf_iterator<char>{}};
+    const auto size = static_cast<std::streamoff>(file.tellg());
+    if (size <= 0)
+        return {};
+
+    std::vector<uint8_t> contents(static_cast<size_t>(size));
+    file.seekg(0);
+    if (!file.read(
+            reinterpret_cast<char*>(contents.data()),
+            static_cast<std::streamsize>(size)))
+        return {};
+
+    return contents;
 }
 
 /// The running checksum SQLite keeps over the contents of a log.
@@ -96,125 +111,228 @@ struct wal_checksum
     }
 };
 
+/// The pages of a log that a reader should honour.
+struct wal_contents
+{
+    /// Page number and ciphertext offset of every committed frame, in the
+    /// order the log wrote them.
+    std::vector<std::pair<uint32_t, size_t>> frames;
+
+    /// Size the database is to be truncated or extended to, in pages, or zero
+    /// if the log commits nothing.
+    uint32_t page_count = 0;
+};
+
+/// Walk the frames of a log, keeping those up to the last one that committed:
+/// anything after it belongs to a transaction that never finished, exactly as
+/// SQLite's own recovery decides.
+///
+/// \throws sqlcipher_error If the log is not one, or does not go with the
+///                         database beside it.
+wal_contents read_log(
+    const std::vector<uint8_t>& log, const std::string& database_path,
+    size_t page_size)
+{
+    wal_contents contents;
+    if (log.size() < wal_header_length)
+        return contents;
+
+    const auto magic = load_be32(log.data());
+    const auto big_endian_checksums = magic == wal_magic_big_endian;
+    if (magic != wal_magic_little_endian && !big_endian_checksums)
+        throw sqlcipher_error{
+            "`" + database_path +
+            "-wal` does not begin like a write-ahead log"};
+
+    const auto log_page_size = load_be32(log.data() + 8);
+    if (log_page_size != page_size)
+        throw sqlcipher_error{
+            "the write-ahead log of `" + database_path +
+            "` uses a different page size from the database"};
+
+    const auto salt_1 = load_be32(log.data() + 16);
+    const auto salt_2 = load_be32(log.data() + 20);
+
+    wal_checksum running;
+    running.accumulate(log.data(), 24, big_endian_checksums);
+    if (!running.matches(log.data() + 24))
+        throw sqlcipher_error{
+            "the write-ahead log of `" + database_path +
+            "` has a damaged header"};
+
+    const auto frame_length = wal_frame_header_length + page_size;
+    size_t committed_frames = 0;
+
+    for (size_t offset = wal_header_length; offset + frame_length <= log.size();
+         offset += frame_length)
+    {
+        const auto* frame = log.data() + offset;
+        const auto page_number = load_be32(frame);
+        const auto truncate_to = load_be32(frame + 4);
+
+        // A frame written after the log was reset carries the salt of the
+        // previous incarnation, and is not part of it.
+        if (load_be32(frame + 8) != salt_1 || load_be32(frame + 12) != salt_2)
+            break;
+
+        auto candidate = running;
+        candidate.accumulate(frame, 8, big_endian_checksums);
+        candidate.accumulate(
+            frame + wal_frame_header_length, page_size, big_endian_checksums);
+        if (!candidate.matches(frame + 16))
+            break;
+
+        running = candidate;
+        contents.frames.emplace_back(
+            page_number, offset + wal_frame_header_length);
+
+        if (truncate_to != 0)
+        {
+            committed_frames = contents.frames.size();
+            contents.page_count = truncate_to;
+        }
+    }
+
+    contents.frames.resize(committed_frames);
+    return contents;
+}
+
+/// The invariants of decrypting an image: everything a page needs but its own
+/// number.
+struct page_work
+{
+    const sqlcipher_codec& codec;
+
+    /// Where each page's ciphertext lies, or null for one that is in neither
+    /// the database file nor the log.
+    const std::vector<const uint8_t*>& sources;
+
+    uint8_t* image;
+    size_t page_size;
+};
+
+/// Decrypt a run of pages, whose sources are already settled.
+void decrypt_range(const page_work& work, size_t first, size_t last)
+{
+    for (size_t index = first; index < last; ++index)
+    {
+        const auto* encrypted = work.sources[index];
+        if (encrypted == nullptr)
+            continue;
+
+        work.codec.decrypt_page(
+            static_cast<uint32_t>(index + 1), encrypted,
+            work.image + (index * work.page_size));
+    }
+}
+
+/// Decrypt every page, over as many processors as there is work for.
+///
+/// A page carries its own initialisation vector and is bound to its own number,
+/// so none depends on any other and the work divides by simple arithmetic.
+void decrypt_pages(const page_work& work)
+{
+    // Enough pages that a thread earns the cost of starting it.
+    constexpr size_t pages_per_worker = 256;
+    constexpr size_t worker_limit = 16;
+
+    const auto page_count = work.sources.size();
+    auto workers = std::min(page_count / pages_per_worker, worker_limit);
+    workers = std::min<size_t>(workers, std::thread::hardware_concurrency());
+
+    if (workers < 2)
+    {
+        decrypt_range(work, 0, page_count);
+        return;
+    }
+
+    std::vector<std::exception_ptr> failures(workers);
+    const auto share = (page_count + workers - 1) / workers;
+
+    const auto run = [&](size_t worker)
+    {
+        try
+        {
+            const auto first = worker * share;
+            decrypt_range(work, first, std::min(page_count, first + share));
+        }
+        catch (...)
+        {
+            failures[worker] = std::current_exception();
+        }
+    };
+
+    std::vector<std::thread> threads;
+    threads.reserve(workers - 1);
+    for (size_t worker = 1; worker < workers; ++worker)
+        threads.emplace_back(run, worker);
+
+    run(0);
+
+    for (auto& thread : threads)
+        thread.join();
+
+    // Report the failure nearest the start of the database, so the error a
+    // caller sees does not depend on how the work happened to divide.
+    for (const auto& failure : failures)
+    {
+        if (failure)
+            std::rethrow_exception(failure);
+    }
+}
+
 }  // anonymous namespace
 
 std::vector<uint8_t> decrypt_database_to_image(
     const std::string& database_path, const sqlcipher_codec& codec)
 {
-    const auto& params = codec.parameters();
-    auto encrypted = read_file(database_path);
-    if (encrypted.size() < params.page_size)
+    const auto page_size = codec.parameters().page_size;
+
+    auto image = read_file(database_path);
+    if (image.size() < page_size)
         throw sqlcipher_error{
             "`" + database_path + "` is too small to be a database"};
 
-    if (encrypted.size() % params.page_size != 0)
+    if (image.size() % page_size != 0)
         throw sqlcipher_error{
             "`" + database_path + "` is not a whole number of pages"};
 
-    const auto page_size = params.page_size;
-    const auto page_count = encrypted.size() / page_size;
+    const auto database_pages = image.size() / page_size;
 
-    std::vector<uint8_t> image(encrypted.size());
-    for (size_t index = 0; index < page_count; ++index)
+    // The log is read first: it settles how large the finished image is, and
+    // which pages of the database file are worth decrypting at all.
+    const auto log = read_file(database_path + "-wal");
+    const auto contents = read_log(log, database_path, page_size);
+
+    const auto image_pages = contents.page_count != 0
+                                 ? static_cast<size_t>(contents.page_count)
+                                 : database_pages;
+
+    // Decryption is in place, so the image is sized first rather than being
+    // copied out of a second buffer afterwards.
+    image.resize(image_pages * page_size, 0);
+
+    // Settle where each page's ciphertext lies before decrypting any of it.  A
+    // page the log replaces is never read from the database file, and rekordbox
+    // leaves most of a fresh export in the log, so that saves the greater part
+    // of the work.  A page in neither keeps the zeroes the resize gave it.
+    std::vector<const uint8_t*> sources(image_pages, nullptr);
+    const auto pages_in_both = std::min(image_pages, database_pages);
+    for (size_t index = 0; index < pages_in_both; ++index)
+        sources[index] = image.data() + (index * page_size);
+
+    for (const auto& [page_number, payload_offset] : contents.frames)
     {
-        codec.decrypt_page(
-            static_cast<uint32_t>(index + 1),
-            encrypted.data() + (index * page_size),
-            image.data() + (index * page_size));
+        if (page_number == 0 || page_number > image_pages)
+            continue;
+
+        sources[page_number - 1] = log.data() + payload_offset;
     }
+
+    decrypt_pages({codec, sources, image.data(), page_size});
 
     // Page one opens with the salt, where a plain database has its magic.
     std::memcpy(image.data(), sqlite_file_magic, sqlite_file_magic_length);
-
-    const auto log = read_file(database_path + "-wal");
-    if (log.size() >= wal_header_length)
-    {
-        const auto magic = load_be32(log.data());
-        const auto big_endian_checksums = magic == wal_magic_big_endian;
-        if (magic != wal_magic_little_endian && !big_endian_checksums)
-            throw sqlcipher_error{
-                "`" + database_path +
-                "-wal` does not begin like a write-ahead log"};
-
-        const auto log_page_size = load_be32(log.data() + 8);
-        if (log_page_size != page_size)
-            throw sqlcipher_error{
-                "the write-ahead log of `" + database_path +
-                "` uses a different page size from the database"};
-
-        const auto salt_1 = load_be32(log.data() + 16);
-        const auto salt_2 = load_be32(log.data() + 20);
-
-        wal_checksum running;
-        running.accumulate(log.data(), 24, big_endian_checksums);
-        if (!running.matches(log.data() + 24))
-            throw sqlcipher_error{
-                "the write-ahead log of `" + database_path +
-                "` has a damaged header"};
-
-        // Walk the frames, keeping only those up to the last one that
-        // committed: anything after it belongs to a transaction that never
-        // finished, exactly as SQLite's own recovery decides.
-        const auto frame_length = wal_frame_header_length + page_size;
-        std::vector<std::pair<uint32_t, size_t>> frames;
-        size_t committed_frames = 0;
-        uint32_t committed_page_count = 0;
-
-        for (size_t offset = wal_header_length;
-             offset + frame_length <= log.size(); offset += frame_length)
-        {
-            const auto* frame = log.data() + offset;
-            const auto page_number = load_be32(frame);
-            const auto truncate_to = load_be32(frame + 4);
-
-            // A frame written after the log was reset carries the salt of the
-            // previous incarnation, and is not part of it.
-            if (load_be32(frame + 8) != salt_1 ||
-                load_be32(frame + 12) != salt_2)
-                break;
-
-            auto candidate = running;
-            candidate.accumulate(frame, 8, big_endian_checksums);
-            candidate.accumulate(
-                frame + wal_frame_header_length, page_size,
-                big_endian_checksums);
-            if (!candidate.matches(frame + 16))
-                break;
-
-            running = candidate;
-            frames.emplace_back(page_number, offset + wal_frame_header_length);
-
-            if (truncate_to != 0)
-            {
-                committed_frames = frames.size();
-                committed_page_count = truncate_to;
-            }
-        }
-
-        if (committed_page_count != 0)
-        {
-            const auto committed_bytes =
-                static_cast<size_t>(committed_page_count) * page_size;
-            image.resize(committed_bytes, 0);
-        }
-
-        for (size_t index = 0; index < committed_frames; ++index)
-        {
-            const auto [page_number, payload_offset] = frames[index];
-            const auto page_offset =
-                static_cast<size_t>(page_number - 1) * page_size;
-            if (page_number == 0 || page_offset + page_size > image.size())
-                continue;
-
-            codec.decrypt_page(
-                page_number, log.data() + payload_offset,
-                image.data() + page_offset);
-
-            if (page_number == 1)
-                std::memcpy(
-                    image.data(), sqlite_file_magic, sqlite_file_magic_length);
-        }
-    }
 
     // The image no longer has a log, so mark it as using a rollback journal.
     // Left as it is, SQLite would look for the log that has just been folded

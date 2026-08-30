@@ -36,6 +36,11 @@ namespace djinterop::util::crypto
 /// The returned image is a standard, unencrypted SQLite file, marked as using
 /// a rollback journal: everything the log held has already been folded in.
 ///
+/// Only the pages the finished image is made of are decrypted, and so only
+/// those are authenticated: a page the log replaces, or one past the size the
+/// log truncates the database to, is never read from the database file and a
+/// fault in it goes unreported.  SQLite would not have looked at it either.
+///
 /// \param database_path Path of the encrypted database.
 /// \param codec Codec built for the database, as by `make_codec_for`.
 /// \return Returns a plain SQLite image.

@@ -142,7 +142,9 @@ private:
 
     sqlcipher_parameters params_;
     aes256_cbc cipher_;
-    std::vector<uint8_t> hmac_key_;
+
+    /// The HMAC key, its padded blocks already absorbed.
+    hmac_sha512_key hmac_key_;
 };
 
 /// Build the codec of a database, reading its salt from the file.

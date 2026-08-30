@@ -51,6 +51,25 @@ const uint8_t* bytes_of(const std::string& s)
     return reinterpret_cast<const uint8_t*>(s.data());
 }
 
+std::vector<uint8_t> from_hex(const std::string& hex)
+{
+    std::vector<uint8_t> out;
+    out.reserve(hex.size() / 2);
+    for (size_t i = 0; i + 1 < hex.size(); i += 2)
+    {
+        out.push_back(
+            static_cast<uint8_t>(std::stoul(hex.substr(i, 2), nullptr, 16)));
+    }
+
+    return out;
+}
+
+/// Both ways the cipher can do its work: a machine with AES instructions would
+/// otherwise never reach the tables, and one without never the instructions, so
+/// every test of the cipher runs over both.
+const aes_implementation implementations[] = {
+    aes_implementation::automatic, aes_implementation::tabulated};
+
 /// Parameters with a cheap key derivation.
 ///
 /// The real format stretches the passphrase 256,000 times, which is the point
@@ -167,20 +186,61 @@ BOOST_AUTO_TEST_CASE(aes256__fips_197_vector__matches)
         0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
     const uint8_t zero_iv[aes_block_length] = {};
 
-    // A single block under a zero vector is plain ECB, which is what the
-    // published vector covers.
-    uint8_t ciphertext[aes_block_length];
-    const aes256_cbc cipher{key};
-    cipher.encrypt(zero_iv, plaintext, ciphertext, sizeof(plaintext));
-    BOOST_CHECK_EQUAL(
-        to_hex(ciphertext, sizeof(ciphertext)),
-        "8ea2b7ca516745bfeafc49904b496089");
+    for (const auto implementation : implementations)
+    {
+        // A single block under a zero vector is plain ECB, which is what the
+        // published vector covers.
+        uint8_t ciphertext[aes_block_length];
+        const aes256_cbc cipher{key, implementation};
+        cipher.encrypt(zero_iv, plaintext, ciphertext, sizeof(plaintext));
+        BOOST_CHECK_EQUAL(
+            to_hex(ciphertext, sizeof(ciphertext)),
+            "8ea2b7ca516745bfeafc49904b496089");
 
-    uint8_t recovered[aes_block_length];
-    cipher.decrypt(zero_iv, ciphertext, recovered, sizeof(ciphertext));
-    BOOST_CHECK_EQUAL(
-        to_hex(recovered, sizeof(recovered)),
-        to_hex(plaintext, sizeof(plaintext)));
+        uint8_t recovered[aes_block_length];
+        cipher.decrypt(zero_iv, ciphertext, recovered, sizeof(ciphertext));
+        BOOST_CHECK_EQUAL(
+            to_hex(recovered, sizeof(recovered)),
+            to_hex(plaintext, sizeof(plaintext)));
+    }
+}
+
+BOOST_TEST_DECORATOR(
+    *utf::description("aes256_cbc matches the NIST SP 800-38A vector"))
+BOOST_AUTO_TEST_CASE(aes256_cbc__sp_800_38a_vector__matches)
+{
+    // F.2.5 and F.2.6 chain four blocks, and so pin the mode itself rather
+    // than only the block cipher under it.
+    const auto key = from_hex(
+        "603deb1015ca71be2b73aef0857d7781"
+        "1f352c073b6108d72d9810a30914dff4");
+    const auto iv = from_hex("000102030405060708090a0b0c0d0e0f");
+    const auto plaintext = from_hex(
+        "6bc1bee22e409f96e93d7e117393172a"
+        "ae2d8a571e03ac9c9eb76fac45af8e51"
+        "30c81c46a35ce411e5fbc1191a0a52ef"
+        "f69f2445df4f9b17ad2b417be66c3710");
+    const std::string expected =
+        "f58c4c04d6e5f1ba779eabfb5f7bfbd6"
+        "9cfc4e967edb808d679f777bc6702c7d"
+        "39f23369a9d9bacfa530e26304231461"
+        "b2eb05e2c39be9fcda6c19078c6a9d1b";
+
+    for (const auto implementation : implementations)
+    {
+        const aes256_cbc cipher{key.data(), implementation};
+
+        std::vector<uint8_t> ciphertext(plaintext.size());
+        cipher.encrypt(
+            iv.data(), plaintext.data(), ciphertext.data(), plaintext.size());
+        BOOST_CHECK_EQUAL(
+            to_hex(ciphertext.data(), ciphertext.size()), expected);
+
+        std::vector<uint8_t> recovered(ciphertext.size());
+        cipher.decrypt(
+            iv.data(), ciphertext.data(), recovered.data(), ciphertext.size());
+        BOOST_CHECK(recovered == plaintext);
+    }
 }
 
 BOOST_TEST_DECORATOR(
@@ -198,16 +258,54 @@ BOOST_AUTO_TEST_CASE(aes256_cbc__multiple_blocks__round_trip)
     for (size_t i = 0; i < plaintext.size(); ++i)
         plaintext[i] = static_cast<uint8_t>(i * 7);
 
-    const aes256_cbc cipher{key};
+    for (const auto implementation : implementations)
+    {
+        const aes256_cbc cipher{key, implementation};
 
-    std::vector<uint8_t> ciphertext(plaintext.size());
-    cipher.encrypt(iv, plaintext.data(), ciphertext.data(), plaintext.size());
-    BOOST_CHECK(ciphertext != plaintext);
+        std::vector<uint8_t> ciphertext(plaintext.size());
+        cipher.encrypt(
+            iv, plaintext.data(), ciphertext.data(), plaintext.size());
+        BOOST_CHECK(ciphertext != plaintext);
 
-    // Decryption in place must work, as the codec relies on it.
-    std::vector<uint8_t> buffer = ciphertext;
-    cipher.decrypt(iv, buffer.data(), buffer.data(), buffer.size());
-    BOOST_CHECK(buffer == plaintext);
+        // Decryption in place must work, as the codec relies on it.
+        std::vector<uint8_t> buffer = ciphertext;
+        cipher.decrypt(iv, buffer.data(), buffer.data(), buffer.size());
+        BOOST_CHECK(buffer == plaintext);
+    }
+}
+
+BOOST_TEST_DECORATOR(*utf::description(
+    "aes256_cbc decrypts every length the same way, whichever implementation"))
+BOOST_AUTO_TEST_CASE(aes256_cbc__every_length__agrees_across_implementations)
+{
+    uint8_t key[aes256_key_length];
+    uint8_t iv[aes_block_length];
+    for (size_t i = 0; i < sizeof(key); ++i)
+        key[i] = static_cast<uint8_t>(0x5a + i);
+    for (size_t i = 0; i < sizeof(iv); ++i)
+        iv[i] = static_cast<uint8_t>(i * 11);
+
+    std::vector<uint8_t> ciphertext(24 * aes_block_length);
+    for (size_t i = 0; i < ciphertext.size(); ++i)
+        ciphertext[i] = static_cast<uint8_t>((i * 31) ^ 0x9c);
+
+    const aes256_cbc hardware{key, aes_implementation::automatic};
+    const aes256_cbc tabulated{key, aes_implementation::tabulated};
+
+    // Decryption runs several blocks at a time where the processor allows it,
+    // so lengths that do not divide by that group size exercise the tail.
+    for (size_t blocks = 0; blocks <= 24; ++blocks)
+    {
+        const auto length = blocks * aes_block_length;
+
+        std::vector<uint8_t> by_hardware(length);
+        hardware.decrypt(iv, ciphertext.data(), by_hardware.data(), length);
+
+        std::vector<uint8_t> by_tables(length);
+        tabulated.decrypt(iv, ciphertext.data(), by_tables.data(), length);
+
+        BOOST_CHECK(by_hardware == by_tables);
+    }
 }
 
 BOOST_TEST_DECORATOR(
