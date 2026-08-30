@@ -52,22 +52,25 @@ resolved_location resolve(const std::string& path)
     // is three levels up: `<root>/PIONEER/rekordbox/exportLibrary.db`.
     if (!util::path_is_directory(path))
     {
-        auto directory = path;
+        // Walking up by index, rather than by assigning a piece of a string
+        // back to itself three times over, which is a shape GCC's -Wrestrict
+        // cannot see the safety of.
+        auto end = path.size();
         for (int level = 0; level < 3; ++level)
         {
-            const auto separator = directory.find_last_of("/\\");
-            if (separator == std::string::npos)
-            {
-                // A relative path with nothing above it sits in the working
-                // directory, which is then the root of the device.
-                directory = ".";
-                break;
-            }
+            const auto separator =
+                end == 0 ? std::string::npos
+                         : path.find_last_of("/\\", end - 1);
 
-            directory = directory.substr(0, separator);
+            // A relative path with nothing above it sits in the working
+            // directory, which is then the root of the device.
+            if (separator == std::string::npos)
+                return resolved_location{".", path};
+
+            end = separator;
         }
 
-        return resolved_location{directory, path};
+        return resolved_location{path.substr(0, end), path};
     }
 
     return resolved_location{path, path + "/" + database_relative_path};
