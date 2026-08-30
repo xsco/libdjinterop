@@ -49,6 +49,82 @@ option(SYSTEM_DATE_H "Use system installation of date.h" OFF)
 option(SYSTEM_SQLITE "Use system installation of SQLite" ON)
 option(SYSTEM_SQLITE_MODERN_CPP "Use system installation of sqlite_modern_cpp" OFF)
 
+
+# The processor's own AES instructions are worth two orders of magnitude over
+# software AES when reading an encrypted OneLibrary database, so use them where
+# the compiler can be persuaded to emit them.  Whether the processor running the
+# built library has them is a separate question, decided at run time; settled
+# here is only whether the intrinsics compile, and with which flags.  They are
+# applied to `aes_hardware.cpp` alone, so no other translation unit can pick up
+# an instruction the target may not have.
+include(CheckCXXSourceCompiles)
+
+set(DJINTEROP_AES_X86_SOURCE "
+#if defined(_MSC_VER)
+#include <intrin.h>
+#else
+#include <immintrin.h>
+#endif
+int main()
+{
+    __m128i x = _mm_setzero_si128();
+    x = _mm_aesenc_si128(x, x);
+    x = _mm_aesenclast_si128(x, x);
+    x = _mm_aesdec_si128(x, x);
+    x = _mm_aesdeclast_si128(x, x);
+    return _mm_cvtsi128_si32(x);
+}
+")
+
+set(DJINTEROP_AES_ARM64_SOURCE "
+#include <arm_neon.h>
+int main()
+{
+    uint8x16_t x = vdupq_n_u8(0);
+    x = vaesmcq_u8(vaeseq_u8(x, x));
+    x = vaesimcq_u8(vaesdq_u8(x, x));
+    return vgetq_lane_u8(x, 0);
+}
+")
+
+set(DJINTEROP_AES_INTRINSICS_DEFINE "")
+set(DJINTEROP_AES_INTRINSICS_FLAGS "")
+
+# Try one architecture, unless another has already answered.  Bare comes first:
+# MSVC needs no flags at all, and neither does a compiler whose default target
+# already includes the extension, such as Apple's on arm64.
+macro(djinterop_try_aes arch source flags)
+    if(NOT DJINTEROP_AES_INTRINSICS_DEFINE)
+        check_cxx_source_compiles("${source}" DJINTEROP_AES_${arch}_BARE)
+        if(NOT DJINTEROP_AES_${arch}_BARE)
+            set(CMAKE_REQUIRED_FLAGS "${flags}")
+            check_cxx_source_compiles(
+                "${source}" DJINTEROP_AES_${arch}_FLAGGED)
+            unset(CMAKE_REQUIRED_FLAGS)
+            if(DJINTEROP_AES_${arch}_FLAGGED)
+                set(DJINTEROP_AES_INTRINSICS_FLAGS "${flags}")
+            endif()
+        endif()
+        if(DJINTEROP_AES_${arch}_BARE OR DJINTEROP_AES_${arch}_FLAGGED)
+            set(DJINTEROP_AES_INTRINSICS_DEFINE
+                "DJINTEROP_AES_INTRINSICS_${arch}")
+        endif()
+    endif()
+endmacro()
+
+djinterop_try_aes(X86 "${DJINTEROP_AES_X86_SOURCE}" "-maes -msse2")
+djinterop_try_aes(ARM64 "${DJINTEROP_AES_ARM64_SOURCE}" "-march=armv8-a+crypto")
+
+if(DJINTEROP_AES_INTRINSICS_DEFINE)
+    message(STATUS "Using AES instructions where available at run time")
+    set_source_files_properties(
+        src/djinterop/util/crypto/aes_hardware.cpp PROPERTIES
+        COMPILE_DEFINITIONS "${DJINTEROP_AES_INTRINSICS_DEFINE}"
+        COMPILE_FLAGS "${DJINTEROP_AES_INTRINSICS_FLAGS}")
+else()
+    message(STATUS "No AES instructions for this target; using AES tables")
+endif()
+
 add_library(
     DjInterop
     include/djinterop/album_art.hpp
@@ -223,6 +299,8 @@ add_library(
     src/djinterop/util/chrono.hpp
     src/djinterop/util/crypto/aes.cpp
     src/djinterop/util/crypto/aes.hpp
+    src/djinterop/util/crypto/aes_hardware.cpp
+    src/djinterop/util/crypto/aes_hardware.hpp
     src/djinterop/util/crypto/sha512.cpp
     src/djinterop/util/crypto/sha512.hpp
     src/djinterop/util/crypto/sqlcipher_codec.cpp
@@ -261,6 +339,14 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${DJINTEROP_INSTALL_INCLUDEDIR}>)
+
+# Decrypting the pages of a database is spread over the processors available,
+# which is what the standard threading library is needed for.
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(
+    DjInterop PRIVATE
+    Threads::Threads)
 
 # Always rely on system installation of zlib.
 set(ZLIB_MIN_VERSION 1.2.8)
@@ -490,6 +576,7 @@ if (Boost_FOUND)
     add_djinterop_test(onelibrary/ database_test)
     target_sources(onelibrary_database_test PRIVATE
             src/djinterop/util/crypto/aes.cpp
+            src/djinterop/util/crypto/aes_hardware.cpp
             src/djinterop/util/crypto/sha512.cpp
             src/djinterop/util/crypto/sqlcipher_codec.cpp
             src/djinterop/util/filesystem.cpp)
@@ -501,6 +588,7 @@ if (Boost_FOUND)
     add_djinterop_test(util/ crypto_test)
     target_sources(util_crypto_test PRIVATE
             src/djinterop/util/crypto/aes.cpp
+            src/djinterop/util/crypto/aes_hardware.cpp
             src/djinterop/util/crypto/sha512.cpp
             src/djinterop/util/crypto/sqlcipher_codec.cpp)
 else()

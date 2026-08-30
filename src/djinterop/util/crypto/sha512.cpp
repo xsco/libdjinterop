@@ -59,6 +59,63 @@ inline uint64_t rotr(uint64_t x, unsigned n) noexcept
     return (x >> n) | (x << (64 - n));
 }
 
+/// Extend the message schedule in place.  Only the last sixteen words are ever
+/// needed, so they live in a window that wraps rather than in the array of
+/// eighty the specification describes.
+inline uint64_t extend(uint64_t* w, int j) noexcept
+{
+    const auto x = w[(j + 1) & 15];
+    const auto y = w[(j + 14) & 15];
+    w[j] += (rotr(x, 1) ^ rotr(x, 8) ^ (x >> 7)) + w[(j + 9) & 15] +
+            (rotr(y, 19) ^ rotr(y, 61) ^ (y >> 6));
+    return w[j];
+}
+
+/// One round, over working variables named in the order the round expects them.
+///
+/// The specification shifts the eight variables along by one each round; the
+/// caller below rotates their *names* instead, which is free.  Sixteen rounds
+/// are two whole turns of the eight, so a block ends with every name back
+/// where it started.
+#define DJINTEROP_SHA512_ROUND(a, b, c, d, e, f, g, h, word, constant)        \
+    do                                                                        \
+    {                                                                         \
+        const uint64_t t1 =                                                   \
+            (h) + (rotr((e), 14) ^ rotr((e), 18) ^ rotr((e), 41)) +           \
+            (((e) & (f)) ^ (~(e) & (g))) + (constant) + (word);               \
+        const uint64_t t2 = (rotr((a), 28) ^ rotr((a), 34) ^ rotr((a), 39)) + \
+                            (((a) & (b)) ^ ((a) & (c)) ^ ((b) & (c)));        \
+        (d) += t1;                                                            \
+        (h) = t1 + t2;                                                        \
+    } while (false)
+
+#define DJINTEROP_SHA512_BLOCK(word)                                         \
+    do                                                                       \
+    {                                                                        \
+        DJINTEROP_SHA512_ROUND(a, b, c, d, e, f, g, h, word(0), k[i + 0]);   \
+        DJINTEROP_SHA512_ROUND(h, a, b, c, d, e, f, g, word(1), k[i + 1]);   \
+        DJINTEROP_SHA512_ROUND(g, h, a, b, c, d, e, f, word(2), k[i + 2]);   \
+        DJINTEROP_SHA512_ROUND(f, g, h, a, b, c, d, e, word(3), k[i + 3]);   \
+        DJINTEROP_SHA512_ROUND(e, f, g, h, a, b, c, d, word(4), k[i + 4]);   \
+        DJINTEROP_SHA512_ROUND(d, e, f, g, h, a, b, c, word(5), k[i + 5]);   \
+        DJINTEROP_SHA512_ROUND(c, d, e, f, g, h, a, b, word(6), k[i + 6]);   \
+        DJINTEROP_SHA512_ROUND(b, c, d, e, f, g, h, a, word(7), k[i + 7]);   \
+        DJINTEROP_SHA512_ROUND(a, b, c, d, e, f, g, h, word(8), k[i + 8]);   \
+        DJINTEROP_SHA512_ROUND(h, a, b, c, d, e, f, g, word(9), k[i + 9]);   \
+        DJINTEROP_SHA512_ROUND(g, h, a, b, c, d, e, f, word(10), k[i + 10]); \
+        DJINTEROP_SHA512_ROUND(f, g, h, a, b, c, d, e, word(11), k[i + 11]); \
+        DJINTEROP_SHA512_ROUND(e, f, g, h, a, b, c, d, word(12), k[i + 12]); \
+        DJINTEROP_SHA512_ROUND(d, e, f, g, h, a, b, c, word(13), k[i + 13]); \
+        DJINTEROP_SHA512_ROUND(c, d, e, f, g, h, a, b, word(14), k[i + 14]); \
+        DJINTEROP_SHA512_ROUND(b, c, d, e, f, g, h, a, word(15), k[i + 15]); \
+        i += 16;                                                             \
+    } while (false)
+
+/// The first sixteen rounds read the block as it arrives; the rest extend the
+/// schedule a word at a time, just before the round that consumes it.
+#define DJINTEROP_SHA512_LOADED(j) w[j]
+#define DJINTEROP_SHA512_EXTENDED(j) extend(w, j)
+
 inline uint64_t load_be64(const uint8_t* p) noexcept
 {
     uint64_t v = 0;
@@ -88,39 +145,19 @@ sha512::sha512() noexcept :
 
 void sha512::compress(const uint8_t* block) noexcept
 {
-    uint64_t w[80];
-    for (int i = 0; i < 16; ++i)
-        w[i] = load_be64(block + (i * 8));
-    for (int i = 16; i < 80; ++i)
-    {
-        const auto s0 =
-            rotr(w[i - 15], 1) ^ rotr(w[i - 15], 8) ^ (w[i - 15] >> 7);
-        const auto s1 =
-            rotr(w[i - 2], 19) ^ rotr(w[i - 2], 61) ^ (w[i - 2] >> 6);
-        w[i] = w[i - 16] + s0 + w[i - 7] + s1;
-    }
+    uint64_t w[16];
+    for (int j = 0; j < 16; ++j)
+        w[j] = load_be64(block + (j * 8));
 
     auto a = state_[0], b = state_[1], c = state_[2], d = state_[3];
     auto e = state_[4], f = state_[5], g = state_[6], h = state_[7];
 
-    for (int i = 0; i < 80; ++i)
-    {
-        const auto s1 = rotr(e, 14) ^ rotr(e, 18) ^ rotr(e, 41);
-        const auto ch = (e & f) ^ (~e & g);
-        const auto temp1 = h + s1 + ch + k[i] + w[i];
-        const auto s0 = rotr(a, 28) ^ rotr(a, 34) ^ rotr(a, 39);
-        const auto maj = (a & b) ^ (a & c) ^ (b & c);
-        const auto temp2 = s0 + maj;
-
-        h = g;
-        g = f;
-        f = e;
-        e = d + temp1;
-        d = c;
-        c = b;
-        b = a;
-        a = temp1 + temp2;
-    }
+    int i = 0;
+    DJINTEROP_SHA512_BLOCK(DJINTEROP_SHA512_LOADED);
+    DJINTEROP_SHA512_BLOCK(DJINTEROP_SHA512_EXTENDED);
+    DJINTEROP_SHA512_BLOCK(DJINTEROP_SHA512_EXTENDED);
+    DJINTEROP_SHA512_BLOCK(DJINTEROP_SHA512_EXTENDED);
+    DJINTEROP_SHA512_BLOCK(DJINTEROP_SHA512_EXTENDED);
 
     state_[0] += a;
     state_[1] += b;
@@ -193,9 +230,7 @@ sha512_digest sha512::hash(const uint8_t* data, size_t length) noexcept
     return h.finalise();
 }
 
-sha512_digest hmac_sha512(
-    const uint8_t* key, size_t key_length, const uint8_t* data,
-    size_t data_length) noexcept
+hmac_sha512_key::hmac_sha512_key(const uint8_t* key, size_t key_length) noexcept
 {
     std::array<uint8_t, sha512_block_length> padded{};
     if (key_length > sha512_block_length)
@@ -208,23 +243,42 @@ sha512_digest hmac_sha512(
         std::copy(key, key + key_length, padded.begin());
     }
 
-    std::array<uint8_t, sha512_block_length> inner_pad{};
-    std::array<uint8_t, sha512_block_length> outer_pad{};
+    std::array<uint8_t, sha512_block_length> pad{};
     for (size_t i = 0; i < sha512_block_length; ++i)
-    {
-        inner_pad[i] = static_cast<uint8_t>(padded[i] ^ 0x36);
-        outer_pad[i] = static_cast<uint8_t>(padded[i] ^ 0x5c);
-    }
+        pad[i] = static_cast<uint8_t>(padded[i] ^ 0x36);
+    inner_.update(pad.data(), pad.size());
 
-    sha512 inner;
-    inner.update(inner_pad.data(), inner_pad.size());
-    inner.update(data, data_length);
-    const auto inner_digest = inner.finalise();
+    for (size_t i = 0; i < sha512_block_length; ++i)
+        pad[i] = static_cast<uint8_t>(padded[i] ^ 0x5c);
+    outer_.update(pad.data(), pad.size());
+}
 
-    sha512 outer;
-    outer.update(outer_pad.data(), outer_pad.size());
-    outer.update(inner_digest.data(), inner_digest.size());
-    return outer.finalise();
+hmac_sha512_stream::hmac_sha512_stream(const hmac_sha512_key& key) noexcept :
+    inner_{key.inner_}, outer_{key.outer_}
+{
+}
+
+void hmac_sha512_stream::update(const uint8_t* data, size_t length) noexcept
+{
+    inner_.update(data, length);
+}
+
+sha512_digest hmac_sha512_stream::finalise() noexcept
+{
+    const auto inner_digest = inner_.finalise();
+    outer_.update(inner_digest.data(), inner_digest.size());
+    return outer_.finalise();
+}
+
+sha512_digest hmac_sha512(
+    const uint8_t* key, size_t key_length, const uint8_t* data,
+    size_t data_length) noexcept
+{
+    const hmac_sha512_key prepared{key, key_length};
+
+    hmac_sha512_stream stream{prepared};
+    stream.update(data, data_length);
+    return stream.finalise();
 }
 
 std::vector<uint8_t> pbkdf2_hmac_sha512(
@@ -234,28 +288,34 @@ std::vector<uint8_t> pbkdf2_hmac_sha512(
     if (iterations == 0)
         throw std::invalid_argument{"PBKDF2 requires at least one iteration"};
 
+    // Every iteration below authenticates under the same key, so its padded
+    // blocks are absorbed once here rather than a quarter of a million times.
+    const hmac_sha512_key prf{password, password_length};
+
     std::vector<uint8_t> output;
     output.reserve(length);
-
-    std::vector<uint8_t> block;
-    block.reserve(salt_length + 4);
 
     for (uint32_t index = 1; output.size() < length; ++index)
     {
         // U_1 = PRF(password, salt || INT_BE32(index))
-        block.assign(salt, salt + salt_length);
-        block.push_back(static_cast<uint8_t>(index >> 24));
-        block.push_back(static_cast<uint8_t>(index >> 16));
-        block.push_back(static_cast<uint8_t>(index >> 8));
-        block.push_back(static_cast<uint8_t>(index));
+        const uint8_t counter[4] = {
+            static_cast<uint8_t>(index >> 24),
+            static_cast<uint8_t>(index >> 16), static_cast<uint8_t>(index >> 8),
+            static_cast<uint8_t>(index)};
 
-        auto u =
-            hmac_sha512(password, password_length, block.data(), block.size());
+        hmac_sha512_stream first{prf};
+        first.update(salt, salt_length);
+        first.update(counter, sizeof(counter));
+
+        auto u = first.finalise();
         auto accumulator = u;
 
         for (uint32_t i = 1; i < iterations; ++i)
         {
-            u = hmac_sha512(password, password_length, u.data(), u.size());
+            hmac_sha512_stream next{prf};
+            next.update(u.data(), u.size());
+            u = next.finalise();
+
             for (size_t j = 0; j < accumulator.size(); ++j)
                 accumulator[j] ^= u[j];
         }
@@ -269,3 +329,8 @@ std::vector<uint8_t> pbkdf2_hmac_sha512(
 }
 
 }  // namespace djinterop::util::crypto
+
+#undef DJINTEROP_SHA512_ROUND
+#undef DJINTEROP_SHA512_BLOCK
+#undef DJINTEROP_SHA512_LOADED
+#undef DJINTEROP_SHA512_EXTENDED

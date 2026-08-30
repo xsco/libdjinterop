@@ -51,6 +51,41 @@ private:
     uint64_t total_length_;
 };
 
+/// A key prepared for repeated HMAC-SHA-512.
+///
+/// Both padded key blocks are absorbed once, here, so a message afterwards
+/// costs only the compressions its own bytes call for.  That halves key
+/// derivation, and every page of a database is checked under the one key.
+class hmac_sha512_key
+{
+public:
+    hmac_sha512_key(const uint8_t* key, size_t key_length) noexcept;
+
+private:
+    friend class hmac_sha512_stream;
+
+    sha512 inner_;
+    sha512 outer_;
+};
+
+/// One message authenticated under a prepared key.  A stream holds no
+/// reference to the key, so streams built from one key on several threads do
+/// not interfere.
+class hmac_sha512_stream
+{
+public:
+    explicit hmac_sha512_stream(const hmac_sha512_key& key) noexcept;
+
+    void update(const uint8_t* data, size_t length) noexcept;
+
+    /// Finalise the tag.  The object must not be reused afterwards.
+    [[nodiscard]] sha512_digest finalise() noexcept;
+
+private:
+    sha512 inner_;
+    sha512 outer_;
+};
+
 /// Compute HMAC-SHA-512, as specified by RFC 2104.
 sha512_digest hmac_sha512(
     const uint8_t* key, size_t key_length, const uint8_t* data,

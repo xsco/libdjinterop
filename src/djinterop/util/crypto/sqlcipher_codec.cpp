@@ -39,11 +39,11 @@ std::vector<uint8_t> derive_page_key(
         salt.data(), salt.size(), iterations, page_key_length);
 }
 
-/// Derive the HMAC key.
+/// Derive the HMAC key, and prepare it for the pages checked under it.
 ///
 /// It comes from the *page key*, not the passphrase, using the database salt
 /// with every byte XORed by 0x3a.
-std::vector<uint8_t> derive_hmac_key(
+hmac_sha512_key make_hmac_key(
     const std::vector<uint8_t>& page_key, const sqlcipher_salt& salt,
     uint32_t iterations)
 {
@@ -52,9 +52,11 @@ std::vector<uint8_t> derive_hmac_key(
         salt.begin(), salt.end(), hmac_salt.begin(),
         [](uint8_t byte) { return static_cast<uint8_t>(byte ^ 0x3a); });
 
-    return pbkdf2_hmac_sha512(
+    const auto key = pbkdf2_hmac_sha512(
         page_key.data(), page_key.size(), hmac_salt.data(), hmac_salt.size(),
         iterations, hmac_key_length);
+
+    return hmac_sha512_key{key.data(), key.size()};
 }
 
 /// Reject parameters that no SQLCipher database could have, before any time
@@ -101,7 +103,7 @@ sqlcipher_codec::sqlcipher_codec(
     const std::vector<uint8_t>& page_key, const sqlcipher_salt& salt,
     const sqlcipher_parameters& params) :
     params_{params}, cipher_{page_key.data()},
-    hmac_key_{derive_hmac_key(page_key, salt, params.hmac_kdf_iterations)}
+    hmac_key_{make_hmac_key(page_key, salt, params.hmac_kdf_iterations)}
 {
 }
 
@@ -109,19 +111,20 @@ sha512_digest sqlcipher_codec::page_mac(
     uint32_t page_number, const uint8_t* ciphertext, size_t length,
     const uint8_t* iv) const noexcept
 {
-    // The tag covers ciphertext || IV || page number, where the page number is
-    // a little-endian 32-bit integer.
-    std::vector<uint8_t> message;
-    message.reserve(length + aes_block_length + 4);
-    message.insert(message.end(), ciphertext, ciphertext + length);
-    message.insert(message.end(), iv, iv + aes_block_length);
-    message.push_back(static_cast<uint8_t>(page_number));
-    message.push_back(static_cast<uint8_t>(page_number >> 8));
-    message.push_back(static_cast<uint8_t>(page_number >> 16));
-    message.push_back(static_cast<uint8_t>(page_number >> 24));
+    // The tag covers ciphertext || IV || page number, the last a little-endian
+    // 32-bit integer.  The three are fed in as they lie rather than gathered
+    // into a buffer, which would copy every page of a database for nothing.
+    const uint8_t number[4] = {
+        static_cast<uint8_t>(page_number),
+        static_cast<uint8_t>(page_number >> 8),
+        static_cast<uint8_t>(page_number >> 16),
+        static_cast<uint8_t>(page_number >> 24)};
 
-    return hmac_sha512(
-        hmac_key_.data(), hmac_key_.size(), message.data(), message.size());
+    hmac_sha512_stream stream{hmac_key_};
+    stream.update(ciphertext, length);
+    stream.update(iv, aes_block_length);
+    stream.update(number, sizeof(number));
+    return stream.finalise();
 }
 
 bool sqlcipher_codec::page_mac_is_valid(
