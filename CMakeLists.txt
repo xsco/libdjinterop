@@ -382,6 +382,7 @@ if(SYSTEM_SQLITE)
     target_link_libraries(
         DjInterop PUBLIC
         ${SQLite3_LIBRARIES})
+    set(DJINTEROP_SQLITE_VERSION "${SQLite3_VERSION}")
 else()
     # Use bundled SQLite amalgamation sources.
     message(STATUS "Using bundled SQLite...")
@@ -394,6 +395,16 @@ else()
     target_include_directories(
         DjInterop PRIVATE SYSTEM
         ext/sqlite-amalgamation)
+
+    # Read the version out of the amalgamation rather than restating it here,
+    # so that bumping the bundled copy is a matter of replacing two files.
+    file(
+        STRINGS ext/sqlite-amalgamation/sqlite3.h DJINTEROP_SQLITE_VERSION
+        REGEX "^#define SQLITE_VERSION[ \t]+\"")
+    string(
+        REGEX REPLACE "^#define SQLITE_VERSION[ \t]+\"([^\"]+)\".*" "\\1"
+        DJINTEROP_SQLITE_VERSION "${DJINTEROP_SQLITE_VERSION}")
+    message(STATUS "Bundled SQLite is version ${DJINTEROP_SQLITE_VERSION}")
 endif()
 
 if(SYSTEM_SQLITE_MODERN_CPP)
@@ -587,17 +598,17 @@ if (Boost_FOUND)
             ${DJINTEROP_TEST_SQLITE_SOURCES})
 
     # A decrypted database is handed to SQLite through `sqlite3_deserialize`,
-    # which arrived in 3.36.  Built against anything older -- the bundled
-    # amalgamation is 3.33 -- the library reports the format unsupported, and
-    # this test would only be watching it say so.
-    if(SYSTEM_SQLITE AND NOT SQLite3_VERSION VERSION_LESS 3.36)
+    # which arrived in 3.36.  Built against anything older the library reports
+    # the format unsupported, and this test would only be watching it say so.
+    if(NOT DJINTEROP_SQLITE_VERSION VERSION_LESS 3.36)
         add_djinterop_test(onelibrary/ database_test)
         target_sources(onelibrary_database_test PRIVATE
                 src/djinterop/util/crypto/aes.cpp
                 src/djinterop/util/crypto/aes_hardware.cpp
                 src/djinterop/util/crypto/sha512.cpp
                 src/djinterop/util/crypto/sqlcipher_codec.cpp
-                src/djinterop/util/filesystem.cpp)
+                src/djinterop/util/filesystem.cpp
+                ${DJINTEROP_TEST_SQLITE_SOURCES})
     else()
         message(
             STATUS
