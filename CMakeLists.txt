@@ -49,6 +49,82 @@ option(SYSTEM_DATE_H "Use system installation of date.h" OFF)
 option(SYSTEM_SQLITE "Use system installation of SQLite" ON)
 option(SYSTEM_SQLITE_MODERN_CPP "Use system installation of sqlite_modern_cpp" OFF)
 
+
+# The processor's own AES instructions are worth two orders of magnitude over
+# software AES when reading an encrypted OneLibrary database, so use them where
+# the compiler can be persuaded to emit them.  Whether the processor running the
+# built library has them is a separate question, decided at run time; settled
+# here is only whether the intrinsics compile, and with which flags.  They are
+# applied to `aes_hardware.cpp` alone, so no other translation unit can pick up
+# an instruction the target may not have.
+include(CheckCXXSourceCompiles)
+
+set(DJINTEROP_AES_X86_SOURCE "
+#if defined(_MSC_VER)
+#include <intrin.h>
+#else
+#include <immintrin.h>
+#endif
+int main()
+{
+    __m128i x = _mm_setzero_si128();
+    x = _mm_aesenc_si128(x, x);
+    x = _mm_aesenclast_si128(x, x);
+    x = _mm_aesdec_si128(x, x);
+    x = _mm_aesdeclast_si128(x, x);
+    return _mm_cvtsi128_si32(x);
+}
+")
+
+set(DJINTEROP_AES_ARM64_SOURCE "
+#include <arm_neon.h>
+int main()
+{
+    uint8x16_t x = vdupq_n_u8(0);
+    x = vaesmcq_u8(vaeseq_u8(x, x));
+    x = vaesimcq_u8(vaesdq_u8(x, x));
+    return vgetq_lane_u8(x, 0);
+}
+")
+
+set(DJINTEROP_AES_INTRINSICS_DEFINE "")
+set(DJINTEROP_AES_INTRINSICS_FLAGS "")
+
+# Try one architecture, unless another has already answered.  Bare comes first:
+# MSVC needs no flags at all, and neither does a compiler whose default target
+# already includes the extension, such as Apple's on arm64.
+macro(djinterop_try_aes arch source flags)
+    if(NOT DJINTEROP_AES_INTRINSICS_DEFINE)
+        check_cxx_source_compiles("${source}" DJINTEROP_AES_${arch}_BARE)
+        if(NOT DJINTEROP_AES_${arch}_BARE)
+            set(CMAKE_REQUIRED_FLAGS "${flags}")
+            check_cxx_source_compiles(
+                "${source}" DJINTEROP_AES_${arch}_FLAGGED)
+            unset(CMAKE_REQUIRED_FLAGS)
+            if(DJINTEROP_AES_${arch}_FLAGGED)
+                set(DJINTEROP_AES_INTRINSICS_FLAGS "${flags}")
+            endif()
+        endif()
+        if(DJINTEROP_AES_${arch}_BARE OR DJINTEROP_AES_${arch}_FLAGGED)
+            set(DJINTEROP_AES_INTRINSICS_DEFINE
+                "DJINTEROP_AES_INTRINSICS_${arch}")
+        endif()
+    endif()
+endmacro()
+
+djinterop_try_aes(X86 "${DJINTEROP_AES_X86_SOURCE}" "-maes -msse2")
+djinterop_try_aes(ARM64 "${DJINTEROP_AES_ARM64_SOURCE}" "-march=armv8-a+crypto")
+
+if(DJINTEROP_AES_INTRINSICS_DEFINE)
+    message(STATUS "Using AES instructions where available at run time")
+    set_source_files_properties(
+        src/djinterop/util/crypto/aes_hardware.cpp PROPERTIES
+        COMPILE_DEFINITIONS "${DJINTEROP_AES_INTRINSICS_DEFINE}"
+        COMPILE_FLAGS "${DJINTEROP_AES_INTRINSICS_FLAGS}")
+else()
+    message(STATUS "No AES instructions for this target; using AES tables")
+endif()
+
 add_library(
     DjInterop
     include/djinterop/album_art.hpp
@@ -81,6 +157,7 @@ add_library(
     include/djinterop/engine/v3/track_table.hpp
     include/djinterop/exceptions.hpp
     include/djinterop/musical_key.hpp
+    include/djinterop/onelibrary/onelibrary.hpp
     include/djinterop/pad_color.hpp
     include/djinterop/performance_data.hpp
     include/djinterop/playlist.hpp
@@ -202,10 +279,34 @@ add_library(
     src/djinterop/impl/playlist_impl.hpp
     src/djinterop/impl/track_impl.cpp
     src/djinterop/impl/track_impl.hpp
+    src/djinterop/onelibrary/content_table.cpp
+    src/djinterop/onelibrary/content_table.hpp
+    src/djinterop/onelibrary/crate_impl.cpp
+    src/djinterop/onelibrary/crate_impl.hpp
+    src/djinterop/onelibrary/database_impl.cpp
+    src/djinterop/onelibrary/database_impl.hpp
+    src/djinterop/onelibrary/onelibrary.cpp
+    src/djinterop/onelibrary/onelibrary_context.hpp
+    src/djinterop/onelibrary/playlist_impl.cpp
+    src/djinterop/onelibrary/playlist_impl.hpp
+    src/djinterop/onelibrary/playlist_table.cpp
+    src/djinterop/onelibrary/playlist_table.hpp
+    src/djinterop/onelibrary/track_impl.cpp
+    src/djinterop/onelibrary/track_impl.hpp
     src/djinterop/playlist.cpp
     src/djinterop/track.cpp
     src/djinterop/util/chrono.cpp
     src/djinterop/util/chrono.hpp
+    src/djinterop/util/crypto/aes.cpp
+    src/djinterop/util/crypto/aes.hpp
+    src/djinterop/util/crypto/aes_hardware.cpp
+    src/djinterop/util/crypto/aes_hardware.hpp
+    src/djinterop/util/crypto/sha512.cpp
+    src/djinterop/util/crypto/sha512.hpp
+    src/djinterop/util/crypto/sqlcipher_codec.cpp
+    src/djinterop/util/crypto/sqlcipher_codec.hpp
+    src/djinterop/util/crypto/sqlcipher_wal.cpp
+    src/djinterop/util/crypto/sqlcipher_wal.hpp
     src/djinterop/util/filesystem.cpp
     src/djinterop/util/filesystem.hpp
     src/djinterop/util/random.cpp
@@ -238,6 +339,14 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${DJINTEROP_INSTALL_INCLUDEDIR}>)
+
+# Decrypting the pages of a database is spread over the processors available,
+# which is what the standard threading library is needed for.
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(
+    DjInterop PRIVATE
+    Threads::Threads)
 
 # Always rely on system installation of zlib.
 set(ZLIB_MIN_VERSION 1.2.8)
@@ -273,6 +382,7 @@ if(SYSTEM_SQLITE)
     target_link_libraries(
         DjInterop PUBLIC
         ${SQLite3_LIBRARIES})
+    set(DJINTEROP_SQLITE_VERSION "${SQLite3_VERSION}")
 else()
     # Use bundled SQLite amalgamation sources.
     message(STATUS "Using bundled SQLite...")
@@ -285,6 +395,16 @@ else()
     target_include_directories(
         DjInterop PRIVATE SYSTEM
         ext/sqlite-amalgamation)
+
+    # Read the version out of the amalgamation rather than restating it here,
+    # so that bumping the bundled copy is a matter of replacing two files.
+    file(
+        STRINGS ext/sqlite-amalgamation/sqlite3.h DJINTEROP_SQLITE_VERSION
+        REGEX "^#define SQLITE_VERSION[ \t]+\"")
+    string(
+        REGEX REPLACE "^#define SQLITE_VERSION[ \t]+\"([^\"]+)\".*" "\\1"
+        DJINTEROP_SQLITE_VERSION "${DJINTEROP_SQLITE_VERSION}")
+    message(STATUS "Bundled SQLite is version ${DJINTEROP_SQLITE_VERSION}")
 endif()
 
 if(SYSTEM_SQLITE_MODERN_CPP)
@@ -357,6 +477,9 @@ install(FILES
     include/djinterop/engine/v3/track_data_blob.hpp
     include/djinterop/engine/v3/track_table.hpp
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/engine/v3")
+install(FILES
+    include/djinterop/onelibrary/onelibrary.hpp
+    DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/onelibrary")
 
 
 if (UNIX)
@@ -407,6 +530,7 @@ if (BUILD_EXAMPLES)
 
     add_djinterop_example(engine_prime)
     add_djinterop_example(engine_library_v2_low_level)
+    add_djinterop_example(onelibrary)
 endif()
 
 # Unit tests.
@@ -431,6 +555,10 @@ if (Boost_FOUND)
                 ${Boost_INCLUDE_DIRS}
                 ${CMAKE_CURRENT_BINARY_DIR}/include
                 include)
+        # A test that compiles library sources into itself, rather than only
+        # linking, needs the headers that those sources include.
+        target_include_directories(${test_executable_name} PRIVATE SYSTEM
+                $<TARGET_PROPERTY:DjInterop,INCLUDE_DIRECTORIES>)
         target_link_libraries(${test_executable_name} PUBLIC
                 DjInterop
                 ${Boost_LIBRARIES})
@@ -450,6 +578,58 @@ if (Boost_FOUND)
     add_djinterop_test(engine/v3/ performance_data_table_test)
     add_djinterop_test(engine/v3/ track_table_test)
 
+    # Some parts of the library are internal, and its symbols are hidden, so
+    # tests of them compile those sources into themselves rather than linking.
+    #
+    # The OneLibrary tests are commented out below.  Each of them talks to
+    # SQLite directly, and a test cannot borrow SQLite from the library: its
+    # symbols are hidden there.  With `-DSYSTEM_SQLITE=OFF` that means every
+    # one of them compiles the amalgamation into itself, some fifteen seconds
+    # apiece, on top of the copy the library already builds.
+    #
+    # The sources are still in `test/djinterop/onelibrary`; uncommenting the
+    # block below is all it takes to run them again.  `sqlite3_deserialize`,
+    # which reading a decrypted database goes through, arrived in SQLite 3.36,
+    # hence the version the database test asks for.
+    #
+    # if(SYSTEM_SQLITE)
+    #     set(DJINTEROP_TEST_SQLITE_SOURCES "")
+    # else()
+    #     set(DJINTEROP_TEST_SQLITE_SOURCES ext/sqlite-amalgamation/sqlite3.c)
+    # endif()
+    #
+    # add_djinterop_test(onelibrary/ content_table_test)
+    # target_sources(onelibrary_content_table_test PRIVATE
+    #         src/djinterop/onelibrary/content_table.cpp
+    #         ${DJINTEROP_TEST_SQLITE_SOURCES})
+    #
+    # if(NOT DJINTEROP_SQLITE_VERSION VERSION_LESS 3.36)
+    #     add_djinterop_test(onelibrary/ database_test)
+    #     target_sources(onelibrary_database_test PRIVATE
+    #             src/djinterop/util/crypto/aes.cpp
+    #             src/djinterop/util/crypto/aes_hardware.cpp
+    #             src/djinterop/util/crypto/sha512.cpp
+    #             src/djinterop/util/crypto/sqlcipher_codec.cpp
+    #             src/djinterop/util/filesystem.cpp
+    #             ${DJINTEROP_TEST_SQLITE_SOURCES})
+    # else()
+    #     message(
+    #         STATUS
+    #         "OneLibrary database test not available, as reading the format "
+    #         "needs SQLite 3.36 or newer")
+    # endif()
+    #
+    # add_djinterop_test(onelibrary/ playlist_table_test)
+    # target_sources(onelibrary_playlist_table_test PRIVATE
+    #         src/djinterop/onelibrary/playlist_table.cpp
+    #         ${DJINTEROP_TEST_SQLITE_SOURCES})
+
+    add_djinterop_test(util/ crypto_test)
+    target_sources(util_crypto_test PRIVATE
+            src/djinterop/util/crypto/aes.cpp
+            src/djinterop/util/crypto/aes_hardware.cpp
+            src/djinterop/util/crypto/sha512.cpp
+            src/djinterop/util/crypto/sqlcipher_codec.cpp)
 else()
     message(STATUS "Unit tests not available, as Boost cannot be found")
 endif()

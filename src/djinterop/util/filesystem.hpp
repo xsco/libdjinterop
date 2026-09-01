@@ -24,6 +24,7 @@ namespace djinterop::util
 {
 void create_dir(const std::string& directory);
 bool path_exists(const std::string& directory);
+bool path_is_directory(const std::string& path);
 std::string get_filename(const std::string& file_path);
 std::optional<std::string> get_file_extension(const std::string& file_path);
 
