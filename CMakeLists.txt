@@ -47,6 +47,7 @@ option(BUILD_SHARED_LIBS "Build shared library" ON)
 # build).
 option(SYSTEM_DATE_H "Use system installation of date.h" OFF)
 option(SYSTEM_SQLITE "Use system installation of SQLite" ON)
+option(EXPERIMENTAL_ENABLE_SQLCIPHER "Use vendored SQLCipher in place of SQLite (supersedes SYSTEM_SQLITE)" OFF)
 option(SYSTEM_SQLITE_MODERN_CPP "Use system installation of sqlite_modern_cpp" OFF)
 
 add_library(
@@ -263,7 +264,16 @@ else()
         ext/date)
 endif()
 
-if(SYSTEM_SQLITE)
+if(EXPERIMENTAL_ENABLE_SQLCIPHER)
+    if(SYSTEM_SQLITE)
+        message(WARNING "EXPERIMENTAL_ENABLE_SQLCIPHER supersedes SYSTEM_SQLITE; the system SQLite option is ignored")
+    endif()
+    message(STATUS "Using vendored SQLCipher (experimental)...")
+    add_subdirectory(ext/sqlcipher)
+    target_link_libraries(
+        DjInterop PRIVATE
+        sqlcipher)
+elseif(SYSTEM_SQLITE)
     # Search for system installation of SQLite and use that.
     set(SQLITE_MIN_VERSION 3.11)
     find_package(SQLite3 ${SQLITE_MIN_VERSION} REQUIRED)
@@ -361,7 +371,7 @@ install(FILES
 
 if (UNIX)
     set(PKGCONFIG_TARGET djinterop)
-    if (SYSTEM_SQLITE)
+    if (SYSTEM_SQLITE AND NOT EXPERIMENTAL_ENABLE_SQLCIPHER)
         set(PKGCONFIG_REQUIRES "zlib >= ${ZLIB_MIN_VERSION}, sqlite3 >= ${SQLITE_MIN_VERSION}")
     else()
         set(PKGCONFIG_REQUIRES "zlib >= ${ZLIB_MIN_VERSION}")
