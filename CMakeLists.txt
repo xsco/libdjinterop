@@ -212,6 +212,8 @@ add_library(
     src/djinterop/util/random.cpp
     src/djinterop/util/random.hpp
     src/djinterop/util/sqlite_transaction.hpp
+    src/djinterop/onelibrary/onelibrary.cpp
+    src/djinterop/onelibrary/schema.cpp
     src/djinterop/onelibrary/onelibrary_context.hpp
 )
 
@@ -371,6 +373,9 @@ install(FILES
     include/djinterop/engine/v3/track_data_blob.hpp
     include/djinterop/engine/v3/track_table.hpp
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/engine/v3")
+install(FILES
+    include/djinterop/onelibrary/onelibrary.hpp
+    DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/onelibrary")
 
 
 if (UNIX)
