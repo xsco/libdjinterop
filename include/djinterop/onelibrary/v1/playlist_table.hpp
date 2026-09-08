@@ -16,6 +16,8 @@
  */
 
 #pragma once
+#ifndef DJINTEROP_ONELIBRARY_V1_PLAYLIST_TABLE_HPP
+#define DJINTEROP_ONELIBRARY_V1_PLAYLIST_TABLE_HPP
 
 #include <cstdint>
 #include <memory>
@@ -23,31 +25,34 @@
 #include <string>
 #include <vector>
 
-#include "onelibrary_context.hpp"
+#include <djinterop/config.hpp>
 
 namespace djinterop::onelibrary
 {
+struct onelibrary_context;
+
+namespace v1
+{
+/// Special value for id to indicate that a given row is not a row of the
+/// database, and the value a root playlist carries as its parent.
+constexpr int64_t PLAYLIST_ROW_ID_NONE = 0;
+
 /// One row of the `playlist` table.
 struct playlist_row
 {
-    int64_t id = 0;
+    int64_t id = PLAYLIST_ROW_ID_NONE;
     std::string name;
 
-    /// The playlist this one sits under, if any.
-    ///
-    /// A root playlist has either no parent recorded or a parent of zero: the
-    /// schema enforces no foreign key, and rekordbox writes both.
+    /// The playlist this one sits under.  A root has either no parent
+    /// recorded or a parent of `PLAYLIST_ROW_ID_NONE`; rekordbox writes both.
     std::optional<int64_t> parent_id;
 
     /// Position among siblings, counting from one.
     std::optional<int64_t> sequence_number;
 };
 
-/// Read access to the playlist tree and its membership.
-///
-/// OneLibrary has a single tree of playlists, which libdjinterop presents both
-/// as playlists and as crates; the two are not distinct in this format.
-class playlist_table
+/// Read access to the `playlist` tree and the `playlist_content` membership.
+class DJINTEROP_PUBLIC playlist_table
 {
 public:
     explicit playlist_table(std::shared_ptr<onelibrary_context> context);
@@ -84,4 +89,7 @@ private:
     std::shared_ptr<onelibrary_context> context_;
 };
 
+}  // namespace v1
 }  // namespace djinterop::onelibrary
+
+#endif  // DJINTEROP_ONELIBRARY_V1_PLAYLIST_TABLE_HPP

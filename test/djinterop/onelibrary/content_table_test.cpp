@@ -18,6 +18,7 @@
 #define BOOST_TEST_MODULE onelibrary_content_table_test
 #include <boost/test/included/unit_test.hpp>
 
+#include <chrono>
 #include <memory>
 #include <string>
 
@@ -25,13 +26,15 @@
 
 #include <djinterop/musical_key.hpp>
 
-#include "../../../src/djinterop/onelibrary/content_table.hpp"
+#include <djinterop/onelibrary/v1/content_table.hpp>
 #include "../../../src/djinterop/onelibrary/onelibrary_context.hpp"
+#include "../../../src/djinterop/onelibrary/v1/track_conversion.hpp"
 #include "../boost_test_printable.hpp"
 #include "onelibrary_schema.hpp"
 
 namespace utf = boost::unit_test;
 namespace ol = djinterop::onelibrary;
+namespace olv1 = djinterop::onelibrary::v1;
 
 namespace
 {
@@ -74,7 +77,7 @@ BOOST_TEST_DECORATOR(*utf::description("get() resolves the lookup tables"))
 BOOST_AUTO_TEST_CASE(get__a_populated_row__resolves_its_lookups)
 {
     // Arrange
-    const ol::content_table content{make_context()};
+    const olv1::content_table content{make_context()};
 
     // Act
     const auto row = content.get(1);
@@ -89,7 +92,7 @@ BOOST_AUTO_TEST_CASE(get__a_populated_row__resolves_its_lookups)
     BOOST_CHECK_EQUAL(row->label.value(), "Warp");
     BOOST_CHECK_EQUAL(row->key.value(), "F#m");
     BOOST_CHECK_EQUAL(row->bpm_x100.value(), 12400);
-    BOOST_CHECK_EQUAL(row->length_seconds.value(), 391);
+    BOOST_CHECK(row->length.value() == std::chrono::seconds{391});
     BOOST_CHECK_EQUAL(row->rating_stars.value(), 4);
     BOOST_CHECK_EQUAL(row->path.value(), "/Contents/Aphex/alpha.mp3");
 }
@@ -98,7 +101,7 @@ BOOST_TEST_DECORATOR(*utf::description("get() reads an empty column as absent"))
 BOOST_AUTO_TEST_CASE(get__an_empty_column__reads_as_absent)
 {
     // Arrange
-    const ol::content_table content{make_context()};
+    const olv1::content_table content{make_context()};
 
     // Act
     const auto row = content.get(2);
@@ -114,7 +117,7 @@ BOOST_TEST_DECORATOR(*utf::description("get() for a row that is not there"))
 BOOST_AUTO_TEST_CASE(get__an_unknown_row__is_absent)
 {
     // Arrange
-    const ol::content_table content{make_context()};
+    const olv1::content_table content{make_context()};
 
     // Act
     const auto row = content.get(404);
@@ -127,7 +130,7 @@ BOOST_TEST_DECORATOR(*utf::description("all_ids() is ordered by identifier"))
 BOOST_AUTO_TEST_CASE(all_ids__a_populated_table__is_ordered)
 {
     // Arrange
-    const ol::content_table content{make_context()};
+    const olv1::content_table content{make_context()};
 
     // Act
     const auto ids = content.all_ids();
@@ -143,7 +146,7 @@ BOOST_TEST_DECORATOR(
 BOOST_AUTO_TEST_CASE(ids_by_path__either_spelling__finds_the_row)
 {
     // Arrange
-    const ol::content_table content{make_context()};
+    const olv1::content_table content{make_context()};
 
     // Act
     const auto absolute = content.ids_by_path("/Contents/Aphex/alpha.mp3");
@@ -159,7 +162,7 @@ BOOST_TEST_DECORATOR(*utf::description("exists() for present and absent rows"))
 BOOST_AUTO_TEST_CASE(exists__present_and_absent_rows__reports_each)
 {
     // Arrange
-    const ol::content_table content{make_context()};
+    const olv1::content_table content{make_context()};
 
     // Act / Assert
     BOOST_CHECK(content.exists(1));
@@ -171,12 +174,12 @@ BOOST_TEST_DECORATOR(
 BOOST_AUTO_TEST_CASE(to_snapshot__a_populated_row__converts_its_units)
 {
     // Arrange
-    const ol::content_table content{make_context()};
+    const olv1::content_table content{make_context()};
     const auto row = content.get(1);
     BOOST_REQUIRE(row);
 
     // Act
-    const auto snapshot = ol::to_snapshot(*row);
+    const auto snapshot = olv1::to_snapshot(*row);
 
     // Assert
     BOOST_CHECK_CLOSE(snapshot.bpm.value(), 124.0, 0.001);
@@ -200,12 +203,12 @@ BOOST_TEST_DECORATOR(
 BOOST_AUTO_TEST_CASE(to_snapshot__any_row__has_no_performance_data)
 {
     // Arrange
-    const ol::content_table content{make_context()};
+    const olv1::content_table content{make_context()};
     const auto row = content.get(1);
     BOOST_REQUIRE(row);
 
     // Act
-    const auto snapshot = ol::to_snapshot(*row);
+    const auto snapshot = olv1::to_snapshot(*row);
 
     // Assert: rekordbox leaves these in the ANLZ files beside the database.
     BOOST_CHECK(snapshot.beatgrid.empty());
@@ -219,18 +222,18 @@ BOOST_TEST_DECORATOR(
 BOOST_AUTO_TEST_CASE(parse_musical_key__known_notations__are_understood)
 {
     // Act / Assert
-    BOOST_CHECK(ol::parse_musical_key("C") == djinterop::musical_key::c_major);
-    BOOST_CHECK(ol::parse_musical_key("Am") == djinterop::musical_key::a_minor);
+    BOOST_CHECK(olv1::parse_musical_key("C") == djinterop::musical_key::c_major);
+    BOOST_CHECK(olv1::parse_musical_key("Am") == djinterop::musical_key::a_minor);
     BOOST_CHECK(
-        ol::parse_musical_key("F#m") == djinterop::musical_key::f_sharp_minor);
+        olv1::parse_musical_key("F#m") == djinterop::musical_key::f_sharp_minor);
     BOOST_CHECK(
-        ol::parse_musical_key("Bb") == djinterop::musical_key::b_flat_major);
+        olv1::parse_musical_key("Bb") == djinterop::musical_key::b_flat_major);
 
     // The typographic accidentals mean the same as the ASCII ones.
     BOOST_CHECK(
-        ol::parse_musical_key("F♯m") == djinterop::musical_key::f_sharp_minor);
+        olv1::parse_musical_key("F♯m") == djinterop::musical_key::f_sharp_minor);
     BOOST_CHECK(
-        ol::parse_musical_key("B♭") == djinterop::musical_key::b_flat_major);
+        olv1::parse_musical_key("B♭") == djinterop::musical_key::b_flat_major);
 }
 
 BOOST_TEST_DECORATOR(
@@ -238,10 +241,10 @@ BOOST_TEST_DECORATOR(
 BOOST_AUTO_TEST_CASE(parse_musical_key__unknown_notations__are_not_guessed)
 {
     // Act / Assert
-    BOOST_CHECK(!ol::parse_musical_key(""));
-    BOOST_CHECK(!ol::parse_musical_key("H"));
+    BOOST_CHECK(!olv1::parse_musical_key(""));
+    BOOST_CHECK(!olv1::parse_musical_key("H"));
 
     // The Camelot and Open Key wheels are not read.
-    BOOST_CHECK(!ol::parse_musical_key("8A"));
-    BOOST_CHECK(!ol::parse_musical_key("Camelot 8A"));
+    BOOST_CHECK(!olv1::parse_musical_key("8A"));
+    BOOST_CHECK(!olv1::parse_musical_key("Camelot 8A"));
 }

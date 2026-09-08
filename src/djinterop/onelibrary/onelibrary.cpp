@@ -24,8 +24,9 @@
 
 #include "../util/crypto/encrypted_database.hpp"
 #include "../util/filesystem.hpp"
-#include "database_impl.hpp"
+#include "loader.hpp"
 #include "onelibrary_context.hpp"
+#include "v1/database_impl.hpp"
 
 namespace djinterop::onelibrary
 {
@@ -36,11 +37,10 @@ struct resolved_location
     /// Root directory of the device, to which track paths are relative.
     std::string directory;
 
-    /// The database file itself.
     std::string database_path;
 };
 
-/// Work out where the database is, given either a device or a database file.
+/// Work out where the database is, given a device or the file itself.
 resolved_location resolve(const std::string& path)
 {
     // A path that names the database directly implies its device root, which
@@ -53,9 +53,8 @@ resolved_location resolve(const std::string& path)
         auto end = path.size();
         for (int level = 0; level < 3; ++level)
         {
-            const auto separator =
-                end == 0 ? std::string::npos
-                         : path.find_last_of("/\\", end - 1);
+            const auto separator = end == 0 ? std::string::npos
+                                            : path.find_last_of("/\\", end - 1);
 
             // A relative path with nothing above it sits in the working
             // directory, which is then the root of the device.
@@ -71,23 +70,8 @@ resolved_location resolve(const std::string& path)
     return resolved_location{path, path + "/" + database_relative_path};
 }
 
-/// Read one column of a track's row, if the row is there and the column set.
-///
-/// The columns behind `library` are each read on their own, rather than
-/// through `content_table`, whose query joins six lookup tables to build a
-/// whole row that none of them needs.
-template <typename T>
-std::optional<T> track_column(
-    onelibrary_context& context, const char* sql, int64_t track_id)
-{
-    std::optional<T> result;
-    context.db << sql << track_id >>
-        [&](std::optional<T> value) { result = std::move(value); };
+}  // anonymous namespace
 
-    return result;
-}
-
-/// Decrypt the database on a device and check that it is one.
 std::shared_ptr<onelibrary_context> load_context(
     const std::string& path, const std::string& passphrase)
 {
@@ -96,16 +80,14 @@ std::shared_ptr<onelibrary_context> load_context(
     if (!util::path_exists(location.database_path))
         throw database_not_found{location.database_path};
 
-    // Key derivation is deliberately expensive, so the passphrase is not
-    // tested separately: a wrong one shows up as the database failing to open,
-    // and is reported as such.
+    // Key derivation is expensive, so the passphrase is not tested
+    // separately: a wrong one shows up as the database failing to open.
     std::shared_ptr<onelibrary_context> context;
     try
     {
         context = std::make_shared<onelibrary_context>(
-            location.directory,
-            util::crypto::open_encrypted_database(
-                location.database_path, passphrase));
+            location.directory, util::crypto::open_encrypted_database(
+                                    location.database_path, passphrase));
 
         // Opening a database reads nothing, so touch it here: a wrong
         // passphrase would otherwise not be noticed until the first query.
@@ -126,14 +108,11 @@ std::shared_ptr<onelibrary_context> load_context(
         throw unsupported_database{e.what()};
     }
 
-    // Fail here, while the caller still has the path in hand, rather than at
-    // the first query.
-    database_impl{context}.verify();
+    // Fail here, while the caller still has the path in hand.
+    v1::database_impl{context}.verify();
 
     return context;
 }
-
-}  // anonymous namespace
 
 bool database_exists(const std::string& path)
 {
@@ -143,62 +122,8 @@ bool database_exists(const std::string& path)
 
 database load_database(const std::string& path, const std::string& passphrase)
 {
-    return database{std::make_shared<database_impl>(
-        load_context(path, passphrase))};
-}
-
-library::library(const std::string& path, const std::string& passphrase) :
-    context_{load_context(path, passphrase)}
-{
-}
-
-database library::db() const
-{
-    return database{std::make_shared<database_impl>(context_)};
-}
-
-const std::string& library::directory() const
-{
-    return context_->directory;
-}
-
-std::optional<std::string> library::analysis_path(int64_t track_id) const
-{
-    const auto path = track_column<std::string>(
-        *context_, "SELECT analysisDataFilePath FROM content WHERE content_id = ?",
-        track_id);
-    if (!path || path->empty())
-        return std::nullopt;
-
-    // Paths are absolute within the device, whereas every path this library
-    // hands out is relative to its root.
-    return path->front() == '/' ? path->substr(1) : *path;
-}
-
-std::optional<std::string> library::key_name(int64_t track_id) const
-{
-    const auto name = track_column<std::string>(
-        *context_,
-        "SELECT \"key\".name FROM content AS c "
-        // `key` is quoted throughout, as it is also a SQL keyword.
-        "LEFT JOIN \"key\" ON \"key\".key_id = c.key_id "
-        "WHERE c.content_id = ?",
-        track_id);
-    if (!name || name->empty())
-        return std::nullopt;
-
-    return name;
-}
-
-std::optional<int> library::color_id(int64_t track_id) const
-{
-    const auto id = track_column<int64_t>(
-        *context_, "SELECT color_id FROM content WHERE content_id = ?",
-        track_id);
-    if (!id || *id == 0)
-        return std::nullopt;
-
-    return static_cast<int>(*id);
+    return database{
+        std::make_shared<v1::database_impl>(load_context(path, passphrase))};
 }
 
 }  // namespace djinterop::onelibrary

@@ -22,15 +22,15 @@
 #include <utility>
 
 #include <djinterop/exceptions.hpp>
+#include <djinterop/onelibrary/v1/content_table.hpp>
+#include <djinterop/onelibrary/v1/playlist_table.hpp>
+#include <djinterop/onelibrary/v1/property_table.hpp>
 #include <djinterop/track.hpp>
 
-#include "content_table.hpp"
 #include "crate_impl.hpp"
 #include "playlist_impl.hpp"
-#include "playlist_table.hpp"
 #include "track_impl.hpp"
-
-namespace djinterop::onelibrary
+namespace djinterop::onelibrary::v1
 {
 namespace
 {
@@ -76,10 +76,8 @@ std::string database_impl::uuid()
 
 std::string database_impl::version_name()
 {
-    std::string version;
-    context_->db << "SELECT dbVersion FROM property LIMIT 1" >>
-        [&](std::optional<std::string> db_version)
-    { version = db_version.value_or(std::string{}); };
+    const auto version =
+        property_table{context_}.get_db_version().value_or(std::string{});
 
     return version.empty() ? "OneLibrary" : "OneLibrary " + version;
 }
@@ -211,4 +209,4 @@ void database_impl::remove_track(djinterop::track)
     read_only();
 }
 
-}  // namespace djinterop::onelibrary
+}  // namespace djinterop::onelibrary::v1

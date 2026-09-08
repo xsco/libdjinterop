@@ -21,13 +21,12 @@
 
 #include <djinterop/database.hpp>
 #include <djinterop/exceptions.hpp>
+#include <djinterop/onelibrary/v1/playlist_table.hpp>
 #include <djinterop/track.hpp>
 
 #include "database_impl.hpp"
-#include "playlist_table.hpp"
 #include "track_impl.hpp"
-
-namespace djinterop::onelibrary
+namespace djinterop::onelibrary::v1
 {
 crate_impl::crate_impl(
     std::shared_ptr<onelibrary_context> context, int64_t id) :
@@ -148,4 +147,4 @@ void crate_impl::set_parent(std::optional<crate>)
     read_only();
 }
 
-}  // namespace djinterop::onelibrary
+}  // namespace djinterop::onelibrary::v1

@@ -24,12 +24,13 @@
 #include <sqlite_modern_cpp.h>
 
 #include "../../../src/djinterop/onelibrary/onelibrary_context.hpp"
-#include "../../../src/djinterop/onelibrary/playlist_table.hpp"
+#include <djinterop/onelibrary/v1/playlist_table.hpp>
 #include "../boost_test_printable.hpp"
 #include "onelibrary_schema.hpp"
 
 namespace utf = boost::unit_test;
 namespace ol = djinterop::onelibrary;
+namespace olv1 = djinterop::onelibrary::v1;
 
 namespace
 {
@@ -69,7 +70,7 @@ BOOST_TEST_DECORATOR(*utf::description("get() reads one row of the tree"))
 BOOST_AUTO_TEST_CASE(get__a_child__reads_its_row)
 {
     // Arrange
-    const ol::playlist_table playlists{make_context()};
+    const olv1::playlist_table playlists{make_context()};
 
     // Act
     const auto row = playlists.get(2);
@@ -88,7 +89,7 @@ BOOST_TEST_DECORATOR(
 BOOST_AUTO_TEST_CASE(get__a_parent_of_zero__reads_as_no_parent)
 {
     // Arrange
-    const ol::playlist_table playlists{make_context()};
+    const olv1::playlist_table playlists{make_context()};
 
     // Act
     const auto row = playlists.get(5);
@@ -102,7 +103,7 @@ BOOST_TEST_DECORATOR(*utf::description("get() for a row that is not there"))
 BOOST_AUTO_TEST_CASE(get__an_unknown_playlist__is_absent)
 {
     // Arrange
-    const ol::playlist_table playlists{make_context()};
+    const olv1::playlist_table playlists{make_context()};
 
     // Act / Assert
     BOOST_CHECK(!playlists.get(404));
@@ -115,7 +116,7 @@ BOOST_TEST_DECORATOR(
 BOOST_AUTO_TEST_CASE(root_ids__both_spellings__are_roots)
 {
     // Arrange
-    const ol::playlist_table playlists{make_context()};
+    const olv1::playlist_table playlists{make_context()};
 
     // Act
     const auto ids = playlists.root_ids();
@@ -130,7 +131,7 @@ BOOST_TEST_DECORATOR(*utf::description("child_ids() is in sibling order"))
 BOOST_AUTO_TEST_CASE(child_ids__several_siblings__are_in_sequence)
 {
     // Arrange
-    const ol::playlist_table playlists{make_context()};
+    const olv1::playlist_table playlists{make_context()};
 
     // Act
     const auto ids = playlists.child_ids(1);
@@ -145,7 +146,7 @@ BOOST_TEST_DECORATOR(*utf::description("descendant_ids() is breadth first"))
 BOOST_AUTO_TEST_CASE(descendant_ids__a_deep_tree__is_breadth_first)
 {
     // Arrange
-    const ol::playlist_table playlists{make_context()};
+    const olv1::playlist_table playlists{make_context()};
 
     // Act
     const auto ids = playlists.descendant_ids(1);
@@ -162,7 +163,7 @@ BOOST_TEST_DECORATOR(
 BOOST_AUTO_TEST_CASE(find__a_known_name__is_found_at_its_own_level)
 {
     // Arrange
-    const ol::playlist_table playlists{make_context()};
+    const olv1::playlist_table playlists{make_context()};
 
     // Act / Assert
     BOOST_CHECK(playlists.find_root("Sets") == 1);
@@ -177,7 +178,7 @@ BOOST_TEST_DECORATOR(*utf::description("track_ids() is in playlist order"))
 BOOST_AUTO_TEST_CASE(track_ids__a_populated_playlist__is_in_order)
 {
     // Arrange
-    const ol::playlist_table playlists{make_context()};
+    const olv1::playlist_table playlists{make_context()};
 
     // Act
     const auto ids = playlists.track_ids(2);
@@ -193,7 +194,7 @@ BOOST_TEST_DECORATOR(
 BOOST_AUTO_TEST_CASE(playlists_containing__a_shared_track__finds_each_holder)
 {
     // Arrange
-    const ol::playlist_table playlists{make_context()};
+    const olv1::playlist_table playlists{make_context()};
 
     // Act
     const auto holders = playlists.playlists_containing(10);

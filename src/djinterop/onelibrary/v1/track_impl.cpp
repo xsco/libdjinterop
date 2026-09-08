@@ -17,18 +17,22 @@
 
 #include "track_impl.hpp"
 
+#include <algorithm>
+#include <chrono>
+#include <cstdint>
 #include <utility>
 
 #include <djinterop/database.hpp>
 #include <djinterop/exceptions.hpp>
+#include <djinterop/onelibrary/v1/content_table.hpp>
+#include <djinterop/onelibrary/v1/playlist_table.hpp>
 
-#include "../util/filesystem.hpp"
-#include "content_table.hpp"
+#include "../../util/filesystem.hpp"
 #include "crate_impl.hpp"
 #include "database_impl.hpp"
-#include "playlist_table.hpp"
+#include "track_conversion.hpp"
 
-namespace djinterop::onelibrary
+namespace djinterop::onelibrary::v1
 {
 // Loudness, beatgrids, waveforms, hot cues and loops are absent throughout:
 // rekordbox leaves them in the ANLZ files that `analysisDataFilePath` points
@@ -74,8 +78,13 @@ std::vector<djinterop::crate> track_impl::containing_crates()
 
 std::string track_impl::relative_path()
 {
-    const auto path = snapshot().relative_path;
-    return path.value_or(std::string{});
+    const auto path = content_table{context_}.get_path(id());
+    if (!path)
+        return {};
+
+    // Paths are absolute within the device, whereas djinterop wants them
+    // relative to the directory of the database.
+    return path->front() == '/' ? path->substr(1) : *path;
 }
 
 std::string track_impl::filename()
@@ -90,12 +99,12 @@ std::string track_impl::file_extension()
 
 std::optional<std::string> track_impl::album()
 {
-    return snapshot().album;
+    return content_table{context_}.get_album(id());
 }
 
 std::optional<std::string> track_impl::artist()
 {
-    return snapshot().artist;
+    return content_table{context_}.get_artist(id());
 }
 
 std::optional<double> track_impl::average_loudness()
@@ -110,32 +119,44 @@ std::vector<beatgrid_marker> track_impl::beatgrid()
 
 std::optional<int> track_impl::bitrate()
 {
-    return snapshot().bitrate;
+    const auto bitrate = content_table{context_}.get_bitrate(id());
+    if (!bitrate || *bitrate <= 0)
+        return std::nullopt;
+
+    return static_cast<int>(*bitrate);
 }
 
 std::optional<double> track_impl::bpm()
 {
-    return snapshot().bpm;
+    const auto bpm_x100 = content_table{context_}.get_bpm_x100(id());
+    if (!bpm_x100 || *bpm_x100 <= 0)
+        return std::nullopt;
+
+    return static_cast<double>(*bpm_x100) / 100;
 }
 
 std::optional<std::string> track_impl::comment()
 {
-    return snapshot().comment;
+    return content_table{context_}.get_comment(id());
 }
 
 std::optional<std::string> track_impl::composer()
 {
-    return snapshot().composer;
+    return content_table{context_}.get_composer(id());
 }
 
 std::optional<std::chrono::milliseconds> track_impl::duration()
 {
-    return snapshot().duration;
+    const auto length = content_table{context_}.get_length(id());
+    if (!length || length->count() <= 0)
+        return std::nullopt;
+
+    return std::chrono::duration_cast<std::chrono::milliseconds>(*length);
 }
 
 std::optional<std::string> track_impl::genre()
 {
-    return snapshot().genre;
+    return content_table{context_}.get_genre(id());
 }
 
 std::optional<hot_cue> track_impl::hot_cue_at(int)
@@ -150,7 +171,11 @@ std::vector<std::optional<hot_cue>> track_impl::hot_cues()
 
 std::optional<musical_key> track_impl::key()
 {
-    return snapshot().key;
+    const auto name = content_table{context_}.get_key(id());
+    if (!name)
+        return std::nullopt;
+
+    return parse_musical_key(*name);
 }
 
 std::optional<std::chrono::system_clock::time_point>
@@ -177,32 +202,54 @@ std::optional<double> track_impl::main_cue()
 
 std::optional<std::string> track_impl::publisher()
 {
-    return snapshot().publisher;
+    return content_table{context_}.get_label(id());
 }
 
 std::optional<int> track_impl::rating()
 {
-    return snapshot().rating;
+    const auto stars = content_table{context_}.get_rating_stars(id());
+    if (!stars)
+        return std::nullopt;
+
+    // djinterop rates a track from zero to one hundred, where rekordbox uses
+    // whole stars.
+    return static_cast<int>(std::clamp<int64_t>(*stars, 0, 5) * 20);
 }
 
 std::optional<unsigned long long> track_impl::sample_count()
 {
-    return snapshot().sample_count;
+    // The database records a duration in whole seconds and no sample count,
+    // so the count can only be recovered to that precision.
+    const content_table content{context_};
+    const auto length = content.get_length(id());
+    const auto rate = content.get_sampling_rate(id());
+    if (!length || length->count() <= 0 || !rate || *rate <= 0)
+        return std::nullopt;
+
+    return static_cast<unsigned long long>(length->count() * *rate);
 }
 
 std::optional<double> track_impl::sample_rate()
 {
-    return snapshot().sample_rate;
+    const auto rate = content_table{context_}.get_sampling_rate(id());
+    if (!rate || *rate <= 0)
+        return std::nullopt;
+
+    return static_cast<double>(*rate);
 }
 
 std::optional<std::string> track_impl::title()
 {
-    return snapshot().title;
+    return content_table{context_}.get_title(id());
 }
 
 std::optional<int> track_impl::track_number()
 {
-    return snapshot().track_number;
+    const auto number = content_table{context_}.get_track_number(id());
+    if (!number || *number <= 0)
+        return std::nullopt;
+
+    return static_cast<int>(*number);
 }
 
 std::vector<waveform_entry> track_impl::waveform()
@@ -212,7 +259,11 @@ std::vector<waveform_entry> track_impl::waveform()
 
 std::optional<int> track_impl::year()
 {
-    return snapshot().year;
+    const auto year = content_table{context_}.get_release_year(id());
+    if (!year || *year <= 0)
+        return std::nullopt;
+
+    return static_cast<int>(*year);
 }
 
 void track_impl::update(const track_snapshot&)
@@ -351,4 +402,4 @@ void track_impl::set_year(std::optional<int>)
     read_only();
 }
 
-}  // namespace djinterop::onelibrary
+}  // namespace djinterop::onelibrary::v1

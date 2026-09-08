@@ -18,15 +18,15 @@
 #pragma once
 
 #include <cstdint>
+
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
-#include "../impl/crate_impl.hpp"
-#include "onelibrary_context.hpp"
-
-namespace djinterop::onelibrary
+#include "../../impl/crate_impl.hpp"
+#include "../onelibrary_context.hpp"
+namespace djinterop::onelibrary::v1
 {
 /// A crate in a OneLibrary database.
 ///
@@ -63,4 +63,4 @@ private:
 /// Wrap a playlist row as a crate.
 crate make_crate(std::shared_ptr<onelibrary_context> context, int64_t id);
 
-}  // namespace djinterop::onelibrary
+}  // namespace djinterop::onelibrary::v1

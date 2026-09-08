@@ -18,15 +18,15 @@
 #pragma once
 
 #include <cstdint>
+
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
-#include "../impl/database_impl.hpp"
-#include "onelibrary_context.hpp"
-
-namespace djinterop::onelibrary
+#include "../../impl/database_impl.hpp"
+#include "../onelibrary_context.hpp"
+namespace djinterop::onelibrary::v1
 {
 /// A loaded OneLibrary database, presented through the unified interface.
 class database_impl : public djinterop::database_impl
@@ -65,4 +65,4 @@ private:
     std::shared_ptr<onelibrary_context> context_;
 };
 
-}  // namespace djinterop::onelibrary
+}  // namespace djinterop::onelibrary::v1

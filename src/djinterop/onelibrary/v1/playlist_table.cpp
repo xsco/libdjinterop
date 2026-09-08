@@ -15,11 +15,13 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "playlist_table.hpp"
+#include <djinterop/onelibrary/v1/playlist_table.hpp>
 
 #include <utility>
 
-namespace djinterop::onelibrary
+#include "../../util/sqlite_query.hpp"
+#include "../onelibrary_context.hpp"
+namespace djinterop::onelibrary::v1
 {
 namespace
 {
@@ -73,19 +75,20 @@ std::optional<playlist_row> playlist_table::get(int64_t id) const
 
 bool playlist_table::exists(int64_t id) const
 {
-    return any_row(
-        *context_, "SELECT 1 FROM playlist WHERE playlist_id = ? LIMIT 1", id);
+    return util::any_row(
+        context_->db, "SELECT 1 FROM playlist WHERE playlist_id = ? LIMIT 1",
+        id);
 }
 
 std::vector<int64_t> playlist_table::root_ids() const
 {
-    return collect_ids(*context_, select_roots);
+    return util::collect_ids(context_->db, select_roots);
 }
 
 std::vector<int64_t> playlist_table::child_ids(int64_t id) const
 {
-    return collect_ids(
-        *context_,
+    return util::collect_ids(
+        context_->db,
         "SELECT playlist_id FROM playlist WHERE playlist_id_parent = ? "
         "ORDER BY sequenceNo, playlist_id",
         id);
@@ -95,8 +98,8 @@ std::vector<int64_t> playlist_table::descendant_ids(int64_t id) const
 {
     // One recursive query rather than one per node.  `depth` keeps the result
     // breadth first, and `sequenceNo` keeps siblings in their own order.
-    return collect_ids(
-        *context_,
+    return util::collect_ids(
+        context_->db,
         "WITH RECURSIVE descendant(playlist_id, sequenceNo, depth) AS ("
         "SELECT playlist_id, sequenceNo, 0 FROM playlist "
         "WHERE playlist_id_parent = ? "
@@ -111,14 +114,14 @@ std::vector<int64_t> playlist_table::descendant_ids(int64_t id) const
 
 std::optional<int64_t> playlist_table::find_root(const std::string& name) const
 {
-    return first_id(*context_, find_root_by_name, name);
+    return util::first_id(context_->db, find_root_by_name, name);
 }
 
 std::optional<int64_t> playlist_table::find_child(
     int64_t parent_id, const std::string& name) const
 {
-    return first_id(
-        *context_,
+    return util::first_id(
+        context_->db,
         "SELECT playlist_id FROM playlist "
         "WHERE playlist_id_parent = ? AND name = ? "
         "ORDER BY sequenceNo, playlist_id LIMIT 1",
@@ -127,8 +130,8 @@ std::optional<int64_t> playlist_table::find_child(
 
 std::vector<int64_t> playlist_table::track_ids(int64_t id) const
 {
-    return collect_ids(
-        *context_,
+    return util::collect_ids(
+        context_->db,
         "SELECT content_id FROM playlist_content WHERE playlist_id = ? "
         "ORDER BY sequenceNo, rowid",
         id);
@@ -137,11 +140,11 @@ std::vector<int64_t> playlist_table::track_ids(int64_t id) const
 std::vector<int64_t> playlist_table::playlists_containing(
     int64_t track_id) const
 {
-    return collect_ids(
-        *context_,
+    return util::collect_ids(
+        context_->db,
         "SELECT DISTINCT playlist_id FROM playlist_content "
         "WHERE content_id = ? ORDER BY playlist_id",
         track_id);
 }
 
-}  // namespace djinterop::onelibrary
+}  // namespace djinterop::onelibrary::v1

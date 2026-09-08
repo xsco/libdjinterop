@@ -18,6 +18,7 @@
 #pragma once
 
 #include <chrono>
+
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -27,10 +28,9 @@
 #include <djinterop/crate.hpp>
 #include <djinterop/track_snapshot.hpp>
 
-#include "../impl/track_impl.hpp"
-#include "onelibrary_context.hpp"
-
-namespace djinterop::onelibrary
+#include "../../impl/track_impl.hpp"
+#include "../onelibrary_context.hpp"
+namespace djinterop::onelibrary::v1
 {
 /// A track in a OneLibrary database.
 ///
@@ -79,8 +79,9 @@ public:
     void set_key(std::optional<musical_key> key) override;
     std::optional<std::chrono::system_clock::time_point> last_played_at()
         override;
-    void set_last_played_at(std::optional<std::chrono::system_clock::time_point>
-                                played_at) override;
+    void set_last_played_at(
+        std::optional<std::chrono::system_clock::time_point> played_at)
+        override;
     std::optional<loop> loop_at(int index) override;
     void set_loop_at(int index, std::optional<loop> l) override;
     std::vector<std::optional<loop>> loops() override;
@@ -111,4 +112,4 @@ private:
     std::shared_ptr<onelibrary_context> context_;
 };
 
-}  // namespace djinterop::onelibrary
+}  // namespace djinterop::onelibrary::v1

@@ -51,9 +51,11 @@ sqlite::database open_encrypted_database(
 #if !DJINTEROP_HAVE_DESERIALIZE
     (void)passphrase;
     throw encryption_unsupported{
-        "The database `" + path +
-        "` needs SQLite 3.36 or newer, built without SQLITE_OMIT_DESERIALIZE, "
-        "to read"};
+        "This build of libdjinterop cannot read the encrypted database `" +
+        path +
+        "`.  Reading one goes through `sqlite3_deserialize`, which needs "
+        "SQLite 3.36 or newer, built without SQLITE_OMIT_DESERIALIZE, and "
+        "this build was made against an older or narrower SQLite."};
 #else
     // Key derivation is expensive, so it is done once here.
     const auto codec = make_codec_for(path, passphrase);

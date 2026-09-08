@@ -18,15 +18,15 @@
 #pragma once
 
 #include <cstdint>
+
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
-#include "../impl/playlist_impl.hpp"
-#include "onelibrary_context.hpp"
-
-namespace djinterop::onelibrary
+#include "../../impl/playlist_impl.hpp"
+#include "../onelibrary_context.hpp"
+namespace djinterop::onelibrary::v1
 {
 /// A playlist in a OneLibrary database.
 ///
@@ -69,4 +69,4 @@ private:
 /// Wrap a playlist row as a playlist.
 playlist make_playlist(std::shared_ptr<onelibrary_context> context, int64_t id);
 
-}  // namespace djinterop::onelibrary
+}  // namespace djinterop::onelibrary::v1
