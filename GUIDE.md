@@ -93,15 +93,12 @@ aspects of the format are worth noting:
   rekordbox leaves them in the ANLZ files that `content.analysisDataFilePath`
   points at, and does not populate the `cue` table on export.  Those accessors
   therefore return nothing rather than throwing.  A caller that reads ANLZ
-  files itself can load the device as an `onelibrary::library`, whose
-  `analysis_path()` gives the path recorded for a track, relative to the root
-  of the device; `library::db()` then gives the same database that
-  `load_database()` would have.
-* `onelibrary::library` also reaches the two other things a device carries
-  that the format-agnostic interface has nowhere to put: `key_name()` gives
-  the musical key in the notation rekordbox wrote, which may be Camelot and
-  which `track::key()` cannot represent, and `color_id()` gives the colour the
-  DJ marked a track with, numbered as `export.pdb` numbers them.
+  files itself reaches that path through the low-level API, described below.
+* The low-level API also reaches the two other things a device carries that
+  the format-agnostic interface has nowhere to put: the musical key in the
+  notation rekordbox wrote, which may be Camelot and which `track::key()`
+  cannot represent, and the colour the DJ marked a track with, numbered as
+  `export.pdb` numbers them.
 * The format has a single tree that serves as both playlists and crates, so
   `playlists_and_crates_are_distinct` is false and the two views show the same
   rows.
@@ -109,6 +106,20 @@ aspects of the format are worth noting:
   in write-ahead-logged mode, and the log has to be folded in before SQLite
   sees the file, so reading one needs SQLite 3.36 or newer, built without
   `SQLITE_OMIT_DESERIALIZE`.
+
+### OneLibrary low-level API
+
+The low-level API is in `<djinterop/onelibrary/v1/library.hpp>`, and exposes
+the tables as the device holds them, translating no further than resolving a
+lookup reference to the text behind it.  A device is loaded as an
+`onelibrary::v1::library`, whose `content()`, `playlist()` and `property()`
+give the tables, and whose `database()` gives the same database that
+`load_database()` would have.
+
+The `v1` is the schema those tables describe.  A device records it as
+`property.dbVersion`, and every export seen so far reports `1000`.  A schema
+not compatible with this one gets a namespace of its own, as the Engine
+formats do.
 
 
 Stable API/ABI

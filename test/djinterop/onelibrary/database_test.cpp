@@ -28,6 +28,7 @@
 
 #include <djinterop/djinterop.hpp>
 #include <djinterop/onelibrary/onelibrary.hpp>
+#include <djinterop/onelibrary/v1/library.hpp>
 
 #include "../../../src/djinterop/util/filesystem.hpp"
 #include "../boost_test_printable.hpp"
@@ -37,6 +38,7 @@
 
 namespace utf = boost::unit_test;
 namespace ol = djinterop::onelibrary;
+namespace olv1 = djinterop::onelibrary::v1;
 namespace crypto = djinterop::util::crypto;
 
 namespace
@@ -231,9 +233,9 @@ djinterop::database loaded_database()
 }
 
 /// The shared device, opened once as a library.
-const ol::library& loaded_library()
+const olv1::library& loaded_library()
 {
-    static const ol::library lib{device_fixture().path, passphrase};
+    static const olv1::library lib{device_fixture().path, passphrase};
     return lib;
 }
 
@@ -511,6 +513,12 @@ BOOST_AUTO_TEST_CASE(
     prepare_plain_database(db);
     create_onelibrary_schema(db);
 
+    // Every export carries a `property` row, whatever else it holds.
+    execute(
+        db,
+        "INSERT INTO property VALUES ('FIXTURE', '1000', 0, "
+        "'2026-01-01', 0, 0)");
+
     // Root
     //  +- Middle A        (sequence 1)
     //  |   +- Leaf A      (sequence 1)
@@ -782,7 +790,7 @@ BOOST_AUTO_TEST_CASE(library__a_device__is_read_through_its_database)
     const auto& lib = loaded_library();
 
     // Act
-    auto db = lib.db();
+    auto db = lib.database();
 
     // Assert
     BOOST_CHECK_EQUAL(lib.directory(), device_fixture().path);
@@ -791,62 +799,76 @@ BOOST_AUTO_TEST_CASE(library__a_device__is_read_through_its_database)
 }
 
 BOOST_TEST_DECORATOR(*utf::description(
-    "library::analysis_path() gives a path relative to the device"))
-BOOST_AUTO_TEST_CASE(analysis_path__a_track_with_analysis_data__is_relative)
+    "content_table::get_analysis_path() gives the path the device records"))
+BOOST_AUTO_TEST_CASE(get_analysis_path__a_track_with_analysis_data__is_read)
 {
     // Arrange
     const auto& lib = loaded_library();
 
     // Act
-    const auto path = lib.analysis_path(1);
+    const auto path = lib.content().get_analysis_path(1);
 
     // Assert
     BOOST_REQUIRE(path);
-    BOOST_CHECK_EQUAL(*path, "PIONEER/USBANLZ/P016/0000875e/ANLZ0000.DAT");
+    BOOST_CHECK_EQUAL(*path, "/PIONEER/USBANLZ/P016/0000875e/ANLZ0000.DAT");
 }
 
 BOOST_TEST_DECORATOR(*utf::description(
-    "library::analysis_path() for a track that carries none, and for one that "
-    "is not there"))
-BOOST_AUTO_TEST_CASE(analysis_path__no_analysis_data__is_absent)
+    "content_table::get_analysis_path() for a track that carries none, and "
+    "for one that is not there"))
+BOOST_AUTO_TEST_CASE(get_analysis_path__no_analysis_data__is_absent)
 {
     // Arrange
     const auto& lib = loaded_library();
 
     // Act, Assert
-    BOOST_CHECK(!lib.analysis_path(2));
-    BOOST_CHECK(!lib.analysis_path(1234));
+    BOOST_CHECK(!lib.content().get_analysis_path(2));
+    BOOST_CHECK(!lib.content().get_analysis_path(1234));
 }
 
 BOOST_TEST_DECORATOR(*utf::description(
-    "library::key_name() gives back the notation the device holds"))
-BOOST_AUTO_TEST_CASE(key_name__any_track__is_the_notation_on_the_device)
+    "content_table::get_key() gives back the notation the device holds"))
+BOOST_AUTO_TEST_CASE(get_key__any_track__is_the_notation_on_the_device)
 {
     // Arrange
     const auto& lib = loaded_library();
 
     // Act, Assert
-    BOOST_CHECK_EQUAL(lib.key_name(1).value(), "F#m");
-    BOOST_CHECK_EQUAL(lib.key_name(2).value(), "Bb");
+    BOOST_CHECK_EQUAL(lib.content().get_key(1).value(), "F#m");
+    BOOST_CHECK_EQUAL(lib.content().get_key(2).value(), "Bb");
 
     // A notation the library does not parse is still given back whole.
-    BOOST_CHECK_EQUAL(lib.key_name(3).value(), "Camelot 8A");
+    BOOST_CHECK_EQUAL(lib.content().get_key(3).value(), "Camelot 8A");
 
-    BOOST_CHECK(!lib.key_name(1234));
+    BOOST_CHECK(!lib.content().get_key(1234));
 }
 
-BOOST_TEST_DECORATOR(
-    *utf::description("library::color_id() reads the colour of a track"))
-BOOST_AUTO_TEST_CASE(color_id__marked_and_unmarked_tracks__reports_each)
+BOOST_TEST_DECORATOR(*utf::description(
+    "content_table::get_color_id() reads the colour of a track"))
+BOOST_AUTO_TEST_CASE(get_color_id__marked_and_unmarked_tracks__reports_each)
 {
     // Arrange
     const auto& lib = loaded_library();
 
     // Act, Assert
-    BOOST_CHECK_EQUAL(lib.color_id(1).value(), 6);
+    BOOST_CHECK_EQUAL(lib.content().get_color_id(1).value(), 6);
 
-    // A colour of zero is no colour, as is a column that is not set at all.
-    BOOST_CHECK(!lib.color_id(2));
-    BOOST_CHECK(!lib.color_id(3));
-    BOOST_CHECK(!lib.color_id(1234));
+    // The low-level API reports what the column holds, and `COLOR_ID_NONE` is
+    // what an unmarked track carries.
+    BOOST_CHECK_EQUAL(
+        lib.content().get_color_id(2).value(), olv1::COLOR_ID_NONE);
+    BOOST_CHECK(!lib.content().get_color_id(3));
+    BOOST_CHECK(!lib.content().get_color_id(1234));
+}
+
+BOOST_TEST_DECORATOR(*utf::description(
+    "property_table::get_db_version() reports the schema version"))
+BOOST_AUTO_TEST_CASE(get_db_version__a_device__is_the_version_it_records)
+{
+    // Arrange
+    const auto& lib = loaded_library();
+
+    // Act, Assert
+    BOOST_CHECK_EQUAL(
+        lib.property().get_db_version().value(), olv1::supported_db_version);
 }

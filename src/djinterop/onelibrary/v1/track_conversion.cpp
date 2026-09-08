@@ -15,47 +15,15 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "content_table.hpp"
+#include "track_conversion.hpp"
 
 #include <algorithm>
-#include <cctype>
 #include <chrono>
-#include <cstring>
-#include <utility>
-
-namespace djinterop::onelibrary
+#include <cstdint>
+namespace djinterop::onelibrary::v1
 {
 namespace
 {
-/// Every column the row structure needs, in the order it reads them back.
-///
-/// Nothing enforces that a lookup reference resolves, so each is joined
-/// outwards.
-constexpr const char* select_columns =
-    "SELECT c.content_id, c.title, artist.name, composer.name, album.name, "
-    "genre.name, label.name, \"key\".name, c.djComment, c.bpmx100, c.length, "
-    "c.trackNo, c.releaseYear, c.rating, c.path, c.fileSize, "
-    "c.bitrate, c.samplingRate "
-    "FROM content AS c "
-    "LEFT JOIN artist AS artist ON artist.artist_id = c.artist_id_artist "
-    "LEFT JOIN artist AS composer "
-    "ON composer.artist_id = c.artist_id_composer "
-    "LEFT JOIN album ON album.album_id = c.album_id "
-    "LEFT JOIN genre ON genre.genre_id = c.genre_id "
-    "LEFT JOIN label ON label.label_id = c.label_id "
-    // `key` is quoted throughout, as it is also a SQL keyword.
-    "LEFT JOIN \"key\" ON \"key\".key_id = c.key_id ";
-
-/// Treat a column that is present but empty as absent: rekordbox writes an
-/// empty string for metadata a track does not carry.
-std::optional<std::string> non_empty(std::optional<std::string> value)
-{
-    if (value.has_value() && value->empty())
-        return std::nullopt;
-
-    return value;
-}
-
 /// The offset in semitones of a note letter above C, if it is one.
 constexpr std::optional<int> semitones_above_c(char note)
 {
@@ -101,8 +69,9 @@ std::optional<musical_key> parse_musical_key(const std::string& name)
     if (position >= name.size())
         return std::nullopt;
 
-    const auto note = semitones_above_c(static_cast<char>(
-        std::toupper(static_cast<unsigned char>(name[position]))));
+    const auto note = semitones_above_c(
+        static_cast<char>(
+            std::toupper(static_cast<unsigned char>(name[position]))));
     if (!note)
         return std::nullopt;
 
@@ -141,80 +110,6 @@ std::optional<musical_key> parse_musical_key(const std::string& name)
     return std::nullopt;
 }
 
-content_table::content_table(std::shared_ptr<onelibrary_context> context) :
-    context_{std::move(context)}
-{
-}
-
-std::optional<content_row> content_table::get(int64_t id) const
-{
-    std::optional<content_row> result;
-
-    // The parameter list has to match `select_columns` exactly.
-    context_->db << (std::string{select_columns} + "WHERE c.content_id = ?")
-                 << id >>
-        [&](int64_t row_id, std::optional<std::string> title,
-            std::optional<std::string> artist,
-            std::optional<std::string> composer,
-            std::optional<std::string> album, std::optional<std::string> genre,
-            std::optional<std::string> label, std::optional<std::string> key,
-            std::optional<std::string> comment, std::optional<int64_t> bpm_x100,
-            std::optional<int64_t> length_seconds,
-            std::optional<int64_t> track_number,
-            std::optional<int64_t> release_year,
-            std::optional<int64_t> rating_stars,
-            std::optional<std::string> path, std::optional<int64_t> file_size,
-            std::optional<int64_t> bitrate,
-            std::optional<int64_t> sampling_rate)
-    {
-        content_row row;
-        row.id = row_id;
-        row.title = non_empty(std::move(title));
-        row.artist = non_empty(std::move(artist));
-        row.composer = non_empty(std::move(composer));
-        row.album = non_empty(std::move(album));
-        row.genre = non_empty(std::move(genre));
-        row.label = non_empty(std::move(label));
-        row.key = non_empty(std::move(key));
-        row.comment = non_empty(std::move(comment));
-        row.bpm_x100 = bpm_x100;
-        row.length_seconds = length_seconds;
-        row.track_number = track_number;
-        row.release_year = release_year;
-        row.rating_stars = rating_stars;
-        row.path = non_empty(std::move(path));
-        row.file_size = file_size;
-        row.bitrate = bitrate;
-        row.sampling_rate = sampling_rate;
-        result = std::move(row);
-    };
-
-    return result;
-}
-
-std::vector<int64_t> content_table::all_ids() const
-{
-    return collect_ids(
-        *context_, "SELECT content_id FROM content ORDER BY content_id");
-}
-
-std::vector<int64_t> content_table::ids_by_path(const std::string& path) const
-{
-    const auto qualified =
-        !path.empty() && path.front() == '/' ? path : "/" + path;
-
-    return collect_ids(
-        *context_,
-        "SELECT content_id FROM content WHERE path = ? ORDER BY content_id",
-        qualified);
-}
-
-bool content_table::exists(int64_t id) const
-{
-    return any_row(
-        *context_, "SELECT 1 FROM content WHERE content_id = ? LIMIT 1", id);
-}
-
 track_snapshot to_snapshot(const content_row& row)
 {
     track_snapshot snapshot;
@@ -230,9 +125,9 @@ track_snapshot to_snapshot(const content_row& row)
     if (row.bpm_x100.has_value() && *row.bpm_x100 > 0)
         snapshot.bpm = static_cast<double>(*row.bpm_x100) / 100;
 
-    if (row.length_seconds.has_value() && *row.length_seconds > 0)
+    if (row.length.has_value() && row.length->count() > 0)
         snapshot.duration =
-            std::chrono::milliseconds{*row.length_seconds * 1000};
+            std::chrono::duration_cast<std::chrono::milliseconds>(*row.length);
 
     if (row.track_number.has_value() && *row.track_number > 0)
         snapshot.track_number = static_cast<int>(*row.track_number);
@@ -266,9 +161,9 @@ track_snapshot to_snapshot(const content_row& row)
 
         // The database records a duration in whole seconds and no sample
         // count, so the count can only be recovered to that precision.
-        if (row.length_seconds.has_value() && *row.length_seconds > 0)
+        if (row.length.has_value() && row.length->count() > 0)
             snapshot.sample_count = static_cast<unsigned long long>(
-                *row.length_seconds * *row.sampling_rate);
+                row.length->count() * *row.sampling_rate);
     }
 
     if (row.key.has_value())
@@ -280,4 +175,4 @@ track_snapshot to_snapshot(const content_row& row)
     return snapshot;
 }
 
-}  // namespace djinterop::onelibrary
+}  // namespace djinterop::onelibrary::v1

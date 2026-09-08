@@ -279,20 +279,23 @@ add_library(
     src/djinterop/impl/playlist_impl.hpp
     src/djinterop/impl/track_impl.cpp
     src/djinterop/impl/track_impl.hpp
-    src/djinterop/onelibrary/content_table.cpp
-    src/djinterop/onelibrary/content_table.hpp
-    src/djinterop/onelibrary/crate_impl.cpp
-    src/djinterop/onelibrary/crate_impl.hpp
-    src/djinterop/onelibrary/database_impl.cpp
-    src/djinterop/onelibrary/database_impl.hpp
+    src/djinterop/onelibrary/loader.hpp
     src/djinterop/onelibrary/onelibrary.cpp
     src/djinterop/onelibrary/onelibrary_context.hpp
-    src/djinterop/onelibrary/playlist_impl.cpp
-    src/djinterop/onelibrary/playlist_impl.hpp
-    src/djinterop/onelibrary/playlist_table.cpp
-    src/djinterop/onelibrary/playlist_table.hpp
-    src/djinterop/onelibrary/track_impl.cpp
-    src/djinterop/onelibrary/track_impl.hpp
+    src/djinterop/onelibrary/v1/content_table.cpp
+    src/djinterop/onelibrary/v1/crate_impl.cpp
+    src/djinterop/onelibrary/v1/crate_impl.hpp
+    src/djinterop/onelibrary/v1/database_impl.cpp
+    src/djinterop/onelibrary/v1/database_impl.hpp
+    src/djinterop/onelibrary/v1/library.cpp
+    src/djinterop/onelibrary/v1/playlist_impl.cpp
+    src/djinterop/onelibrary/v1/playlist_impl.hpp
+    src/djinterop/onelibrary/v1/playlist_table.cpp
+    src/djinterop/onelibrary/v1/property_table.cpp
+    src/djinterop/onelibrary/v1/track_conversion.cpp
+    src/djinterop/onelibrary/v1/track_conversion.hpp
+    src/djinterop/onelibrary/v1/track_impl.cpp
+    src/djinterop/onelibrary/v1/track_impl.hpp
     src/djinterop/playlist.cpp
     src/djinterop/track.cpp
     src/djinterop/util/chrono.cpp
@@ -315,6 +318,7 @@ add_library(
     src/djinterop/util/filesystem.hpp
     src/djinterop/util/random.cpp
     src/djinterop/util/random.hpp
+    src/djinterop/util/sqlite_query.hpp
     src/djinterop/util/sqlite_transaction.hpp
 )
 
@@ -485,6 +489,14 @@ install(FILES
     include/djinterop/onelibrary/onelibrary.hpp
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/onelibrary")
 
+install(
+    FILES
+    include/djinterop/onelibrary/v1/content_table.hpp
+    include/djinterop/onelibrary/v1/library.hpp
+    include/djinterop/onelibrary/v1/playlist_table.hpp
+    include/djinterop/onelibrary/v1/property_table.hpp
+    DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/onelibrary/v1")
+
 
 if (UNIX)
     set(PKGCONFIG_TARGET djinterop)
@@ -596,6 +608,11 @@ if (Boost_FOUND)
     # which reading a decrypted database goes through, arrived in SQLite 3.36,
     # hence the version the database test asks for.
     #
+    # Both problems go away once the format can be written: a fixture would
+    # then be built from `testdata/ref/onelibrary/schema.sql` through the
+    # library, as the Engine tests build one through
+    # `create_database_from_scripts()`, and no test would touch SQLite at all.
+    #
     # if(SYSTEM_SQLITE)
     #     set(DJINTEROP_TEST_SQLITE_SOURCES "")
     # else()
@@ -604,7 +621,8 @@ if (Boost_FOUND)
     #
     # add_djinterop_test(onelibrary/ content_table_test)
     # target_sources(onelibrary_content_table_test PRIVATE
-    #         src/djinterop/onelibrary/content_table.cpp
+    #         src/djinterop/onelibrary/v1/content_table.cpp
+    #         src/djinterop/onelibrary/v1/track_conversion.cpp
     #         ${DJINTEROP_TEST_SQLITE_SOURCES})
     #
     # if(NOT DJINTEROP_SQLITE_VERSION VERSION_LESS 3.36)
@@ -625,7 +643,7 @@ if (Boost_FOUND)
     #
     # add_djinterop_test(onelibrary/ playlist_table_test)
     # target_sources(onelibrary_playlist_table_test PRIVATE
-    #         src/djinterop/onelibrary/playlist_table.cpp
+    #         src/djinterop/onelibrary/v1/playlist_table.cpp
     #         ${DJINTEROP_TEST_SQLITE_SOURCES})
 
     add_djinterop_test(util/ crypto_test)
