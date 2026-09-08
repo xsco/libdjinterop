@@ -17,17 +17,12 @@
 
 #include <djinterop/onelibrary/onelibrary.hpp>
 
-#include <cstring>
 #include <memory>
-#include <new>
 #include <string>
-
-#include <sqlite3.h>
 
 #include <djinterop/exceptions.hpp>
 
-#include "../util/crypto/sqlcipher_codec.hpp"
-#include "../util/crypto/sqlcipher_wal.hpp"
+#include "../util/crypto/encrypted_database.hpp"
 #include "../util/filesystem.hpp"
 #include "database_impl.hpp"
 #include "onelibrary_context.hpp"
@@ -76,57 +71,6 @@ resolved_location resolve(const std::string& path)
     return resolved_location{path, path + "/" + database_relative_path};
 }
 
-/// Open the database, folding in its write-ahead log.
-///
-/// The database is decrypted into a plain SQLite image, which is handed back
-/// as an in-memory database.  A device is written in WAL mode and checkpointed
-/// on eject, which leaves the header declaring the database
-/// write-ahead-logged, and SQLite will not open one of those read-only without
-/// the log that is no longer there -- so the log has to be folded in here, and
-/// the header rewritten, before SQLite ever sees the bytes.
-sqlite::database open_database(
-    const std::string& database_path, const std::string& passphrase)
-{
-#if defined(SQLITE_OMIT_DESERIALIZE) || SQLITE_VERSION_NUMBER < 3036000
-    throw unsupported_database{
-        "The database `" + database_path +
-        "` needs SQLite 3.36 or newer, built without SQLITE_OMIT_DESERIALIZE, "
-        "to read"};
-#else
-    // Key derivation is deliberately expensive, so it is done once here and
-    // the codec is handed to everything that reads a page.
-    const auto codec = util::crypto::make_codec_for(database_path, passphrase);
-    if (!codec)
-        throw unsupported_database{
-            "The file `" + database_path + "` is too small to be a database"};
-
-    const auto image =
-        util::crypto::decrypt_database_to_image(database_path, *codec);
-
-    sqlite::database db{":memory:"};
-
-    // SQLite takes ownership of the buffer and frees it with the connection,
-    // so it must come from SQLite's own allocator.
-    auto* buffer = static_cast<uint8_t*>(sqlite3_malloc64(image.size()));
-    if (buffer == nullptr)
-        throw std::bad_alloc{};
-
-    std::memcpy(buffer, image.data(), image.size());
-
-    const auto rc = sqlite3_deserialize(
-        db.connection().get(), "main", buffer,
-        static_cast<sqlite3_int64>(image.size()),
-        static_cast<sqlite3_int64>(image.size()),
-        SQLITE_DESERIALIZE_FREEONCLOSE | SQLITE_DESERIALIZE_READONLY);
-    if (rc != SQLITE_OK)
-        throw unsupported_database{
-            "The database `" + database_path +
-            "` could not be read once it had been decrypted"};
-
-    return db;
-#endif
-}
-
 /// Read one column of a track's row, if the row is there and the column set.
 ///
 /// The columns behind `library` are each read on their own, rather than
@@ -160,7 +104,8 @@ std::shared_ptr<onelibrary_context> load_context(
     {
         context = std::make_shared<onelibrary_context>(
             location.directory,
-            open_database(location.database_path, passphrase));
+            util::crypto::open_encrypted_database(
+                location.database_path, passphrase));
 
         // Opening a database reads nothing, so touch it here: a wrong
         // passphrase would otherwise not be noticed until the first query.
@@ -172,11 +117,13 @@ std::shared_ptr<onelibrary_context> load_context(
             "The file `" + location.database_path +
             "` is not a SQLCipher database that the given passphrase opens"};
     }
-    catch (const util::crypto::sqlcipher_error&)
+    catch (const util::crypto::encrypted_database_error& e)
     {
-        throw unsupported_database{
-            "The file `" + location.database_path +
-            "` is not a SQLCipher database that the given passphrase opens"};
+        throw unsupported_database{e.what()};
+    }
+    catch (const util::crypto::encryption_unsupported& e)
+    {
+        throw unsupported_database{e.what()};
     }
 
     // Fail here, while the caller still has the path in hand, rather than at
