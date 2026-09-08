@@ -301,6 +301,10 @@ add_library(
     src/djinterop/util/crypto/aes.hpp
     src/djinterop/util/crypto/aes_hardware.cpp
     src/djinterop/util/crypto/aes_hardware.hpp
+    src/djinterop/util/crypto/encrypted_database.hpp
+    # The one implementation of `encrypted_database.hpp`; a SQLCipher-backed
+    # build would name its own here instead.
+    src/djinterop/util/crypto/encrypted_database_builtin.cpp
     src/djinterop/util/crypto/sha512.cpp
     src/djinterop/util/crypto/sha512.hpp
     src/djinterop/util/crypto/sqlcipher_codec.cpp
