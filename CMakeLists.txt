@@ -412,7 +412,7 @@ endif()
 # Unit tests.
 include(CTest)
 find_package(Boost 1.71.0 QUIET COMPONENTS filesystem system)
-if (Boost_FOUND)
+if (Boost_FOUND AND Boost_filesystem_FOUND AND Boost_system_FOUND)
     set(TESTDATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/testdata")
 
     function(add_djinterop_test test_dir test_name)
@@ -451,7 +451,9 @@ if (Boost_FOUND)
     add_djinterop_test(engine/v3/ track_table_test)
 
 else()
-    message(STATUS "Unit tests not available, as Boost cannot be found")
+    message(STATUS
+            "Unit tests not available, as the Boost.Filesystem and Boost.System "
+            "libraries cannot be found")
 endif()
 
 
