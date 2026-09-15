@@ -18,14 +18,22 @@
 #pragma once
 
 #include <optional>
+
 #include <string>
 
-namespace djinterop::util
+#include <djinterop/musical_key.hpp>
+#include <djinterop/onelibrary/v1/content_table.hpp>
+#include <djinterop/track_snapshot.hpp>
+namespace djinterop::onelibrary::v1
 {
-void create_dir(const std::string& directory);
-bool path_exists(const std::string& directory);
-bool path_is_directory(const std::string& path);
-std::string get_filename(const std::string& file_path);
-std::optional<std::string> get_file_extension(const std::string& file_path);
+/// Build a track snapshot from a content row.
+[[nodiscard]] track_snapshot to_snapshot(const content_row& row);
 
-}  // namespace djinterop::util
+/// Interpret the key notation that rekordbox writes, such as `F#m` or `Bb`.
+///
+/// Returns no value for a notation that is not recognised, rather than
+/// guessing.
+[[nodiscard]] std::optional<musical_key> parse_musical_key(
+    const std::string& name);
+
+}  // namespace djinterop::onelibrary::v1

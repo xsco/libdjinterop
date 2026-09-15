@@ -17,15 +17,17 @@
 
 #pragma once
 
-#include <optional>
+#include <memory>
 #include <string>
 
-namespace djinterop::util
+namespace djinterop::onelibrary
 {
-void create_dir(const std::string& directory);
-bool path_exists(const std::string& directory);
-bool path_is_directory(const std::string& path);
-std::string get_filename(const std::string& file_path);
-std::optional<std::string> get_file_extension(const std::string& file_path);
+struct onelibrary_context;
 
-}  // namespace djinterop::util
+/// Decrypt the database on a device and check that it is one.
+///
+/// \param path Either the root directory of a device, or the database file.
+std::shared_ptr<onelibrary_context> load_context(
+    const std::string& path, const std::string& passphrase);
+
+}  // namespace djinterop::onelibrary
