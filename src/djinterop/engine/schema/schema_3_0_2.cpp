@@ -322,7 +322,6 @@ void schema_3_0_2::create(sqlite::database& db)
           "CONSTRAINT C_NAME_UNIQUE_FOR_PARENT UNIQUE (title, "
           "parentPlaylistPath), 	CONSTRAINT C_NEXT_LIST_UNIQUE_FOR_PARENT "
           "UNIQUE (parentPlaylistPath, nextPlaylistPath, nextListUuid) );";
-    db << "INSERT INTO sqlite_sequence VALUES('Information',1);";
     db << "CREATE VIEW ChangeLog (id, trackId) AS SELECT 0, 0 WHERE FALSE;";
     db << "CREATE VIEW PlaylistAllParent AS WITH FindAllParent AS ( 	SELECT "
           "id, parentListId FROM Playlist 	UNION ALL 	SELECT "
