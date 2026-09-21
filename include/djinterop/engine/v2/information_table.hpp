@@ -36,7 +36,8 @@ struct DJINTEROP_PUBLIC information_row
 {
     /// Auto-generated id column.
     ///
-    /// Not especially meaningful when there is only a single row in the table.
+    /// The table holds only one row, and Engine keeps it at id 1.  Hardware
+    /// players have been observed to reject a library whose row is elsewhere.
     int64_t id;
 
     /// UUID for the database.
