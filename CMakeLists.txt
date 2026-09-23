@@ -265,7 +265,7 @@ target_include_directories(
         DjInterop PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:${DJINTEROP_INSTALL_INCLUDEDIR}>)
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 # Always rely on system installation of zlib.
 set(ZLIB_MIN_VERSION 1.2.8)
@@ -344,6 +344,14 @@ endif()
 
 set_target_properties(DjInterop PROPERTIES C_VISIBILITY_PRESET hidden)
 set_target_properties(DjInterop PROPERTIES CXX_VISIBILITY_PRESET hidden)
+
+# A static DjInterop does not carry the SQLCipher library inside it, so that
+# library is installed beside it for consumers to link as well.
+if(EXPERIMENTAL_ENABLE_SQLCIPHER)
+    install(TARGETS sqlcipher
+            EXPORT DjInteropTargets
+            ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+endif()
 
 install(TARGETS DjInterop
         EXPORT DjInteropTargets

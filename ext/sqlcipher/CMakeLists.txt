@@ -27,7 +27,7 @@ target_compile_definitions(
 
 target_include_directories(
     sqlcipher PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR})
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 # SQLCipher needs OpenSSL for AES-256-CBC, PBKDF2-HMAC-SHA512
 find_package(OpenSSL REQUIRED)
