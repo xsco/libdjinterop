@@ -17,22 +17,28 @@
 
 #include <djinterop/onelibrary/v1/library.hpp>
 
-#include <utility>
-
-#include "../loader.hpp"
 #include "../onelibrary_context.hpp"
 #include "database_impl.hpp"
 namespace djinterop::onelibrary::v1
 {
 library::library(const std::string& path, const std::string& passphrase) :
-    library{load_context(path, passphrase)}
+    context_{load_context(path, passphrase)}
 {
 }
 
-library::library(std::shared_ptr<onelibrary_context> context) :
-    context_{std::move(context)}, content_{context_}, playlist_{context_},
-    property_{context_}
+content_table library::content() const
 {
+    return content_table{context_};
+}
+
+playlist_table library::playlist() const
+{
+    return playlist_table{context_};
+}
+
+property_table library::property() const
+{
+    return property_table{context_};
 }
 
 djinterop::database library::database() const

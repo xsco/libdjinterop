@@ -30,8 +30,9 @@
 /// OneLibrary succeeds the DeviceSQL `export.pdb` library that rekordbox wrote
 /// to USB media; a device usually carries both, and a player that understands
 /// OneLibrary prefers it.  The library is one SQLite database encrypted with
-/// SQLCipher 4, whose page format is implemented in `util/crypto`, so neither
-/// SQLCipher nor OpenSSL is needed to read one.
+/// SQLCipher 4, so reading one needs libdjinterop built with
+/// `EXPERIMENTAL_ENABLE_SQLCIPHER`; without it, loading throws
+/// `djinterop::unsupported_database`.
 ///
 /// Support here is currently **read-only**.  Everything that changes a
 /// database throws `djinterop::unsupported_operation`.
@@ -73,9 +74,6 @@ bool DJINTEROP_PUBLIC database_exists(const std::string& path);
 database DJINTEROP_PUBLIC load_database(
     const std::string& path,
     const std::string& passphrase = default_passphrase);
-
-/// State shared by everything belonging to one loaded database.
-struct onelibrary_context;
 
 }  // namespace djinterop::onelibrary
 

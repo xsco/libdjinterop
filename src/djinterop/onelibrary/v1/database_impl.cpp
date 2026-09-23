@@ -17,8 +17,6 @@
 
 #include "database_impl.hpp"
 
-#include <array>
-#include <set>
 #include <utility>
 
 #include <djinterop/exceptions.hpp>
@@ -32,18 +30,6 @@
 #include "track_impl.hpp"
 namespace djinterop::onelibrary::v1
 {
-namespace
-{
-/// The tables that must be present for a database to be a OneLibrary one.
-///
-/// A real export has twenty-two; demanding the ones this library does not read
-/// would reject a database that is merely older or newer.
-constexpr std::array<const char*, 8> required_tables{
-    "content",  "artist",           "album",   "genre", "label",
-    "playlist", "playlist_content", "property"};
-
-}  // anonymous namespace
-
 database_impl::database_impl(std::shared_ptr<onelibrary_context> context) :
     djinterop::database_impl{
         {feature::supports_nested_crates, feature::supports_nested_playlists,
@@ -84,15 +70,7 @@ std::string database_impl::version_name()
 
 void database_impl::verify()
 {
-    std::set<std::string> present;
-    context_->db << "SELECT name FROM sqlite_master WHERE type = 'table'" >>
-        [&](std::string name) { present.insert(std::move(name)); };
-
-    for (const auto& table : required_tables)
-        if (present.count(table) == 0)
-            throw database_inconsistency{
-                std::string{"The table `"} + table +
-                "` is missing, so this is not a OneLibrary database"};
+    verify_schema(*context_);
 }
 
 std::optional<djinterop::track> database_impl::track_by_id(int64_t id)
@@ -100,14 +78,14 @@ std::optional<djinterop::track> database_impl::track_by_id(int64_t id)
     if (!content_table{context_}.exists(id))
         return std::nullopt;
 
-    return track{std::make_shared<track_impl>(context_, id)};
+    return make_track(context_, id);
 }
 
 std::vector<djinterop::track> database_impl::tracks()
 {
     std::vector<djinterop::track> results;
     for (const auto& id : content_table{context_}.all_ids())
-        results.push_back(track{std::make_shared<track_impl>(context_, id)});
+        results.push_back(make_track(context_, id));
 
     return results;
 }
@@ -117,7 +95,7 @@ std::vector<djinterop::track> database_impl::tracks_by_relative_path(
 {
     std::vector<djinterop::track> results;
     for (const auto& id : content_table{context_}.ids_by_path(relative_path))
-        results.push_back(track{std::make_shared<track_impl>(context_, id)});
+        results.push_back(make_track(context_, id));
 
     return results;
 }

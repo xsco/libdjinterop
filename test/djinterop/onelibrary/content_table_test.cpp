@@ -46,8 +46,7 @@ namespace
 std::shared_ptr<ol::onelibrary_context> make_context()
 {
     sqlite::database db{":memory:"};
-    for (const auto& statement : onelibrary_schema_statements())
-        db << statement;
+    create_onelibrary_schema(db.connection().get());
 
     db << "INSERT INTO artist VALUES (1, 'Aphex Twin', ''), "
           "(2, 'Squarepusher', '')";

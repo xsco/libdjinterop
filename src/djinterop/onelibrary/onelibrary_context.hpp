@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -40,9 +41,20 @@ struct onelibrary_context
     /// the database file itself sits in.
     const std::string directory;
 
-    /// The database, decrypted from the device into memory.
+    /// The database, opened with the key that decrypts it.
     sqlite::database db;
 };
+
+/// Open the database on a device and check that it is one.
+///
+/// \param path Either the root directory of a device, or the database file.
+std::shared_ptr<onelibrary_context> load_context(
+    const std::string& path, const std::string& passphrase);
+
+/// Check that a database holds the tables of a OneLibrary one.
+///
+/// \throws database_inconsistency If a table is missing.
+void verify_schema(onelibrary_context& context);
 
 /// Refuse an operation that would change the database.
 [[noreturn]] inline void read_only()

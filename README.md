@@ -35,6 +35,8 @@ CDJ-3000 from firmware 3.15.  Track metadata, playlists and crates can be read.
 Writing is not supported yet, and beat grids, waveforms, hot cues and loops are
 not held in the database at all, as rekordbox leaves them in the ANLZ files
 beside it.  The format is also documented under the name Device Library Plus.
+The database is encrypted with SQLCipher, so reading it needs the library built
+with `-DEXPERIMENTAL_ENABLE_SQLCIPHER=ON -DSYSTEM_SQLITE=OFF`, and OpenSSL.
 
 What is not supported (yet):
 

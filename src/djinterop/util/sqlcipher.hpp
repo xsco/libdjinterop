@@ -17,14 +17,25 @@
 
 #pragma once
 
-#include <optional>
 #include <string>
+
+#include <sqlite_modern_cpp.h>
 
 namespace djinterop::util
 {
-void create_dir(const std::string& directory);
-bool path_exists(const std::string& directory);
-std::string get_filename(const std::string& file_path);
-std::optional<std::string> get_file_extension(const std::string& file_path);
+// Exactly one implementation of this header is compiled in: `sqlcipher.cpp`
+// where the build has SQLCipher, and otherwise `sqlcipher_unsupported.cpp`.
+
+/// Open a SQLCipher database for reading.
+///
+/// The connection serves the decrypted contents, including anything still in
+/// the write-ahead log.  Reading a write-ahead-logged database creates the
+/// `-shm` and `-wal` files beside it if they are missing, so the directory
+/// holding it must be writable.
+///
+/// \throws djinterop::unsupported_database If this build cannot open
+///         encrypted databases, or the passphrase does not open the file.
+[[nodiscard]] sqlite::database open_encrypted_database(
+    const std::string& path, const std::string& passphrase);
 
 }  // namespace djinterop::util

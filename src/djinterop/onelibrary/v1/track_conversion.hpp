@@ -17,8 +17,9 @@
 
 #pragma once
 
+#include <chrono>
+#include <cstdint>
 #include <optional>
-
 #include <string>
 
 #include <djinterop/musical_key.hpp>
@@ -26,6 +27,34 @@
 #include <djinterop/track_snapshot.hpp>
 namespace djinterop::onelibrary::v1
 {
+// Each column is interpreted in one place, shared by `to_snapshot` and the
+// single-field accessors of `track_impl`, so that the two cannot disagree.
+// rekordbox writes zero for a numeric field it does not know.
+
+[[nodiscard]] std::optional<double> to_bpm(std::optional<int64_t> bpm_x100);
+
+[[nodiscard]] std::optional<std::chrono::milliseconds> to_duration(
+    std::optional<std::chrono::seconds> length);
+
+/// Interpret a count, such as a track number, a year or a bitrate.
+[[nodiscard]] std::optional<int> to_positive_int(std::optional<int64_t> value);
+
+[[nodiscard]] std::optional<int> to_rating(std::optional<int64_t> stars);
+
+/// Paths are absolute within the device, as `/Contents/...`, whereas djinterop
+/// wants them relative to its root.
+[[nodiscard]] std::string to_relative_path(const std::string& path);
+
+/// The inverse of `to_relative_path`.
+[[nodiscard]] std::string to_device_path(const std::string& relative_path);
+
+[[nodiscard]] std::optional<double> to_sample_rate(
+    std::optional<int64_t> sampling_rate);
+
+[[nodiscard]] std::optional<unsigned long long> to_sample_count(
+    std::optional<std::chrono::seconds> length,
+    std::optional<int64_t> sampling_rate);
+
 /// Build a track snapshot from a content row.
 [[nodiscard]] track_snapshot to_snapshot(const content_row& row);
 

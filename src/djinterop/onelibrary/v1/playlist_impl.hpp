@@ -37,7 +37,6 @@ class playlist_impl : public djinterop::playlist_impl
 public:
     playlist_impl(std::shared_ptr<onelibrary_context> context, int64_t id);
 
-    [[nodiscard]] int64_t id() const noexcept { return id_; }
 
     void add_track_back(const djinterop::track_impl& tr) override;
     void add_track_after(

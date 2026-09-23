@@ -50,82 +50,6 @@ option(SYSTEM_SQLITE "Use system installation of SQLite" ON)
 option(EXPERIMENTAL_ENABLE_SQLCIPHER "Use SQLCipher in place of SQLite" OFF)
 option(SYSTEM_SQLITE_MODERN_CPP "Use system installation of sqlite_modern_cpp" OFF)
 
-
-# The processor's own AES instructions are worth two orders of magnitude over
-# software AES when reading an encrypted OneLibrary database, so use them where
-# the compiler can be persuaded to emit them.  Whether the processor running the
-# built library has them is a separate question, decided at run time; settled
-# here is only whether the intrinsics compile, and with which flags.  They are
-# applied to `aes_hardware.cpp` alone, so no other translation unit can pick up
-# an instruction the target may not have.
-include(CheckCXXSourceCompiles)
-
-set(DJINTEROP_AES_X86_SOURCE "
-#if defined(_MSC_VER)
-#include <intrin.h>
-#else
-#include <immintrin.h>
-#endif
-int main()
-{
-    __m128i x = _mm_setzero_si128();
-    x = _mm_aesenc_si128(x, x);
-    x = _mm_aesenclast_si128(x, x);
-    x = _mm_aesdec_si128(x, x);
-    x = _mm_aesdeclast_si128(x, x);
-    return _mm_cvtsi128_si32(x);
-}
-")
-
-set(DJINTEROP_AES_ARM64_SOURCE "
-#include <arm_neon.h>
-int main()
-{
-    uint8x16_t x = vdupq_n_u8(0);
-    x = vaesmcq_u8(vaeseq_u8(x, x));
-    x = vaesimcq_u8(vaesdq_u8(x, x));
-    return vgetq_lane_u8(x, 0);
-}
-")
-
-set(DJINTEROP_AES_INTRINSICS_DEFINE "")
-set(DJINTEROP_AES_INTRINSICS_FLAGS "")
-
-# Try one architecture, unless another has already answered.  Bare comes first:
-# MSVC needs no flags at all, and neither does a compiler whose default target
-# already includes the extension, such as Apple's on arm64.
-macro(djinterop_try_aes arch source flags)
-    if(NOT DJINTEROP_AES_INTRINSICS_DEFINE)
-        check_cxx_source_compiles("${source}" DJINTEROP_AES_${arch}_BARE)
-        if(NOT DJINTEROP_AES_${arch}_BARE)
-            set(CMAKE_REQUIRED_FLAGS "${flags}")
-            check_cxx_source_compiles(
-                "${source}" DJINTEROP_AES_${arch}_FLAGGED)
-            unset(CMAKE_REQUIRED_FLAGS)
-            if(DJINTEROP_AES_${arch}_FLAGGED)
-                set(DJINTEROP_AES_INTRINSICS_FLAGS "${flags}")
-            endif()
-        endif()
-        if(DJINTEROP_AES_${arch}_BARE OR DJINTEROP_AES_${arch}_FLAGGED)
-            set(DJINTEROP_AES_INTRINSICS_DEFINE
-                "DJINTEROP_AES_INTRINSICS_${arch}")
-        endif()
-    endif()
-endmacro()
-
-djinterop_try_aes(X86 "${DJINTEROP_AES_X86_SOURCE}" "-maes -msse2")
-djinterop_try_aes(ARM64 "${DJINTEROP_AES_ARM64_SOURCE}" "-march=armv8-a+crypto")
-
-if(DJINTEROP_AES_INTRINSICS_DEFINE)
-    message(STATUS "Using AES instructions where available at run time")
-    set_source_files_properties(
-        src/djinterop/util/crypto/aes_hardware.cpp PROPERTIES
-        COMPILE_DEFINITIONS "${DJINTEROP_AES_INTRINSICS_DEFINE}"
-        COMPILE_FLAGS "${DJINTEROP_AES_INTRINSICS_FLAGS}")
-else()
-    message(STATUS "No AES instructions for this target; using AES tables")
-endif()
-
 add_library(
     DjInterop
     include/djinterop/album_art.hpp
@@ -280,7 +204,6 @@ add_library(
     src/djinterop/impl/playlist_impl.hpp
     src/djinterop/impl/track_impl.cpp
     src/djinterop/impl/track_impl.hpp
-    src/djinterop/onelibrary/loader.hpp
     src/djinterop/onelibrary/onelibrary.cpp
     src/djinterop/onelibrary/onelibrary_context.hpp
     src/djinterop/onelibrary/v1/content_table.cpp
@@ -301,27 +224,22 @@ add_library(
     src/djinterop/track.cpp
     src/djinterop/util/chrono.cpp
     src/djinterop/util/chrono.hpp
-    src/djinterop/util/crypto/aes.cpp
-    src/djinterop/util/crypto/aes.hpp
-    src/djinterop/util/crypto/aes_hardware.cpp
-    src/djinterop/util/crypto/aes_hardware.hpp
-    src/djinterop/util/crypto/encrypted_database.hpp
-    # The one implementation of `encrypted_database.hpp`; a SQLCipher-backed
-    # build would name its own here instead.
-    src/djinterop/util/crypto/encrypted_database_builtin.cpp
-    src/djinterop/util/crypto/sha512.cpp
-    src/djinterop/util/crypto/sha512.hpp
-    src/djinterop/util/crypto/sqlcipher_codec.cpp
-    src/djinterop/util/crypto/sqlcipher_codec.hpp
-    src/djinterop/util/crypto/sqlcipher_wal.cpp
-    src/djinterop/util/crypto/sqlcipher_wal.hpp
     src/djinterop/util/filesystem.cpp
     src/djinterop/util/filesystem.hpp
     src/djinterop/util/random.cpp
     src/djinterop/util/random.hpp
+    src/djinterop/util/sqlcipher.hpp
     src/djinterop/util/sqlite_query.hpp
     src/djinterop/util/sqlite_transaction.hpp
 )
+
+# Encrypted OneLibrary databases are opened with SQLCipher, where the build has
+# it.  Otherwise, opening one fails with an explanation.
+if(EXPERIMENTAL_ENABLE_SQLCIPHER)
+    target_sources(DjInterop PRIVATE src/djinterop/util/sqlcipher.cpp)
+else()
+    target_sources(DjInterop PRIVATE src/djinterop/util/sqlcipher_unsupported.cpp)
+endif()
 
 set_target_properties(DjInterop PROPERTIES
     OUTPUT_NAME "djinterop"
@@ -348,14 +266,6 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${DJINTEROP_INSTALL_INCLUDEDIR}>)
-
-# Decrypting the pages of a database is spread over the processors available,
-# which is what the standard threading library is needed for.
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-target_link_libraries(
-    DjInterop PRIVATE
-    Threads::Threads)
 
 # Always rely on system installation of zlib.
 set(ZLIB_MIN_VERSION 1.2.8)
@@ -403,7 +313,6 @@ elseif(SYSTEM_SQLITE)
     target_link_libraries(
         DjInterop PUBLIC
         ${SQLite3_LIBRARIES})
-    set(DJINTEROP_SQLITE_VERSION "${SQLite3_VERSION}")
 else()
     # Use bundled SQLite amalgamation sources.
     message(STATUS "Using bundled SQLite...")
@@ -416,16 +325,6 @@ else()
     target_include_directories(
         DjInterop PRIVATE SYSTEM
         ext/sqlite-amalgamation)
-
-    # Read the version out of the amalgamation rather than restating it here,
-    # so that bumping the bundled copy is a matter of replacing two files.
-    file(
-        STRINGS ext/sqlite-amalgamation/sqlite3.h DJINTEROP_SQLITE_VERSION
-        REGEX "^#define SQLITE_VERSION[ \t]+\"")
-    string(
-        REGEX REPLACE "^#define SQLITE_VERSION[ \t]+\"([^\"]+)\".*" "\\1"
-        DJINTEROP_SQLITE_VERSION "${DJINTEROP_SQLITE_VERSION}")
-    message(STATUS "Bundled SQLite is version ${DJINTEROP_SQLITE_VERSION}")
 endif()
 
 if(SYSTEM_SQLITE_MODERN_CPP)
@@ -584,10 +483,6 @@ if (Boost_FOUND AND Boost_filesystem_FOUND AND Boost_system_FOUND)
                 ${Boost_INCLUDE_DIRS}
                 ${CMAKE_CURRENT_BINARY_DIR}/include
                 include)
-        # A test that compiles library sources into itself, rather than only
-        # linking, needs the headers that those sources include.
-        target_include_directories(${test_executable_name} PRIVATE SYSTEM
-                $<TARGET_PROPERTY:DjInterop,INCLUDE_DIRECTORIES>)
         target_link_libraries(${test_executable_name} PUBLIC
                 DjInterop
                 ${Boost_LIBRARIES})
@@ -609,64 +504,34 @@ if (Boost_FOUND AND Boost_filesystem_FOUND AND Boost_system_FOUND)
     add_djinterop_test(engine/v3/ performance_data_table_test)
     add_djinterop_test(engine/v3/ track_table_test)
 
-    # Some parts of the library are internal, and its symbols are hidden, so
-    # tests of them compile those sources into themselves rather than linking.
-    #
-    # The OneLibrary tests are commented out below.  Each of them talks to
-    # SQLite directly, and a test cannot borrow SQLite from the library: its
-    # symbols are hidden there.  With `-DSYSTEM_SQLITE=OFF` that means every
-    # one of them compiles the amalgamation into itself, some fifteen seconds
-    # apiece, on top of the copy the library already builds.
-    #
-    # The sources are still in `test/djinterop/onelibrary`; uncommenting the
-    # block below is all it takes to run them again.  `sqlite3_deserialize`,
-    # which reading a decrypted database goes through, arrived in SQLite 3.36,
-    # hence the version the database test asks for.
-    #
-    # Both problems go away once the format can be written: a fixture would
-    # then be built from `testdata/ref/onelibrary/schema.sql` through the
-    # library, as the Engine tests build one through
-    # `create_database_from_scripts()`, and no test would touch SQLite at all.
-    #
-    # if(SYSTEM_SQLITE)
-    #     set(DJINTEROP_TEST_SQLITE_SOURCES "")
-    # else()
-    #     set(DJINTEROP_TEST_SQLITE_SOURCES ext/sqlite-amalgamation/sqlite3.c)
-    # endif()
-    #
-    # add_djinterop_test(onelibrary/ content_table_test)
-    # target_sources(onelibrary_content_table_test PRIVATE
-    #         src/djinterop/onelibrary/v1/content_table.cpp
-    #         src/djinterop/onelibrary/v1/track_conversion.cpp
-    #         ${DJINTEROP_TEST_SQLITE_SOURCES})
-    #
-    # if(NOT DJINTEROP_SQLITE_VERSION VERSION_LESS 3.36)
-    #     add_djinterop_test(onelibrary/ database_test)
-    #     target_sources(onelibrary_database_test PRIVATE
-    #             src/djinterop/util/crypto/aes.cpp
-    #             src/djinterop/util/crypto/aes_hardware.cpp
-    #             src/djinterop/util/crypto/sha512.cpp
-    #             src/djinterop/util/crypto/sqlcipher_codec.cpp
-    #             src/djinterop/util/filesystem.cpp
-    #             ${DJINTEROP_TEST_SQLITE_SOURCES})
-    # else()
-    #     message(
-    #         STATUS
-    #         "OneLibrary database test not available, as reading the format "
-    #         "needs SQLite 3.36 or newer")
-    # endif()
-    #
-    # add_djinterop_test(onelibrary/ playlist_table_test)
-    # target_sources(onelibrary_playlist_table_test PRIVATE
-    #         src/djinterop/onelibrary/v1/playlist_table.cpp
-    #         ${DJINTEROP_TEST_SQLITE_SOURCES})
+    # The OneLibrary tests talk to SQLite directly to build their fixtures, and
+    # the library's own copy is hidden from them, so they link the SQLCipher
+    # static library themselves.  For the same reason, they compile the
+    # internal sources they test into themselves rather than linking.
+    if(EXPERIMENTAL_ENABLE_SQLCIPHER)
+        add_djinterop_test(onelibrary/ content_table_test)
+        target_sources(onelibrary_content_table_test PRIVATE
+                src/djinterop/onelibrary/v1/content_table.cpp
+                src/djinterop/onelibrary/v1/track_conversion.cpp)
 
-    add_djinterop_test(util/ crypto_test)
-    target_sources(util_crypto_test PRIVATE
-            src/djinterop/util/crypto/aes.cpp
-            src/djinterop/util/crypto/aes_hardware.cpp
-            src/djinterop/util/crypto/sha512.cpp
-            src/djinterop/util/crypto/sqlcipher_codec.cpp)
+        add_djinterop_test(onelibrary/ database_test)
+
+        add_djinterop_test(onelibrary/ playlist_table_test)
+        target_sources(onelibrary_playlist_table_test PRIVATE
+                src/djinterop/onelibrary/v1/playlist_table.cpp)
+
+        foreach(test_name content_table_test database_test playlist_table_test)
+            target_link_libraries(onelibrary_${test_name} PRIVATE sqlcipher)
+            # The library sources compiled in need the headers they include.
+            target_include_directories(onelibrary_${test_name} PRIVATE SYSTEM
+                    $<TARGET_PROPERTY:DjInterop,INCLUDE_DIRECTORIES>)
+        endforeach()
+    else()
+        message(
+            STATUS
+            "OneLibrary tests not available, as reading the format needs "
+            "EXPERIMENTAL_ENABLE_SQLCIPHER")
+    endif()
 else()
     message(STATUS
             "Unit tests not available, as the Boost.Filesystem and Boost.System "

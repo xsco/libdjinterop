@@ -21,60 +21,33 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <vector>
+
+#include <sqlite3.h>
 
 #define ONELIBRARY_STRINGIFY(x) ONELIBRARY_STRINGIFY_(x)
 #define ONELIBRARY_STRINGIFY_(x) #x
 
-/// The schema a real OneLibrary export carries, read from the reference
+/// Create the tables a real OneLibrary export carries, from the reference
 /// script in `testdata/ref/onelibrary`.
 ///
 /// The script is the record of what a device holds; see its own comments.
-inline const std::vector<std::string>& onelibrary_schema_statements()
+inline void create_onelibrary_schema(sqlite3* db)
 {
-    static const std::vector<std::string> statements = []
-    {
-        const std::string path =
-            std::string{ONELIBRARY_STRINGIFY(TESTDATA_DIR)} +
-            "/ref/onelibrary/schema.sql";
+    const std::string path = std::string{ONELIBRARY_STRINGIFY(TESTDATA_DIR)} +
+                             "/ref/onelibrary/schema.sql";
 
-        std::ifstream file{path};
-        if (!file)
-            throw std::runtime_error{"Cannot read the schema at " + path};
+    std::ifstream file{path};
+    if (!file)
+        throw std::runtime_error{"Cannot read the schema at " + path};
 
-        std::ostringstream contents;
-        contents << file.rdbuf();
+    std::ostringstream script;
+    script << file.rdbuf();
 
-        // The script is a sequence of statements separated by semicolons, and
-        // nothing in it holds one in a string literal.
-        std::vector<std::string> result;
-        std::string statement;
-        for (const auto character : contents.str())
-        {
-            if (character != ';')
-            {
-                statement += character;
-                continue;
-            }
-
-            // Comment lines belong to the script, not to the statement.
-            std::string stripped;
-            std::istringstream lines{statement};
-            for (std::string line; std::getline(lines, line);)
-                if (line.rfind("--", 0) != 0)
-                    stripped += line + " ";
-
-            const auto begin = stripped.find_first_not_of(" \t\r\n");
-            const auto end = stripped.find_last_not_of(" \t\r\n");
-            if (begin != std::string::npos)
-                result.push_back(
-                    stripped.substr(begin, end - begin + 1));
-
-            statement.clear();
-        }
-
-        return result;
-    }();
-
-    return statements;
+    char* error = nullptr;
+    const auto rc =
+        sqlite3_exec(db, script.str().c_str(), nullptr, nullptr, &error);
+    const std::string message = error != nullptr ? error : "";
+    sqlite3_free(error);
+    if (rc != SQLITE_OK)
+        throw std::runtime_error{"Cannot create the schema: " + message};
 }

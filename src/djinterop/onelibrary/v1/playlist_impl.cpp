@@ -83,8 +83,7 @@ std::vector<track> playlist_impl::tracks() const
 {
     std::vector<track> results;
     for (const auto& track_id : playlist_table{context_}.track_ids(id_))
-        results.push_back(
-            track{std::make_shared<track_impl>(context_, track_id)});
+        results.push_back(make_track(context_, track_id));
 
     return results;
 }

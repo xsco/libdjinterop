@@ -18,11 +18,8 @@
 #define BOOST_TEST_MODULE onelibrary_database_test
 #include <boost/test/included/unit_test.hpp>
 
-#include <cstdint>
 #include <cstdio>
-#include <fstream>
 #include <string>
-#include <vector>
 
 #include <sqlite3.h>
 
@@ -30,83 +27,17 @@
 #include <djinterop/onelibrary/onelibrary.hpp>
 #include <djinterop/onelibrary/v1/library.hpp>
 
-#include "../../../src/djinterop/util/filesystem.hpp"
 #include "../boost_test_printable.hpp"
-#include "../sqlcipher_encryptor.hpp"
 #include "../temporary_directory.hpp"
 #include "onelibrary_schema.hpp"
 
 namespace utf = boost::unit_test;
 namespace ol = djinterop::onelibrary;
 namespace olv1 = djinterop::onelibrary::v1;
-namespace crypto = djinterop::util::crypto;
 
 namespace
 {
 const std::string passphrase = "a passphrase for the fixture";
-
-/// The encryptor that every fixture is written with.
-///
-/// Key derivation is deliberately expensive -- the format stretches the
-/// passphrase 256,000 times -- so one salt, and hence one derived key, is
-/// shared by every fixture rather than made afresh for each.  A database
-/// carries its own salt, so nothing about reading one depends on this.
-const sqlcipher_encryptor& fixture_encryptor()
-{
-    static const sqlcipher_encryptor encryptor{passphrase};
-    return encryptor;
-}
-
-/// Encrypt a plain SQLite file in place, as SQLCipher would have written it.
-///
-/// The fixture is built as an ordinary database and encrypted afterwards,
-/// which is the only direction the library offers: it decrypts a device to
-/// read it, and never writes one.
-void encrypt_in_place(const std::string& path)
-{
-    std::vector<uint8_t> plain;
-    {
-        std::ifstream file{path, std::ios::binary};
-        plain.assign(
-            std::istreambuf_iterator<char>{file},
-            std::istreambuf_iterator<char>{});
-    }
-
-    const crypto::sqlcipher_parameters params;
-    BOOST_REQUIRE(!plain.empty());
-    BOOST_REQUIRE_EQUAL(plain.size() % params.page_size, 0u);
-
-    const auto& encryptor = fixture_encryptor();
-
-    std::vector<uint8_t> encrypted(plain.size());
-    for (size_t index = 0; index < plain.size() / params.page_size; ++index)
-    {
-        encryptor.encrypt_page(
-            static_cast<uint32_t>(index + 1),
-            plain.data() + (index * params.page_size),
-            encrypted.data() + (index * params.page_size));
-    }
-
-    std::ofstream{path, std::ios::binary | std::ios::trunc}.write(
-        reinterpret_cast<const char*>(encrypted.data()),
-        static_cast<std::streamsize>(encrypted.size()));
-}
-
-/// Prepare a plain database to hold pages of the shape SQLCipher expects.
-void prepare_plain_database(sqlite3* db)
-{
-    const crypto::sqlcipher_parameters params;
-    char* error = nullptr;
-    const auto sql = "PRAGMA page_size = " + std::to_string(params.page_size);
-    BOOST_REQUIRE_EQUAL(
-        sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &error), SQLITE_OK);
-    sqlite3_free(error);
-
-    auto reserve = static_cast<int>(params.reserve);
-    BOOST_REQUIRE_EQUAL(
-        sqlite3_file_control(db, "main", SQLITE_FCNTL_RESERVE_BYTES, &reserve),
-        SQLITE_OK);
-}
 
 void execute(sqlite3* db, const std::string& sql)
 {
@@ -118,10 +49,29 @@ void execute(sqlite3* db, const std::string& sql)
         rc == SQLITE_OK, "failed to run \"" << sql << "\": " << message);
 }
 
-void create_onelibrary_schema(sqlite3* db)
+/// Create a database encrypted as rekordbox encrypts one.
+///
+/// The format is SQLCipher 4 with its default parameters, so the key is all
+/// there is to set.
+sqlite3* create_encrypted_database(const std::string& path)
 {
-    for (const auto& statement : onelibrary_schema_statements())
-        execute(db, statement);
+    sqlite3* db = nullptr;
+    BOOST_REQUIRE_EQUAL(
+        sqlite3_open_v2(
+            path.c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
+            nullptr),
+        SQLITE_OK);
+    execute(db, "PRAGMA key = '" + passphrase + "'");
+    return db;
+}
+
+/// Create the directories of a device, returning where its database goes.
+std::string make_device_directories(const std::string& root)
+{
+    const auto path = root + "/" + ol::database_relative_path;
+    boost::filesystem::create_directories(
+        boost::filesystem::path{path}.parent_path());
+    return path;
 }
 
 /// Build a device holding a small OneLibrary export.
@@ -133,19 +83,9 @@ void create_onelibrary_schema(sqlite3* db)
 std::string make_device(const temporary_directory& temp_dir)
 {
     const auto root = temp_dir.temp_dir;
-    djinterop::util::create_dir(root + "/PIONEER");
-    djinterop::util::create_dir(root + "/PIONEER/rekordbox");
+    const auto path = make_device_directories(root);
 
-    const auto path = root + "/" + ol::database_relative_path;
-
-    sqlite3* db = nullptr;
-    BOOST_REQUIRE_EQUAL(
-        sqlite3_open_v2(
-            path.c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
-            nullptr),
-        SQLITE_OK);
-
-    prepare_plain_database(db);
+    auto* db = create_encrypted_database(path);
 
     create_onelibrary_schema(db);
 
@@ -201,7 +141,6 @@ std::string make_device(const temporary_directory& temp_dir)
         "'2026-01-01', 0, 0)");
 
     sqlite3_close(db);
-    encrypt_in_place(path);
     return root;
 }
 
@@ -224,19 +163,17 @@ const shared_device& device_fixture()
     return instance;
 }
 
-/// The shared device, opened once.
-djinterop::database loaded_database()
-{
-    static const djinterop::database db =
-        ol::load_database(device_fixture().path, passphrase);
-    return db;
-}
-
 /// The shared device, opened once as a library.
 const olv1::library& loaded_library()
 {
     static const olv1::library lib{device_fixture().path, passphrase};
     return lib;
+}
+
+/// The shared device, through the same connection as `loaded_library()`.
+djinterop::database loaded_database()
+{
+    return loaded_library().database();
 }
 
 }  // anonymous namespace
@@ -504,13 +441,7 @@ BOOST_AUTO_TEST_CASE(
     temporary_directory temp_dir;
     const auto path = temp_dir.temp_dir + "/deep.db";
 
-    sqlite3* db = nullptr;
-    BOOST_REQUIRE_EQUAL(
-        sqlite3_open_v2(
-            path.c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
-            nullptr),
-        SQLITE_OK);
-    prepare_plain_database(db);
+    auto* db = create_encrypted_database(path);
     create_onelibrary_schema(db);
 
     // Every export carries a `property` row, whatever else it holds.
@@ -528,12 +459,7 @@ BOOST_AUTO_TEST_CASE(
         "INSERT INTO playlist VALUES (1, 1, 'Root', 0, 0, 0), "
         "(2, 1, 'Middle A', 0, 0, 1), (3, 2, 'Middle B', 0, 0, 1), "
         "(4, 1, 'Leaf A', 0, 0, 2)");
-    execute(
-        db,
-        "INSERT INTO property VALUES ('FIXTURE', '1000', 0, "
-        "'2026-01-01', 0, 0)");
     sqlite3_close(db);
-    encrypt_in_place(path);
 
     auto loaded = ol::load_database(path, passphrase);
     const auto root = loaded.root_crate_by_name("Root");
@@ -555,18 +481,12 @@ BOOST_AUTO_TEST_CASE(load_database__a_checkpointed_log__is_read)
 {
     // A real export is written in WAL mode and checkpointed on eject, which
     // removes the log but leaves the header declaring the database
-    // write-ahead-logged.  SQLite refuses to open one of those read-only
-    // without the log, so the header has to be rewritten as it is decrypted.
+    // write-ahead-logged.  SQLite will not open one of those read-only unless
+    // it can create the log again.
     temporary_directory temp_dir;
     const auto path = temp_dir.temp_dir + "/checkpointed.db";
 
-    sqlite3* db = nullptr;
-    BOOST_REQUIRE_EQUAL(
-        sqlite3_open_v2(
-            path.c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
-            nullptr),
-        SQLITE_OK);
-    prepare_plain_database(db);
+    auto* db = create_encrypted_database(path);
     create_onelibrary_schema(db);
     execute(db, "PRAGMA journal_mode = WAL");
     execute(
@@ -583,8 +503,6 @@ BOOST_AUTO_TEST_CASE(load_database__a_checkpointed_log__is_read)
     sqlite3_close(db);
     std::remove((path + "-wal").c_str());
 
-    encrypt_in_place(path);
-
     auto loaded = ol::load_database(path, passphrase);
     const auto tracks = loaded.tracks();
     BOOST_REQUIRE_EQUAL(tracks.size(), 1u);
@@ -598,130 +516,13 @@ BOOST_AUTO_TEST_CASE(verify__a_database_missing_its_tables__is_rejected)
     temporary_directory temp_dir;
     const auto path = temp_dir.temp_dir + "/not-onelibrary.db";
 
-    sqlite3* db = nullptr;
-    BOOST_REQUIRE_EQUAL(
-        sqlite3_open_v2(
-            path.c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
-            nullptr),
-        SQLITE_OK);
-    prepare_plain_database(db);
+    auto* db = create_encrypted_database(path);
     execute(db, "CREATE TABLE something_else(id INTEGER PRIMARY KEY)");
     sqlite3_close(db);
-    encrypt_in_place(path);
 
     BOOST_CHECK_THROW(
         ol::load_database(path, passphrase), djinterop::database_inconsistency);
 }
-
-namespace
-{
-/// Read a whole file.
-std::vector<uint8_t> read_file(const std::string& path)
-{
-    std::ifstream file{path, std::ios::binary};
-    return std::vector<uint8_t>{
-        std::istreambuf_iterator<char>{file}, std::istreambuf_iterator<char>{}};
-}
-
-void write_file(const std::string& path, const std::vector<uint8_t>& data)
-{
-    std::ofstream{path, std::ios::binary | std::ios::trunc}.write(
-        reinterpret_cast<const char*>(data.data()),
-        static_cast<std::streamsize>(data.size()));
-}
-
-uint32_t load_be32(const uint8_t* p)
-{
-    return (static_cast<uint32_t>(p[0]) << 24) |
-           (static_cast<uint32_t>(p[1]) << 16) |
-           (static_cast<uint32_t>(p[2]) << 8) | static_cast<uint32_t>(p[3]);
-}
-
-void store_be32(uint8_t* p, uint32_t value)
-{
-    p[0] = static_cast<uint8_t>(value >> 24);
-    p[1] = static_cast<uint8_t>(value >> 16);
-    p[2] = static_cast<uint8_t>(value >> 8);
-    p[3] = static_cast<uint8_t>(value);
-}
-
-/// Encrypt a plain database and its write-ahead log the way SQLCipher does.
-///
-/// SQLCipher encrypts the page inside each log frame, and SQLite checksums the
-/// frame over the bytes as they end up in the file -- so over the ciphertext.
-/// Reproducing that here is what makes this a test of reading a real log
-/// rather than of reading one this library made up.
-void encrypt_database_and_log(
-    const std::string& path, const sqlcipher_encryptor& encryptor)
-{
-    const auto& params = encryptor.params();
-
-    auto plain = read_file(path);
-    BOOST_REQUIRE_EQUAL(plain.size() % params.page_size, 0u);
-    std::vector<uint8_t> encrypted(plain.size());
-    for (size_t index = 0; index < plain.size() / params.page_size; ++index)
-        encryptor.encrypt_page(
-            static_cast<uint32_t>(index + 1),
-            plain.data() + (index * params.page_size),
-            encrypted.data() + (index * params.page_size));
-    write_file(path, encrypted);
-
-    auto log = read_file(path + "-wal");
-    BOOST_REQUIRE_GE(log.size(), 32u);
-
-    // The checksums of the log are computed over its contents in the byte
-    // order its magic number selects, and stored big-endian.
-    const auto big_endian = (load_be32(log.data()) & 1) != 0;
-    const auto read_word = [&](const uint8_t* p)
-    {
-        if (big_endian)
-            return load_be32(p);
-
-        return static_cast<uint32_t>(
-            (static_cast<uint32_t>(p[3]) << 24) |
-            (static_cast<uint32_t>(p[2]) << 16) |
-            (static_cast<uint32_t>(p[1]) << 8) | static_cast<uint32_t>(p[0]));
-    };
-
-    uint32_t s0 = 0;
-    uint32_t s1 = 0;
-    const auto accumulate = [&](const uint8_t* data, size_t length)
-    {
-        for (size_t offset = 0; offset + 8 <= length; offset += 8)
-        {
-            s0 += read_word(data + offset) + s1;
-            s1 += read_word(data + offset + 4) + s0;
-        }
-    };
-
-    accumulate(log.data(), 24);
-    BOOST_REQUIRE_EQUAL(s0, load_be32(log.data() + 24));
-    BOOST_REQUIRE_EQUAL(s1, load_be32(log.data() + 28));
-
-    const auto frame_length = 24 + params.page_size;
-    size_t frames = 0;
-    for (size_t offset = 32; offset + frame_length <= log.size();
-         offset += frame_length)
-    {
-        auto* frame = log.data() + offset;
-        const auto page_number = load_be32(frame);
-
-        std::vector<uint8_t> page(params.page_size);
-        encryptor.encrypt_page(page_number, frame + 24, page.data());
-        std::memcpy(frame + 24, page.data(), page.size());
-
-        accumulate(frame, 8);
-        accumulate(frame + 24, params.page_size);
-        store_be32(frame + 16, s0);
-        store_be32(frame + 20, s1);
-        ++frames;
-    }
-
-    BOOST_REQUIRE_GT(frames, 0u);
-    write_file(path + "-wal", log);
-}
-
-}  // anonymous namespace
 
 BOOST_TEST_DECORATOR(
     *utf::description("load_database() reads data left in the write-ahead log"))
@@ -732,19 +533,11 @@ BOOST_AUTO_TEST_CASE(load_database__data_left_in_the_log__is_read)
     // library, with no error at all.
     temporary_directory temp_dir;
     const auto device = temp_dir.temp_dir + "/device";
-    djinterop::util::create_dir(device);
-    djinterop::util::create_dir(device + "/PIONEER");
-    djinterop::util::create_dir(device + "/PIONEER/rekordbox");
+    const auto path = make_device_directories(device);
 
-    const auto path = device + "/" + std::string{ol::database_relative_path};
-
-    sqlite3* db = nullptr;
-    BOOST_REQUIRE_EQUAL(
-        sqlite3_open_v2(
-            path.c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
-            nullptr),
-        SQLITE_OK);
-    prepare_plain_database(db);
+    // The database is written beside the device, and copied onto it.
+    const auto work = temp_dir.temp_dir + "/work.db";
+    auto* db = create_encrypted_database(work);
     create_onelibrary_schema(db);
     execute(
         db,
@@ -763,17 +556,11 @@ BOOST_AUTO_TEST_CASE(load_database__data_left_in_the_log__is_read)
         "INSERT INTO content (content_id, title, path) "
         "VALUES (2, 'In The Log', '/b.mp3')");
 
-    // Copy the pair aside while the connection is open, because closing it
-    // would fold the log back in.
-    const auto db_copy = temp_dir.temp_dir + "/copy.db";
-    write_file(db_copy, read_file(path));
-    write_file(db_copy + "-wal", read_file(path + "-wal"));
+    // Copy the pair while the connection is open, because closing it would
+    // fold the log back in.
+    boost::filesystem::copy_file(work, path);
+    boost::filesystem::copy_file(work + "-wal", path + "-wal");
     sqlite3_close(db);
-
-    write_file(path, read_file(db_copy));
-    write_file(path + "-wal", read_file(db_copy + "-wal"));
-
-    encrypt_database_and_log(path, fixture_encryptor());
 
     auto loaded = ol::load_database(device, passphrase);
     const auto tracks = loaded.tracks();

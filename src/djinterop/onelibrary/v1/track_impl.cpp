@@ -17,9 +17,6 @@
 
 #include "track_impl.hpp"
 
-#include <algorithm>
-#include <chrono>
-#include <cstdint>
 #include <utility>
 
 #include <djinterop/database.hpp>
@@ -43,6 +40,11 @@ track_impl::track_impl(
     std::shared_ptr<onelibrary_context> context, int64_t id) :
     djinterop::track_impl{id}, context_{std::move(context)}
 {
+}
+
+track make_track(std::shared_ptr<onelibrary_context> context, int64_t id)
+{
+    return track{std::make_shared<track_impl>(std::move(context), id)};
 }
 
 track_snapshot track_impl::snapshot() const
@@ -79,12 +81,7 @@ std::vector<djinterop::crate> track_impl::containing_crates()
 std::string track_impl::relative_path()
 {
     const auto path = content_table{context_}.get_path(id());
-    if (!path)
-        return {};
-
-    // Paths are absolute within the device, whereas djinterop wants them
-    // relative to the directory of the database.
-    return path->front() == '/' ? path->substr(1) : *path;
+    return path ? to_relative_path(*path) : std::string{};
 }
 
 std::string track_impl::filename()
@@ -119,20 +116,12 @@ std::vector<beatgrid_marker> track_impl::beatgrid()
 
 std::optional<int> track_impl::bitrate()
 {
-    const auto bitrate = content_table{context_}.get_bitrate(id());
-    if (!bitrate || *bitrate <= 0)
-        return std::nullopt;
-
-    return static_cast<int>(*bitrate);
+    return to_positive_int(content_table{context_}.get_bitrate(id()));
 }
 
 std::optional<double> track_impl::bpm()
 {
-    const auto bpm_x100 = content_table{context_}.get_bpm_x100(id());
-    if (!bpm_x100 || *bpm_x100 <= 0)
-        return std::nullopt;
-
-    return static_cast<double>(*bpm_x100) / 100;
+    return to_bpm(content_table{context_}.get_bpm_x100(id()));
 }
 
 std::optional<std::string> track_impl::comment()
@@ -147,11 +136,7 @@ std::optional<std::string> track_impl::composer()
 
 std::optional<std::chrono::milliseconds> track_impl::duration()
 {
-    const auto length = content_table{context_}.get_length(id());
-    if (!length || length->count() <= 0)
-        return std::nullopt;
-
-    return std::chrono::duration_cast<std::chrono::milliseconds>(*length);
+    return to_duration(content_table{context_}.get_length(id()));
 }
 
 std::optional<std::string> track_impl::genre()
@@ -207,35 +192,19 @@ std::optional<std::string> track_impl::publisher()
 
 std::optional<int> track_impl::rating()
 {
-    const auto stars = content_table{context_}.get_rating_stars(id());
-    if (!stars)
-        return std::nullopt;
-
-    // djinterop rates a track from zero to one hundred, where rekordbox uses
-    // whole stars.
-    return static_cast<int>(std::clamp<int64_t>(*stars, 0, 5) * 20);
+    return to_rating(content_table{context_}.get_rating_stars(id()));
 }
 
 std::optional<unsigned long long> track_impl::sample_count()
 {
-    // The database records a duration in whole seconds and no sample count,
-    // so the count can only be recovered to that precision.
     const content_table content{context_};
-    const auto length = content.get_length(id());
-    const auto rate = content.get_sampling_rate(id());
-    if (!length || length->count() <= 0 || !rate || *rate <= 0)
-        return std::nullopt;
-
-    return static_cast<unsigned long long>(length->count() * *rate);
+    return to_sample_count(
+        content.get_length(id()), content.get_sampling_rate(id()));
 }
 
 std::optional<double> track_impl::sample_rate()
 {
-    const auto rate = content_table{context_}.get_sampling_rate(id());
-    if (!rate || *rate <= 0)
-        return std::nullopt;
-
-    return static_cast<double>(*rate);
+    return to_sample_rate(content_table{context_}.get_sampling_rate(id()));
 }
 
 std::optional<std::string> track_impl::title()
@@ -245,11 +214,7 @@ std::optional<std::string> track_impl::title()
 
 std::optional<int> track_impl::track_number()
 {
-    const auto number = content_table{context_}.get_track_number(id());
-    if (!number || *number <= 0)
-        return std::nullopt;
-
-    return static_cast<int>(*number);
+    return to_positive_int(content_table{context_}.get_track_number(id()));
 }
 
 std::vector<waveform_entry> track_impl::waveform()
@@ -259,11 +224,7 @@ std::vector<waveform_entry> track_impl::waveform()
 
 std::optional<int> track_impl::year()
 {
-    const auto year = content_table{context_}.get_release_year(id());
-    if (!year || *year <= 0)
-        return std::nullopt;
-
-    return static_cast<int>(*year);
+    return to_positive_int(content_table{context_}.get_release_year(id()));
 }
 
 void track_impl::update(const track_snapshot&)

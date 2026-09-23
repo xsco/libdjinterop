@@ -42,11 +42,11 @@ template <typename... Args>
 std::optional<int64_t> first_id(
     sqlite::database& db, const char* sql, const Args&... args)
 {
-    std::optional<int64_t> result;
-    auto query = db << sql;
-    ((query << args), ...);
-    query >> [&](int64_t id) { result = id; };
-    return result;
+    const auto ids = collect_ids(db, sql, args...);
+    if (ids.empty())
+        return std::nullopt;
+
+    return ids.front();
 }
 
 /// Test whether a query matches any row at all.

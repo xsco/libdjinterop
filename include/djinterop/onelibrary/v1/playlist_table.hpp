@@ -33,18 +33,13 @@ struct onelibrary_context;
 
 namespace v1
 {
-/// Special value for id to indicate that a given row is not a row of the
-/// database, and the value a root playlist carries as its parent.
-constexpr int64_t PLAYLIST_ROW_ID_NONE = 0;
-
 /// One row of the `playlist` table.
 struct playlist_row
 {
-    int64_t id = PLAYLIST_ROW_ID_NONE;
+    int64_t id = 0;
     std::string name;
 
-    /// The playlist this one sits under.  A root has either no parent
-    /// recorded or a parent of `PLAYLIST_ROW_ID_NONE`; rekordbox writes both.
+    /// The playlist this one sits under, or no value for a root.
     std::optional<int64_t> parent_id;
 
     /// Position among siblings, counting from one.

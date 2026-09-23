@@ -15,19 +15,18 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "sqlcipher.hpp"
 
-#include <memory>
-#include <string>
+#include <djinterop/exceptions.hpp>
 
-namespace djinterop::onelibrary
+namespace djinterop::util
 {
-struct onelibrary_context;
+sqlite::database open_encrypted_database(
+    const std::string& path, const std::string&)
+{
+    throw unsupported_database{
+        "This build of libdjinterop cannot read the encrypted database `" +
+        path + "`, as it was built without EXPERIMENTAL_ENABLE_SQLCIPHER"};
+}
 
-/// Decrypt the database on a device and check that it is one.
-///
-/// \param path Either the root directory of a device, or the database file.
-std::shared_ptr<onelibrary_context> load_context(
-    const std::string& path, const std::string& passphrase);
-
-}  // namespace djinterop::onelibrary
+}  // namespace djinterop::util

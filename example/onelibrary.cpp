@@ -70,17 +70,21 @@ int main(int argc, char** argv)
         std::cout << "Tracks\n------\n";
         for (auto&& track : db.tracks())
         {
+            // A snapshot reads the whole track at once, where each accessor
+            // would query the database again.
+            const auto snapshot = track.snapshot();
             std::cout << track.id() << ". "
-                      << track.title().value_or("(untitled)") << " - "
-                      << track.artist().value_or("(unknown artist)");
+                      << snapshot.title.value_or("(untitled)") << " - "
+                      << snapshot.artist.value_or("(unknown artist)");
 
-            if (const auto bpm = track.bpm())
-                std::cout << " [" << *bpm << " BPM]";
+            if (snapshot.bpm)
+                std::cout << " [" << *snapshot.bpm << " BPM]";
 
-            if (const auto key = track.key())
-                std::cout << " [" << *key << "]";
+            if (snapshot.key)
+                std::cout << " [" << *snapshot.key << "]";
 
-            std::cout << "\n    " << track.relative_path() << "\n";
+            std::cout << "\n    " << snapshot.relative_path.value_or("")
+                      << "\n";
         }
 
         std::cout << "\nPlaylists\n---------\n";

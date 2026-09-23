@@ -36,9 +36,9 @@ namespace djinterop::onelibrary::v1
 /// The tables expose the format as the device holds it, translating no
 /// further than resolving a lookup reference to the text behind it.
 ///
-/// Loading decrypts the device into memory, and derives a key to do it, which
-/// is deliberately expensive; take `database()` from a library rather than
-/// also calling `load_database`.
+/// Loading derives the key that decrypts the device, which is deliberately
+/// expensive; take `database()` from a library rather than also calling
+/// `load_database`.
 class DJINTEROP_PUBLIC library
 {
 public:
@@ -47,17 +47,14 @@ public:
         const std::string& path,
         const std::string& passphrase = default_passphrase);
 
-    /// Construct from a context, as `load_database` builds one.
-    explicit library(std::shared_ptr<onelibrary_context> context);
-
     /// The `content` table.
-    [[nodiscard]] content_table content() const { return content_; }
+    [[nodiscard]] content_table content() const;
 
     /// The `playlist` table, and the membership beside it.
-    [[nodiscard]] playlist_table playlist() const { return playlist_; }
+    [[nodiscard]] playlist_table playlist() const;
 
     /// The `property` table, which records the schema version.
-    [[nodiscard]] property_table property() const { return property_; }
+    [[nodiscard]] property_table property() const;
 
     /// The device, through the format-agnostic interface.
     [[nodiscard]] djinterop::database database() const;
@@ -68,9 +65,6 @@ public:
 
 private:
     std::shared_ptr<onelibrary_context> context_;
-    content_table content_;
-    playlist_table playlist_;
-    property_table property_;
 };
 
 }  // namespace djinterop::onelibrary::v1

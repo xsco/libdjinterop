@@ -102,10 +102,14 @@ aspects of the format are worth noting:
 * The format has a single tree that serves as both playlists and crates, so
   `playlists_and_crates_are_distinct` is false and the two views show the same
   rows.
-* A device is read by decrypting it into memory.  rekordbox writes the library
-  in write-ahead-logged mode, and the log has to be folded in before SQLite
-  sees the file, so reading one needs SQLite 3.36 or newer, built without
-  `SQLITE_OMIT_DESERIALIZE`.
+* The database is encrypted with SQLCipher, so reading one needs libdjinterop
+  built with `-DEXPERIMENTAL_ENABLE_SQLCIPHER=ON -DSYSTEM_SQLITE=OFF`, and
+  OpenSSL.  Without it, `load_database()` throws
+  `djinterop::unsupported_database`.
+* rekordbox writes the database in write-ahead-logged mode, and SQLite cannot
+  read one of those without writing beside it, so reading a device creates
+  `-shm` and `-wal` files next to `exportLibrary.db` if they are missing.  The
+  device therefore has to be writable.
 
 ### OneLibrary low-level API
 

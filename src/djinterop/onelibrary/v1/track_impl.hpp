@@ -112,4 +112,7 @@ private:
     std::shared_ptr<onelibrary_context> context_;
 };
 
+/// Wrap a content row as a track.
+track make_track(std::shared_ptr<onelibrary_context> context, int64_t id);
+
 }  // namespace djinterop::onelibrary::v1

@@ -17,14 +17,16 @@
 
 #include <djinterop/onelibrary/onelibrary.hpp>
 
+#include <array>
+#include <filesystem>
 #include <memory>
+#include <set>
 #include <string>
+#include <utility>
 
 #include <djinterop/exceptions.hpp>
 
-#include "../util/crypto/encrypted_database.hpp"
-#include "../util/filesystem.hpp"
-#include "loader.hpp"
+#include "../util/sqlcipher.hpp"
 #include "onelibrary_context.hpp"
 #include "v1/database_impl.hpp"
 
@@ -43,73 +45,56 @@ struct resolved_location
 /// Work out where the database is, given a device or the file itself.
 resolved_location resolve(const std::string& path)
 {
+    if (std::filesystem::is_directory(path))
+        return resolved_location{path, path + "/" + database_relative_path};
+
     // A path that names the database directly implies its device root, which
-    // is three levels up: `<root>/PIONEER/rekordbox/exportLibrary.db`.
-    if (!util::path_is_directory(path))
-    {
-        // Walking up by index, rather than by assigning a piece of a string
-        // back to itself three times over, which is a shape GCC's -Wrestrict
-        // cannot see the safety of.
-        auto end = path.size();
-        for (int level = 0; level < 3; ++level)
-        {
-            const auto separator = end == 0 ? std::string::npos
-                                            : path.find_last_of("/\\", end - 1);
+    // is three levels up: `<root>/PIONEER/rekordbox/exportLibrary.db`.  A
+    // relative path with nothing above it sits in the working directory, which
+    // is then the root of the device.
+    auto root =
+        std::filesystem::path{path}.parent_path().parent_path().parent_path();
+    if (root.empty())
+        root = ".";
 
-            // A relative path with nothing above it sits in the working
-            // directory, which is then the root of the device.
-            if (separator == std::string::npos)
-                return resolved_location{".", path};
-
-            end = separator;
-        }
-
-        return resolved_location{path.substr(0, end), path};
-    }
-
-    return resolved_location{path, path + "/" + database_relative_path};
+    return resolved_location{root.string(), path};
 }
 
 }  // anonymous namespace
+
+void verify_schema(onelibrary_context& context)
+{
+    // A real export has twenty-two tables; demanding the ones this library
+    // does not read would reject a database that is merely older or newer.
+    constexpr std::array<const char*, 8> required_tables{
+        "content",  "artist",           "album",   "genre", "label",
+        "playlist", "playlist_content", "property"};
+
+    std::set<std::string> present;
+    context.db << "SELECT name FROM sqlite_master WHERE type = 'table'" >>
+        [&](std::string name) { present.insert(std::move(name)); };
+
+    for (const auto& table : required_tables)
+        if (present.count(table) == 0)
+            throw database_inconsistency{
+                std::string{"The table `"} + table +
+                "` is missing, so this is not a OneLibrary database"};
+}
 
 std::shared_ptr<onelibrary_context> load_context(
     const std::string& path, const std::string& passphrase)
 {
     const auto location = resolve(path);
 
-    if (!util::path_exists(location.database_path))
+    if (!std::filesystem::exists(location.database_path))
         throw database_not_found{location.database_path};
 
-    // Key derivation is expensive, so the passphrase is not tested
-    // separately: a wrong one shows up as the database failing to open.
-    std::shared_ptr<onelibrary_context> context;
-    try
-    {
-        context = std::make_shared<onelibrary_context>(
-            location.directory, util::crypto::open_encrypted_database(
-                                    location.database_path, passphrase));
-
-        // Opening a database reads nothing, so touch it here: a wrong
-        // passphrase would otherwise not be noticed until the first query.
-        context->db << "SELECT COUNT(*) FROM sqlite_master" >> [](int64_t) {};
-    }
-    catch (const sqlite::sqlite_exception&)
-    {
-        throw unsupported_database{
-            "The file `" + location.database_path +
-            "` is not a SQLCipher database that the given passphrase opens"};
-    }
-    catch (const util::crypto::encrypted_database_error& e)
-    {
-        throw unsupported_database{e.what()};
-    }
-    catch (const util::crypto::encryption_unsupported& e)
-    {
-        throw unsupported_database{e.what()};
-    }
+    auto context = std::make_shared<onelibrary_context>(
+        location.directory, util::open_encrypted_database(
+                                location.database_path, passphrase));
 
     // Fail here, while the caller still has the path in hand.
-    v1::database_impl{context}.verify();
+    verify_schema(*context);
 
     return context;
 }
@@ -117,7 +102,7 @@ std::shared_ptr<onelibrary_context> load_context(
 bool database_exists(const std::string& path)
 {
     const auto location = resolve(path);
-    return util::path_exists(location.database_path);
+    return std::filesystem::exists(location.database_path);
 }
 
 database load_database(const std::string& path, const std::string& passphrase)

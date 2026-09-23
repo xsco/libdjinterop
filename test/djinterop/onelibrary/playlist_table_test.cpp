@@ -46,8 +46,7 @@ namespace
 std::shared_ptr<ol::onelibrary_context> make_context()
 {
     sqlite::database db{":memory:"};
-    for (const auto& statement : onelibrary_schema_statements())
-        db << statement;
+    create_onelibrary_schema(db.connection().get());
 
     db << "INSERT INTO playlist (playlist_id, sequenceNo, name, "
           "playlist_id_parent) VALUES (1, 1, 'Sets', NULL), "

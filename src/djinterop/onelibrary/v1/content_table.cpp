@@ -22,6 +22,7 @@
 
 #include "../../util/sqlite_query.hpp"
 #include "../onelibrary_context.hpp"
+#include "track_conversion.hpp"
 
 namespace djinterop::onelibrary::v1
 {
@@ -162,13 +163,10 @@ std::vector<int64_t> content_table::all_ids() const
 
 std::vector<int64_t> content_table::ids_by_path(const std::string& path) const
 {
-    const auto qualified =
-        !path.empty() && path.front() == '/' ? path : "/" + path;
-
     return util::collect_ids(
         context_->db,
         "SELECT content_id FROM content WHERE path = ? ORDER BY content_id",
-        qualified);
+        to_device_path(path));
 }
 
 bool content_table::exists(int64_t id) const
