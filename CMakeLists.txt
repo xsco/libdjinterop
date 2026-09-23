@@ -82,6 +82,7 @@ add_library(
     include/djinterop/engine/v3/track_table.hpp
     include/djinterop/exceptions.hpp
     include/djinterop/musical_key.hpp
+    include/djinterop/onelibrary/onelibrary.hpp
     include/djinterop/pad_color.hpp
     include/djinterop/performance_data.hpp
     include/djinterop/playlist.hpp
@@ -203,6 +204,22 @@ add_library(
     src/djinterop/impl/playlist_impl.hpp
     src/djinterop/impl/track_impl.cpp
     src/djinterop/impl/track_impl.hpp
+    src/djinterop/onelibrary/onelibrary.cpp
+    src/djinterop/onelibrary/onelibrary_context.hpp
+    src/djinterop/onelibrary/v1/content_table.cpp
+    src/djinterop/onelibrary/v1/crate_impl.cpp
+    src/djinterop/onelibrary/v1/crate_impl.hpp
+    src/djinterop/onelibrary/v1/database_impl.cpp
+    src/djinterop/onelibrary/v1/database_impl.hpp
+    src/djinterop/onelibrary/v1/library.cpp
+    src/djinterop/onelibrary/v1/playlist_impl.cpp
+    src/djinterop/onelibrary/v1/playlist_impl.hpp
+    src/djinterop/onelibrary/v1/playlist_table.cpp
+    src/djinterop/onelibrary/v1/property_table.cpp
+    src/djinterop/onelibrary/v1/track_conversion.cpp
+    src/djinterop/onelibrary/v1/track_conversion.hpp
+    src/djinterop/onelibrary/v1/track_impl.cpp
+    src/djinterop/onelibrary/v1/track_impl.hpp
     src/djinterop/playlist.cpp
     src/djinterop/track.cpp
     src/djinterop/util/chrono.cpp
@@ -211,8 +228,18 @@ add_library(
     src/djinterop/util/filesystem.hpp
     src/djinterop/util/random.cpp
     src/djinterop/util/random.hpp
+    src/djinterop/util/sqlcipher.hpp
+    src/djinterop/util/sqlite_query.hpp
     src/djinterop/util/sqlite_transaction.hpp
 )
+
+# Encrypted OneLibrary databases are opened with SQLCipher, where the build has
+# it.  Otherwise, opening one fails with an explanation.
+if(EXPERIMENTAL_ENABLE_SQLCIPHER)
+    target_sources(DjInterop PRIVATE src/djinterop/util/sqlcipher.cpp)
+else()
+    target_sources(DjInterop PRIVATE src/djinterop/util/sqlcipher_unsupported.cpp)
+endif()
 
 set_target_properties(DjInterop PROPERTIES
     OUTPUT_NAME "djinterop"
@@ -238,7 +265,7 @@ target_include_directories(
         DjInterop PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:${DJINTEROP_INSTALL_INCLUDEDIR}>)
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 # Always rely on system installation of zlib.
 set(ZLIB_MIN_VERSION 1.2.8)
@@ -318,6 +345,14 @@ endif()
 set_target_properties(DjInterop PROPERTIES C_VISIBILITY_PRESET hidden)
 set_target_properties(DjInterop PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
+# A static DjInterop does not carry the SQLCipher library inside it, so that
+# library is installed beside it for consumers to link as well.
+if(EXPERIMENTAL_ENABLE_SQLCIPHER)
+    install(TARGETS sqlcipher
+            EXPORT DjInteropTargets
+            ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+endif()
+
 install(TARGETS DjInterop
         EXPORT DjInteropTargets
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
@@ -370,6 +405,17 @@ install(FILES
     include/djinterop/engine/v3/track_data_blob.hpp
     include/djinterop/engine/v3/track_table.hpp
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/engine/v3")
+install(FILES
+    include/djinterop/onelibrary/onelibrary.hpp
+    DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/onelibrary")
+
+install(
+    FILES
+    include/djinterop/onelibrary/v1/content_table.hpp
+    include/djinterop/onelibrary/v1/library.hpp
+    include/djinterop/onelibrary/v1/playlist_table.hpp
+    include/djinterop/onelibrary/v1/property_table.hpp
+    DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/onelibrary/v1")
 
 
 if (UNIX)
@@ -420,6 +466,7 @@ if (BUILD_EXAMPLES)
 
     add_djinterop_example(engine_prime)
     add_djinterop_example(engine_library_v2_low_level)
+    add_djinterop_example(onelibrary)
 endif()
 
 # Unit tests.
@@ -465,6 +512,34 @@ if (Boost_FOUND AND Boost_filesystem_FOUND AND Boost_system_FOUND)
     add_djinterop_test(engine/v3/ performance_data_table_test)
     add_djinterop_test(engine/v3/ track_table_test)
 
+    # The OneLibrary tests talk to SQLite directly to build their fixtures, and
+    # the library's own copy is hidden from them, so they link the SQLCipher
+    # static library themselves.  For the same reason, they compile the
+    # internal sources they test into themselves rather than linking.
+    if(EXPERIMENTAL_ENABLE_SQLCIPHER)
+        add_djinterop_test(onelibrary/ content_table_test)
+        target_sources(onelibrary_content_table_test PRIVATE
+                src/djinterop/onelibrary/v1/content_table.cpp
+                src/djinterop/onelibrary/v1/track_conversion.cpp)
+
+        add_djinterop_test(onelibrary/ database_test)
+
+        add_djinterop_test(onelibrary/ playlist_table_test)
+        target_sources(onelibrary_playlist_table_test PRIVATE
+                src/djinterop/onelibrary/v1/playlist_table.cpp)
+
+        foreach(test_name content_table_test database_test playlist_table_test)
+            target_link_libraries(onelibrary_${test_name} PRIVATE sqlcipher)
+            # The library sources compiled in need the headers they include.
+            target_include_directories(onelibrary_${test_name} PRIVATE SYSTEM
+                    $<TARGET_PROPERTY:DjInterop,INCLUDE_DIRECTORIES>)
+        endforeach()
+    else()
+        message(
+            STATUS
+            "OneLibrary tests not available, as reading the format needs "
+            "EXPERIMENTAL_ENABLE_SQLCIPHER")
+    endif()
 else()
     message(STATUS
             "Unit tests not available, as the Boost.Filesystem and Boost.System "
