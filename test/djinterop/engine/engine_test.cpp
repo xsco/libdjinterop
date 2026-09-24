@@ -48,6 +48,30 @@ BOOST_DATA_TEST_CASE(
     }
 }
 
+BOOST_TEST_DECORATOR(*utf::description(
+    "create_database() and load_database() with a UTF-8 directory name"))
+BOOST_DATA_TEST_CASE(
+    create_database__utf8_directory__loads, e::supported_schemas, schema)
+{
+    // Note separate scope to ensure no locks are held on the temporary dir.
+    temporary_directory tmp_loc;
+
+    {
+        // Arrange: a directory name with characters outside ASCII, as UTF-8.
+        // On Windows, these are also outside most ANSI code pages.
+        auto directory =
+            tmp_loc.temp_dir + "/Engine Library \xC3\xBC\xE2\x99\xAA";
+
+        // Act
+        auto db = e::create_database(directory, schema);
+
+        // Assert
+        BOOST_CHECK_EQUAL(db.directory(), directory);
+        BOOST_CHECK(e::database_exists(directory));
+        BOOST_CHECK_NO_THROW(e::load_database(directory).verify());
+    }
+}
+
 BOOST_TEST_DECORATOR(
     *utf::description("load_database() with a non-existent path"))
 BOOST_AUTO_TEST_CASE(load_database__fake_path__throw)
