@@ -94,6 +94,11 @@ std::string album_art_file_name(
     const std::vector<std::byte>& hash, const std::string& extension)
 {
     std::string result;
+    // Round the hash up to whole 24-bit groups, `(n + 2) / 3`, and take four
+    // characters for each of them.  A short final group is unpadded and so
+    // needs fewer: two characters for one byte and three for two, against
+    // the four counted here.  Over-reserving by one or two is cheaper than
+    // getting it exactly right.
     result.reserve((hash.size() + 2) / 3 * 4 + extension.length());
 
     std::size_t offset = 0;
