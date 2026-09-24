@@ -58,6 +58,7 @@ add_library(
     include/djinterop/djinterop.hpp
     include/djinterop/engine/engine.hpp
     include/djinterop/engine/engine_schema.hpp
+    include/djinterop/engine/v2/album_art_table.hpp
     include/djinterop/engine/v2/beat_data_blob.hpp
     include/djinterop/engine/v2/change_log_table.hpp
     include/djinterop/engine/v2/engine_library.hpp
@@ -69,6 +70,7 @@ add_library(
     include/djinterop/engine/v2/quick_cues_blob.hpp
     include/djinterop/engine/v2/track_data_blob.hpp
     include/djinterop/engine/v2/track_table.hpp
+    include/djinterop/engine/v3/album_art_table.hpp
     include/djinterop/engine/v3/beat_data_blob.hpp
     include/djinterop/engine/v3/engine_library.hpp
     include/djinterop/engine/v3/information_table.hpp
@@ -157,6 +159,7 @@ add_library(
     src/djinterop/engine/v1/engine_track_impl.hpp
     src/djinterop/engine/v1/performance_data_format.cpp
     src/djinterop/engine/v1/performance_data_format.hpp
+    src/djinterop/engine/v2/album_art_table.cpp
     src/djinterop/engine/v2/beat_data_blob.cpp
     src/djinterop/engine/v2/change_log_table.cpp
     src/djinterop/engine/v2/convert_beatgrid.hpp
@@ -346,6 +349,7 @@ install(FILES
     include/djinterop/engine/engine_schema.hpp
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/engine")
 install(FILES
+    include/djinterop/engine/v2/album_art_table.hpp
     include/djinterop/engine/v2/beat_data_blob.hpp
     include/djinterop/engine/v2/change_log_table.hpp
     include/djinterop/engine/v2/engine_library.hpp
@@ -359,6 +363,7 @@ install(FILES
     include/djinterop/engine/v2/track_table.hpp
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/engine/v2")
 install(FILES
+    include/djinterop/engine/v3/album_art_table.hpp
     include/djinterop/engine/v3/beat_data_blob.hpp
     include/djinterop/engine/v3/engine_library.hpp
     include/djinterop/engine/v3/information_table.hpp
@@ -457,10 +462,12 @@ if (Boost_FOUND AND Boost_filesystem_FOUND AND Boost_system_FOUND)
     add_djinterop_test(engine/ engine_test)
     add_djinterop_test(engine/ playlist_test)
     add_djinterop_test(engine/ track_test)
+    add_djinterop_test(engine/v2/ album_art_table_test)
     add_djinterop_test(engine/v2/ information_table_test)
     add_djinterop_test(engine/v2/ playlist_entity_table_test)
     add_djinterop_test(engine/v2/ playlist_table_test)
     add_djinterop_test(engine/v2/ track_table_test)
+    add_djinterop_test(engine/v3/ album_art_table_test)
     add_djinterop_test(engine/v3/ information_table_test)
     add_djinterop_test(engine/v3/ performance_data_table_test)
     add_djinterop_test(engine/v3/ track_table_test)

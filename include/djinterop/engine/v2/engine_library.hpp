@@ -19,6 +19,7 @@
 
 #include <djinterop/config.hpp>
 #include <djinterop/engine/base_engine_library.hpp>
+#include <djinterop/engine/v2/album_art_table.hpp>
 #include <djinterop/engine/v2/change_log_table.hpp>
 #include <djinterop/engine/v2/information_table.hpp>
 #include <djinterop/engine/v2/playlist_entity_table.hpp>
@@ -42,6 +43,9 @@ namespace djinterop::engine::v2
 class DJINTEROP_PUBLIC engine_library : public base_engine_library
 {
 public:
+    /// Gets a class representing the `AlbumArt` table.
+    album_art_table album_art() const noexcept { return album_art_; }
+
     /// Gets a class representing the `ChangeLog` table.
     change_log_table change_log() const noexcept { return change_log_; }
 
@@ -64,9 +68,9 @@ public:
     ///
     /// \param context Engine library context.
     explicit engine_library(std::shared_ptr<engine_library_context> context) :
-        base_engine_library{std::move(context)}, change_log_{context_},
-        information_{context_}, playlist_entity_{context_}, playlist_{context_},
-        track_{context_}
+        base_engine_library{std::move(context)}, album_art_{context_},
+        change_log_{context_}, information_{context_},
+        playlist_entity_{context_}, playlist_{context_}, track_{context_}
     {
     }
 
@@ -114,6 +118,7 @@ public:
     [[nodiscard]] djinterop::database database() const override;
 
 private:
+    album_art_table album_art_;
     change_log_table change_log_;
     information_table information_;
     playlist_entity_table playlist_entity_;

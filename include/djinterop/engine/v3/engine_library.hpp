@@ -24,6 +24,7 @@
 #include <djinterop/database.hpp>
 #include <djinterop/engine/base_engine_library.hpp>
 #include <djinterop/engine/engine_schema.hpp>
+#include <djinterop/engine/v3/album_art_table.hpp>
 #include <djinterop/engine/v3/information_table.hpp>
 #include <djinterop/engine/v3/performance_data_table.hpp>
 #include <djinterop/engine/v3/playlist_entity_table.hpp>
@@ -52,6 +53,9 @@ namespace djinterop::engine::v3
 class DJINTEROP_PUBLIC engine_library : public base_engine_library
 {
 public:
+    /// Gets a class representing the `AlbumArt` table.
+    album_art_table album_art() const noexcept { return album_art_; }
+
     /// Gets a class representing the `Information` table.
     information_table information() const noexcept { return information_; }
 
@@ -77,9 +81,9 @@ public:
     ///
     /// \param context Engine library context.
     explicit engine_library(std::shared_ptr<engine_library_context> context) :
-        base_engine_library{std::move(context)}, information_{context_},
-        performance_data_{context_}, playlist_entity_{context_},
-        playlist_{context_}, track_{context_}
+        base_engine_library{std::move(context)}, album_art_{context_},
+        information_{context_}, performance_data_{context_},
+        playlist_entity_{context_}, playlist_{context_}, track_{context_}
     {
     }
 
@@ -127,6 +131,7 @@ public:
     [[nodiscard]] djinterop::database database() const override;
 
 private:
+    album_art_table album_art_;
     information_table information_;
     performance_data_table performance_data_;
     playlist_entity_table playlist_entity_;
