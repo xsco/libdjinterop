@@ -45,6 +45,28 @@ constexpr const char* ALBUM_ART_DEFAULT_EXTENSION =
 /// Get the name of the file in which the image for a given hash is stored.
 using djinterop::engine::v2::album_art_file_name;
 
+/// Where a library keeps its album art.
+using album_art_storage = djinterop::engine::v2::album_art_storage;
+
+/// A hash as written when the image is stored in the `albumArt` column.
+using album_art_text_hash = djinterop::engine::v2::album_art_text_hash;
+
+/// A hash as written when the image is a file beneath `Artwork`.
+using album_art_binary_hash = djinterop::engine::v2::album_art_binary_hash;
+
+/// A URI in the `hash` column, written by Engine's rekordbox import.
+using album_art_uri = djinterop::engine::v2::album_art_uri;
+
+/// What the `hash` column holds.
+using album_art_hash = djinterop::engine::v2::album_art_hash;
+
+/// Prefix of a `hash` value that is a URI rather than a hash.
+constexpr const char* ALBUM_ART_URI_PREFIX =
+    djinterop::engine::v2::ALBUM_ART_URI_PREFIX;
+
+/// Where the image for a given row lives.
+using djinterop::engine::v2::storage_of;
+
 /// Represents a row in the `AlbumArt` table.
 using album_art_row = djinterop::engine::v2::album_art_row;
 
