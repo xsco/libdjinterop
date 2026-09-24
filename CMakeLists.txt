@@ -212,6 +212,9 @@ add_library(
     src/djinterop/util/random.cpp
     src/djinterop/util/random.hpp
     src/djinterop/util/sqlite_transaction.hpp
+    src/djinterop/onelibrary/onelibrary.cpp
+    src/djinterop/onelibrary/schema.cpp
+    src/djinterop/onelibrary/onelibrary_context.hpp
 )
 
 set_target_properties(DjInterop PROPERTIES
@@ -370,6 +373,9 @@ install(FILES
     include/djinterop/engine/v3/track_data_blob.hpp
     include/djinterop/engine/v3/track_table.hpp
     DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/engine/v3")
+install(FILES
+    include/djinterop/onelibrary/onelibrary.hpp
+    DESTINATION "${DJINTEROP_INSTALL_INCLUDEDIR}/onelibrary")
 
 
 if (UNIX)
@@ -420,6 +426,7 @@ if (BUILD_EXAMPLES)
 
     add_djinterop_example(engine_prime)
     add_djinterop_example(engine_library_v2_low_level)
+    add_djinterop_example(onelibrary_empty_db)
 endif()
 
 # Unit tests.
@@ -464,6 +471,8 @@ if (Boost_FOUND AND Boost_filesystem_FOUND AND Boost_system_FOUND)
     add_djinterop_test(engine/v3/ information_table_test)
     add_djinterop_test(engine/v3/ performance_data_table_test)
     add_djinterop_test(engine/v3/ track_table_test)
+    add_djinterop_test(onelibrary/ onelibrary_test)
+    add_djinterop_test(onelibrary/ onelibrary_reference_test)
 
 else()
     message(STATUS
