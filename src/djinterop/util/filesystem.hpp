@@ -17,11 +17,20 @@
 
 #pragma once
 
+#include <filesystem>
 #include <optional>
 #include <string>
 
 namespace djinterop::util
 {
+/// Converts a UTF-8 encoded path string into a `std::filesystem::path`.
+///
+/// Path strings are UTF-8 on all platforms.  On Windows, the narrow-string
+/// constructor of `std::filesystem::path` would read them in the ANSI code
+/// page instead, so any code that hands a path string to the operating system
+/// must go through this function.
+std::filesystem::path path_from_utf8(const std::string& path);
+
 void create_dir(const std::string& directory);
 bool path_exists(const std::string& directory);
 std::string get_filename(const std::string& file_path);

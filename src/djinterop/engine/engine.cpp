@@ -41,7 +41,7 @@ void hydrate_database(
 {
     std::string stmt;
 
-    std::ifstream script{script_path};
+    std::ifstream script{djinterop::util::path_from_utf8(script_path)};
     sqlite::database m_db{db_path};
     while (std::getline(script, stmt))
     {

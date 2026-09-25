@@ -18,21 +18,26 @@
 #include "filesystem.hpp"
 
 #include <stdexcept>
-
-#include <sys/stat.h>
-#if defined(_WIN32)
-#include <direct.h>
-#endif
+#include <system_error>
 
 namespace djinterop::util
 {
-void create_dir(const std::string& directory)
+std::filesystem::path path_from_utf8(const std::string& path)
 {
 #if defined(_WIN32)
-    if (_mkdir(directory.c_str()) != 0)
+    // On Windows, constructing a path from a narrow string interprets it in
+    // the active ANSI code page.  The strings handed to this library are
+    // UTF-8, so go via std::u8string to get the conversion right.
+    return std::filesystem::path{std::u8string{path.begin(), path.end()}};
 #else
-    if (mkdir(directory.c_str(), 0755) != 0)
+    return std::filesystem::path{path};
 #endif
+}
+
+void create_dir(const std::string& directory)
+{
+    std::error_code ec;
+    if (!std::filesystem::create_directory(path_from_utf8(directory), ec))
     {
         throw std::runtime_error{"Failed to create directory"};
     }
@@ -40,8 +45,8 @@ void create_dir(const std::string& directory)
 
 bool path_exists(const std::string& directory)
 {
-    struct stat buf;
-    return (stat(directory.c_str(), &buf) == 0);
+    std::error_code ec;
+    return std::filesystem::exists(path_from_utf8(directory), ec);
 }
 
 std::string get_filename(const std::string& file_path)

@@ -55,6 +55,11 @@ constexpr std::array<pad_color, 8> pads{pad_1, pad_2, pad_3, pad_4,
 
 constexpr const char* default_database_dir_name = "Engine Library";
 
+// Every directory or file path that the functions below take or return as a
+// `std::string` is UTF-8 encoded, on all platforms.  This includes Windows,
+// where the string is converted to a wide path before it reaches the
+// operating system, so it must not be in the ANSI code page.
+
 /// Creates a new, empty database in a directory using the version provided.
 ///
 /// By convention, the last part of the directory path is "Engine Library".  If

@@ -97,7 +97,8 @@ public:
 
     /// Returns the path directory of the database
     ///
-    /// This is the same as the directory passed to the `database` constructor.
+    /// This is the same as the directory passed to the `database` constructor,
+    /// and is UTF-8 encoded on all platforms.
     std::string directory() const;
 
     /// Returns the UUID of the database
