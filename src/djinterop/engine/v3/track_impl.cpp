@@ -180,7 +180,6 @@ track_impl::track_impl(std::shared_ptr<engine_library> library, int64_t id) :
 
 track_snapshot track_impl::snapshot() const
 {
-    const auto information = library_->information().get();
     const auto track_row_maybe = library_->track().get(id());
     if (!track_row_maybe)
         throw djinterop::track_deleted{id()};
