@@ -19,9 +19,9 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/included/unit_test.hpp>
 
+#include <array>
 #include <cstddef>
 #include <ostream>
-#include <stdexcept>
 #include <string>
 #include <variant>
 #include <vector>
@@ -35,7 +35,7 @@ namespace ev2 = djinterop::engine::v2;
 
 namespace
 {
-std::vector<std::byte> make_hash(std::initializer_list<int> bytes)
+std::vector<std::byte> make_bytes(std::initializer_list<int> bytes)
 {
     std::vector<std::byte> result;
     result.reserve(bytes.size());
@@ -45,32 +45,37 @@ std::vector<std::byte> make_hash(std::initializer_list<int> bytes)
     return result;
 }
 
-/// An example hash, of the 20-byte width that Engine writes.
-const std::vector<std::byte> example_hash_bytes =
-    make_hash({0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
-               0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13});
+ev2::album_art_binary_hash make_binary_hash(std::initializer_list<int> bytes)
+{
+    ev2::album_art_binary_hash result{};
+    auto it = result.value.begin();
+    for (auto b : bytes)
+        *it++ = static_cast<std::byte>(b);
 
-/// The same, as the column holds it: a binary hash, which is what a
-/// library with its art in files beneath `Artwork` writes.
-const ev2::album_art_hash example_hash =
-    ev2::album_art_binary_hash{example_hash_bytes};
+    return result;
+}
 
-/// A hash as a library that keeps its art in the `albumArt` column writes
-/// it: text, in a column declared text.
+const ev2::album_art_binary_hash example_binary_hash = make_binary_hash(
+    {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
+     0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13});
+
+const ev2::album_art_hash example_hash = example_binary_hash;
+
+/// A text hash of the form Engine writes, including the case where a leading
+/// zero is dropped and the hash is only 39 characters long.
 const ev2::album_art_hash example_text_hash =
-    ev2::album_art_text_hash{"0001020304050607080910111213"};
+    ev2::album_art_text_hash{"551c96558e2eb05ea31f3735b129f242b720c15"};
 
-/// What Engine's own rekordbox import writes instead of a hash.
 const ev2::album_art_uri example_uri{
     "image://fileart/media/DJ-STICK/PIONEER/Artwork/0123abcd.jpg"};
 
 /// A small image, standing in for one stored in the database.
 const std::vector<std::byte> example_image =
-    make_hash({0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46});
+    make_bytes({0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46});
 
 struct file_name_test_case
 {
-    std::vector<std::byte> hash;
+    ev2::album_art_binary_hash hash;
     std::string expected;
 
     friend std::ostream& operator<<(
@@ -82,17 +87,14 @@ struct file_name_test_case
 };
 
 const std::vector<file_name_test_case> file_name_test_cases{
-    {example_hash_bytes, "AAECAwQFBgcICQoLDA0ODxAREhM.jpg"},
+    {example_binary_hash, "AAECAwQFBgcICQoLDA0ODxAREhM.jpg"},
 
-    // A whole group, exercising both characters that base64url spells
-    // differently from base64.
-    {make_hash({0xff, 0x00, 0x7f}), "_wB_.jpg"},
-
-    // Partial groups, which are not padded.
-    {make_hash({0xfb}), "-w.jpg"},
-    {make_hash({0xfb, 0xef}), "--8.jpg"},
-
-    {make_hash({}), ".jpg"},
+    // Exercises both characters that base64url spells differently from
+    // base64, and the unpadded final group.
+    {make_binary_hash({0xff, 0x00, 0x7f, 0xff, 0x00, 0x7f, 0xff,
+                       0x00, 0x7f, 0xff, 0x00, 0x7f, 0xff, 0x00,
+                       0x7f, 0xff, 0x00, 0x7f, 0xfb, 0xef}),
+     "_wB__wB__wB__wB__wB__wB_--8.jpg"},
 };
 }  // anonymous namespace
 
@@ -113,8 +115,7 @@ BOOST_DATA_TEST_CASE(add__valid_row__adds, e::supported_v2_schemas, schema)
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto table = library.album_art();
-    ev2::album_art_row row{
-        ev2::ALBUM_ART_ROW_ID_NONE, example_hash, std::nullopt};
+    ev2::album_art_row row{ev2::ALBUM_ART_ROW_ID_NONE, example_hash, {}};
 
     // Act
     auto id = table.add(row);
@@ -133,7 +134,7 @@ BOOST_DATA_TEST_CASE(add__existing_id__throws, e::supported_v2_schemas, schema)
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto table = library.album_art();
-    ev2::album_art_row row{123, example_hash, std::nullopt};
+    ev2::album_art_row row{123, example_hash, {}};
 
     // Act/Assert
     BOOST_CHECK_THROW(table.add(row), ev2::album_art_row_id_error);
@@ -146,8 +147,8 @@ BOOST_DATA_TEST_CASE(
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto table = library.album_art();
-    auto id = table.add(ev2::album_art_row{
-        ev2::ALBUM_ART_ROW_ID_NONE, example_hash, std::nullopt});
+    auto id = table.add(
+        ev2::album_art_row{ev2::ALBUM_ART_ROW_ID_NONE, example_hash, {}});
 
     // Act
     auto found = table.find_id(example_hash);
@@ -194,8 +195,7 @@ BOOST_DATA_TEST_CASE(
     // Act
     auto ids = table.all_ids();
 
-    // Assert: the schema creates one row, which is the one that tracks
-    // without album art refer to.
+    // Assert
     BOOST_REQUIRE_EQUAL(ids.size(), 1);
     BOOST_CHECK_EQUAL(ids[0], ev2::ALBUM_ART_ID_NONE);
 }
@@ -206,8 +206,8 @@ BOOST_DATA_TEST_CASE(remove__existing__removes, e::supported_v2_schemas, schema)
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto table = library.album_art();
-    auto id = table.add(ev2::album_art_row{
-        ev2::ALBUM_ART_ROW_ID_NONE, example_hash, std::nullopt});
+    auto id = table.add(
+        ev2::album_art_row{ev2::ALBUM_ART_ROW_ID_NONE, example_hash, {}});
 
     // Act
     table.remove(id);
@@ -222,11 +222,9 @@ BOOST_DATA_TEST_CASE(update__existing__updates, e::supported_v2_schemas, schema)
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto table = library.album_art();
-    auto id = table.add(ev2::album_art_row{
-        ev2::ALBUM_ART_ROW_ID_NONE, example_hash, std::nullopt});
-    ev2::album_art_row updated{
-        id, ev2::album_art_binary_hash{make_hash({0x01, 0x02, 0x03})},
-        std::nullopt};
+    auto id = table.add(
+        ev2::album_art_row{ev2::ALBUM_ART_ROW_ID_NONE, example_hash, {}});
+    ev2::album_art_row updated{id, make_binary_hash({0x01, 0x02, 0x03}), {}};
 
     // Act
     table.update(updated);
@@ -242,33 +240,10 @@ BOOST_DATA_TEST_CASE(update__no_id__throws, e::supported_v2_schemas, schema)
     // Arrange
     auto library = ev2::engine_library::create_temporary(schema);
     auto table = library.album_art();
-    ev2::album_art_row row{
-        ev2::ALBUM_ART_ROW_ID_NONE, example_hash, std::nullopt};
+    ev2::album_art_row row{ev2::ALBUM_ART_ROW_ID_NONE, example_hash, {}};
 
     // Act/Assert
     BOOST_CHECK_THROW(table.update(row), ev2::album_art_row_id_error);
-}
-
-BOOST_TEST_DECORATOR(
-    *utf::description("add() with an image in the `albumArt` column"))
-BOOST_DATA_TEST_CASE(
-    add__with_image__round_trips, e::supported_v2_schemas, schema)
-{
-    // Arrange: Engine itself always leaves this column null, but the column
-    // exists, and what is written to it must come back.
-    auto library = ev2::engine_library::create_temporary(schema);
-    auto table = library.album_art();
-    auto image = make_hash({0xff, 0xd8, 0xff, 0xe0, 0x00});
-    ev2::album_art_row row{ev2::ALBUM_ART_ROW_ID_NONE, example_hash, image};
-
-    // Act
-    auto id = table.add(row);
-
-    // Assert
-    auto actual = table.get(id);
-    BOOST_REQUIRE(actual.has_value());
-    BOOST_REQUIRE(actual->album_art.has_value());
-    BOOST_CHECK(*actual->album_art == image);
 }
 
 BOOST_TEST_DECORATOR(
@@ -285,46 +260,32 @@ BOOST_DATA_TEST_CASE(
 
     // Assert
     BOOST_REQUIRE(row.has_value());
-    // The schema writes this row with an empty text hash, which is a text
-    // hash and not a binary one: the row exists to be pointed at, not to
-    // name a file.
     BOOST_REQUIRE(std::holds_alternative<ev2::album_art_text_hash>(row->hash));
     BOOST_CHECK(std::get<ev2::album_art_text_hash>(row->hash).value.empty());
-    BOOST_CHECK(!row->album_art.has_value());
-    // And so there is nowhere to look for an image: a caller that took
-    // "text hash" for "the image is in the column" would dereference an
-    // empty optional on the one row every artless track points at.
+    BOOST_CHECK(row->album_art.empty());
     BOOST_CHECK(ev2::storage_of(*row) == ev2::album_art_storage::none);
 }
 
-BOOST_TEST_DECORATOR(*utf::description("a text hash comes back as a text hash"))
+BOOST_TEST_DECORATOR(
+    *utf::description("a text hash and image in the database round-trip"))
 BOOST_DATA_TEST_CASE(
     add_get__text_hash__round_trips, e::supported_v2_schemas, schema)
 {
     // Arrange
-    // What a library written before Engine 4.5.0 holds: the image in the
-    // `albumArt` column, and a hash the column's declared type actually
-    // fits.
     auto library = ev2::engine_library::create_temporary(schema);
     auto table = library.album_art();
     ev2::album_art_row row{
         ev2::ALBUM_ART_ROW_ID_NONE, example_text_hash, example_image};
 
     // Act
-    auto id = table.add(row);
-    auto reloaded = table.get(id);
+    row.id = table.add(row);
+    auto reloaded = table.get(row.id);
 
     // Assert
     BOOST_REQUIRE(reloaded.has_value());
-    BOOST_REQUIRE(
-        std::holds_alternative<ev2::album_art_text_hash>(reloaded->hash));
-    BOOST_CHECK_EQUAL(
-        std::get<ev2::album_art_text_hash>(reloaded->hash).value,
-        std::get<ev2::album_art_text_hash>(example_text_hash).value);
+    BOOST_CHECK_EQUAL(row, *reloaded);
     BOOST_CHECK(
-        ev2::storage_of(*reloaded) == ev2::album_art_storage::in_database);
-    BOOST_REQUIRE(reloaded->album_art.has_value());
-    BOOST_CHECK(*reloaded->album_art == example_image);
+        ev2::storage_of(*reloaded) == ev2::album_art_storage::blob_in_database);
 }
 
 BOOST_TEST_DECORATOR(
@@ -333,14 +294,12 @@ BOOST_DATA_TEST_CASE(
     add_get__binary_hash__stays_binary, e::supported_v2_schemas, schema)
 {
     // Arrange
-    // The two are the same column and SQLite keeps them apart by storage
-    // class, which is the whole reason the kinds are separate types.
     auto library = ev2::engine_library::create_temporary(schema);
     auto table = library.album_art();
 
     // Act
-    auto id = table.add(ev2::album_art_row{
-        ev2::ALBUM_ART_ROW_ID_NONE, example_hash, std::nullopt});
+    auto id = table.add(
+        ev2::album_art_row{ev2::ALBUM_ART_ROW_ID_NONE, example_hash, {}});
     auto reloaded = table.get(id);
 
     // Assert
@@ -348,9 +307,11 @@ BOOST_DATA_TEST_CASE(
     BOOST_REQUIRE(
         std::holds_alternative<ev2::album_art_binary_hash>(reloaded->hash));
     BOOST_CHECK(
-        std::get<ev2::album_art_binary_hash>(reloaded->hash).value ==
-        example_hash_bytes);
-    BOOST_CHECK(ev2::storage_of(*reloaded) == ev2::album_art_storage::as_file);
+        std::get<ev2::album_art_binary_hash>(reloaded->hash) ==
+        example_binary_hash);
+    BOOST_CHECK(
+        ev2::storage_of(*reloaded) ==
+        ev2::album_art_storage::file_in_artwork_dir);
 }
 
 BOOST_TEST_DECORATOR(
@@ -358,13 +319,12 @@ BOOST_TEST_DECORATOR(
 BOOST_DATA_TEST_CASE(add_get__uri__round_trips, e::supported_v2_schemas, schema)
 {
     // Arrange
-    // What Engine's own rekordbox import writes into this column.
     auto library = ev2::engine_library::create_temporary(schema);
     auto table = library.album_art();
 
     // Act
-    auto id = table.add(ev2::album_art_row{
-        ev2::ALBUM_ART_ROW_ID_NONE, example_uri, std::nullopt});
+    auto id = table.add(
+        ev2::album_art_row{ev2::ALBUM_ART_ROW_ID_NONE, example_uri, {}});
     auto reloaded = table.get(id);
 
     // Assert
@@ -372,8 +332,7 @@ BOOST_DATA_TEST_CASE(add_get__uri__round_trips, e::supported_v2_schemas, schema)
     BOOST_REQUIRE(std::holds_alternative<ev2::album_art_uri>(reloaded->hash));
     BOOST_CHECK_EQUAL(
         std::get<ev2::album_art_uri>(reloaded->hash).value, example_uri.value);
-    BOOST_CHECK(
-        ev2::storage_of(*reloaded) == ev2::album_art_storage::elsewhere);
+    BOOST_CHECK(ev2::storage_of(*reloaded) == ev2::album_art_storage::uri);
 }
 
 BOOST_TEST_DECORATOR(
@@ -381,29 +340,25 @@ BOOST_TEST_DECORATOR(
 BOOST_DATA_TEST_CASE(
     find_id__same_bytes_other_kind__none, e::supported_v2_schemas, schema)
 {
-    // Arrange
+    // Arrange: a text hash of 20 characters, and a binary hash of the same
+    // 20 bytes.
     auto library = ev2::engine_library::create_temporary(schema);
     auto table = library.album_art();
+    const std::string text = "0123456789abcdef0123";
+    const ev2::album_art_hash text_hash = ev2::album_art_text_hash{text};
     table.add(ev2::album_art_row{
-        ev2::ALBUM_ART_ROW_ID_NONE, example_text_hash, example_image});
+        ev2::ALBUM_ART_ROW_ID_NONE, text_hash, example_image});
+
+    ev2::album_art_binary_hash binary_hash{};
+    for (std::size_t i = 0; i < binary_hash.value.size(); ++i)
+        binary_hash.value[i] = static_cast<std::byte>(text[i]);
 
     // Act
-    // The same characters, asked for as bytes. SQLite does not equate a
-    // TEXT value with a BLOB of the same content, and neither does this.
-    const auto& text =
-        std::get<ev2::album_art_text_hash>(example_text_hash).value;
-    std::vector<std::byte> as_bytes;
-    as_bytes.reserve(text.size());
-    for (char c : text)
-        as_bytes.push_back(static_cast<std::byte>(c));
-    auto found_as_bytes = table.find_id(ev2::album_art_binary_hash{as_bytes});
-
-    // The control, without which this case would also pass if find_id()
-    // found nothing at all: the row is there, and its own kind finds it.
-    auto found_as_text = table.find_id(example_text_hash);
+    auto found_as_binary = table.find_id(binary_hash);
+    auto found_as_text = table.find_id(text_hash);
 
     // Assert
-    BOOST_CHECK(!found_as_bytes.has_value());
+    BOOST_CHECK(!found_as_binary.has_value());
     BOOST_CHECK(found_as_text.has_value());
 }
 
@@ -413,14 +368,10 @@ BOOST_DATA_TEST_CASE(
     add_get__null_hash__round_trips, e::supported_v2_schemas, schema)
 {
     // Arrange
-    // The column is nullable in every schema, so a library written by
-    // something else may hold one.  Reading it must not throw: `get()` is
-    // called in a loop over `all_ids()`, and one unreadable row there takes
-    // the whole enumeration with it.
     auto library = ev2::engine_library::create_temporary(schema);
     auto table = library.album_art();
-    auto id = table.add(ev2::album_art_row{
-        ev2::ALBUM_ART_ROW_ID_NONE, std::monostate{}, std::nullopt});
+    auto id = table.add(
+        ev2::album_art_row{ev2::ALBUM_ART_ROW_ID_NONE, std::monostate{}, {}});
 
     // Act
     auto reloaded = table.get(id);
@@ -430,31 +381,4 @@ BOOST_DATA_TEST_CASE(
     BOOST_CHECK(std::holds_alternative<std::monostate>(reloaded->hash));
     BOOST_CHECK(ev2::storage_of(*reloaded) == ev2::album_art_storage::none);
     BOOST_CHECK(table.find_id(std::monostate{}) == id);
-}
-
-BOOST_TEST_DECORATOR(
-    *utf::description("an empty binary hash is refused, not written as null"))
-BOOST_DATA_TEST_CASE(
-    add__empty_binary_hash__throws, e::supported_v2_schemas, schema)
-{
-    // Arrange
-    // SQLite binds a zero-length blob as a null column, so storing this
-    // would hand back a row that does not equal the one written and that
-    // find_id() can never match again.
-    auto library = ev2::engine_library::create_temporary(schema);
-    auto table = library.album_art();
-    ev2::album_art_row row{
-        ev2::ALBUM_ART_ROW_ID_NONE, ev2::album_art_binary_hash{}, std::nullopt};
-
-    // Act/Assert
-    BOOST_CHECK_THROW(table.add(row), std::invalid_argument);
-    BOOST_CHECK_EQUAL(table.all_ids().size(), 1);
-
-    auto persisted = table.add(ev2::album_art_row{
-        ev2::ALBUM_ART_ROW_ID_NONE, example_hash, std::nullopt});
-    row.id = persisted;
-    BOOST_CHECK_THROW(table.update(row), std::invalid_argument);
-    auto unchanged = table.get(persisted);
-    BOOST_REQUIRE(unchanged.has_value());
-    BOOST_CHECK(unchanged->hash == example_hash);
 }
