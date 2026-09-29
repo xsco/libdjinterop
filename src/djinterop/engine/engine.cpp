@@ -18,6 +18,7 @@
 #include <djinterop/engine/engine.hpp>
 
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -105,12 +106,13 @@ database create_database_from_scripts(
     const std::string& db_directory, const std::string& script_directory,
     engine_schema& loaded_schema)
 {
-    if (!djinterop::util::path_exists(db_directory))
+    if (!std::filesystem::exists(djinterop::util::path_from_utf8(db_directory)))
     {
         throw std::runtime_error{"DB directory does not exist"};
     }
 
-    if (!djinterop::util::path_exists(script_directory))
+    if (!std::filesystem::exists(
+            djinterop::util::path_from_utf8(script_directory)))
     {
         throw std::runtime_error{"Script directory does not exist"};
     }
@@ -124,20 +126,25 @@ database create_database_from_scripts(
     auto v2_m_db_path = database2_db_dir + "/m.db";
     auto v2_m_db_sql_path = database2_script_dir + "/m.db.sql";
 
-    if (djinterop::util::path_exists(v1_m_db_sql_path))
+    if (std::filesystem::exists(
+            djinterop::util::path_from_utf8(v1_m_db_sql_path)))
     {
         hydrate_database(v1_m_db_path, v1_m_db_sql_path);
     }
 
-    if (djinterop::util::path_exists(v1_p_db_sql_path))
+    if (std::filesystem::exists(
+            djinterop::util::path_from_utf8(v1_p_db_sql_path)))
     {
         hydrate_database(v1_p_db_path, v1_p_db_sql_path);
     }
 
-    if (djinterop::util::path_exists(v2_m_db_sql_path))
+    if (std::filesystem::exists(
+            djinterop::util::path_from_utf8(v2_m_db_sql_path)))
     {
-        if (!djinterop::util::path_exists(database2_db_dir))
-            djinterop::util::create_dir(database2_db_dir);
+        if (!std::filesystem::exists(
+                djinterop::util::path_from_utf8(database2_db_dir)))
+            std::filesystem::create_directory(
+                djinterop::util::path_from_utf8(database2_db_dir));
 
         hydrate_database(v2_m_db_path, v2_m_db_sql_path);
     }

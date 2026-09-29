@@ -17,9 +17,6 @@
 
 #include "filesystem.hpp"
 
-#include <stdexcept>
-#include <system_error>
-
 namespace djinterop::util
 {
 std::filesystem::path path_from_utf8(const std::string& path)
@@ -32,21 +29,6 @@ std::filesystem::path path_from_utf8(const std::string& path)
 #else
     return std::filesystem::path{path};
 #endif
-}
-
-void create_dir(const std::string& directory)
-{
-    std::error_code ec;
-    if (!std::filesystem::create_directory(path_from_utf8(directory), ec))
-    {
-        throw std::runtime_error{"Failed to create directory"};
-    }
-}
-
-bool path_exists(const std::string& directory)
-{
-    std::error_code ec;
-    return std::filesystem::exists(path_from_utf8(directory), ec);
 }
 
 std::string get_filename(const std::string& file_path)

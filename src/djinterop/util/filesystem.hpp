@@ -31,8 +31,6 @@ namespace djinterop::util
 /// must go through this function.
 std::filesystem::path path_from_utf8(const std::string& path);
 
-void create_dir(const std::string& directory);
-bool path_exists(const std::string& directory);
 std::string get_filename(const std::string& file_path);
 std::optional<std::string> get_file_extension(const std::string& file_path);
 
