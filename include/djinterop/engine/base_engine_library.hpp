@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <filesystem>
 #include <memory>
 #include <string>
 
@@ -48,7 +49,7 @@ public:
     /// Get the Engine library top-level directory.
     ///
     /// \return Returns the top-level directory.
-    [[nodiscard]] std::string directory() const;
+    [[nodiscard]] std::filesystem::path directory() const;
 
     /// Get the schema version of the Engine library.
     ///
@@ -60,15 +61,15 @@ public:
 
 protected:
     static std::shared_ptr<engine_library_context> create(
-        const std::string& directory, const engine_schema& schema);
+        const std::filesystem::path& directory, const engine_schema& schema);
 
     static std::shared_ptr<engine_library_context> create_temporary(
         const engine_schema& schema);
 
-    static bool exists(const std::string& directory);
+    static bool exists(const std::filesystem::path& directory);
 
     static std::shared_ptr<engine_library_context> load(
-        const std::string& directory);
+        const std::filesystem::path& directory);
 
     // Pimpl-like idiom, also used by other classes.
     std::shared_ptr<engine_library_context> context_;

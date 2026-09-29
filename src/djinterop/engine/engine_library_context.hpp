@@ -17,7 +17,8 @@
 
 #pragma once
 
-#include <string>
+#include <filesystem>
+#include <utility>
 
 #include <sqlite_modern_cpp.h>
 
@@ -28,15 +29,15 @@ namespace djinterop::engine
 struct engine_library_context
 {
     engine_library_context(
-        std::string directory, bool is_database2, engine_schema schema,
-        sqlite::database db) :
+        std::filesystem::path directory, bool is_database2,
+        engine_schema schema, sqlite::database db) :
         directory{std::move(directory)}, is_database2{is_database2},
         schema{schema}, db{std::move(db)}
     {
     }
 
     /// The directory in which the Engine DB files reside.
-    const std::string directory;
+    const std::filesystem::path directory;
 
     /// Flag indicating whether the directory is of the 'Database2' structure.
     ///

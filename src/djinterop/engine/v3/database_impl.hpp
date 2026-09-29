@@ -41,7 +41,7 @@ public:
         const std::string& name,
         const djinterop::playlist_impl& after_base) override;
     track create_track(const track_snapshot& snapshot) override;
-    std::string directory() override;
+    std::filesystem::path directory() override;
     void verify() override;
     void remove_crate(djinterop::crate cr) override;
     void remove_playlist(const djinterop::playlist_impl& pl_base) override;

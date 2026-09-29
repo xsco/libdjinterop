@@ -21,6 +21,7 @@
 
 #include <array>
 #include <cstdint>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -55,18 +56,14 @@ constexpr std::array<pad_color, 8> pads{pad_1, pad_2, pad_3, pad_4,
 
 constexpr const char* default_database_dir_name = "Engine Library";
 
-// Every directory or file path that the functions below take or return as a
-// `std::string` is UTF-8 encoded, on all platforms.  This includes Windows,
-// where the string is converted to a wide path before it reaches the
-// operating system, so it must not be in the ANSI code page.
-
 /// Creates a new, empty database in a directory using the version provided.
 ///
 /// By convention, the last part of the directory path is "Engine Library".  If
 /// a database already exists in the target directory, an exception will be
 /// thrown.
 database DJINTEROP_PUBLIC create_database(
-    const std::string& directory, const engine_schema& schema = latest_schema);
+    const std::filesystem::path& directory,
+    const engine_schema& schema = latest_schema);
 
 /// Creates a new temporary database.
 ///
@@ -88,7 +85,8 @@ create_temporary_database(const engine_schema& schema = latest_schema);
 ///                       the created database.
 /// \return Returns the created database.
 database DJINTEROP_PUBLIC create_database_from_scripts(
-    const std::string& db_directory, const std::string& script_directory,
+    const std::filesystem::path& db_directory,
+    const std::filesystem::path& script_directory,
     engine_schema& loaded_schema);
 
 /// Creates a new database from a set of SQL scripts.
@@ -102,7 +100,8 @@ database DJINTEROP_PUBLIC create_database_from_scripts(
 /// \param script_directory Directory containing scripts.
 /// \return Returns the created database.
 inline database DJINTEROP_PUBLIC create_database_from_scripts(
-    const std::string& db_directory, const std::string& script_directory)
+    const std::filesystem::path& db_directory,
+    const std::filesystem::path& script_directory)
 {
     engine_schema unused{};
     return create_database_from_scripts(db_directory, script_directory, unused);
@@ -122,8 +121,8 @@ inline database DJINTEROP_PUBLIC create_database_from_scripts(
 /// if a new database was created.
 /// \return Returns the created or loaded database.
 database DJINTEROP_PUBLIC create_or_load_database(
-    const std::string& directory, const engine_schema& schema, bool& created,
-    engine_schema& loaded_schema);
+    const std::filesystem::path& directory, const engine_schema& schema,
+    bool& created, engine_schema& loaded_schema);
 
 /// Create or load an Engine Library database in a given directory.
 ///
@@ -136,7 +135,8 @@ database DJINTEROP_PUBLIC create_or_load_database(
 ///                was created or not.
 /// \return Returns the created or loaded database.
 inline database DJINTEROP_PUBLIC create_or_load_database(
-    const std::string& directory, const engine_schema& schema, bool& created)
+    const std::filesystem::path& directory, const engine_schema& schema,
+    bool& created)
 {
     engine_schema unused{};
     return create_or_load_database(directory, schema, created, unused);
@@ -144,7 +144,7 @@ inline database DJINTEROP_PUBLIC create_or_load_database(
 
 /// Returns a boolean indicating whether an Engine Library already exists in a
 /// given directory.
-bool DJINTEROP_PUBLIC database_exists(const std::string& directory);
+bool DJINTEROP_PUBLIC database_exists(const std::filesystem::path& directory);
 
 /// Loads an Engine Library database from a given directory.
 ///
@@ -152,14 +152,15 @@ bool DJINTEROP_PUBLIC database_exists(const std::string& directory);
 /// \param loaded_schema Output reference parameter indicating the version of
 ///                       the loaded database.
 /// \return Returns the loaded database.
-database DJINTEROP_PUBLIC
-load_database(const std::string& directory, engine_schema& loaded_schema);
+database DJINTEROP_PUBLIC load_database(
+    const std::filesystem::path& directory, engine_schema& loaded_schema);
 
 /// Loads an Engine Library database from a given directory.
 ///
 /// \param directory Directory to load from.
 /// \return Returns the loaded database.
-inline database DJINTEROP_PUBLIC load_database(const std::string& directory)
+inline database DJINTEROP_PUBLIC
+load_database(const std::filesystem::path& directory)
 {
     engine_schema unused{};
     return load_database(directory, unused);

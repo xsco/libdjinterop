@@ -19,16 +19,10 @@
 
 namespace djinterop::util
 {
-std::filesystem::path path_from_utf8(const std::string& path)
+std::string path_to_utf8(const std::filesystem::path& path)
 {
-#if defined(_WIN32)
-    // On Windows, constructing a path from a narrow string interprets it in
-    // the active ANSI code page.  The strings handed to this library are
-    // UTF-8, so go via std::u8string to get the conversion right.
-    return std::filesystem::path{std::u8string{path.begin(), path.end()}};
-#else
-    return std::filesystem::path{path};
-#endif
+    const auto utf8 = path.u8string();
+    return std::string{utf8.begin(), utf8.end()};
 }
 
 std::string get_filename(const std::string& file_path)

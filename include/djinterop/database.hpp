@@ -20,6 +20,7 @@
 #define DJINTEROP_DATABASE_HPP
 
 #include <cstdint>
+#include <filesystem>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -97,9 +98,8 @@ public:
 
     /// Returns the path directory of the database
     ///
-    /// This is the same as the directory passed to the `database` constructor,
-    /// and is UTF-8 encoded on all platforms.
-    std::string directory() const;
+    /// This is the same as the directory passed to the `database` constructor.
+    std::filesystem::path directory() const;
 
     /// Returns the UUID of the database
     std::string uuid() const;
