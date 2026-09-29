@@ -17,6 +17,8 @@
 
 #include "engine_library_dir_utils.hpp"
 
+#include <filesystem>
+
 #include <djinterop/exceptions.hpp>
 
 #include "../util/filesystem.hpp"
@@ -48,7 +50,7 @@ std::string make_database2_m_db_path(const std::string& directory)
 
 bool detect_is_database2(const std::string& directory)
 {
-    if (!djinterop::util::path_exists(directory))
+    if (!std::filesystem::exists(djinterop::util::path_from_utf8(directory)))
     {
         throw database_not_found{directory};
     }
@@ -58,10 +60,10 @@ bool detect_is_database2(const std::string& directory)
     // version in some of its columns.
     auto legacy_m_db_path = directory + "/m.db";
     auto database2_m_db_path = directory + "/Database2/m.db";
-    auto legacy_m_db_path_exists =
-        djinterop::util::path_exists(legacy_m_db_path);
-    auto database2_m_db_path_exists =
-        djinterop::util::path_exists(database2_m_db_path);
+    auto legacy_m_db_path_exists = std::filesystem::exists(
+        djinterop::util::path_from_utf8(legacy_m_db_path));
+    auto database2_m_db_path_exists = std::filesystem::exists(
+        djinterop::util::path_from_utf8(database2_m_db_path));
 
     if (!legacy_m_db_path_exists && !database2_m_db_path_exists)
     {
@@ -80,10 +82,11 @@ bool detect_is_database2(const std::string& directory)
 
 sqlite::database create_legacy_sqlite_database(const std::string& directory)
 {
-    if (!djinterop::util::path_exists(directory))
+    if (!std::filesystem::exists(djinterop::util::path_from_utf8(directory)))
     {
         // Note: only creates leaf directory, not entire tree.
-        djinterop::util::create_dir(directory);
+        std::filesystem::create_directory(
+            djinterop::util::path_from_utf8(directory));
     }
 
     sqlite::database db{":memory:"};
@@ -95,20 +98,22 @@ sqlite::database create_legacy_sqlite_database(const std::string& directory)
 sqlite::database create_database2_sqlite_database(const std::string& directory)
 {
     // Ensure the target directory exists.
-    if (!djinterop::util::path_exists(directory))
+    if (!std::filesystem::exists(djinterop::util::path_from_utf8(directory)))
     {
-        djinterop::util::create_dir(directory);
+        std::filesystem::create_directory(
+            djinterop::util::path_from_utf8(directory));
     }
 
     auto db_dir_path = make_database2_db_dir_path(directory);
-    if (!djinterop::util::path_exists(db_dir_path))
+    if (!std::filesystem::exists(djinterop::util::path_from_utf8(db_dir_path)))
     {
-        djinterop::util::create_dir(db_dir_path);
+        std::filesystem::create_directory(
+            djinterop::util::path_from_utf8(db_dir_path));
     }
 
     // Target database must not exist.
     auto db_path = make_database2_m_db_path(directory);
-    if (djinterop::util::path_exists(db_path))
+    if (std::filesystem::exists(djinterop::util::path_from_utf8(db_path)))
     {
         throw database_inconsistency{
             "Cannot create new Engine library, as the database file already "
@@ -133,7 +138,7 @@ sqlite::database create_temporary_database2_sqlite_database()
 
 sqlite::database load_legacy_sqlite_database(const std::string& directory)
 {
-    if (!djinterop::util::path_exists(directory))
+    if (!std::filesystem::exists(djinterop::util::path_from_utf8(directory)))
     {
         throw database_not_found{directory};
     }
@@ -147,7 +152,7 @@ sqlite::database load_legacy_sqlite_database(const std::string& directory)
 sqlite::database load_database2_sqlite_database(const std::string& directory)
 {
     auto db_path = make_database2_m_db_path(directory);
-    if (!djinterop::util::path_exists(db_path))
+    if (!std::filesystem::exists(djinterop::util::path_from_utf8(db_path)))
     {
         throw database_not_found{directory};
     }
@@ -157,12 +162,14 @@ sqlite::database load_database2_sqlite_database(const std::string& directory)
 
 bool legacy_database_exists(const std::string& directory)
 {
-    return djinterop::util::path_exists(make_legacy_m_db_path(directory));
+    return std::filesystem::exists(
+        djinterop::util::path_from_utf8(make_legacy_m_db_path(directory)));
 }
 
 bool database2_database_exists(const std::string& directory)
 {
-    return djinterop::util::path_exists(make_database2_m_db_path(directory));
+    return std::filesystem::exists(
+        djinterop::util::path_from_utf8(make_database2_m_db_path(directory)));
 }
 
 }  // namespace djinterop::engine
