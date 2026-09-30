@@ -19,6 +19,7 @@
 
 #include <bitset>
 #include <cstdint>
+#include <filesystem>
 #include <initializer_list>
 #include <optional>
 #include <string>
@@ -57,7 +58,7 @@ public:
     virtual crate create_root_crate_after(
         const std::string& name, const crate& after) = 0;
     virtual track create_track(const track_snapshot& snapshot) = 0;
-    virtual std::string directory() = 0;
+    virtual std::filesystem::path directory() = 0;
     virtual void verify() = 0;
     virtual void remove_crate(crate cr) = 0;
     virtual void remove_playlist(const playlist_impl& pl) = 0;

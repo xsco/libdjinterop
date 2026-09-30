@@ -19,6 +19,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <memory>
 #include <optional>
 #include <string>
@@ -99,15 +100,16 @@ class engine_storage
 {
 public:
     engine_storage(
-        const std::string& directory, const engine_schema& schema,
+        const std::filesystem::path& directory, const engine_schema& schema,
         sqlite::database db);
 
     /// Construct by loading from an existing DB directory.
-    static std::shared_ptr<engine_storage> load(const std::string& directory);
+    static std::shared_ptr<engine_storage> load(
+        const std::filesystem::path& directory);
 
     /// Make a new, empty DB of a given version.
     static std::shared_ptr<engine_storage> create(
-        const std::string& directory, const engine_schema& schema);
+        const std::filesystem::path& directory, const engine_schema& schema);
 
     /// Make a new, empty, in-memory DB of a given version.
     ///
@@ -346,7 +348,7 @@ public:
     }
 
     /// The directory in which the Engine DB files reside.
-    const std::string directory;
+    const std::filesystem::path directory;
 
     /// SQLite database handle, with both music and performance DBs attached.
     sqlite::database db;
