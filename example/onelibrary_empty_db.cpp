@@ -15,24 +15,25 @@
     along with libdjinterop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-#ifndef DJINTEROP_DJINTEROP_HPP
-#define DJINTEROP_DJINTEROP_HPP
+#include <iostream>
 
-#include <djinterop/config.hpp>
-
-#include <djinterop/album_art.hpp>
-#include <djinterop/crate.hpp>
-#include <djinterop/database.hpp>
-#include <djinterop/engine/engine.hpp>
-#include <djinterop/exceptions.hpp>
-#include <djinterop/musical_key.hpp>
 #include <djinterop/onelibrary/onelibrary.hpp>
-#include <djinterop/pad_color.hpp>
-#include <djinterop/performance_data.hpp>
-#include <djinterop/playlist.hpp>
-#include <djinterop/semantic_version.hpp>
-#include <djinterop/track.hpp>
-#include <djinterop/track_snapshot.hpp>
 
-#endif  // DJINTEROP_DJINTEROP_HPP
+namespace onelib = djinterop::onelibrary;
+
+/// Example program that creates an empty OneLibrary database and verifies it.
+int main()
+{
+    auto dir = "OneLibrary";
+
+    std::cout << "OneLibrary Empty Database Example Program\n" << std::endl;
+
+    auto library = onelib::onelibrary::create(dir);
+    library.verify();
+
+    std::cout << "Created empty OneLibrary database:" << std::endl;
+    std::cout << "  Path:   " << library.directory() << std::endl;
+    std::cout << "  Verified OK" << std::endl;
+
+    return 0;
+}

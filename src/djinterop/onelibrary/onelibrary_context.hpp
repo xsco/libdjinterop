@@ -16,23 +16,26 @@
  */
 
 #pragma once
-#ifndef DJINTEROP_DJINTEROP_HPP
-#define DJINTEROP_DJINTEROP_HPP
 
-#include <djinterop/config.hpp>
+#include <memory>
+#include <string>
 
-#include <djinterop/album_art.hpp>
-#include <djinterop/crate.hpp>
-#include <djinterop/database.hpp>
-#include <djinterop/engine/engine.hpp>
-#include <djinterop/exceptions.hpp>
-#include <djinterop/musical_key.hpp>
-#include <djinterop/onelibrary/onelibrary.hpp>
-#include <djinterop/pad_color.hpp>
-#include <djinterop/performance_data.hpp>
-#include <djinterop/playlist.hpp>
-#include <djinterop/semantic_version.hpp>
-#include <djinterop/track.hpp>
-#include <djinterop/track_snapshot.hpp>
+#include <sqlite_modern_cpp.h>
 
-#endif  // DJINTEROP_DJINTEROP_HPP
+namespace djinterop::onelibrary
+{
+struct onelibrary_context
+{
+    onelibrary_context(std::string directory, sqlite::database db) :
+        directory{std::move(directory)}, db{std::move(db)}
+    {
+    }
+
+    /// The root directory
+    const std::string directory;
+
+    /// The database handle.
+    sqlite::database db;
+};
+
+}  // namespace djinterop::onelibrary
