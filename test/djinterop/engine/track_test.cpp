@@ -26,6 +26,8 @@
 #include <vector>
 
 #include <djinterop/engine/engine.hpp>
+#include <djinterop/engine/v2/engine_library.hpp>
+#include <djinterop/engine/v3/engine_library.hpp>
 #include <djinterop/track_snapshot.hpp>
 
 #include "example_track_data.hpp"
@@ -35,6 +37,8 @@
 
 namespace c = std::chrono;
 namespace e = djinterop::engine;
+namespace ev2 = djinterop::engine::v2;
+namespace ev3 = djinterop::engine::v3;
 namespace utf = boost::unit_test;
 
 namespace
@@ -204,6 +208,94 @@ BOOST_DATA_TEST_CASE(
         schema);
     auto actual = track.snapshot();
     BOOST_CHECK_EQUAL(expected, actual);
+}
+
+BOOST_TEST_DECORATOR(
+    *utf::description("track update keeps columns not in the snapshot, all "
+                      "v2 schema versions"))
+BOOST_DATA_TEST_CASE(
+    update__v2_unsnapshotted_columns__keeps, e::supported_v2_schemas, schema)
+{
+    // Arrange
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto library = ev2::engine_library::create_temporary(schema);
+    auto db = library.database();
+
+    djinterop::track_snapshot snapshot{};
+    populate_track_snapshot(
+        snapshot, example_track_data_variation::fully_analysed_1,
+        example_track_data_usage::create, schema);
+
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating track...");
+    auto track = db.create_track(snapshot);
+
+    const auto album_art_id = library.album_art().add(ev2::album_art_row{
+        ev2::ALBUM_ART_ROW_ID_NONE,
+        ev2::album_art_text_hash{"0123456789abcdef0123456789abcdef01234567"},
+        {}});
+    const c::system_clock::time_point date_added{c::seconds{1700000000}};
+    library.track().set_album_art_id(track.id(), album_art_id);
+    library.track().set_date_added(track.id(), date_added);
+    library.track().set_is_played(track.id(), true);
+
+    auto modified = track.snapshot();
+    modified.title = "Updated Title";
+
+    // Act
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Updating track...");
+    track.update(modified);
+
+    // Assert
+    auto row = library.track().get(track.id());
+    BOOST_REQUIRE(row);
+    BOOST_CHECK(row->title == std::optional<std::string>{"Updated Title"});
+    BOOST_CHECK_EQUAL(row->album_art_id, album_art_id);
+    BOOST_CHECK(row->date_added == date_added);
+    BOOST_CHECK(row->is_played);
+}
+
+BOOST_TEST_DECORATOR(
+    *utf::description("track update keeps columns not in the snapshot, all "
+                      "v3 schema versions"))
+BOOST_DATA_TEST_CASE(
+    update__v3_unsnapshotted_columns__keeps, e::supported_v3_schemas, schema)
+{
+    // Arrange
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating temporary database...");
+    auto library = ev3::engine_library::create_temporary(schema);
+    auto db = library.database();
+
+    djinterop::track_snapshot snapshot{};
+    populate_track_snapshot(
+        snapshot, example_track_data_variation::fully_analysed_1,
+        example_track_data_usage::create, schema);
+
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Creating track...");
+    auto track = db.create_track(snapshot);
+
+    const auto album_art_id = library.album_art().add(ev3::album_art_row{
+        ev3::ALBUM_ART_ROW_ID_NONE,
+        ev3::album_art_text_hash{"0123456789abcdef0123456789abcdef01234567"},
+        {}});
+    const c::system_clock::time_point date_added{c::seconds{1700000000}};
+    library.track().set_album_art_id(track.id(), album_art_id);
+    library.track().set_date_added(track.id(), date_added);
+    library.track().set_is_played(track.id(), true);
+
+    auto modified = track.snapshot();
+    modified.title = "Updated Title";
+
+    // Act
+    BOOST_TEST_CHECKPOINT("(" << schema << ") Updating track...");
+    track.update(modified);
+
+    // Assert
+    auto row = library.track().get(track.id());
+    BOOST_REQUIRE(row);
+    BOOST_CHECK(row->title == std::optional<std::string>{"Updated Title"});
+    BOOST_CHECK_EQUAL(row->album_art_id, album_art_id);
+    BOOST_CHECK(row->date_added == date_added);
+    BOOST_CHECK(row->is_played);
 }
 
 // TODO (mr-smidge): Add tests for each getter/setter
