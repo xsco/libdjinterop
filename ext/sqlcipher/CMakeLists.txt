@@ -27,7 +27,7 @@ target_compile_definitions(
 
 target_include_directories(
     sqlcipher PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR})
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 # SQLCipher needs OpenSSL for AES-256-CBC, PBKDF2-HMAC-SHA512
 find_package(OpenSSL REQUIRED)
@@ -46,3 +46,8 @@ endif()
 
 # Must be position-independent to link into a shared library.
 set_target_properties(sqlcipher PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+# Keep SQLite's symbols inside a shared libdjinterop.  An application that
+# links its own SQLite would otherwise interpose its copy, which cannot
+# decrypt, on the calls libdjinterop makes.
+set_target_properties(sqlcipher PROPERTIES C_VISIBILITY_PRESET hidden)
