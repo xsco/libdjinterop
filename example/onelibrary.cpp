@@ -21,8 +21,11 @@
 //
 // The first argument is the root of the device -- the directory holding
 // `PIONEER` -- or the `exportLibrary.db` file itself.  The second is the
-// passphrase, which defaults to the one rekordbox uses.
+// passphrase with which the database is encrypted, which libdjinterop does
+// not supply; without it, the `ONELIBRARY_PASSPHRASE` environment variable is
+// read instead.
 
+#include <cstdlib>
 #include <iostream>
 #include <string>
 
@@ -51,8 +54,14 @@ int main(int argc, char** argv)
     }
 
     const std::string device = argv[1];
-    const std::string passphrase =
-        argc > 2 ? argv[2] : djinterop::onelibrary::default_passphrase;
+    const char* passphrase =
+        argc > 2 ? argv[2] : std::getenv("ONELIBRARY_PASSPHRASE");
+    if (passphrase == nullptr)
+    {
+        std::cerr << "No passphrase given, either as an argument or in "
+                     "ONELIBRARY_PASSPHRASE\n";
+        return 2;
+    }
 
     if (!djinterop::onelibrary::database_exists(device))
     {
@@ -96,6 +105,11 @@ int main(int argc, char** argv)
         // The most likely cause is a passphrase that does not open the
         // database, which happens if rekordbox has changed it.
         std::cerr << "Could not read the library: " << e.what() << "\n";
+        return 1;
+    }
+    catch (const djinterop::database_inconsistency& e)
+    {
+        std::cerr << "The library is damaged: " << e.what() << "\n";
         return 1;
     }
 

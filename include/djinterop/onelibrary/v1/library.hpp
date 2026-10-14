@@ -58,7 +58,7 @@ public:
     /// \param passphrase Passphrase with which the database is encrypted.
     [[nodiscard]] static library load(
         const std::string& path,
-        const std::string& passphrase = default_passphrase);
+        const std::string& passphrase);
 
     /// Create a new database from an SQL script, as
     /// `create_database_from_scripts` does, and load it.
@@ -68,7 +68,7 @@ public:
     /// \param passphrase Passphrase with which to encrypt the database.
     [[nodiscard]] static library create_from_scripts(
         const std::string& directory, const std::string& script_directory,
-        const std::string& passphrase = default_passphrase);
+        const std::string& passphrase);
 
     /// The `content` table.
     [[nodiscard]] content_table content() const;

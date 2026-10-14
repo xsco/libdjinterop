@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <unordered_set>
 #include <utility>
 
@@ -68,9 +69,9 @@ void verify_schema(onelibrary_context& context)
 {
     // A real export has twenty-two tables; demanding the ones this library
     // does not read would reject a database that is merely older or newer.
-    constexpr std::array<std::string_view, 8> required_tables{
-        "content",  "artist",           "album",   "genre", "label",
-        "playlist", "playlist_content", "property"};
+    constexpr std::array<std::string_view, 9> required_tables{
+        "content",  "artist",   "album",            "genre",   "label",
+        "key",      "playlist", "playlist_content", "property"};
 
     std::unordered_set<std::string> present;
     context.db << "SELECT name FROM sqlite_master WHERE type = 'table'" >>
@@ -84,6 +85,25 @@ void verify_schema(onelibrary_context& context)
                 "The table `" + name +
                 "` is missing, so this is not a valid OneLibrary database"};
     }
+
+    // Every export carries exactly one `property` row, recording the version
+    // of its schema.  A database without one has not been written properly.
+    int64_t property_rows = 0;
+    int64_t versioned_rows = 0;
+    context.db << "SELECT COUNT(*), COUNT(NULLIF(dbVersion, '')) "
+                  "FROM property" >>
+        std::tie(property_rows, versioned_rows);
+
+    if (property_rows != 1)
+        throw database_inconsistency{
+            "The table `property` holds " + std::to_string(property_rows) +
+            " rows rather than one, so this is not a valid OneLibrary "
+            "database"};
+
+    if (versioned_rows != 1)
+        throw database_inconsistency{
+            "The table `property` records no `dbVersion`, so this is not a "
+            "valid OneLibrary database"};
 }
 
 std::shared_ptr<onelibrary_context> load_context(

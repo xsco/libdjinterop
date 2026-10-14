@@ -83,8 +83,7 @@ struct onelibrary_device
 {
     explicit onelibrary_device(
         const std::vector<std::string>& statements,
-        const std::string& passphrase =
-            djinterop::onelibrary::default_passphrase) :
+        const std::string& passphrase = "a passphrase for the fixture") :
         root{temp_dir.temp_dir + "/device"},
         library{create(temp_dir, root, statements, passphrase)}
     {

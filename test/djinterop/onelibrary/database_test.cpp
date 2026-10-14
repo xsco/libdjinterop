@@ -441,6 +441,49 @@ BOOST_AUTO_TEST_CASE(verify__a_database_missing_its_tables__is_rejected)
 }
 
 BOOST_TEST_DECORATOR(
+    *utf::description("verify() rejects a database missing the key table"))
+BOOST_AUTO_TEST_CASE(verify__a_database_missing_the_key_table__is_rejected)
+{
+    // Tracks are read joined to `key`, so it is as necessary as the others.
+    temporary_directory temp_dir;
+    const auto scripts = temp_dir.temp_dir + "/scripts";
+    write_script_on_schema(scripts, {"DROP TABLE \"key\";"});
+
+    BOOST_CHECK_THROW(
+        ol::create_database_from_scripts(
+            temp_dir.temp_dir + "/device", scripts, passphrase),
+        djinterop::database_inconsistency);
+}
+
+BOOST_TEST_DECORATOR(*utf::description(
+    "verify() rejects a database without exactly one versioned property row"))
+BOOST_AUTO_TEST_CASE(verify__a_bad_property_table__is_rejected)
+{
+    // Every export carries exactly one `property` row, recording `dbVersion`.
+    const std::vector<std::vector<std::string>> bad_property_tables{
+        {"DELETE FROM property;"},
+        {"INSERT INTO property (dbVersion) VALUES ('1000');"},
+        {"UPDATE property SET dbVersion = NULL;"},
+        {"UPDATE property SET dbVersion = '';"},
+    };
+
+    for (const auto& statements : bad_property_tables)
+    {
+        BOOST_TEST_CONTEXT(statements.front())
+        {
+            temporary_directory temp_dir;
+            const auto scripts = temp_dir.temp_dir + "/scripts";
+            write_script_on_schema(scripts, statements);
+
+            BOOST_CHECK_THROW(
+                ol::create_database_from_scripts(
+                    temp_dir.temp_dir + "/device", scripts, passphrase),
+                djinterop::database_inconsistency);
+        }
+    }
+}
+
+BOOST_TEST_DECORATOR(
     *utf::description("library reaches the device through both interfaces"))
 BOOST_AUTO_TEST_CASE(library__a_device__is_read_through_its_database)
 {

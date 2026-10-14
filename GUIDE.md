@@ -102,10 +102,11 @@ aspects of the format are worth noting:
 * The format has a single tree that serves as both playlists and crates, so
   `playlists_and_crates_are_distinct` is false and the two views show the same
   rows.
-* The database is encrypted with SQLCipher, so reading one needs libdjinterop
-  built with `-DEXPERIMENTAL_ENABLE_SQLCIPHER=ON -DSYSTEM_SQLITE=OFF`, and
-  OpenSSL.  Without it, `load_database()` throws
-  `djinterop::unsupported_database`.
+* The database is encrypted with SQLCipher.  libdjinterop does not supply the
+  passphrase, so an application has to pass it to `load_database()`.
+* Reading an encrypted database needs libdjinterop built with
+  `-DEXPERIMENTAL_ENABLE_SQLCIPHER=ON -DSYSTEM_SQLITE=OFF`, and OpenSSL.
+  Without it, `load_database()` throws `djinterop::unsupported_database`.
 * rekordbox writes the database in write-ahead-logged mode, and SQLite cannot
   read one of those without writing beside it, so reading a device creates
   `-shm` and `-wal` files next to `exportLibrary.db` if they are missing.  The

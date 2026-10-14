@@ -28,7 +28,8 @@
 /// OneLibrary succeeds the DeviceSQL `export.pdb` library that rekordbox wrote
 /// to USB media; a device usually carries both, and a player that understands
 /// OneLibrary prefers it.  The library is one SQLite database encrypted with
-/// SQLCipher 4, so reading one needs libdjinterop built with
+/// SQLCipher 4, so reading one needs the passphrase with which it is
+/// encrypted, which libdjinterop does not supply, and libdjinterop built with
 /// `EXPERIMENTAL_ENABLE_SQLCIPHER`; without it, loading throws
 /// `djinterop::unsupported_database`.
 ///
@@ -43,14 +44,6 @@ namespace djinterop::onelibrary
 /// Location of the library database within a device, relative to its root.
 constexpr const char* database_relative_path =
     "PIONEER/rekordbox/exportLibrary.db";
-
-/// The passphrase with which rekordbox encrypts every `exportLibrary.db`.
-///
-/// It is the same on every installation, and depends on neither licence nor
-/// machine, so any player can read any device.  Pass a different one to
-/// `load_database` if a future release of rekordbox changes it.
-constexpr const char* default_passphrase =
-    "r8gddnr4k847830ar6cqzbkk0el6qytmb3trbbx805jm74vez64i5o8fnrqryqls";
 
 /// Test whether a OneLibrary database exists in a given location.
 ///
@@ -68,10 +61,11 @@ bool DJINTEROP_PUBLIC database_exists(const std::string& path);
 /// \throws unsupported_database If the passphrase does not open the database,
 ///                              or this build of libdjinterop cannot read one.
 /// \throws database_inconsistency If the database does not hold the tables
-///                                that a OneLibrary database is expected to.
+///                                that a OneLibrary database is expected to,
+///                                or the single `property` row recording its
+///                                version.
 database DJINTEROP_PUBLIC load_database(
-    const std::string& path,
-    const std::string& passphrase = default_passphrase);
+    const std::string& path, const std::string& passphrase);
 
 /// Create a new database from an SQL script, and load it.
 ///
@@ -88,6 +82,6 @@ database DJINTEROP_PUBLIC load_database(
 ///                              encrypted database.
 database DJINTEROP_PUBLIC create_database_from_scripts(
     const std::string& directory, const std::string& script_directory,
-    const std::string& passphrase = default_passphrase);
+    const std::string& passphrase);
 
 }  // namespace djinterop::onelibrary

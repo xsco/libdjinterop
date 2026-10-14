@@ -24,9 +24,11 @@ The library needs a C++20 compiler, and its headers refuse to compile under
 any older standard.
 
 `onelibrary` takes the device to read as its argument, either the root
-directory of a device or the `exportLibrary.db` file itself, and optionally a
-passphrase:
+directory of a device or the `exportLibrary.db` file itself, and the
+passphrase with which the database is encrypted.  libdjinterop does not supply
+the passphrase, so it has to be given either as the second argument or in the
+`ONELIBRARY_PASSPHRASE` environment variable:
 
 ```shell
-./onelibrary /Volumes/MYUSB
+ONELIBRARY_PASSPHRASE=... ./onelibrary /Volumes/MYUSB
 ```
