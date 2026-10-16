@@ -33,7 +33,7 @@
 namespace djinterop::engine::v1
 {
 engine_storage::engine_storage(
-    const std::string& directory, const engine_schema& schema,
+    const std::filesystem::path& directory, const engine_schema& schema,
     sqlite::database db) :
     directory{directory},
     db{std::move(db)}, schema{schema}
@@ -41,7 +41,7 @@ engine_storage::engine_storage(
 }
 
 std::shared_ptr<engine_storage> engine_storage::load(
-    const std::string& directory)
+    const std::filesystem::path& directory)
 {
     auto db = load_legacy_sqlite_database(directory);
 
@@ -50,7 +50,7 @@ std::shared_ptr<engine_storage> engine_storage::load(
 }
 
 std::shared_ptr<engine_storage> engine_storage::create(
-    const std::string& directory, const engine_schema& schema)
+    const std::filesystem::path& directory, const engine_schema& schema)
 {
     auto db = create_legacy_sqlite_database(directory);
 

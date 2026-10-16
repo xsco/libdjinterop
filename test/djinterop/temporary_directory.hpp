@@ -17,25 +17,21 @@
 
 #pragma once
 
+#include <filesystem>
 #include <stdexcept>
-#include <string>
 
 #include <boost/filesystem.hpp>
 
 struct temporary_directory
 {
-    temporary_directory() :
-        temp_dir_path{create_temp_dir()}, temp_dir{temp_dir_path.string()}
-    {
-    }
+    temporary_directory() : temp_dir{create_temp_dir()} {}
 
-    ~temporary_directory() { boost::filesystem::remove_all(temp_dir); }
+    ~temporary_directory() { std::filesystem::remove_all(temp_dir); }
 
-    boost::filesystem::path temp_dir_path;
-    std::string temp_dir;
+    std::filesystem::path temp_dir;
 
 private:
-    static boost::filesystem::path create_temp_dir()
+    static std::filesystem::path create_temp_dir()
     {
         boost::filesystem::path temp_dir{
             boost::filesystem::temp_directory_path()};
@@ -44,7 +40,7 @@ private:
         {
             throw std::runtime_error{"Failed to create tmp_dir"};
         }
-        return temp_dir;
+        return std::filesystem::path{temp_dir.native()};
     }
 };
 

@@ -163,7 +163,7 @@ track database_impl::create_track(const track_snapshot& snapshot)
     return djinterop::engine::v3::create_track(library_, snapshot);
 }
 
-std::string database_impl::directory()
+std::filesystem::path database_impl::directory()
 {
     return library_->directory();
 }
