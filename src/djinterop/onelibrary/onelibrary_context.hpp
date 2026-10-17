@@ -59,11 +59,10 @@ std::shared_ptr<onelibrary_context> create_context_from_scripts(
     const std::string& directory, const std::string& script_directory,
     const std::string& passphrase);
 
-/// Check that a database holds the tables of a OneLibrary one, and the single
-/// `property` row that records its version.
+/// Check that a database holds the tables, indexes and versioned `property` row of an export.
 ///
-/// \throws database_inconsistency If a table or the `property` row is
-///                                missing.
+/// \throws database_inconsistency If a table, an index or the `property` row
+///                                is missing.
 void verify_schema(onelibrary_context& context);
 
 /// Refuse an operation that would change the database.

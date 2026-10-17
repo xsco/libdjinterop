@@ -67,27 +67,54 @@ resolved_location resolve(const std::string& path)
 
 void verify_schema(onelibrary_context& context)
 {
-    // A real export has twenty-two tables; demanding the ones this library
-    // does not read would reject a database that is merely older or newer.
-    constexpr std::array<std::string_view, 9> required_tables{
-        "content",  "artist",   "album",            "genre",   "label",
-        "key",      "playlist", "playlist_content", "property"};
+    constexpr std::array<std::string_view, 22> required_tables{
+        "content",            "artist",
+        "album",              "genre",
+        "label",              "key",
+        "color",              "image",
+        "cue",                "playlist",
+        "playlist_content",   "history",
+        "history_content",    "hotCueBankList",
+        "hotCueBankList_cue", "myTag",
+        "myTag_content",      "menuItem",
+        "category",           "sort",
+        "property",           "recommendedLike",
+    };
 
-    std::unordered_set<std::string> present;
+    constexpr std::array<std::string_view, 4> required_indexes{
+        "index_playlist_content_playlist_id",
+        "index_myTag_content_myTag_id",
+        "index_myTag_content_content_id",
+        "index_hotCueBankList_cue_hotCueBankList_id",
+    };
+
+    std::unordered_set<std::string> tables;
     context.db << "SELECT name FROM sqlite_master WHERE type = 'table'" >>
-        [&](std::string name) { present.insert(std::move(name)); };
+        [&](std::string name) { tables.insert(std::move(name)); };
+
+    std::unordered_set<std::string> indexes;
+    context.db << "SELECT name FROM sqlite_master WHERE type = 'index'" >>
+        [&](std::string name) { indexes.insert(std::move(name)); };
 
     for (const auto& table : required_tables)
     {
         std::string name{table};
-        if (present.count(name) == 0)
+        if (tables.count(name) == 0)
             throw database_inconsistency{
                 "The table `" + name +
                 "` is missing, so this is not a valid OneLibrary database"};
     }
 
-    // Every export carries exactly one `property` row, recording the version
-    // of its schema.  A database without one has not been written properly.
+    for (const auto& index : required_indexes)
+    {
+        std::string name{index};
+        if (indexes.count(name) == 0)
+            throw database_inconsistency{
+                "The index `" + name +
+                "` is missing, so this is not a valid OneLibrary database"};
+    }
+
+    // Exports contain a single `property` row declaring the version.
     int64_t property_rows = 0;
     int64_t versioned_rows = 0;
     context.db << "SELECT COUNT(*), COUNT(NULLIF(dbVersion, '')) "
