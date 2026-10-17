@@ -426,33 +426,64 @@ BOOST_AUTO_TEST_CASE(load_database__a_checkpointed_log__is_read)
 }
 
 BOOST_TEST_DECORATOR(
-    *utf::description("verify() rejects a database missing its tables"))
-BOOST_AUTO_TEST_CASE(verify__a_database_missing_its_tables__is_rejected)
+    *utf::description("verify() rejects a database missing a table"))
+BOOST_AUTO_TEST_CASE(verify__a_database_missing_a_table__is_rejected)
 {
-    temporary_directory temp_dir;
-    const auto scripts = temp_dir.temp_dir + "/scripts";
-    write_script(
-        scripts, {"CREATE TABLE something_else(id INTEGER PRIMARY KEY);"});
+    const std::vector<std::string> tables{
+        "content",            "artist",
+        "album",              "genre",
+        "label",              "key",
+        "color",              "image",
+        "cue",                "playlist",
+        "playlist_content",   "history",
+        "history_content",    "hotCueBankList",
+        "hotCueBankList_cue", "myTag",
+        "myTag_content",      "menuItem",
+        "category",           "sort",
+        "property",           "recommendedLike",
+    };
 
-    BOOST_CHECK_THROW(
-        ol::create_database_from_scripts(
-            temp_dir.temp_dir + "/device", scripts, passphrase),
-        djinterop::database_inconsistency);
+    for (const auto& table : tables)
+    {
+        BOOST_TEST_CONTEXT(table)
+        {
+            temporary_directory temp_dir;
+            const auto scripts = temp_dir.temp_dir + "/scripts";
+            write_script_on_schema(scripts, {"DROP TABLE " + table + ";"});
+
+            BOOST_CHECK_THROW(
+                ol::create_database_from_scripts(
+                    temp_dir.temp_dir + "/device", scripts, passphrase),
+                djinterop::database_inconsistency);
+        }
+    }
 }
 
-BOOST_TEST_DECORATOR(
-    *utf::description("verify() rejects a database missing the key table"))
-BOOST_AUTO_TEST_CASE(verify__a_database_missing_the_key_table__is_rejected)
+BOOST_TEST_DECORATOR(*utf::description(
+    "verify() rejects a database missing an index"))
+BOOST_AUTO_TEST_CASE(verify__a_database_missing_an_index__is_rejected)
 {
-    // Tracks are read joined to `key`, so it is as necessary as the others.
-    temporary_directory temp_dir;
-    const auto scripts = temp_dir.temp_dir + "/scripts";
-    write_script_on_schema(scripts, {"DROP TABLE \"key\";"});
+    const std::vector<std::string> indexes{
+        "index_playlist_content_playlist_id",
+        "index_myTag_content_myTag_id",
+        "index_myTag_content_content_id",
+        "index_hotCueBankList_cue_hotCueBankList_id",
+    };
 
-    BOOST_CHECK_THROW(
-        ol::create_database_from_scripts(
-            temp_dir.temp_dir + "/device", scripts, passphrase),
-        djinterop::database_inconsistency);
+    for (const auto& index : indexes)
+    {
+        BOOST_TEST_CONTEXT(index)
+        {
+            temporary_directory temp_dir;
+            const auto scripts = temp_dir.temp_dir + "/scripts";
+            write_script_on_schema(scripts, {"DROP INDEX " + index + ";"});
+
+            BOOST_CHECK_THROW(
+                ol::create_database_from_scripts(
+                    temp_dir.temp_dir + "/device", scripts, passphrase),
+                djinterop::database_inconsistency);
+        }
+    }
 }
 
 BOOST_TEST_DECORATOR(*utf::description(

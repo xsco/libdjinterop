@@ -1,35 +1,132 @@
--- The schema a real OneLibrary export carries, abbreviated to the tables that
--- libdjinterop reads.  The version is the one `property.dbVersion` records, as
--- the `onelibrary::v1` namespace reads it.
---
--- Statements are one per line, as `create_database_from_scripts` reads them.
---
--- Nothing in a real export is declared NOT NULL, and no foreign key is
--- enforced, so a fixture can leave any column unset.
---
--- The published description of the format, which the pyrekordbox project
--- documents as Device Library Plus, lists neither content.djPlayCount nor
--- album.image_id, and gives playlist_content and property primary keys that an
--- export does not carry.  What a device holds is what is written here.
-
+PRAGMA foreign_keys=OFF;
+BEGIN TRANSACTION;
 CREATE TABLE content(content_id integer primary key, title varchar, titleForSearch varchar, subtitle varchar, bpmx100 integer, length integer, trackNo integer, discNo integer, artist_id_artist integer, artist_id_remixer integer, artist_id_originalArtist integer, artist_id_composer integer, artist_id_lyricist integer, album_id integer, genre_id integer, label_id integer, key_id integer, color_id integer, image_id integer, djComment varchar, rating integer, releaseYear integer, releaseDate varchar, dateCreated varchar, dateAdded varchar, path varchar, fileName varchar, fileSize integer, fileType integer, bitrate integer, bitDepth integer, samplingRate integer, isrc varchar, djPlayCount integer, isHotCueAutoLoadOn integer, isKuvoDeliverStatusOn integer, kuvoDeliveryComment varchar, masterDbId integer, masterContentId integer, analysisDataFilePath varchar, analysedBits integer, contentLink integer, hasModified integer, cueUpdateCount integer, analysisDataUpdateCount integer, informationUpdateCount integer);
-
-CREATE TABLE artist(artist_id integer primary key, name varchar, nameForSearch varchar);
-
-CREATE TABLE album(album_id integer primary key, name varchar, artist_id integer, image_id integer, isComplation integer, nameForSearch varchar);
-
 CREATE TABLE genre(genre_id integer primary key, name varchar);
-
+CREATE TABLE artist(artist_id integer primary key, name varchar, nameForSearch varchar);
+CREATE TABLE album(album_id integer primary key, name varchar, artist_id integer, image_id integer, isComplation integer, nameForSearch varchar);
 CREATE TABLE label(label_id integer primary key, name varchar);
-
-CREATE TABLE "key"(key_id integer primary key, name varchar);
-
+CREATE TABLE key(key_id integer primary key, name varchar);
+CREATE TABLE color(color_id integer primary key, name varchar);
+INSERT INTO color VALUES(1,'Pink');
+INSERT INTO color VALUES(2,'Red');
+INSERT INTO color VALUES(3,'Orange');
+INSERT INTO color VALUES(4,'Yellow');
+INSERT INTO color VALUES(5,'Green');
+INSERT INTO color VALUES(6,'Aqua');
+INSERT INTO color VALUES(7,'Blue');
+INSERT INTO color VALUES(8,'Purple');
 CREATE TABLE playlist(playlist_id integer primary key, sequenceNo integer, name varchar, image_id integer, attribute integer, playlist_id_parent integer);
-
 CREATE TABLE playlist_content(playlist_id integer, content_id integer, sequenceNo integer);
-
+CREATE TABLE hotCueBankList(hotCueBankList_id integer primary key, sequenceNo integer, name varchar, image_id integer, attribute integer, hotCueBankList_id_parent integer);
+CREATE TABLE hotCueBankList_cue(hotCueBankList_id integer, cue_id integer, sequenceNo integer);
+CREATE TABLE history(history_id integer primary key, sequenceNo integer, name varchar, attribute integer, history_id_parent integer);
+CREATE TABLE history_content(history_id integer, content_id integer, sequenceNo integer);
+CREATE TABLE image(image_id integer primary key, path varchar);
+CREATE TABLE cue(cue_id integer primary key, content_id integer, kind integer, colorTableIndex integer, cueComment varchar, isActiveLoop integer, beatLoopNumerator integer, beatLoopDenominator integer, inUsec integer, outUsec integer, in150FramePerSec integer, out150FramePerSec integer, inMpegFrameNumber integer, outMpegFrameNumber integer, inMpegAbs integer, outMpegAbs integer, inDecodingStartFramePosition integer, outDecodingStartFramePosition integer, inFileOffsetInBlock integer, OutFileOffsetInBlock integer, inNumberOfSampleInBlock integer, outNumberOfSampleInBlock integer);
+CREATE TABLE menuItem(menuItem_id integer primary key, kind integer, name varchar);
+INSERT INTO menuItem VALUES(1,128,'￺GENRE￻');
+INSERT INTO menuItem VALUES(2,129,'￺ARTIST￻');
+INSERT INTO menuItem VALUES(3,130,'￺ALBUM￻');
+INSERT INTO menuItem VALUES(4,131,'￺TRACK￻');
+INSERT INTO menuItem VALUES(5,133,'￺BPM￻');
+INSERT INTO menuItem VALUES(6,134,'￺RATING￻');
+INSERT INTO menuItem VALUES(7,135,'￺YEAR￻');
+INSERT INTO menuItem VALUES(8,136,'￺REMIXER￻');
+INSERT INTO menuItem VALUES(9,137,'￺LABEL￻');
+INSERT INTO menuItem VALUES(10,138,'￺ORIGINAL ARTIST￻');
+INSERT INTO menuItem VALUES(11,139,'￺KEY￻');
+INSERT INTO menuItem VALUES(12,141,'￺CUE￻');
+INSERT INTO menuItem VALUES(13,142,'￺COLOR￻');
+INSERT INTO menuItem VALUES(14,146,'￺TIME￻');
+INSERT INTO menuItem VALUES(15,147,'￺BITRATE￻');
+INSERT INTO menuItem VALUES(16,148,'￺FILE NAME￻');
+INSERT INTO menuItem VALUES(17,132,'￺PLAYLIST￻');
+INSERT INTO menuItem VALUES(18,152,'￺HOT CUE BANK￻');
+INSERT INTO menuItem VALUES(19,149,'￺HISTORY￻');
+INSERT INTO menuItem VALUES(20,145,'￺SEARCH￻');
+INSERT INTO menuItem VALUES(21,150,'￺COMMENTS￻');
+INSERT INTO menuItem VALUES(22,140,'￺DATE ADDED￻');
+INSERT INTO menuItem VALUES(23,151,'￺DJ PLAY COUNT￻');
+INSERT INTO menuItem VALUES(24,144,'￺FOLDER￻');
+INSERT INTO menuItem VALUES(25,161,'￺DEFAULT￻');
+INSERT INTO menuItem VALUES(26,162,'￺ALPHABET￻');
+INSERT INTO menuItem VALUES(27,170,'￺MATCHING￻');
+CREATE TABLE category(category_id integer primary key, menuItem_id integer, sequenceNo integer, isVisible integer);
+INSERT INTO category VALUES(1,1,0,0);
+INSERT INTO category VALUES(2,2,1,1);
+INSERT INTO category VALUES(3,3,2,1);
+INSERT INTO category VALUES(4,4,3,1);
+INSERT INTO category VALUES(5,17,5,1);
+INSERT INTO category VALUES(6,5,0,0);
+INSERT INTO category VALUES(7,6,0,0);
+INSERT INTO category VALUES(8,7,0,0);
+INSERT INTO category VALUES(9,8,0,0);
+INSERT INTO category VALUES(10,9,0,0);
+INSERT INTO category VALUES(11,10,0,0);
+INSERT INTO category VALUES(12,11,4,1);
+INSERT INTO category VALUES(15,13,0,0);
+INSERT INTO category VALUES(17,24,9,1);
+INSERT INTO category VALUES(18,20,7,1);
+INSERT INTO category VALUES(19,14,0,0);
+INSERT INTO category VALUES(20,15,0,0);
+INSERT INTO category VALUES(21,16,0,0);
+INSERT INTO category VALUES(22,19,6,1);
+INSERT INTO category VALUES(23,18,0,0);
+INSERT INTO category VALUES(26,27,8,1);
+INSERT INTO category VALUES(27,22,10,1);
+CREATE TABLE sort(sort_id integer primary key, menuItem_id integer, sequenceNo integer, isVisible integer, isSelectedAsSubColumn integer);
+INSERT INTO sort VALUES(0,25,1,1,0);
+INSERT INTO sort VALUES(1,26,2,1,0);
+INSERT INTO sort VALUES(2,2,3,1,0);
+INSERT INTO sort VALUES(3,3,4,1,0);
+INSERT INTO sort VALUES(4,5,5,1,0);
+INSERT INTO sort VALUES(5,6,6,1,0);
+INSERT INTO sort VALUES(6,1,0,0,0);
+INSERT INTO sort VALUES(7,21,0,0,0);
+INSERT INTO sort VALUES(8,14,0,0,0);
+INSERT INTO sort VALUES(9,8,0,0,0);
+INSERT INTO sort VALUES(10,9,0,0,0);
+INSERT INTO sort VALUES(11,10,0,0,0);
+INSERT INTO sort VALUES(12,11,7,1,0);
+INSERT INTO sort VALUES(13,15,0,0,0);
+INSERT INTO sort VALUES(15,13,0,0,0);
+INSERT INTO sort VALUES(16,23,0,0,0);
+INSERT INTO sort VALUES(17,22,0,0,0);
 CREATE TABLE property(deviceName varchar, dbVersion varchar, numberOfContents integer, createdDate varchar, backGroundColorType integer, myTagMasterDBID integer);
-
--- Every export carries exactly one `property` row, describing the device and
--- the version of its schema, so an otherwise empty database carries it too.
-INSERT INTO property (dbVersion, numberOfContents) VALUES ('1000', 0);
+INSERT INTO property VALUES('','1000',0,'2026-09-05',0,1853643511);
+CREATE TABLE recommendedLike(content_id_1 integer, content_id_2 integer, rating integer, createdDate integer);
+CREATE TABLE myTag(myTag_id integer primary key, sequenceNo integer, name varchar, attribute integer, myTag_id_parent integer);
+INSERT INTO myTag VALUES(1,0,'Genre',1,0);
+INSERT INTO myTag VALUES(2,1,'Components',1,0);
+INSERT INTO myTag VALUES(3,2,'Situation',1,0);
+INSERT INTO myTag VALUES(4,3,'Untitled Column',1,0);
+INSERT INTO myTag VALUES(78619492,3,'Nu Disco',0,1);
+INSERT INTO myTag VALUES(542690471,1,'Deep House',0,1);
+INSERT INTO myTag VALUES(557783755,0,'My Comment',0,4);
+INSERT INTO myTag VALUES(734835734,7,'Build down',0,3);
+INSERT INTO myTag VALUES(924150941,5,'Piano',0,2);
+INSERT INTO myTag VALUES(1157481955,0,'Main Floor',0,3);
+INSERT INTO myTag VALUES(1373956844,5,'Build up',0,3);
+INSERT INTO myTag VALUES(1494640599,4,'Percussion',0,2);
+INSERT INTO myTag VALUES(1574634827,5,'Bass Music',0,1);
+INSERT INTO myTag VALUES(1588221825,1,'Vocal',0,2);
+INSERT INTO myTag VALUES(1829832119,2,'Techno',0,1);
+INSERT INTO myTag VALUES(1945901698,6,'Trap',0,1);
+INSERT INTO myTag VALUES(2453969498,3,'Sub Bass',0,2);
+INSERT INTO myTag VALUES(2799474499,6,'Dark',0,2);
+INSERT INTO myTag VALUES(2875086209,2,'Lounge',0,3);
+INSERT INTO myTag VALUES(2929018516,2,'Beat',0,2);
+INSERT INTO myTag VALUES(3007189819,6,'Peak Time',0,3);
+INSERT INTO myTag VALUES(3146290123,3,'Mid Night',0,3);
+INSERT INTO myTag VALUES(3167910249,4,'Morning',0,3);
+INSERT INTO myTag VALUES(3265347719,0,'Synth',0,2);
+INSERT INTO myTag VALUES(3366526410,4,'Electro House',0,1);
+INSERT INTO myTag VALUES(3795478438,0,'Acid House',0,1);
+INSERT INTO myTag VALUES(3944383242,7,'Upper',0,2);
+INSERT INTO myTag VALUES(4207964230,1,'Second Floor',0,3);
+CREATE TABLE myTag_content(myTag_id integer, content_id integer);
+CREATE INDEX index_playlist_content_playlist_id on playlist_content(playlist_id);
+CREATE INDEX index_myTag_content_myTag_id on myTag_content(myTag_id);
+CREATE INDEX index_myTag_content_content_id on myTag_content(content_id);
+CREATE INDEX index_hotCueBankList_cue_hotCueBankList_id on hotCueBankList_cue(hotCueBankList_id);
+COMMIT;
