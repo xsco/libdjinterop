@@ -515,6 +515,17 @@ BOOST_AUTO_TEST_CASE(verify__a_bad_property_table__is_rejected)
 }
 
 BOOST_TEST_DECORATOR(
+    *utf::description("verify() accepts a database created empty"))
+BOOST_AUTO_TEST_CASE(verify__a_created_database__is_accepted)
+{
+    temporary_directory temp_dir;
+
+    auto db = ol::create_database(temp_dir.temp_dir + "/device", passphrase);
+
+    BOOST_CHECK_NO_THROW(db.verify());
+}
+
+BOOST_TEST_DECORATOR(
     *utf::description("library reaches the device through both interfaces"))
 BOOST_AUTO_TEST_CASE(library__a_device__is_read_through_its_database)
 {
@@ -701,4 +712,19 @@ BOOST_AUTO_TEST_CASE(create_database_from_scripts__an_existing_one__throws)
         ol::create_database_from_scripts(
             device, onelibrary_v1_script_directory(), passphrase),
         std::runtime_error);
+}
+
+BOOST_TEST_DECORATOR(*utf::description(
+    "create_database() refuses to overwrite a database"))
+BOOST_AUTO_TEST_CASE(create_database__an_existing_one__throws)
+{
+    // Arrange
+    temporary_directory temp_dir;
+    const auto device = temp_dir.temp_dir + "/device";
+    ol::create_database(device, passphrase);
+
+    // Act / Assert
+    BOOST_CHECK_THROW(
+        ol::create_database(device, passphrase),
+        djinterop::database_inconsistency);
 }
