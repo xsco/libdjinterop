@@ -36,7 +36,7 @@ base_engine_library::base_engine_library(
 }
 
 std::shared_ptr<engine_library_context> base_engine_library::load(
-    const std::string& directory)
+    const std::filesystem::path& directory)
 {
     auto db = load_database2_sqlite_database(directory);
 
@@ -46,7 +46,7 @@ std::shared_ptr<engine_library_context> base_engine_library::load(
 }
 
 std::shared_ptr<engine_library_context> base_engine_library::create(
-    const std::string& directory, const engine_schema& schema)
+    const std::filesystem::path& directory, const engine_schema& schema)
 {
     auto db = create_database2_sqlite_database(directory);
 
@@ -70,7 +70,7 @@ std::shared_ptr<engine_library_context> base_engine_library::create_temporary(
         ":memory:", true, schema, std::move(db));
 }
 
-bool base_engine_library::exists(const std::string& directory)
+bool base_engine_library::exists(const std::filesystem::path& directory)
 {
     return database2_database_exists(directory);
 }
@@ -81,7 +81,7 @@ void base_engine_library::verify() const
     validator->verify(context_->db);
 }
 
-std::string base_engine_library::directory() const
+std::filesystem::path base_engine_library::directory() const
 {
     return context_->directory;
 }

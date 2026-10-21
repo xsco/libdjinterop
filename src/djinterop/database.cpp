@@ -66,7 +66,7 @@ track database::create_track(const track_snapshot& snapshot)
     return pimpl_->create_track(snapshot);
 }
 
-std::string database::directory() const
+std::filesystem::path database::directory() const
 {
     return pimpl_->directory();
 }

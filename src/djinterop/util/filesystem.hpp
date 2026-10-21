@@ -23,13 +23,11 @@
 
 namespace djinterop::util
 {
-/// Converts a UTF-8 encoded path string into a `std::filesystem::path`.
+/// Returns a path as a UTF-8 encoded string, on all platforms.
 ///
-/// Path strings are UTF-8 on all platforms.  On Windows, the narrow-string
-/// constructor of `std::filesystem::path` would read them in the ANSI code
-/// page instead, so any code that hands a path string to the operating system
-/// must go through this function.
-std::filesystem::path path_from_utf8(const std::string& path);
+/// Use this for anything handed to SQLite or put in a message.
+/// `std::filesystem::path::string()` returns the ANSI code page on Windows.
+std::string path_to_utf8(const std::filesystem::path& path);
 
 std::string get_filename(const std::string& file_path);
 std::optional<std::string> get_file_extension(const std::string& file_path);

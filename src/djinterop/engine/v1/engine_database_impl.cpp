@@ -177,7 +177,7 @@ track engine_database_impl::create_track(const track_snapshot& snapshot)
     return djinterop::engine::v1::create_track(storage_, snapshot);
 }
 
-std::string engine_database_impl::directory()
+std::filesystem::path engine_database_impl::directory()
 {
     return storage_->directory;
 }
