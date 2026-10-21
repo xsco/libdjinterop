@@ -233,6 +233,13 @@ database load_database(const std::string& path, const std::string& passphrase)
         std::make_shared<v1::database_impl>(load_context(path, passphrase))};
 }
 
+database create_database(
+    const std::string& directory, const std::string& passphrase)
+{
+    return database{std::make_shared<v1::database_impl>(
+        create_context(directory, passphrase))};
+}
+
 database create_database_from_scripts(
     const std::string& directory, const std::string& script_directory,
     const std::string& passphrase)
