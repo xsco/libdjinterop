@@ -30,7 +30,9 @@
 #include <djinterop/exceptions.hpp>
 
 #include "../util/sqlcipher.hpp"
+#include "../util/sqlite_transaction.hpp"
 #include "onelibrary_context.hpp"
+#include "schema.hpp"
 #include "v1/database_impl.hpp"
 
 namespace djinterop::onelibrary
@@ -155,6 +157,28 @@ bool database_exists(const std::string& path)
 {
     const auto location = resolve(path);
     return std::filesystem::exists(location.database_path);
+}
+
+std::shared_ptr<onelibrary_context> create_context(
+    const std::string& directory, const std::string& passphrase)
+{
+    const auto database_path = directory + "/" + database_relative_path;
+    if (std::filesystem::exists(database_path))
+        throw database_inconsistency{
+            "A database already exists at `" + database_path + "`"};
+
+    std::filesystem::create_directories(
+        std::filesystem::path{database_path}.parent_path());
+
+    {
+        auto db = util::create_encrypted_database(database_path, passphrase);
+        util::sqlite_transaction trans{db};
+        create_tables(db);
+        insert_default_catalogues(db);
+        trans.commit();
+    }
+
+    return load_context(directory, passphrase);
 }
 
 std::shared_ptr<onelibrary_context> create_context_from_scripts(
