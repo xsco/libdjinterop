@@ -477,6 +477,7 @@ if (BUILD_EXAMPLES)
     add_djinterop_example(engine_prime)
     add_djinterop_example(engine_library_v2_low_level)
     add_djinterop_example(onelibrary)
+    add_djinterop_example(onelibrary_empty_db)
 endif()
 
 # Unit tests.
