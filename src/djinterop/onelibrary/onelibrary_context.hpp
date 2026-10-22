@@ -51,6 +51,13 @@ struct onelibrary_context
 std::shared_ptr<onelibrary_context> load_context(
     const std::string& path, const std::string& passphrase);
 
+/// Create a database on a device, and open it.
+///
+/// \param directory Root directory of the device.
+/// \param passphrase Passphrase with which to encrypt the database.
+std::shared_ptr<onelibrary_context> create_context(
+    const std::string& directory, const std::string& passphrase);
+
 /// Create a database on a device from a script, and open it.
 ///
 /// \param directory Root directory of the device.
