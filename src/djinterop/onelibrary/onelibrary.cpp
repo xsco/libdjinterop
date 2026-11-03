@@ -29,6 +29,7 @@
 
 #include <djinterop/exceptions.hpp>
 
+#include "../util/filesystem.hpp"
 #include "../util/sqlcipher.hpp"
 #include "onelibrary_context.hpp"
 #include "v1/database_impl.hpp"
@@ -40,27 +41,26 @@ namespace
 struct resolved_location
 {
     /// Root directory of the device, to which track paths are relative.
-    std::string directory;
+    std::filesystem::path directory;
 
-    std::string database_path;
+    std::filesystem::path database_path;
 };
 
 /// Work out where the database is, given a device or the file itself.
-resolved_location resolve(const std::string& path)
+resolved_location resolve(const std::filesystem::path& path)
 {
     if (std::filesystem::is_directory(path))
-        return resolved_location{path, path + "/" + database_relative_path};
+        return resolved_location{path, path / database_relative_path};
 
     // A path that names the database directly implies its device root, which
     // is three levels up: `<root>/PIONEER/rekordbox/exportLibrary.db`.  A
     // relative path with nothing above it sits in the working directory, which
     // is then the root of the device.
-    auto root =
-        std::filesystem::path{path}.parent_path().parent_path().parent_path();
+    auto root = path.parent_path().parent_path().parent_path();
     if (root.empty())
         root = ".";
 
-    return resolved_location{root.string(), path};
+    return resolved_location{root, path};
 }
 
 }  // anonymous namespace
@@ -134,16 +134,17 @@ void verify_schema(onelibrary_context& context)
 }
 
 std::shared_ptr<onelibrary_context> load_context(
-    const std::string& path, const std::string& passphrase)
+    const std::filesystem::path& path, const std::string& passphrase)
 {
     const auto location = resolve(path);
 
     if (!std::filesystem::exists(location.database_path))
-        throw database_not_found{location.database_path};
+        throw database_not_found{util::path_to_utf8(location.database_path)};
 
     auto context = std::make_shared<onelibrary_context>(
-        location.directory, util::open_encrypted_database(
-                                location.database_path, passphrase));
+        location.directory,
+        util::open_encrypted_database(
+            util::path_to_utf8(location.database_path), passphrase));
 
     // Fail here, while the caller still has the path in hand.
     verify_schema(*context);
@@ -151,32 +152,34 @@ std::shared_ptr<onelibrary_context> load_context(
     return context;
 }
 
-bool database_exists(const std::string& path)
+bool database_exists(const std::filesystem::path& path)
 {
     const auto location = resolve(path);
     return std::filesystem::exists(location.database_path);
 }
 
 std::shared_ptr<onelibrary_context> create_context_from_scripts(
-    const std::string& directory, const std::string& script_directory,
+    const std::filesystem::path& directory,
+    const std::filesystem::path& script_directory,
     const std::string& passphrase)
 {
-    const auto script_path = script_directory + "/exportLibrary.db.sql";
+    const auto script_path = script_directory / "exportLibrary.db.sql";
     std::ifstream script{script_path};
     if (!script)
         throw std::runtime_error{
-            "Cannot read the script `" + script_path + "`"};
+            "Cannot read the script `" + util::path_to_utf8(script_path) + "`"};
 
-    const auto database_path = directory + "/" + database_relative_path;
+    const auto database_path = directory / database_relative_path;
     if (std::filesystem::exists(database_path))
         throw std::runtime_error{
-            "A database already exists at `" + database_path + "`"};
+            "A database already exists at `" +
+            util::path_to_utf8(database_path) + "`"};
 
-    std::filesystem::create_directories(
-        std::filesystem::path{database_path}.parent_path());
+    std::filesystem::create_directories(database_path.parent_path());
 
     {
-        auto db = util::create_encrypted_database(database_path, passphrase);
+        auto db = util::create_encrypted_database(
+            util::path_to_utf8(database_path), passphrase);
 
         // One statement per line, as the Engine scripts are written, with
         // blank lines and comments between them.
@@ -193,9 +196,9 @@ std::shared_ptr<onelibrary_context> create_context_from_scripts(
             catch (const std::exception& e)
             {
                 throw std::runtime_error{
-                    "Error in script `" + script_path +
-                    "` whilst executing line \"" + statement + "\": " +
-                    e.what()};
+                    "Error in script `" + util::path_to_utf8(script_path) +
+                    "` whilst executing line \"" + statement +
+                    "\": " + e.what()};
             }
         }
     }
@@ -203,14 +206,16 @@ std::shared_ptr<onelibrary_context> create_context_from_scripts(
     return load_context(directory, passphrase);
 }
 
-database load_database(const std::string& path, const std::string& passphrase)
+database load_database(
+    const std::filesystem::path& path, const std::string& passphrase)
 {
     return database{
         std::make_shared<v1::database_impl>(load_context(path, passphrase))};
 }
 
 database create_database_from_scripts(
-    const std::string& directory, const std::string& script_directory,
+    const std::filesystem::path& directory,
+    const std::filesystem::path& script_directory,
     const std::string& passphrase)
 {
     return database{std::make_shared<v1::database_impl>(

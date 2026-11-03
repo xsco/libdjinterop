@@ -17,28 +17,32 @@
 
 #pragma once
 
-#include <string>
+#include <filesystem>
 
 #include <sqlite_modern_cpp.h>
 
 namespace djinterop::engine
 {
-bool detect_is_database2(const std::string& directory);
+bool detect_is_database2(const std::filesystem::path& directory);
 
-sqlite::database create_legacy_sqlite_database(const std::string& directory);
+sqlite::database create_legacy_sqlite_database(
+    const std::filesystem::path& directory);
 
-sqlite::database create_database2_sqlite_database(const std::string& directory);
+sqlite::database create_database2_sqlite_database(
+    const std::filesystem::path& directory);
 
 sqlite::database create_temporary_legacy_sqlite_database();
 
 sqlite::database create_temporary_database2_sqlite_database();
 
-sqlite::database load_legacy_sqlite_database(const std::string& directory);
+sqlite::database load_legacy_sqlite_database(
+    const std::filesystem::path& directory);
 
-sqlite::database load_database2_sqlite_database(const std::string& directory);
+sqlite::database load_database2_sqlite_database(
+    const std::filesystem::path& directory);
 
-bool legacy_database_exists(const std::string& directory);
+bool legacy_database_exists(const std::filesystem::path& directory);
 
-bool database2_database_exists(const std::string& directory);
+bool database2_database_exists(const std::filesystem::path& directory);
 
 }  // namespace djinterop::engine

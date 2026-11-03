@@ -18,6 +18,7 @@
 #pragma once
 
 #include <cstdint>
+#include <filesystem>
 
 #include <memory>
 #include <optional>
@@ -43,7 +44,7 @@ public:
         const std::string& name,
         const djinterop::playlist_impl& after) override;
     track create_track(const track_snapshot& snapshot) override;
-    std::string directory() override;
+    std::filesystem::path directory() override;
     void verify() override;
     void remove_crate(djinterop::crate cr) override;
     void remove_playlist(const djinterop::playlist_impl& pl) override;

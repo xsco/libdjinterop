@@ -17,12 +17,11 @@
 
 #pragma once
 
+#include <filesystem>
 #include <fstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
-
-#include <boost/filesystem.hpp>
 
 #include <djinterop/onelibrary/onelibrary.hpp>
 #include <djinterop/onelibrary/v1/library.hpp>
@@ -41,23 +40,23 @@ inline std::string onelibrary_v1_script_directory()
 
 /// Write a script directory holding the given statements, one per line.
 inline void write_script(
-    const std::string& script_directory,
+    const std::filesystem::path& script_directory,
     const std::vector<std::string>& statements)
 {
-    boost::filesystem::create_directories(script_directory);
-    std::ofstream script{script_directory + "/exportLibrary.db.sql"};
+    std::filesystem::create_directories(script_directory);
+    std::ofstream script{script_directory / "exportLibrary.db.sql"};
     for (const auto& statement : statements)
         script << statement << "\n";
 
     if (!script)
         throw std::runtime_error{
-            "Cannot write a script in " + script_directory};
+            "Cannot write a script in " + script_directory.string()};
 }
 
 /// Write a script directory holding the reference schema, followed by
 /// statements of a test's own.
 inline void write_script_on_schema(
-    const std::string& script_directory,
+    const std::filesystem::path& script_directory,
     const std::vector<std::string>& statements)
 {
     const auto schema_path =
@@ -84,7 +83,7 @@ struct onelibrary_device
     explicit onelibrary_device(
         const std::vector<std::string>& statements,
         const std::string& passphrase = "a passphrase for the fixture") :
-        root{temp_dir.temp_dir + "/device"},
+        root{temp_dir.temp_dir / "device"},
         library{create(temp_dir, root, statements, passphrase)}
     {
     }
@@ -92,17 +91,17 @@ struct onelibrary_device
     temporary_directory temp_dir;
 
     /// Root directory of the device.
-    std::string root;
+    std::filesystem::path root;
 
     djinterop::onelibrary::v1::library library;
 
 private:
     static djinterop::onelibrary::v1::library create(
-        const temporary_directory& temp_dir, const std::string& root,
+        const temporary_directory& temp_dir, const std::filesystem::path& root,
         const std::vector<std::string>& statements,
         const std::string& passphrase)
     {
-        const auto script_directory = temp_dir.temp_dir + "/scripts";
+        const auto script_directory = temp_dir.temp_dir / "scripts";
         write_script_on_schema(script_directory, statements);
         return djinterop::onelibrary::v1::library::create_from_scripts(
             root, script_directory, passphrase);

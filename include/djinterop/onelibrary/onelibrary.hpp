@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <filesystem>
 #include <string>
 
 #include <djinterop/config.hpp>
@@ -49,7 +50,7 @@ constexpr const char* database_relative_path =
 ///
 /// \param path Either the root directory of a device, or the database file.
 /// \return Returns true if a database is present.
-bool DJINTEROP_PUBLIC database_exists(const std::string& path);
+bool DJINTEROP_PUBLIC database_exists(const std::filesystem::path& path);
 
 /// Load a OneLibrary database.
 ///
@@ -64,8 +65,8 @@ bool DJINTEROP_PUBLIC database_exists(const std::string& path);
 ///                                that a OneLibrary database is expected to,
 ///                                or the single `property` row recording its
 ///                                version.
-database DJINTEROP_PUBLIC load_database(
-    const std::string& path, const std::string& passphrase);
+database DJINTEROP_PUBLIC
+load_database(const std::filesystem::path& path, const std::string& passphrase);
 
 /// Create a new database from an SQL script, and load it.
 ///
@@ -81,7 +82,8 @@ database DJINTEROP_PUBLIC load_database(
 /// \throws unsupported_database If this build of libdjinterop cannot write an
 ///                              encrypted database.
 database DJINTEROP_PUBLIC create_database_from_scripts(
-    const std::string& directory, const std::string& script_directory,
+    const std::filesystem::path& directory,
+    const std::filesystem::path& script_directory,
     const std::string& passphrase);
 
 }  // namespace djinterop::onelibrary

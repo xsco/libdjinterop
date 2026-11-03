@@ -57,10 +57,9 @@ BOOST_DATA_TEST_CASE(
     temporary_directory tmp_loc;
 
     {
-        // Arrange: a directory name with characters outside ASCII, as UTF-8.
-        // On Windows, these are also outside most ANSI code pages.
-        auto directory =
-            tmp_loc.temp_dir + "/Engine Library \xC3\xBC\xE2\x99\xAA";
+        // Arrange: a directory name with characters outside ASCII.  On
+        // Windows, these are also outside most ANSI code pages.
+        auto directory = tmp_loc.temp_dir / u8"Engine Library \u00FC\u266A";
 
         // Act
         auto db = e::create_database(directory, schema);
@@ -84,7 +83,7 @@ BOOST_AUTO_TEST_CASE(load_database__fake_path__throw)
         e::engine_schema unused{};
         BOOST_CHECK_THROW(
             auto db =
-                e::load_database(tmp_loc.temp_dir + "/does_not_exist", unused),
+                e::load_database(tmp_loc.temp_dir / "does_not_exist", unused),
             djinterop::database_not_found);
     }
 }

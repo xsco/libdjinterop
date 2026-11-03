@@ -38,7 +38,7 @@ database_impl::database_impl(std::shared_ptr<onelibrary_context> context) :
 {
 }
 
-std::string database_impl::directory()
+std::filesystem::path database_impl::directory()
 {
     return context_->directory;
 }

@@ -29,18 +29,20 @@ library::library(std::shared_ptr<onelibrary_context> context) :
 {
 }
 
-bool library::exists(const std::string& path)
+bool library::exists(const std::filesystem::path& path)
 {
     return database_exists(path);
 }
 
-library library::load(const std::string& path, const std::string& passphrase)
+library library::load(
+    const std::filesystem::path& path, const std::string& passphrase)
 {
     return library{load_context(path, passphrase)};
 }
 
 library library::create_from_scripts(
-    const std::string& directory, const std::string& script_directory,
+    const std::filesystem::path& directory,
+    const std::filesystem::path& script_directory,
     const std::string& passphrase)
 {
     return library{
@@ -67,7 +69,7 @@ djinterop::database library::database() const
     return djinterop::database{std::make_shared<database_impl>(context_)};
 }
 
-const std::string& library::directory() const
+const std::filesystem::path& library::directory() const
 {
     return context_->directory;
 }

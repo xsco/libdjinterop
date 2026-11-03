@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <utility>
@@ -30,7 +31,7 @@ namespace djinterop::onelibrary
 /// State shared by everything belonging to one loaded OneLibrary database.
 struct onelibrary_context
 {
-    onelibrary_context(std::string directory, sqlite::database db) :
+    onelibrary_context(std::filesystem::path directory, sqlite::database db) :
         directory{std::move(directory)}, db{std::move(db)}
     {
     }
@@ -39,7 +40,7 @@ struct onelibrary_context
     ///
     /// Track paths in the database are relative to this, not to the directory
     /// the database file itself sits in.
-    const std::string directory;
+    const std::filesystem::path directory;
 
     /// The database, opened with the key that decrypts it.
     sqlite::database db;
@@ -49,14 +50,15 @@ struct onelibrary_context
 ///
 /// \param path Either the root directory of a device, or the database file.
 std::shared_ptr<onelibrary_context> load_context(
-    const std::string& path, const std::string& passphrase);
+    const std::filesystem::path& path, const std::string& passphrase);
 
 /// Create a database on a device from a script, and open it.
 ///
 /// \param directory Root directory of the device.
 /// \param script_directory Directory holding `exportLibrary.db.sql`.
 std::shared_ptr<onelibrary_context> create_context_from_scripts(
-    const std::string& directory, const std::string& script_directory,
+    const std::filesystem::path& directory,
+    const std::filesystem::path& script_directory,
     const std::string& passphrase);
 
 /// Check that a database holds the tables, indexes and versioned `property` row of an export.

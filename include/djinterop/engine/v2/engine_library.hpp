@@ -40,9 +40,6 @@ namespace djinterop::engine::v2
 /// Note that the directory that should be passed to constructors and member
 /// functions of this class must be the `Engine Library` directory, not the
 /// `Database2` directory.
-///
-/// Directory paths are UTF-8 encoded strings on all platforms, including
-/// Windows.
 class DJINTEROP_PUBLIC engine_library : public base_engine_library
 {
 public:
@@ -83,7 +80,7 @@ public:
     /// \param schema Version to create.
     /// \return Returns the new Engine library.
     static engine_library create(
-        const std::string& directory, const engine_schema& schema)
+        const std::filesystem::path& directory, const engine_schema& schema)
     {
         return engine_library{base_engine_library::create(directory, schema)};
     }
@@ -104,7 +101,7 @@ public:
     ///
     /// \param directory Directory to test.
     /// \return Returns a flag indicating whether an Engine library exists.
-    static bool exists(const std::string& directory)
+    static bool exists(const std::filesystem::path& directory)
     {
         return base_engine_library::exists(directory);
     }
@@ -112,7 +109,7 @@ public:
     /// Load an existing library from a directory.
     ///
     /// \param directory Directory to load from.
-    static engine_library load(const std::string& directory)
+    static engine_library load(const std::filesystem::path& directory)
     {
         return engine_library{base_engine_library::load(directory)};
     }

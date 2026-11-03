@@ -38,12 +38,13 @@ namespace djinterop::engine
 namespace
 {
 void hydrate_database(
-    const std::string& db_path, const std::string& script_path)
+    const std::filesystem::path& db_path,
+    const std::filesystem::path& script_path)
 {
     std::string stmt;
 
-    std::ifstream script{djinterop::util::path_from_utf8(script_path)};
-    sqlite::database m_db{db_path};
+    std::ifstream script{script_path};
+    sqlite::database m_db{djinterop::util::path_to_utf8(db_path)};
     while (std::getline(script, stmt))
     {
         try
@@ -54,7 +55,7 @@ void hydrate_database(
         {
             std::stringstream msg;
             msg << "Error in script ";
-            msg << script_path;
+            msg << djinterop::util::path_to_utf8(script_path);
             msg << " whilst executing line \"";
             msg << stmt;
             msg << "\": ";
@@ -66,7 +67,7 @@ void hydrate_database(
 }  // anonymous namespace
 
 database create_database(
-    const std::string& directory, const engine_schema& schema)
+    const std::filesystem::path& directory, const engine_schema& schema)
 {
     if (schema >= engine_schema::schema_3_0_0)
     {
@@ -103,48 +104,42 @@ database create_temporary_database(const engine_schema& schema)
 }
 
 database create_database_from_scripts(
-    const std::string& db_directory, const std::string& script_directory,
-    engine_schema& loaded_schema)
+    const std::filesystem::path& db_directory,
+    const std::filesystem::path& script_directory, engine_schema& loaded_schema)
 {
-    if (!std::filesystem::exists(djinterop::util::path_from_utf8(db_directory)))
+    if (!std::filesystem::exists(db_directory))
     {
         throw std::runtime_error{"DB directory does not exist"};
     }
 
-    if (!std::filesystem::exists(
-            djinterop::util::path_from_utf8(script_directory)))
+    if (!std::filesystem::exists(script_directory))
     {
         throw std::runtime_error{"Script directory does not exist"};
     }
 
-    auto v1_m_db_path = db_directory + "/m.db";
-    auto v1_m_db_sql_path = script_directory + "/m.db.sql";
-    auto v1_p_db_path = db_directory + "/p.db";
-    auto v1_p_db_sql_path = script_directory + "/p.db.sql";
-    auto database2_db_dir = db_directory + "/Database2";
-    auto database2_script_dir = script_directory + "/Database2";
-    auto v2_m_db_path = database2_db_dir + "/m.db";
-    auto v2_m_db_sql_path = database2_script_dir + "/m.db.sql";
+    auto v1_m_db_path = db_directory / "m.db";
+    auto v1_m_db_sql_path = script_directory / "m.db.sql";
+    auto v1_p_db_path = db_directory / "p.db";
+    auto v1_p_db_sql_path = script_directory / "p.db.sql";
+    auto database2_db_dir = db_directory / "Database2";
+    auto database2_script_dir = script_directory / "Database2";
+    auto v2_m_db_path = database2_db_dir / "m.db";
+    auto v2_m_db_sql_path = database2_script_dir / "m.db.sql";
 
-    if (std::filesystem::exists(
-            djinterop::util::path_from_utf8(v1_m_db_sql_path)))
+    if (std::filesystem::exists(v1_m_db_sql_path))
     {
         hydrate_database(v1_m_db_path, v1_m_db_sql_path);
     }
 
-    if (std::filesystem::exists(
-            djinterop::util::path_from_utf8(v1_p_db_sql_path)))
+    if (std::filesystem::exists(v1_p_db_sql_path))
     {
         hydrate_database(v1_p_db_path, v1_p_db_sql_path);
     }
 
-    if (std::filesystem::exists(
-            djinterop::util::path_from_utf8(v2_m_db_sql_path)))
+    if (std::filesystem::exists(v2_m_db_sql_path))
     {
-        if (!std::filesystem::exists(
-                djinterop::util::path_from_utf8(database2_db_dir)))
-            std::filesystem::create_directory(
-                djinterop::util::path_from_utf8(database2_db_dir));
+        if (!std::filesystem::exists(database2_db_dir))
+            std::filesystem::create_directory(database2_db_dir);
 
         hydrate_database(v2_m_db_path, v2_m_db_sql_path);
     }
@@ -153,8 +148,8 @@ database create_database_from_scripts(
 }
 
 database create_or_load_database(
-    const std::string& directory, const engine_schema& schema, bool& created,
-    engine_schema& loaded_schema)
+    const std::filesystem::path& directory, const engine_schema& schema,
+    bool& created, engine_schema& loaded_schema)
 {
     try
     {
@@ -168,7 +163,7 @@ database create_or_load_database(
     }
 }
 
-bool database_exists(const std::string& directory)
+bool database_exists(const std::filesystem::path& directory)
 {
     try
     {
@@ -183,7 +178,7 @@ bool database_exists(const std::string& directory)
 }
 
 database load_database(
-    const std::string& directory, engine_schema& loaded_schema)
+    const std::filesystem::path& directory, engine_schema& loaded_schema)
 {
     const auto is_database2 = detect_is_database2(directory);
 

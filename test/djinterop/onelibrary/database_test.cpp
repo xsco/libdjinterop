@@ -18,7 +18,7 @@
 #define BOOST_TEST_MODULE onelibrary_database_test
 #include <boost/test/included/unit_test.hpp>
 
-#include <cstdio>
+#include <filesystem>
 #include <string>
 
 #include <djinterop/djinterop.hpp>
@@ -113,8 +113,8 @@ BOOST_AUTO_TEST_CASE(database_exists__a_device__is_found)
     const auto& device = device_fixture().root;
 
     BOOST_CHECK(ol::database_exists(device));
-    BOOST_CHECK(ol::database_exists(device + "/" + ol::database_relative_path));
-    BOOST_CHECK(!ol::database_exists(device + "/nowhere"));
+    BOOST_CHECK(ol::database_exists(device / ol::database_relative_path));
+    BOOST_CHECK(!ol::database_exists(device / "nowhere"));
 }
 
 BOOST_TEST_DECORATOR(
@@ -140,8 +140,8 @@ BOOST_TEST_DECORATOR(
 BOOST_AUTO_TEST_CASE(load_database__the_database_file_itself__is_accepted)
 {
     const auto& device = device_fixture().root;
-    auto db = ol::load_database(
-        device + "/" + ol::database_relative_path, passphrase);
+    auto db =
+        ol::load_database(device / ol::database_relative_path, passphrase);
 
     BOOST_CHECK_EQUAL(db.tracks().size(), 3u);
 
@@ -403,8 +403,8 @@ BOOST_AUTO_TEST_CASE(load_database__a_checkpointed_log__is_read)
     // Creating a database in WAL mode does the same: closing the connection
     // that wrote it checkpoints the log into the database.
     temporary_directory temp_dir;
-    const auto device = temp_dir.temp_dir + "/device";
-    const auto scripts = temp_dir.temp_dir + "/scripts";
+    const auto device = temp_dir.temp_dir / "device";
+    const auto scripts = temp_dir.temp_dir / "scripts";
     write_script_on_schema(
         scripts, {
                      "PRAGMA journal_mode = WAL;",
@@ -415,9 +415,9 @@ BOOST_AUTO_TEST_CASE(load_database__a_checkpointed_log__is_read)
 
     // Creating it also loads it, and that read-only connection leaves an empty
     // log and index behind, so remove them to leave the header alone.
-    const auto path = device + "/" + ol::database_relative_path;
-    std::remove((path + "-wal").c_str());
-    std::remove((path + "-shm").c_str());
+    const auto path = device / ol::database_relative_path;
+    std::filesystem::remove(std::filesystem::path{path} += "-wal");
+    std::filesystem::remove(std::filesystem::path{path} += "-shm");
 
     auto loaded = ol::load_database(path, passphrase);
     const auto tracks = loaded.tracks();
@@ -448,12 +448,12 @@ BOOST_AUTO_TEST_CASE(verify__a_database_missing_a_table__is_rejected)
         BOOST_TEST_CONTEXT(table)
         {
             temporary_directory temp_dir;
-            const auto scripts = temp_dir.temp_dir + "/scripts";
+            const auto scripts = temp_dir.temp_dir / "scripts";
             write_script_on_schema(scripts, {"DROP TABLE " + table + ";"});
 
             BOOST_CHECK_THROW(
                 ol::create_database_from_scripts(
-                    temp_dir.temp_dir + "/device", scripts, passphrase),
+                    temp_dir.temp_dir / "device", scripts, passphrase),
                 djinterop::database_inconsistency);
         }
     }
@@ -475,12 +475,12 @@ BOOST_AUTO_TEST_CASE(verify__a_database_missing_an_index__is_rejected)
         BOOST_TEST_CONTEXT(index)
         {
             temporary_directory temp_dir;
-            const auto scripts = temp_dir.temp_dir + "/scripts";
+            const auto scripts = temp_dir.temp_dir / "scripts";
             write_script_on_schema(scripts, {"DROP INDEX " + index + ";"});
 
             BOOST_CHECK_THROW(
                 ol::create_database_from_scripts(
-                    temp_dir.temp_dir + "/device", scripts, passphrase),
+                    temp_dir.temp_dir / "device", scripts, passphrase),
                 djinterop::database_inconsistency);
         }
     }
@@ -503,12 +503,12 @@ BOOST_AUTO_TEST_CASE(verify__a_bad_property_table__is_rejected)
         BOOST_TEST_CONTEXT(statements.front())
         {
             temporary_directory temp_dir;
-            const auto scripts = temp_dir.temp_dir + "/scripts";
+            const auto scripts = temp_dir.temp_dir / "scripts";
             write_script_on_schema(scripts, statements);
 
             BOOST_CHECK_THROW(
                 ol::create_database_from_scripts(
-                    temp_dir.temp_dir + "/device", scripts, passphrase),
+                    temp_dir.temp_dir / "device", scripts, passphrase),
                 djinterop::database_inconsistency);
         }
     }
@@ -684,7 +684,7 @@ BOOST_AUTO_TEST_CASE(library__exists_and_load__find_a_device)
 
     // Assert
     BOOST_CHECK(olv1::library::exists(device));
-    BOOST_CHECK(!olv1::library::exists(device + "/nowhere"));
+    BOOST_CHECK(!olv1::library::exists(device / "nowhere"));
     BOOST_CHECK_EQUAL(lib.directory(), device);
     BOOST_CHECK_EQUAL(lib.content().all_ids().size(), 3u);
 }

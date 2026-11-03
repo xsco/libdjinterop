@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <filesystem>
 #include <memory>
 #include <string>
 
@@ -49,7 +50,7 @@ public:
     ///
     /// \param path Either the root directory of a device, or the database
     ///             file.
-    [[nodiscard]] static bool exists(const std::string& path);
+    [[nodiscard]] static bool exists(const std::filesystem::path& path);
 
     /// Load the database on a device, as `load_database` does.
     ///
@@ -57,8 +58,7 @@ public:
     ///             file.
     /// \param passphrase Passphrase with which the database is encrypted.
     [[nodiscard]] static library load(
-        const std::string& path,
-        const std::string& passphrase);
+        const std::filesystem::path& path, const std::string& passphrase);
 
     /// Create a new database from an SQL script, as
     /// `create_database_from_scripts` does, and load it.
@@ -67,7 +67,8 @@ public:
     /// \param script_directory Directory containing `exportLibrary.db.sql`.
     /// \param passphrase Passphrase with which to encrypt the database.
     [[nodiscard]] static library create_from_scripts(
-        const std::string& directory, const std::string& script_directory,
+        const std::filesystem::path& directory,
+        const std::filesystem::path& script_directory,
         const std::string& passphrase);
 
     /// The `content` table.
@@ -84,7 +85,7 @@ public:
 
     /// Root directory of the device, to which every path is relative, and
     /// not the directory the database file itself sits in.
-    [[nodiscard]] const std::string& directory() const;
+    [[nodiscard]] const std::filesystem::path& directory() const;
 
 private:
     std::shared_ptr<onelibrary_context> context_;
