@@ -24,9 +24,11 @@
 #include <djinterop/engine/engine.hpp>
 #include <djinterop/engine/v3/engine_library.hpp>
 #include <djinterop/exceptions.hpp>
+#include <djinterop/track.hpp>
 
 #include "../../boost_test_printable.hpp"
 #include "../../boost_test_utils.hpp"
+#include "../example_track_data.hpp"
 #include "example_track_row_data.hpp"
 
 namespace utf = boost::unit_test;
@@ -41,6 +43,13 @@ const std::vector<example_track_row_type> all_example_track_row_types{
     example_track_row_type::basic_metadata_only_1,
     example_track_row_type::fully_analysed_1,
 };
+
+const std::vector<example_track_data_variation>
+    all_example_track_data_variations{
+        example_track_data_variation::minimal_1,
+        example_track_data_variation::basic_metadata_only_1,
+        example_track_data_variation::fully_analysed_1,
+    };
 }  // anonymous namespace
 
 BOOST_TEST_DECORATOR(*utf::description("add() with valid track row"))
@@ -154,6 +163,53 @@ BOOST_DATA_TEST_CASE(
     BOOST_REQUIRE(actual != std::nullopt);
     actual->last_edit_time = expected.last_edit_time;
     BOOST_CHECK_EQUAL(expected, *actual);
+}
+
+BOOST_TEST_DECORATOR(
+    *utf::description("track::update() with an unchanged snapshot"))
+BOOST_DATA_TEST_CASE(
+    track_update_with_unchanged_snapshot_keeps_row,
+    e::supported_v3_schemas * all_example_track_data_variations, schema,
+    variation)
+{
+    // Arrange
+    BOOST_TEST_CHECKPOINT(
+        "(" << schema << ", " << variation
+            << ") Creating temporary database...");
+    auto library = ev3::engine_library::create_temporary(schema);
+
+    djinterop::track_snapshot snapshot{};
+    populate_track_snapshot(
+        snapshot, variation, example_track_data_usage::create, schema);
+
+    BOOST_TEST_CHECKPOINT(
+        "(" << schema << ", " << variation << ") Creating track...");
+    auto track = library.database().create_track(snapshot);
+
+    // Give the track values in columns that the snapshot does not carry.
+    const auto album_art_id = library.album_art().add(ev3::album_art_row{
+        ev3::ALBUM_ART_ROW_ID_NONE,
+        ev3::album_art_text_hash{"0123456789abcdef0123456789abcdef01234567"},
+        {}});
+    library.track().set_album_art_id(track.id(), album_art_id);
+    library.track().set_date_added(
+        track.id(), std::chrono::system_clock::time_point{
+                        std::chrono::seconds{1700000000}});
+    library.track().set_is_played(track.id(), true);
+
+    auto expected = library.track().get(track.id());
+    BOOST_REQUIRE(expected != std::nullopt);
+
+    // Act
+    BOOST_TEST_CHECKPOINT(
+        "(" << schema << ", " << variation << ") Updating track...");
+    track.update(track.snapshot());
+
+    // Assert
+    auto actual = library.track().get(track.id());
+    BOOST_REQUIRE(actual != std::nullopt);
+    actual->last_edit_time = expected->last_edit_time;
+    BOOST_CHECK_EQUAL(*expected, *actual);
 }
 
 // The act of defining very similar test cases for all the getters and setters

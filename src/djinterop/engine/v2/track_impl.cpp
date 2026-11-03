@@ -235,9 +235,40 @@ void track_impl::update(const track_snapshot& snapshot)
             "which is required to update a track"};
     }
 
+    auto row_maybe = library_->track().get(id());
+    if (!row_maybe)
+        throw djinterop::track_deleted{id()};
+
     auto information = library_->information().get();
-    auto row = snapshot_to_row(snapshot, information);
-    row.id = id();
+    auto from_snapshot = snapshot_to_row(snapshot, information);
+
+    // Overwrite only the columns that a snapshot carries.
+    auto& row = *row_maybe;
+    row.play_order = from_snapshot.play_order;
+    row.length = from_snapshot.length;
+    row.bpm = from_snapshot.bpm;
+    row.year = from_snapshot.year;
+    row.path = from_snapshot.path;
+    row.filename = from_snapshot.filename;
+    row.bitrate = from_snapshot.bitrate;
+    row.bpm_analyzed = from_snapshot.bpm_analyzed;
+    row.file_bytes = from_snapshot.file_bytes;
+    row.title = from_snapshot.title;
+    row.artist = from_snapshot.artist;
+    row.album = from_snapshot.album;
+    row.genre = from_snapshot.genre;
+    row.comment = from_snapshot.comment;
+    row.label = from_snapshot.label;
+    row.composer = from_snapshot.composer;
+    row.key = from_snapshot.key;
+    row.rating = from_snapshot.rating;
+    row.time_last_played = from_snapshot.time_last_played;
+    row.file_type = from_snapshot.file_type;
+    row.track_data = from_snapshot.track_data;
+    row.overview_waveform_data = from_snapshot.overview_waveform_data;
+    row.beat_data = from_snapshot.beat_data;
+    row.quick_cues = from_snapshot.quick_cues;
+    row.loops = from_snapshot.loops;
 
     library_->track().update(row);
 }

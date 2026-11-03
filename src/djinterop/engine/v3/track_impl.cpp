@@ -243,14 +243,53 @@ void track_impl::update(const track_snapshot& snapshot)
             "which is required to update a track"};
     }
 
+    auto track_row_maybe = library_->track().get(id());
+    if (!track_row_maybe)
+        throw djinterop::track_deleted{id()};
+
+    auto performance_data_row_maybe = library_->performance_data().get(id());
+    if (!performance_data_row_maybe)
+        throw djinterop::track_database_inconsistency{
+            "No performance data row is present for track", id()};
+
     const auto information = library_->information().get();
-    auto track_row = snapshot_to_track_row(snapshot, information);
-    track_row.id = id();
+    const auto track_from_snapshot =
+        snapshot_to_track_row(snapshot, information);
+    const auto performance_data_from_snapshot =
+        snapshot_to_performance_data_row(id(), snapshot);
+
+    // Overwrite only the columns that a snapshot carries.
+    auto& track_row = *track_row_maybe;
+    track_row.play_order = track_from_snapshot.play_order;
+    track_row.length = track_from_snapshot.length;
+    track_row.bpm = track_from_snapshot.bpm;
+    track_row.year = track_from_snapshot.year;
+    track_row.path = track_from_snapshot.path;
+    track_row.filename = track_from_snapshot.filename;
+    track_row.bitrate = track_from_snapshot.bitrate;
+    track_row.bpm_analyzed = track_from_snapshot.bpm_analyzed;
+    track_row.file_bytes = track_from_snapshot.file_bytes;
+    track_row.title = track_from_snapshot.title;
+    track_row.artist = track_from_snapshot.artist;
+    track_row.album = track_from_snapshot.album;
+    track_row.genre = track_from_snapshot.genre;
+    track_row.comment = track_from_snapshot.comment;
+    track_row.label = track_from_snapshot.label;
+    track_row.composer = track_from_snapshot.composer;
+    track_row.key = track_from_snapshot.key;
+    track_row.rating = track_from_snapshot.rating;
+    track_row.time_last_played = track_from_snapshot.time_last_played;
+    track_row.file_type = track_from_snapshot.file_type;
+
+    auto& performance_data_row = *performance_data_row_maybe;
+    performance_data_row.track_data = performance_data_from_snapshot.track_data;
+    performance_data_row.overview_waveform_data =
+        performance_data_from_snapshot.overview_waveform_data;
+    performance_data_row.beat_data = performance_data_from_snapshot.beat_data;
+    performance_data_row.quick_cues = performance_data_from_snapshot.quick_cues;
+    performance_data_row.loops = performance_data_from_snapshot.loops;
 
     library_->track().update(track_row);
-
-    const auto performance_data_row =
-        snapshot_to_performance_data_row(track_row.id, snapshot);
     library_->performance_data().update(performance_data_row);
 }
 
