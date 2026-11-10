@@ -40,6 +40,12 @@ library library::load(
     return library{load_context(path, passphrase)};
 }
 
+library library::create(
+    const std::string& directory, const std::string& passphrase)
+{
+    return library{create_context(directory, passphrase)};
+}
+
 library library::create_from_scripts(
     const std::filesystem::path& directory,
     const std::filesystem::path& script_directory,

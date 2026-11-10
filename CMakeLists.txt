@@ -238,6 +238,7 @@ add_library(
     src/djinterop/util/sqlcipher.hpp
     src/djinterop/util/sqlite_query.hpp
     src/djinterop/util/sqlite_transaction.hpp
+    src/djinterop/onelibrary/schema.cpp
 )
 
 # Encrypted OneLibrary databases are opened with SQLCipher, where the build has
@@ -476,6 +477,7 @@ if (BUILD_EXAMPLES)
     add_djinterop_example(engine_prime)
     add_djinterop_example(engine_library_v2_low_level)
     add_djinterop_example(onelibrary)
+    add_djinterop_example(onelibrary_empty_db)
 endif()
 
 # Unit tests.
